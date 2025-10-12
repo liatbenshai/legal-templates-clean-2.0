@@ -269,7 +269,8 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
     totalCopies,
     specialInstructions,
     vehicleInstructions,
-    digitalAssets: true
+    digitalAssets: true,
+    customSections // הוספת הסעיפים מהמחסן!
   });
 
   return (
