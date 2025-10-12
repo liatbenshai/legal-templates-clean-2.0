@@ -80,12 +80,53 @@ export const hebrewDictionary: Record<string, GenderedWord> = {
   'המעביד': { male: 'המעביד', female: 'המעבידה', plural: 'המעבידים', organization: 'החברה המעבידה' },
   'השותף': { male: 'השותף', female: 'השותפה', plural: 'השותפים', organization: 'החברה השותפה' },
   
+  // מונחים משפטיים - ייפוי כוח והנחיות מקדימות
+  'מיופה_כוח': { male: 'מיופה כוח', female: 'מיופת כוח', plural: 'מיופי כוח' },
+  'מיופה_הכוח': { male: 'מיופה הכוח', female: 'מיופת הכוח', plural: 'מיופי הכוח' },
+  'אפוטרופוס': { male: 'אפוטרופוס', female: 'אפוטרופסת', plural: 'אפוטרופסים' },
+  'האפוטרופוס': { male: 'האפוטרופוס', female: 'האפוטרופסת', plural: 'האפוטרופסים' },
+  'הממנה': { male: 'הממנה', female: 'הממנה', plural: 'הממנים' },
+  'ממנה': { male: 'ממנה', female: 'ממנה', plural: 'ממנים' },
+  'מטפל': { male: 'מטפל', female: 'מטפלת', plural: 'מטפלים' },
+  'המטפל': { male: 'המטפל', female: 'המטפלת', plural: 'המטפלים' },
+  'המנהל': { male: 'המנהל', female: 'המנהלת', plural: 'המנהלים' },
+  'מנהל': { male: 'מנהל', female: 'מנהלת', plural: 'מנהלים' },
+  'מורשה': { male: 'מורשה', female: 'מורשת', plural: 'מורשים' },
+  'בעלים': { male: 'בעלים', female: 'בעלת', plural: 'בעלים' },
+  'הבעלים': { male: 'הבעלים', female: 'הבעלת', plural: 'הבעלים' },
+  'נציג': { male: 'נציג', female: 'נציגה', plural: 'נציגים' },
+  'הנציג': { male: 'הנציג', female: 'הנציגה', plural: 'הנציגים' },
+  
+  // יחסי משפחה
+  'בן': { male: 'בן', female: 'בת', plural: 'ילדים' },
+  'הבן': { male: 'הבן', female: 'הבת', plural: 'הילדים' },
+  'בנו': { male: 'בנו', female: 'בתו', plural: 'ילדיו' },
+  'אח': { male: 'אח', female: 'אחות', plural: 'אחים' },
+  'האח': { male: 'האח', female: 'האחות', plural: 'האחים' },
+  'אחיו': { male: 'אחיו', female: 'אחותו', plural: 'אחיו' },
+  'הורה': { male: 'אב', female: 'אם', plural: 'הורים' },
+  'ההורה': { male: 'האב', female: 'האם', plural: 'ההורים' },
+  'נכד': { male: 'נכד', female: 'נכדה', plural: 'נכדים' },
+  'הנכד': { male: 'הנכד', female: 'הנכדה', plural: 'הנכדים' },
+  
+  // יורשים וזכאים
+  'יורש': { male: 'יורש', female: 'יורשת', plural: 'יורשים' },
+  'היורש': { male: 'היורש', female: 'היורשת', plural: 'היורשים' },
+  'זכאי_לירושה': { male: 'זכאי לירושה', female: 'זכאית לירושה', plural: 'זכאים לירושה' },
+  'מקבל': { male: 'מקבל', female: 'מקבלת', plural: 'מקבלים' },
+  'המקבל': { male: 'המקבל', female: 'המקבלת', plural: 'המקבלים' },
+  
   // מונחים משפטיים - מצבים
   'זכאי': { male: 'זכאי', female: 'זכאית', plural: 'זכאים' },
   'חייב': { male: 'חייב', female: 'חייבת', plural: 'חייבים' },
   'רשאי': { male: 'רשאי', female: 'רשאית', plural: 'רשאים' },
   'אחראי': { male: 'אחראי', female: 'אחראית', plural: 'אחראים' },
   'מוסמך': { male: 'מוסמך', female: 'מוסמכת', plural: 'מוסמכים' },
+  'מחויב': { male: 'מחויב', female: 'מחויבת', plural: 'מחויבים' },
+  'מורשה_פעולה': { male: 'מורשה לפעול', female: 'מורשת לפעול', plural: 'מורשים לפעול' },
+  'מנוע': { male: 'מנוע', female: 'מנועה', plural: 'מנועים' },
+  'חתום': { male: 'חתום', female: 'חתומה', plural: 'חתומים' },
+  'הנ"ל': { male: 'הנ"ל', female: 'הנ"ל', plural: 'הנ"ל' },
 };
 
 /**
@@ -189,6 +230,26 @@ export function addCustomWord(word: string, genderedWord: GenderedWord): void {
  */
 export function applyGenderToText(text: string, gender: Gender): string {
   return replaceTextWithGender(text, gender);
+}
+
+/**
+ * פונקציה להחלת מגדור על טקסט שמתייחס ליורש ספציפי
+ * שימושי לטקסטים בצוואות שמדברים על יורשים
+ */
+export function applyGenderToHeirText(text: string, heir: { gender: Gender; firstName?: string; lastName?: string }): string {
+  let result = text;
+  
+  // החלף placeholders של היורש
+  if (heir.firstName && heir.lastName) {
+    result = result.replace(/\{שם_יורש\}/g, `${heir.firstName} ${heir.lastName}`);
+    result = result.replace(/\{שם_היורש\}/g, `${heir.firstName} ${heir.lastName}`);
+  } else if (heir.firstName) {
+    result = result.replace(/\{שם_יורש\}/g, heir.firstName);
+    result = result.replace(/\{שם_היורש\}/g, heir.firstName);
+  }
+  
+  // החלף מגדור
+  return replaceTextWithGender(result, heir.gender);
 }
 
 /**

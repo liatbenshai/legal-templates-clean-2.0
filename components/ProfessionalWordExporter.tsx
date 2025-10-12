@@ -796,7 +796,8 @@ export default function ProfessionalWordExporter({
                 right: 1440,  
                 bottom: 1440, 
                 left: 1440 
-              }
+              },
+              rightToLeft: true // ✅ כיוון RTL לכל הדף!
             }
           },
           headers: {

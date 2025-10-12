@@ -28,7 +28,7 @@ export const advanceDirectivesSectionsWarehouse: AdvanceDirectivesSectionTemplat
     subcategory: 'real_estate',
     title: 'מכירת נכס - מותרת',
     titleEn: 'Property Sale - Allowed',
-    content: `מיופה הכוח רשאי למכור את הנכס במקרים הבאים:
+    content: `מיופה_הכוח רשאי למכור את הנכס במקרים הבאים:
 - צורך כספי דחוף (הוצאות רפואיות, טיפול סיעודי)
 - מעבר למוסד סיעודי או בית אבות
 - אי יכולת תחזוקה
@@ -74,7 +74,7 @@ export const advanceDirectivesSectionsWarehouse: AdvanceDirectivesSectionTemplat
     subcategory: 'real_estate',
     title: 'השכרת נכס',
     titleEn: 'Property Rental',
-    content: `מיופה הכוח רשאי להשכיר את הנכס במקרים הבאים:
+    content: `מיופה_הכוח רשאי להשכיר את הנכס במקרים הבאים:
 - מעבר שלי למוסד / בית אבות / דיור מוגן
 - אי יכולת להתגורר בנכס
 - צורך בהכנסה נוספת
@@ -100,7 +100,7 @@ export const advanceDirectivesSectionsWarehouse: AdvanceDirectivesSectionTemplat
     subcategory: 'real_estate',
     title: 'תחזוקת נכס',
     titleEn: 'Property Maintenance',
-    content: `מיופה הכוח אחראי על תחזוקת הנכס:
+    content: `מיופה_הכוח אחראי על תחזוקת הנכס:
 
 **תחזוקה שוטפת:**
 - תשלום ארנונה במועד
@@ -122,7 +122,7 @@ export const advanceDirectivesSectionsWarehouse: AdvanceDirectivesSectionTemplat
     subcategory: 'banking',
     title: 'ניהול חשבון בנק',
     titleEn: 'Bank Account Management',
-    content: `מיופה הכוח מוסמך לנהל את חשבונות הבנק:
+    content: `מיופה_הכוח מוסמך לנהל את חשבונות הבנק:
 
 **פעולות מותרות:**
 - משיכת כסף מזומן (לצרכים יומיומיים)
@@ -172,7 +172,7 @@ export const advanceDirectivesSectionsWarehouse: AdvanceDirectivesSectionTemplat
     content: `כספי חיסכון וקרנות פנסיה:
 
 **איסור נגיעה:**
-מיופה הכוח לא ייגע בכספי החיסכון, אלא במקרים חריגים:
+מיופה_הכוח לא ייגע בכספי החיסכון, אלא במקרים חריגים:
 - חשבון חיסכון, קרן השתלמות, קופת גמל, פיקדונות
 
 **שימוש מותר רק:**
@@ -257,7 +257,7 @@ export const advanceDirectivesSectionsWarehouse: AdvanceDirectivesSectionTemplat
     content: `מכירה מיידית:
 אין צורך ברכב.
 
-מיופה הכוח ימכור במחיר שוק הוגן.
+מיופה_הכוח ימכור במחיר שוק הוגן.
 
 **תמורה:**
 העברה לחשבון הבנק.`,
@@ -273,7 +273,7 @@ export const advanceDirectivesSectionsWarehouse: AdvanceDirectivesSectionTemplat
     titleEn: 'Gift Prohibition',
     content: `איסור מתנות מנכסים:
 
-**איסור מוחלט** להעניק מתנות לכל גורם.
+**איסור מוחלט** על מיופה_הכוח להעניק מתנות לכל גורם.
 
 **למעט:**
 - מתנות סמליות (עד 500 ₪)
@@ -292,7 +292,7 @@ export const advanceDirectivesSectionsWarehouse: AdvanceDirectivesSectionTemplat
     titleEn: 'Will Protection',
     content: `איסור שינוי צוואה:
 
-**מיופה הכוח אינו רשאי:**
+**מיופה_הכוח אינו רשאי:**
 - לשנות / לבטל צוואה
 - ליצור צוואה חדשה
 - להוסיף או להסיר מוטבים
@@ -344,7 +344,7 @@ export const advanceDirectivesSectionsWarehouse: AdvanceDirectivesSectionTemplat
     titleEn: 'Flexible Residence',
     content: `העדפה להישאר בבית ככל האפשר.
 
-אם לא ניתן - מיופה הכוח יחליט על מוסד מתאים.
+אם לא ניתן - מיופה_הכוח יחליט על מוסד מתאים.
 
 החלטה בשיקול דעת + התייעצות רפואית.`,
     variables: [],
@@ -367,7 +367,7 @@ export const advanceDirectivesSectionsWarehouse: AdvanceDirectivesSectionTemplat
 - צוות מקצועי
 
 **החלטה:**
-בהחלטת מיופה כוח + התייעצות רפואית.`,
+בהחלטת מיופה_כוח + התייעצות רפואית.`,
     variables: [],
     tags: ['בית אבות', 'תנאים', 'סיעוד']
   },
@@ -417,7 +417,7 @@ export const advanceDirectivesSectionsWarehouse: AdvanceDirectivesSectionTemplat
     subcategory: 'caregiver',
     title: 'דרישות למטפלת - סטנדרט',
     titleEn: 'Standard Caregiver Requirements',
-    content: `דרישות לבחירת מטפל/ת:
+    content: `דרישות לבחירת מטפל:
 
 **ניסיון:**
 - 2 שנות ניסיון לפחות

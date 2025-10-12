@@ -257,10 +257,12 @@ export async function exportToWord(templateData: any, fieldValues: any) {
       PageNumber
     } = docx;
 
-    // פונקציית עזר ליצירת פסקה בעברית מקצועית - תיקון RTL מלא
+    // פונקציית עזר ליצירת פסקה בעברית מקצועית - תיקון RTL מלא + יישור לשני הצדדים
     const createHebrewParagraph = (text: string, options: any = {}) => {
       const paragraph = new Paragraph({
-        alignment: options.alignment || AlignmentType.RIGHT, // תמיד ימינה לעברית!
+        // יישור לשני הצדדים (Justify) לפסקאות רגילות, ימינה לכותרות
+        alignment: options.alignment || 
+                  (options.heading ? AlignmentType.RIGHT : AlignmentType.BOTH),
         bidirectional: true,
         spacing: { 
           after: options.spacingAfter || 200,

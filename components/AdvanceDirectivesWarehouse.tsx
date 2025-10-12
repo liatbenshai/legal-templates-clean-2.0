@@ -11,12 +11,14 @@ import {
   advanceDirectivesSubcategories,
   type AdvanceDirectivesSectionTemplate
 } from '@/lib/sections-warehouses/advance-directives-warehouse';
+import { applyGenderToText, type Gender } from '@/lib/hebrew-gender';
 
 interface AdvanceDirectivesWarehouseProps {
   onAddSection: (content: string, title: string) => void;
+  attorneyGender?: 'male' | 'female'; // מגדר מיופה הכוח
 }
 
-export default function AdvanceDirectivesWarehouse({ onAddSection }: AdvanceDirectivesWarehouseProps) {
+export default function AdvanceDirectivesWarehouse({ onAddSection, attorneyGender = 'male' }: AdvanceDirectivesWarehouseProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<'all' | 'property' | 'personal' | 'medical'>('all');
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>('all');
@@ -187,12 +189,15 @@ export default function AdvanceDirectivesWarehouse({ onAddSection }: AdvanceDire
                     </div>
 
                     <div className="text-gray-700 text-sm whitespace-pre-wrap bg-gray-50 p-3 rounded max-h-40 overflow-y-auto">
-                      {section.content}
+                      {applyGenderToText(section.content, attorneyGender)}
                     </div>
                   </div>
 
                   <button
-                    onClick={() => onAddSection(section.content, section.title)}
+                    onClick={() => onAddSection(
+                      applyGenderToText(section.content, attorneyGender),
+                      section.title
+                    )}
                     className="mr-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-2 shrink-0"
                   >
                     <Plus size={18} />

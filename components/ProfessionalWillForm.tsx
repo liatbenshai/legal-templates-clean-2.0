@@ -32,6 +32,7 @@ interface Heir {
   id: string;
   relation: string;
   share: string;
+  gender: 'male' | 'female'; // מגדר היורש/ת
 }
 
 interface Witness {
@@ -96,7 +97,8 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
       lastName: '',
       id: '',
       relation: '',
-      share: '100%'
+      share: '100%',
+      gender: 'male' // ברירת מחדל
     }
   ]);
 
@@ -222,7 +224,8 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
       lastName: '',
       id: '',
       relation: '',
-      share: ''
+      share: '',
+      gender: 'male' // ברירת מחדל
     }]);
   };
 
@@ -802,7 +805,7 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
                   />
                 </div>
 
-                <div className="grid md:grid-cols-3 gap-3">
+                <div className="grid md:grid-cols-4 gap-3">
                   <input
                     type="text"
                     value={heir.id}
@@ -816,6 +819,20 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
                     dir="ltr"
                     maxLength={9}
                   />
+                  
+                  {/* בחירת מגדר */}
+                  <select
+                    value={heir.gender}
+                    onChange={(e) => {
+                      const newHeirs = [...heirs];
+                      newHeirs[index].gender = e.target.value as 'male' | 'female';
+                      setHeirs(newHeirs);
+                    }}
+                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-yellow-500 focus:border-yellow-500"
+                  >
+                    <option value="male">זכר</option>
+                    <option value="female">נקבה</option>
+                  </select>
                   
                   <select
                     value={heir.relation}

@@ -11,6 +11,7 @@ interface Attorney {
   relationship: string;
   address: string;
   phone: string;
+  gender: 'male' | 'female'; // הוספת שדה מגדר
 }
 
 interface CustomSection {
@@ -29,6 +30,9 @@ export default function AdvanceDirectivesDocument() {
     maritalStatus: 'single' as 'single' | 'married' | 'divorced' | 'widowed'
   });
 
+  // מגדר מיופה כוח (לנטיות)
+  const [attorneyGender, setAttorneyGender] = useState<'male' | 'female'>('male');
+
   // מיופי כוח
   const [attorneys, setAttorneys] = useState<Attorney[]>([
     {
@@ -36,7 +40,8 @@ export default function AdvanceDirectivesDocument() {
       idNumber: '',
       relationship: '',
       address: '',
-      phone: ''
+      phone: '',
+      gender: 'male' // ברירת מחדל
     }
   ]);
 
@@ -83,7 +88,8 @@ export default function AdvanceDirectivesDocument() {
       idNumber: '',
       relationship: '',
       address: '',
-      phone: ''
+      phone: '',
+      gender: 'male' // ברירת מחדל
     }]);
   };
 
@@ -193,7 +199,34 @@ export default function AdvanceDirectivesDocument() {
 
         {/* מיופי כוח */}
         <section className="bg-green-50 p-6 rounded-lg border border-green-200 mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">✍️ מיופי כוח</h2>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-bold text-gray-900">✍️ מיופי כוח</h2>
+            
+            {/* בחירת מגדר לנטיות */}
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-700 font-medium">מגדר לנטיות:</span>
+              <button
+                onClick={() => setAttorneyGender('male')}
+                className={`px-4 py-2 rounded-lg font-bold transition ${
+                  attorneyGender === 'male'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+              >
+                זכר
+              </button>
+              <button
+                onClick={() => setAttorneyGender('female')}
+                className={`px-4 py-2 rounded-lg font-bold transition ${
+                  attorneyGender === 'female'
+                    ? 'bg-pink-600 text-white'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+              >
+                נקבה
+              </button>
+            </div>
+          </div>
 
           {attorneys.map((attorney, index) => (
             <div key={index} className="bg-white p-4 rounded-lg mb-4 border">
@@ -234,6 +267,24 @@ export default function AdvanceDirectivesDocument() {
                   className="px-3 py-2 border rounded"
                   placeholder="ת.ז"
                 />
+                
+                {/* בחירת מגדר */}
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">מגדר</label>
+                  <select
+                    value={attorney.gender}
+                    onChange={(e) => {
+                      const newAttorneys = [...attorneys];
+                      newAttorneys[index].gender = e.target.value as 'male' | 'female';
+                      setAttorneys(newAttorneys);
+                    }}
+                    className="w-full px-3 py-2 border rounded"
+                  >
+                    <option value="male">זכר</option>
+                    <option value="female">נקבה</option>
+                  </select>
+                </div>
+
                 <input
                   type="text"
                   value={attorney.relationship}
@@ -243,7 +294,7 @@ export default function AdvanceDirectivesDocument() {
                     setAttorneys(newAttorneys);
                   }}
                   className="px-3 py-2 border rounded"
-                  placeholder="יחס קרבה (בן/בת)"
+                  placeholder={attorney.gender === 'male' ? 'יחס קרבה (בן, אח)' : 'יחס קרבה (בת, אחות)'}
                 />
                 <input
                   type="tel"
@@ -299,6 +350,7 @@ export default function AdvanceDirectivesDocument() {
               onAddSection={(content, title) => {
                 setCustomSections([...customSections, { title, content }]);
               }}
+              attorneyGender={attorneys[0]?.gender || 'male'}
             />
           )}
         </section>
