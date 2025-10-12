@@ -373,18 +373,14 @@ export default function AdvanceDirectivesDocument() {
                         <div className="mb-4">
                           <SimpleAIImprover
                             initialText={section.content}
-                            onImprove={(improved) => {
+                            onAccept={(improved) => {
                               const updated = [...customSections];
                               updated[index].content = improved;
                               setCustomSections(updated);
                               setShowAI(false);
                               setEditingSection(null);
                             }}
-                            onCancel={() => {
-                              setShowAI(false);
-                              setEditingSection(null);
-                            }}
-                            context="הנחיות מקדימות - סעיף משפטי פורמלי"
+                            placeholder="ערוך את הטקסט ולחץ על שיפור"
                           />
                         </div>
                       ) : (
