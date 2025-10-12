@@ -39,6 +39,7 @@ interface Witness {
   name: string;
   id: string;
   address: string;
+  gender: 'male' | 'female'; // מגדר העד/העדה
 }
 
 interface ProfessionalWillFormProps {
@@ -106,17 +107,18 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
   const [alternativeHeirs, setAlternativeHeirs] = useState<Heir[]>([]);
 
   // עדים
-  const [witnessesGender, setWitnessesGender] = useState<'both-male' | 'both-female' | 'mixed'>('mixed');
   const [witnesses, setWitnesses] = useState<Witness[]>([
     {
       name: '',
       id: '',
-      address: ''
+      address: '',
+      gender: 'male' // ברירת מחדל
     },
     {
       name: '',
       id: '',
-      address: ''
+      address: '',
+      gender: 'male' // ברירת מחדל
     }
   ]);
 
@@ -237,7 +239,8 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
     setWitnesses(prev => [...prev, {
       name: '',
       id: '',
-      address: ''
+      address: '',
+      gender: 'male' // ברירת מחדל
     }]);
   };
 
@@ -267,7 +270,6 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
     heirsDisplayMode,
     alternativeHeirs: willType === 'mutual' ? alternativeHeirs : undefined,
     witnesses,
-    witnessesGender, // הוספת סוג העדים
     willDate,
     lawyerName,
     copyNumber,
@@ -890,21 +892,6 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
             )}
           </div>
 
-          {/* בחירת סוג העדים */}
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">סוג העדים</label>
-            <select
-              value={witnessesGender}
-              onChange={(e) => setWitnessesGender(e.target.value as 'both-male' | 'both-female' | 'mixed')}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-purple-500 focus:border-purple-500"
-              dir="rtl"
-            >
-              <option value="mixed">עדות ועדים (מעורב)</option>
-              <option value="both-male">שני עדים (גברים)</option>
-              <option value="both-female">שתי עדות (נשים)</option>
-            </select>
-          </div>
-
           <div className="space-y-4">
             {witnesses.map((witness, index) => (
               <div key={index} className="bg-white p-4 rounded-lg border border-purple-300">
@@ -920,7 +907,7 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
                   )}
                 </div>
                 
-                <div className="grid md:grid-cols-2 gap-3 mb-3">
+                <div className="grid md:grid-cols-3 gap-3 mb-3">
                   <input
                     type="text"
                     value={witness.name}
@@ -933,6 +920,20 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
                     className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-purple-500 focus:border-purple-500"
                     dir="rtl"
                   />
+                  
+                  {/* בחירת מגדר */}
+                  <select
+                    value={witness.gender}
+                    onChange={(e) => {
+                      const newWitnesses = [...witnesses];
+                      newWitnesses[index].gender = e.target.value as 'male' | 'female';
+                      setWitnesses(newWitnesses);
+                    }}
+                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-purple-500 focus:border-purple-500"
+                  >
+                    <option value="male">זכר</option>
+                    <option value="female">נקבה</option>
+                  </select>
                   
                   <input
                     type="text"

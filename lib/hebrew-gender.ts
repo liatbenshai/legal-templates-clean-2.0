@@ -116,6 +116,11 @@ export const hebrewDictionary: Record<string, GenderedWord> = {
   'מקבל': { male: 'מקבל', female: 'מקבלת', plural: 'מקבלים' },
   'המקבל': { male: 'המקבל', female: 'המקבלת', plural: 'המקבלים' },
   
+  // עדים
+  'עד': { male: 'עד', female: 'עדה', plural: 'עדים' },
+  'העד': { male: 'העד', female: 'העדה', plural: 'העדים' },
+  'חתם': { male: 'חתם', female: 'חתמה', plural: 'חתמו' },
+  
   // מונחים משפטיים - מצבים
   'זכאי': { male: 'זכאי', female: 'זכאית', plural: 'זכאים' },
   'חייב': { male: 'חייב', female: 'חייבת', plural: 'חייבים' },
