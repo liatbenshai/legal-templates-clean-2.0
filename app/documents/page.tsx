@@ -74,6 +74,14 @@ export default function DocumentsPage() {
       color: 'indigo',
       href: '/documents/power-of-attorney',
     },
+    {
+      id: 'advance-directives',
+      name: 'הנחיות מקדימות',
+      icon: FileText,
+      description: 'הנחיות מקדימות בייפוי כוח מתמשך - 23 מודולים לניהול רכוש, בריאות וחיים',
+      color: 'teal',
+      href: '/documents/advance-directives',
+    },
   ];
 
   return (

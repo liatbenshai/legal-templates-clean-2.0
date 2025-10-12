@@ -58,7 +58,7 @@ export default function HomePage() {
             <div className="text-gray-600">תבניות משפטיות</div>
           </div>
           <div className="bg-white rounded-xl p-6 text-center shadow-md">
-            <div className="text-4xl font-bold text-primary mb-2">9</div>
+            <div className="text-4xl font-bold text-primary mb-2">10</div>
             <div className="text-gray-600">קטגוריות ראשיות</div>
           </div>
           <div className="bg-white rounded-xl p-6 text-center shadow-md">
