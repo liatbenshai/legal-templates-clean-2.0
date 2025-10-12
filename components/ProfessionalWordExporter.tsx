@@ -379,27 +379,6 @@ export default function ProfessionalWordExporter({
         })
       );
 
-      // 🎯 הוספת סעיפים מהמחסן!
-      if (willData.customSections && willData.customSections.length > 0) {
-        sections.push(new Paragraph({ text: '' }));
-        sections.push(
-          new Paragraph({
-            heading: HeadingLevel.HEADING_1,
-            children: [new TextRun('סעיפים נוספים')]
-          })
-        );
-        
-        willData.customSections.forEach((section: any) => {
-          sectionNum++;
-          sections.push(
-            new Paragraph({
-              numbering: { reference: 'main-numbering', level: 0 },
-              children: [new TextRun(section.content || section.title)]
-            })
-          );
-        });
-      }
-
       // יורשים
       sections.push(new Paragraph({ text: '' }));
       sections.push(
@@ -558,6 +537,21 @@ export default function ProfessionalWordExporter({
             rows: tableRows
           })
         );
+      }
+
+      // 🎯 הוספת סעיפים מהמחסן אחרי חלוקת העיזבון!
+      if (willData.customSections && willData.customSections.length > 0) {
+        sections.push(new Paragraph({ text: '' }));
+        
+        willData.customSections.forEach((section: any) => {
+          sectionNum++;
+          sections.push(
+            new Paragraph({
+              numbering: { reference: 'main-numbering', level: 0 },
+              children: [new TextRun(section.content || section.title)]
+            })
+          );
+        });
       }
 
       // סעיפי סיום
