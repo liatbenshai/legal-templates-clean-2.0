@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-// import { Plus, X, Building, User, CreditCard, Users, FileText, Calendar, BookOpen } from 'lucide-react';
+// Icons replaced with emojis for compatibility
 import GenderSelector from './GenderSelector';
 import ProfessionalWordExporter from './ProfessionalWordExporter';
 import SectionsWarehouse from './SectionsWarehouse';
@@ -307,7 +307,7 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
                 : 'border-gray-300 hover:border-gray-400'
             }`}
           >
-            <User className="w-8 h-8 mx-auto mb-2" />
+            <span className="text-2xl mx-auto mb-2 block">👤</span>
             <div className="font-bold">צוואת יחיד</div>
             <div className="text-sm text-gray-600">למצווה בודד</div>
           </button>
@@ -320,7 +320,7 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
                 : 'border-gray-300 hover:border-gray-400'
             }`}
           >
-            <Users className="w-8 h-8 mx-auto mb-2" />
+            <span className="text-2xl mx-auto mb-2 block">👥</span>
             <div className="font-bold">צוואה הדדית</div>
             <div className="text-sm text-gray-600">לבני זוג</div>
           </button>
@@ -329,7 +329,7 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
         {/* פרטי המצווה */}
         <section className="bg-gray-50 p-6 rounded-lg border">
           <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-            <User className="w-5 h-5" />
+            <span className="text-lg">👤</span>
             פרטי המצווה{willType === 'mutual' ? ' הראשי' : ''}
           </h2>
           
@@ -400,7 +400,7 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
         {willType === 'mutual' && (
           <section className="bg-pink-50 p-6 rounded-lg border border-pink-200">
             <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-              <Users className="w-5 h-5" />
+              <span className="text-lg">👥</span>
               פרטי בן/בת הזוג
             </h2>
             
@@ -460,14 +460,14 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
         <section className="bg-green-50 p-6 rounded-lg border border-green-200">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-              <Building className="w-5 h-5" />
+              <span className="text-lg">🏢</span>
               נכסי מקרקעין
             </h2>
             <button
               onClick={addProperty}
               className="flex items-center gap-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm"
             >
-              <Plus className="w-4 h-4" />
+              <span className="text-lg">➕</span>
               הוסף נכס
             </button>
           </div>
@@ -482,7 +482,7 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
                       onClick={() => removeProperty(index)}
                       className="text-red-500 hover:text-red-700"
                     >
-                      <X className="w-4 h-4" />
+                      <span className="text-lg">❌</span>
                     </button>
                   )}
                 </div>
@@ -594,14 +594,14 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
         <section className="bg-blue-50 p-6 rounded-lg border border-blue-200">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-              <CreditCard className="w-5 h-5" />
+              <span className="text-lg">💳</span>
               חשבונות בנק
             </h2>
             <button
               onClick={addBankAccount}
               className="flex items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm"
             >
-              <Plus className="w-4 h-4" />
+              <span className="text-lg">➕</span>
               הוסף חשבון
             </button>
           </div>
@@ -616,7 +616,7 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
                       onClick={() => removeBankAccount(index)}
                       className="text-red-500 hover:text-red-700"
                     >
-                      <X className="w-4 h-4" />
+                      <span className="text-lg">❌</span>
                     </button>
                   )}
                 </div>
@@ -698,14 +698,14 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
         <section className="bg-yellow-50 p-6 rounded-lg border border-yellow-200">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-              <Users className="w-5 h-5" />
+              <span className="text-lg">👥</span>
               יורשים
             </h2>
             <button
               onClick={addHeir}
               className="flex items-center gap-2 px-3 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition text-sm"
             >
-              <Plus className="w-4 h-4" />
+              <span className="text-lg">➕</span>
               הוסף יורש
             </button>
           </div>
@@ -756,7 +756,7 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
                       onClick={() => removeHeir(index)}
                       className="text-red-500 hover:text-red-700"
                     >
-                      <X className="w-4 h-4" />
+                      <span className="text-lg">❌</span>
                     </button>
                   )}
                 </div>
@@ -846,7 +846,7 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
         <section className="bg-purple-50 p-6 rounded-lg border border-purple-200">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-              <FileText className="w-5 h-5" />
+              <span className="text-lg">📄</span>
               עדים לצוואה
             </h2>
             {witnesses.length < 3 && (
@@ -854,7 +854,7 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
                 onClick={addWitness}
                 className="flex items-center gap-2 px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition text-sm"
               >
-                <Plus className="w-4 h-4" />
+                <span className="text-lg">➕</span>
                 הוסף עד
               </button>
             )}
@@ -870,7 +870,7 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
                       onClick={() => removeWitness(index)}
                       className="text-red-500 hover:text-red-700"
                     >
-                      <X className="w-4 h-4" />
+                      <span className="text-lg">❌</span>
                     </button>
                   )}
                 </div>
@@ -924,7 +924,7 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
         {/* פרטי חתימה */}
         <section className="bg-gray-50 p-6 rounded-lg border border-gray-300">
           <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-            <Calendar className="w-5 h-5" />
+            <span className="text-lg">📅</span>
             פרטי חתימה
           </h2>
           
@@ -1000,7 +1000,7 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
         <section className="bg-indigo-50 p-6 rounded-lg border border-indigo-200">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-              <BookOpen className="w-5 h-5" />
+              <span className="text-lg">📖</span>
               מחסן סעיפים משפטיים
             </h2>
             <button
@@ -1036,7 +1036,7 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
                       onClick={() => setCustomSections(prev => prev.filter((_, i) => i !== index))}
                       className="text-red-500 hover:text-red-700"
                     >
-                      <X className="w-4 h-4" />
+                      <span className="text-lg">❌</span>
                     </button>
                   </div>
                   
