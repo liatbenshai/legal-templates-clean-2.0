@@ -654,10 +654,51 @@ export default function ProfessionalWordExporter({
         })
       );
 
+      // חתימת המצווה - מיד אחרי "ולראיה באתי על החתום"
+      sections.push(new Paragraph({ text: '' }));
+      sections.push(new Paragraph({ text: '' }));
+      if (willData.type === 'mutual') {
+        sections.push(
+          new Paragraph({
+            alignment: AlignmentType.CENTER,
+            children: [
+              new TextRun(`${willData.testator?.fullName || '[שם 1]'}                    ${willData.spouse?.fullName || '[שם 2]'}`)
+            ]
+          })
+        );
+        sections.push(
+          new Paragraph({
+            alignment: AlignmentType.CENTER,
+            children: [
+              new TextRun('________________                    ________________')
+            ],
+            spacing: { after: SPACING.betweenParagraphs * 2 }
+          })
+        );
+      } else {
+        sections.push(
+          new Paragraph({
+            alignment: AlignmentType.CENTER,
+            children: [
+              new TextRun(willData.testator?.fullName || '[שם מלא המצווה]')
+            ]
+          })
+        );
+        sections.push(
+          new Paragraph({
+            alignment: AlignmentType.CENTER,
+            children: [
+              new TextRun('________________')
+            ],
+            spacing: { after: SPACING.betweenParagraphs * 2 }
+          })
+        );
+      }
+      
+      // הצהרת העדים - עם התאמה לסוג העדים
       sections.push(new Paragraph({ text: '' }));
       sections.push(new Paragraph({ text: '' }));
       
-      // הצהרת העדים - עם התאמה לסוג העדים
       const witnessGender = willData.witnessesGender || 'mixed';
       let witnessDeclaration = '';
       
@@ -676,8 +717,32 @@ export default function ProfessionalWordExporter({
         })
       );
 
+      // אנו הח"מ + שמות העדים
       sections.push(new Paragraph({ text: '' }));
+      sections.push(
+        new Paragraph({
+          children: [new TextRun('אנו הח"מ:')],
+          spacing: { after: 180 }
+        })
+      );
+
       if (willData.witnesses && willData.witnesses.length >= 2) {
+        willData.witnesses.forEach((witness: any, index: number) => {
+          sections.push(
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: `${index + 1}. ${witness.name || '[שם מלא עד]'}, ת.ז. ${witness.id || '[מספר]'}, מרחוב: ${witness.address || '[כתובת מלאה]'}`,
+                  bold: true
+                })
+              ],
+              spacing: { after: 120 }
+            })
+          );
+        });
+        
+        // חתימות העדים
+        sections.push(new Paragraph({ text: '' }));
         sections.push(
           new Paragraph({
             alignment: AlignmentType.CENTER,
@@ -704,7 +769,7 @@ export default function ProfessionalWordExporter({
         );
       }
 
-      // ✅ הוספת alignment RIGHT לכל הפסקאות שאין להן alignment מפורש
+      // ✅ הפסקאות כבר מוגדרות RTL בסגנון הברירת מחדל  
       const finalSections = sections;
 
       // 📄 יצירת המסמך
@@ -723,7 +788,9 @@ export default function ProfessionalWordExporter({
                 bottom: 1440, 
                 left: 1440 
               }
-            }
+            },
+            rtl: true,
+            bidiVisual: true
           },
           headers: {
             default: new Header({
