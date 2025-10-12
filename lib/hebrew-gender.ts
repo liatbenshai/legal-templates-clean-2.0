@@ -119,7 +119,7 @@ export const hebrewDictionary: Record<string, GenderedWord> = {
   // עדים
   'עד': { male: 'עד', female: 'עדה', plural: 'עדים' },
   'העד': { male: 'העד', female: 'העדה', plural: 'העדים' },
-  'חתם': { male: 'חתם', female: 'חתמה', plural: 'חתמו' },
+  // 'חתם' already defined above in line 22
   
   // מונחים משפטיים - מצבים
   'זכאי': { male: 'זכאי', female: 'זכאית', plural: 'זכאים' },
