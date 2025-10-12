@@ -76,9 +76,9 @@ export default function DocumentsPage() {
     },
     {
       id: 'advance-directives',
-      name: 'הנחיות מקדימות',
+      name: 'הנחיות מקדימות 📋',
       icon: FileText,
-      description: 'הנחיות מקדימות בייפוי כוח מתמשך - 23 מודולים לניהול רכוש, בריאות וחיים',
+      description: 'ייפוי כוח מתמשך - מסמך מקיף לניהול רכוש, בריאות וחיים עם מחסן סעיפים',
       color: 'teal',
       href: '/documents/advance-directives',
     },

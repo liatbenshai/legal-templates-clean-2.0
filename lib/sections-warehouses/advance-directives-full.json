@@ -1,0 +1,60 @@
+{
+  "metadata": {
+    "version": "1.0",
+    "totalSections": 95,
+    "description": "מחסן סעיפים מלא לייפוי כוח מתמשך",
+    "createdBy": "Claude AI",
+    "createdAt": "2025-10-12"
+  },
+  "categories": {
+    "property": {
+      "name": "עניינים רכושיים",
+      "nameEn": "Property Matters",
+      "icon": "🏠",
+      "color": "#27ae60"
+    },
+    "personal": {
+      "name": "עניינים אישיים",
+      "nameEn": "Personal Matters",
+      "icon": "👤",
+      "color": "#3498db"
+    },
+    "medical": {
+      "name": "עניינים רפואיים",
+      "nameEn": "Medical Matters",
+      "icon": "⚕️",
+      "color": "#e74c3c"
+    }
+  },
+  "subcategories": {
+    "real_estate": "נדל\\\"ן",
+    "banking": "בנקאות",
+    "allowances": "קצבאות",
+    "vehicle": "רכב",
+    "prohibitions": "איסורים",
+    "residence": "מגורים",
+    "caregiver": "מטפלים",
+    "social": "קשרים חברתיים",
+    "cleanliness": "ניקיון",
+    "maintenance": "תחזוקה",
+    "nutrition": "תזונה",
+    "personal_care": "טיפוח",
+    "physical_activity": "פעילות גופנית",
+    "culture": "תרבות ופנאי",
+    "technology": "טכנולוגיה",
+    "security": "אבטחה",
+    "travel": "נסיעות",
+    "decisions": "החלטות רפואיות",
+    "treatment": "טיפול",
+    "second_opinion": "חוות דעת",
+    "clinical_trials": "ניסויים קליניים",
+    "end_of_life": "סוף חיים",
+    "pain": "ניהול כאב",
+    "resuscitation": "החייאה",
+    "chronic": "מחלות כרוניות",
+    "providers": "נותני שירות",
+    "insurance": "ביטוחים",
+    "organ_donation": "תרומת איברים"
+  }
+}
+

@@ -84,7 +84,15 @@ export default function ProfessionalWordExporter({
         ]
       };
 
-      // ❌ מחק את הפונקציה הלא בשימוש
+      // 🔧 פונקציית עזר ליצירת TextRun עם RTL
+      const createRTLTextRun = (text: string, options: any = {}) => {
+        return new TextRun({
+          text,
+          font: 'David',
+          rightToLeft: true,
+          ...options
+        });
+      };
 
       // 🎨 הגדרת סגנונות מקצועיים
       const styles = {
@@ -769,7 +777,8 @@ export default function ProfessionalWordExporter({
         );
       }
 
-      // ✅ הפסקאות כבר מוגדרות RTL בסגנון הברירת מחדל  
+      // ✅ הסגנון הברירת מחדל כבר כולל RTL
+      // אם Word לא מכבד את זה, המשתמש יצטרך לשנות את כיוון הטקסט ידנית ב-Word
       const finalSections = sections;
 
       // 📄 יצירת המסמך
