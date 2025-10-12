@@ -36,7 +36,7 @@ export default function ProfessionalWordExporter({
         title: 40,      // 20pt
         heading1: 32,   // 16pt
         heading2: 28,   // 14pt
-        normal: 28,     // 14pt (גדול יותר מהמקור!)
+        normal: 26,     // 13pt (David 13)
         small: 24       // 12pt
       };
 
@@ -82,6 +82,15 @@ export default function ProfessionalWordExporter({
             ]
           }
         ]
+      };
+
+      // 🔧 פונקציה עזר ליצירת פסקה RTL
+      const createRTLParagraph = (options: any) => {
+        return new Paragraph({
+          ...options,
+          bidirectional: true,
+          alignment: options.alignment || AlignmentType.RIGHT
+        });
       };
 
       // 🎨 הגדרת סגנונות מקצועיים
@@ -330,8 +339,15 @@ export default function ProfessionalWordExporter({
         })
       );
 
-      // נכסים
+      // פרטי העיזבון
       sections.push(new Paragraph({ text: '' }));
+      sections.push(
+        new Paragraph({
+          heading: HeadingLevel.HEADING_1,
+          children: [new TextRun('פרטי העיזבון')]
+        })
+      );
+      
       sectionNum++;
       sections.push(
         new Paragraph({
@@ -395,7 +411,7 @@ export default function ProfessionalWordExporter({
       sections.push(
         new Paragraph({
           children: [
-            new TextRun(`הואיל והנני מבקש${gender ? 'ת' : ''} להסדיר את חלוקת העיזבון לאחר מותי, הריני מצווה${gender ? 'ה' : ''} בזאת את כלל עזבוני, כפי שיהא במועד פטירתי כמפורט להלן:`)
+            new TextRun(`הואיל והנני מבקש${gender ? 'ת' : ''} להסדיר את חלוקת העיזבון לאחר מותי, הריני מצווה בזאת את כלל עזבוני, כפי שיהא במועד פטירתי כמפורט להלן:`)
           ],
           spacing: { after: SPACING.betweenParagraphs }
         })
@@ -416,12 +432,6 @@ export default function ProfessionalWordExporter({
       // 📊 טבלת יורשים - עכשיו ממש מקצועית!
       if (willData.heirs && willData.heirs.length > 0) {
         sections.push(new Paragraph({ text: '' }));
-        sections.push(
-          new Paragraph({
-            children: [new TextRun({ text: 'רשימת היורשים:', bold: true })],
-            spacing: { after: 180 }
-          })
-        );
 
         // יצירת טבלה אמיתית בעברית
         const tableBorder = { style: BorderStyle.SINGLE, size: 6, color: COLORS.gray };
@@ -596,26 +606,7 @@ export default function ProfessionalWordExporter({
         })
       );
 
-      // חתימות
-      sections.push(new Paragraph({ text: '' }));
-      sections.push(new Paragraph({ text: '' }));
-      sections.push(
-        new Paragraph({
-          heading: HeadingLevel.HEADING_1,
-          children: [new TextRun('חתימות')]
-        })
-      );
-
-      sections.push(
-        new Paragraph({
-          children: [
-            new TextRun(`ולראיה באתי על החתום מרצוני הטוב והחופשי, בפני העדות החתומות הנקובות בשמותיהן וכתובותיהן בלי להיות נתונה לכל השפעה בלתי הוגנת, לחץ או כפיה שהם וכשאינני סובלת מאיזו חולשה גופנית או רוחנית הגורעת או המונעת ממני את כושרי המשפטי לערוך צוואה בעלת תוקף חוקי, לאחר שהצהרתי בנוכחות שתי עדות הצוואה המפורטות להלן כי זו צוואתי, וביקשתי מהן לאשר בחתימתן שכך הצהרתי וחתמתי בפניהן.`)
-          ],
-          spacing: { after: SPACING.betweenParagraphs * 2 }
-        })
-      );
-
-      // שורות חתימה
+      // שורות חתימה המצווה
       sections.push(new Paragraph({ text: '' }));
       if (willData.type === 'mutual') {
         sections.push(
@@ -686,7 +677,22 @@ export default function ProfessionalWordExporter({
         });
       }
 
+      // סעיף סיום - ולראיה באתי על החתום
       sections.push(new Paragraph({ text: '' }));
+      sectionNum++;
+      sections.push(
+        new Paragraph({
+          numbering: { reference: 'main-numbering', level: 0 },
+          children: [
+            new TextRun(`ולראיה באתי על החתום מרצוני הטוב והחופשי, בפני העדות החתומות הנקובות בשמותיהן וכתובותיהן בלי להיות ${gender ? 'נתונה' : 'נתון'} לכל השפעה בלתי הוגנת, לחץ או כפיה שהם וכשאינני ${gender ? 'סובלת' : 'סובל'} מאיזו חולשה גופנית או רוחנית הגורעת או המונעת ממני את כושרי המשפטי לערוך צוואה בעלת תוקף חוקי, לאחר שהצהרתי בנוכחות שתי עדות הצוואה המפורטות להלן כי זו צוואתי, וביקשתי מהן לאשר בחתימתן שכך הצהרתי וחתמתי בפניהן.`)
+          ]
+        })
+      );
+
+      sections.push(new Paragraph({ text: '' }));
+      sections.push(new Paragraph({ text: '' }));
+      
+      // הצהרת העדים
       sections.push(
         new Paragraph({
           children: [
@@ -723,6 +729,17 @@ export default function ProfessionalWordExporter({
           })
         );
       }
+
+      // הוספת bidirectional לכל הפסקאות
+      const finalSections = sections.map((section: any) => {
+        if (section.constructor.name === 'Paragraph') {
+          return new Paragraph({
+            ...section,
+            bidirectional: true
+          });
+        }
+        return section;
+      });
 
       // 📄 יצירת המסמך
       const doc = new Document({
@@ -771,7 +788,7 @@ export default function ProfessionalWordExporter({
               ]
             })
           },
-          children: sections
+          children: finalSections
         }]
       });
 
