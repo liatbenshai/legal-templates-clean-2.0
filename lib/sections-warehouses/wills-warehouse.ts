@@ -415,17 +415,7 @@ export const willsSectionsWarehouse: WillSectionTemplate[] = [
     aiPrompt: 'כתוב בצורה אישית, חמה ומרגשת, שמור על כבוד וערכים משפחתיים',
     usageInstructions: 'השתמש לסיום הצוואה במסר אישי למשפחה',
     willTypes: ['individual', 'mutual']
-  }
-];
-
-/**
- * פונקציה לקבלת סעיפים לפי סוג צוואה
- */
-export function getWillSectionsForType(willType: 'individual' | 'mutual'): WillSectionTemplate[] {
-  return willsSectionsWarehouse.filter(section => 
-    section.willTypes.includes(willType)
-  );
-}
+  },
 
   // === סעיפים חדשים מהמחסן המשודרג ===
   
@@ -632,6 +622,15 @@ export function getWillSectionsForType(willType: 'individual' | 'mutual'): WillS
     willTypes: ['individual', 'mutual']
   }
 ];
+
+/**
+ * פונקציה לקבלת סעיפים לפי סוג צוואה
+ */
+export function getWillSectionsForType(willType: 'individual' | 'mutual'): WillSectionTemplate[] {
+  return willsSectionsWarehouse.filter(section => 
+    section.willTypes.includes(willType)
+  );
+}
 
 /**
  * פונקציה לקבלת סעיפים לפי קטגוריה
