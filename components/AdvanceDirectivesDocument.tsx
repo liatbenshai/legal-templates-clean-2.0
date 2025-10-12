@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import AdvanceDirectivesWarehouse from './AdvanceDirectivesWarehouse';
 import ProfessionalWordExporter from './ProfessionalWordExporter';
+import SimpleAIImprover from './SimpleAIImprover';
 
 interface Attorney {
   fullName: string;
@@ -45,6 +46,36 @@ export default function AdvanceDirectivesDocument() {
   // הצגת מחסן
   const [showWarehouse, setShowWarehouse] = useState(true);
 
+  // AI Improver
+  const [showAI, setShowAI] = useState(false);
+  const [editingSection, setEditingSection] = useState<number | null>(null);
+
+  // טעינה מ-localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('advanceDirectivesDraft');
+    if (saved) {
+      try {
+        const data = JSON.parse(saved);
+        if (data.principal) setPrincipal(data.principal);
+        if (data.attorneys) setAttorneys(data.attorneys);
+        if (data.sections) setCustomSections(data.sections);
+      } catch (error) {
+        console.error('Error loading draft:', error);
+      }
+    }
+  }, []);
+
+  // שמירה אוטומטית ל-localStorage
+  useEffect(() => {
+    const draftData = {
+      principal,
+      attorneys,
+      sections: customSections,
+      lastSaved: new Date().toISOString()
+    };
+    localStorage.setItem('advanceDirectivesDraft', JSON.stringify(draftData));
+  }, [principal, attorneys, customSections]);
+
   // הוספת מיופה כוח
   const addAttorney = () => {
     setAttorneys([...attorneys, {
@@ -79,6 +110,10 @@ export default function AdvanceDirectivesDocument() {
           <p className="text-gray-600">
             צור מסמך מותאם אישית עם סעיפים מוכנים ממחסן
           </p>
+          <div className="mt-3 inline-flex items-center gap-2 px-4 py-2 bg-green-100 text-green-800 rounded-full text-sm">
+            <span>💾</span>
+            <span className="font-medium">שמירה אוטומטית פעילה</span>
+          </div>
         </div>
 
         {/* פרטי ממנה */}
@@ -281,16 +316,49 @@ export default function AdvanceDirectivesDocument() {
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
                       <h4 className="font-bold text-gray-900 mb-2">{section.title}</h4>
-                      <div className="text-gray-700 text-sm whitespace-pre-wrap">
-                        {section.content}
-                      </div>
+                      
+                      {editingSection === index && showAI ? (
+                        <div className="mb-4">
+                          <SimpleAIImprover
+                            initialText={section.content}
+                            onImprove={(improved) => {
+                              const updated = [...customSections];
+                              updated[index].content = improved;
+                              setCustomSections(updated);
+                              setShowAI(false);
+                              setEditingSection(null);
+                            }}
+                            onCancel={() => {
+                              setShowAI(false);
+                              setEditingSection(null);
+                            }}
+                            context="הנחיות מקדימות - סעיף משפטי פורמלי"
+                          />
+                        </div>
+                      ) : (
+                        <div className="text-gray-700 text-sm whitespace-pre-wrap">
+                          {section.content}
+                        </div>
+                      )}
                     </div>
-                    <button
-                      onClick={() => removeSection(index)}
-                      className="mr-4 text-red-600 hover:text-red-800"
-                    >
-                      🗑️
-                    </button>
+                    <div className="mr-4 flex gap-2">
+                      <button
+                        onClick={() => {
+                          setEditingSection(index);
+                          setShowAI(true);
+                        }}
+                        className="text-purple-600 hover:text-purple-800 px-3 py-1 border border-purple-300 rounded hover:bg-purple-50 transition text-sm"
+                        title="שפר עם AI"
+                      >
+                        ✨ AI
+                      </button>
+                      <button
+                        onClick={() => removeSection(index)}
+                        className="text-red-600 hover:text-red-800"
+                      >
+                        🗑️
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}

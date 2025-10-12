@@ -135,6 +135,10 @@ export default function Navbar() {
                 <CheckCircle className="w-4 h-4 text-green-600" />
                 <span>תצהיר</span>
               </Link>
+              <Link href="/documents/advance-directives" className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition">
+                <FileText className="w-4 h-4 text-teal-600" />
+                <span>הנחיות מקדימות</span>
+              </Link>
               <div className="border-t border-gray-200 my-2"></div>
               <Link href="/documents" className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition text-blue-600">
                 <FileText className="w-4 h-4" />
