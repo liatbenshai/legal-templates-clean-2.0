@@ -104,6 +104,7 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
   const [alternativeHeirs, setAlternativeHeirs] = useState<Heir[]>([]);
 
   // עדים
+  const [witnessesGender, setWitnessesGender] = useState<'both-male' | 'both-female' | 'mixed'>('mixed');
   const [witnesses, setWitnesses] = useState<Witness[]>([
     {
       name: '',
@@ -263,6 +264,7 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
     heirsDisplayMode,
     alternativeHeirs: willType === 'mutual' ? alternativeHeirs : undefined,
     witnesses,
+    witnessesGender, // הוספת סוג העדים
     willDate,
     lawyerName,
     copyNumber,
@@ -869,6 +871,21 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
                 הוסף עד
               </button>
             )}
+          </div>
+
+          {/* בחירת סוג העדים */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">סוג העדים</label>
+            <select
+              value={witnessesGender}
+              onChange={(e) => setWitnessesGender(e.target.value as 'both-male' | 'both-female' | 'mixed')}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-purple-500 focus:border-purple-500"
+              dir="rtl"
+            >
+              <option value="mixed">עדות ועדים (מעורב)</option>
+              <option value="both-male">שני עדים (גברים)</option>
+              <option value="both-female">שתי עדות (נשים)</option>
+            </select>
           </div>
 
           <div className="space-y-4">
