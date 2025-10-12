@@ -23,9 +23,6 @@ export default function ProfessionalWordExporter({
       const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell,
               AlignmentType, WidthType, BorderStyle, Header, Footer, PageNumber } = await import('docx');
 
-      // יצירת תוכן הצוואה המלא
-      const content = generateWillContent(willData);
-      
       // פונקציה ליצירת פסקה בעברית (כמו בהוראות קלוד)
       const createHebrewParagraph = (text: string, bold = false, size = 13) => {
         return new Paragraph({
@@ -43,6 +40,9 @@ export default function ProfessionalWordExporter({
           ]
         });
       };
+
+      // יצירת תוכן הצוואה המלא
+      const content = generateWillContent(willData);
 
       // יצירת טבלה בעברית (כמו בהוראות קלוד)
       const createHebrewTable = (headers: string[], data: string[][]) => {
