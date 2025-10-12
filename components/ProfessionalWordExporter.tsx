@@ -796,8 +796,9 @@ export default function ProfessionalWordExporter({
                 right: 1440,  
                 bottom: 1440, 
                 left: 1440 
-              },
-              rightToLeft: true // ✅ כיוון RTL לכל הדף!
+              }
+              // Note: rightToLeft is not supported in this docx version
+              // RTL is handled via textDirection and alignment instead
             }
           },
           headers: {
