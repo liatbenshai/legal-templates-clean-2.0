@@ -797,9 +797,11 @@ export default function ProfessionalWordExporter({
                 bottom: 1440, 
                 left: 1440 
               }
-            },
-            // RTL handled via paragraph alignment and TextRun rightToLeft property
-            textDirection: 'rtl' as any
+            }
+            // RTL מטופל אוטומטית דרך:
+            // 1. alignment: AlignmentType.RIGHT/BOTH בכל פסקה
+            // 2. rightToLeft: true בכל TextRun
+            // 3. bidirectional: true בכל פסקה
           },
           headers: {
             default: new Header({
