@@ -1,0 +1,149 @@
+{
+  "id": "witnesses-warehouse-upgraded",
+  "title": "מחסן עדים משודרג",
+  "description": "תבניות עדים מבוססות על צוואות אמיתיות",
+  "version": "3.0.0",
+  
+  "defaultWitnesses": [
+    {
+      "full_name": "לודמילה צאצאשווילי",
+      "id_number": "317070118",
+      "address": "ביל\"ו 11, קריית אתא",
+      "sourceDoc": "כל הצוואות"
+    },
+    {
+      "full_name": "ליאת בן-שי",
+      "id_number": "021376785",
+      "address": "שד' בן גוריון 62, קריית ביאליק",
+      "sourceDoc": "כל הצוואות"
+    }
+  ],
+  
+  "items": [
+    {
+      "id": "W1-standard",
+      "title": "עדים סטנדרטי (2 עדים)",
+      "witnessCount": 2,
+      "format": "{{witness_number}}. {{full_name}}, ת.ז. {{id_number}}, מרחוב: {{address}}",
+      "fields": ["full_name", "id_number", "address"],
+      "declaration": "אנו מעידים/ות בזאת שהמצווה חתם/ה בפנינו מרצונו/ה החופשי.",
+      "category": "witness",
+      "witnessType": "individual",
+      "sourceDoc": "כל הצוואות",
+      "tags": ["סטנדרטי", "2 עדים", "בסיסי"]
+    },
+    {
+      "id": "W2-detailed",
+      "title": "עדים מפורט (עם טלפון)",
+      "witnessCount": 2,
+      "format": "{{witness_number}}. {{full_name}}, ת.ז. {{id_number}}, מרחוב: {{address}}, טלפון: {{phone}}",
+      "fields": ["full_name", "id_number", "address", "phone"],
+      "declaration": "אנו מעידים/ות בזאת שהמצווה חתם/ה בפנינו מרצונו/ה החופשי ללא כל לחץ ו/או כפיה מכל גורם שהוא, והצהיר/ה כי זו צוואתו/ה.\n\nאנו מצהירים/ות כי אנו לא קטינים/ות ולא פסולי/ות דין וכי אין לאף אחד/ת מאיתנו כל טובת הנאה בעיזבון של המצווה.",
+      "category": "witness",
+      "witnessType": "individual",
+      "sourceDoc": "בלס, טלמור",
+      "tags": ["מפורט", "טלפון", "הצהרה מלאה"]
+    },
+    {
+      "id": "W3-couple",
+      "title": "זוג עדים",
+      "witnessCount": 2,
+      "format": "1. {{husband_name}}, ת.ז. {{husband_id}}, מרחוב: {{address}}\n2. {{wife_name}}, ת.ז. {{wife_id}}, מרחוב: {{address}}",
+      "fields": ["husband_name", "husband_id", "wife_name", "wife_id", "address"],
+      "declaration": "אנו, בני זוג נשואים, מעידים בזאת שהמצווה חתם בפנינו מרצונו החופשי.",
+      "category": "witness",
+      "witnessType": "couple",
+      "sourceDoc": "קרמר",
+      "tags": ["זוג", "נשואים", "בני זוג"]
+    },
+    {
+      "id": "W4-default-actual",
+      "title": "העדות הקבועות (ממשיות)",
+      "witnessCount": 2,
+      "witnesses": [
+        {
+          "number": 1,
+          "full_name": "לודמילה צאצאשווילי",
+          "id_number": "317070118",
+          "address": "ביל\"ו 11, קריית אתא"
+        },
+        {
+          "number": 2,
+          "full_name": "ליאת בן-שי",
+          "id_number": "021376785",
+          "address": "שד' בן גוריון 62, קריית ביאליק"
+        }
+      ],
+      "declaration": "אנו מעידות בזאת שהמצווה חתם/ה בפנינו מרצונו/ה החופשי ללא כל לחץ ו/או כפיה מכל גורם שהוא, והצהיר/ה כי זו צוואתו/ה.\n\nאנו מצהירות כי אנו לא קטינות ולא פסולות דין וכי אין לאף אחת מאיתנו כל טובת הנאה בעיזבון של המצווה. אנו חותמות בתור עדות לצוואה בנוכחותו/ה של המצווה ובנוכחות כל אחת מאיתנו.",
+      "category": "witness",
+      "witnessType": "individual",
+      "isPrefilled": true,
+      "sourceDoc": "כל הצוואות",
+      "tags": ["קבוע", "ממשי", "מוכן"]
+    },
+    {
+      "id": "W5-minimal",
+      "title": "עדים מינימלי (שם בלבד)",
+      "witnessCount": 2,
+      "format": "{{witness_number}}. {{full_name}}",
+      "fields": ["full_name"],
+      "declaration": "אנו מעידים כי המצווה חתם בפנינו.",
+      "category": "witness",
+      "witnessType": "individual",
+      "sourceDoc": "מנצור",
+      "tags": ["מינימלי", "פשוט", "קצר"]
+    }
+  ],
+  
+  "dateFormats": [
+    {
+      "id": "full-date",
+      "template": "היום: {{day}} לחודש: {{month}}, שנת: {{year}}",
+      "variables": ["day", "month", "year"],
+      "example": "היום: 11 לחודש: אוקטובר, שנת: 2025",
+      "sourceDoc": "כל הצוואות"
+    },
+    {
+      "id": "short-date",
+      "template": "{{day}}/{{month}}/{{year}}",
+      "variables": ["day", "month", "year"],
+      "example": "11/10/2025",
+      "sourceDoc": "מנצור"
+    },
+    {
+      "id": "hebrew-date",
+      "template": "היום {{hebrew_day}} לחודש {{hebrew_month}} שנת {{hebrew_year}}",
+      "variables": ["hebrew_day", "hebrew_month", "hebrew_year"],
+      "example": "היום כ\"ז לחודש תשרי שנת תשפ\"ו",
+      "sourceDoc": "דתיות"
+    }
+  ],
+  
+  "witnessRequirements": {
+    "minimumAge": 18,
+    "mentalCapacity": "כשיר דין",
+    "cannotBe": [
+      "קטין",
+      "פסול דין",
+      "בעל טובת הנאה בעיזבון",
+      "קרוב משפחה מדרגה ראשונה של המצווה",
+      "יורש בצוואה"
+    ],
+    "mustBe": [
+      "בן 18 ומעלה",
+      "כשיר דין",
+      "נוכח בעת החתימה",
+      "מבין את משמעות העדות"
+    ]
+  },
+  
+  "metadata": {
+    "createdAt": "2025-10-11T17:25:00Z",
+    "version": "3.0.0",
+    "totalItems": 5,
+    "basedOn": "9 real wills",
+    "language": "he",
+    "jurisdiction": "IL"
+  }
+}
+
