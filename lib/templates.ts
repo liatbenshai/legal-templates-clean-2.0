@@ -23,6 +23,13 @@ export const categories: TemplateCategory[] = [
     count: 0,
     description: 'ייפויי כוח כלליים, מיוחדים ובלתי חוזרים'
   },
+  {
+    id: 'advance-directives',
+    name: 'הנחיות מקדימות',
+    icon: '📋',
+    count: 1,
+    description: 'הנחיות מקדימות בייפוי כוח מתמשך - ניהול רכוש, בריאות וחיים אישיים (23 מודולים)'
+  },
   { 
     id: 'contracts', 
     name: 'הסכמים', 
