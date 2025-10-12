@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { FileDown, FileText, AlertCircle } from 'lucide-react';
+// Icons replaced with emojis for compatibility
 
 interface ProfessionalWordExporterProps {
   willData: any;
@@ -29,7 +29,7 @@ export default function ProfessionalWordExporter({
       // פונקציה ליצירת פסקה בעברית (כמו בהוראות קלוד)
       const createHebrewParagraph = (text: string, bold = false, size = 13) => {
         return new Paragraph({
-          alignment: bold ? AlignmentType.RIGHT : AlignmentType.JUSTIFIED, // כותרות ימינה, טקסט רגיל לשני הצדדים
+          alignment: AlignmentType.RIGHT, // תמיד ימינה לעברית
           bidirectional: true,
           spacing: { after: text.trim() === '' ? 120 : 60 },
           children: [
@@ -203,7 +203,7 @@ export default function ProfessionalWordExporter({
             default: new Footer({
               children: [
                 new Paragraph({
-                  alignment: AlignmentType.CENTER,
+                  alignment: AlignmentType.RIGHT,
                   bidirectional: true,
                   children: [
                     new TextRun({ 

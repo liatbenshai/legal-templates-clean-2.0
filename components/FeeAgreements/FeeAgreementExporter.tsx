@@ -87,7 +87,7 @@ export async function exportFeeAgreementToWord(agreementText: string, fileName: 
           trimmedLine.startsWith('לפיכך הוסכם')) {
         paragraphs.push(createHebrewParagraph(trimmedLine, {
           fontSize: 13,
-          alignment: AlignmentType.JUSTIFIED
+          alignment: AlignmentType.RIGHT
         }));
         continue;
       }
@@ -108,7 +108,7 @@ export async function exportFeeAgreementToWord(agreementText: string, fileName: 
         paragraphs.push(createHebrewParagraph(trimmedLine, {
           bold: false,
           fontSize: 13,
-          alignment: AlignmentType.JUSTIFIED
+          alignment: AlignmentType.RIGHT
         }));
         continue;
       }
@@ -126,7 +126,7 @@ export async function exportFeeAgreementToWord(agreementText: string, fileName: 
       // שורות רגילות
       paragraphs.push(createHebrewParagraph(trimmedLine, {
         fontSize: 13,
-        alignment: AlignmentType.JUSTIFIED
+        alignment: AlignmentType.RIGHT
       }));
     }
 

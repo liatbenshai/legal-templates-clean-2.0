@@ -138,7 +138,17 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
   const [sectionsWarehouse, setSectionsWarehouse] = useState<any>(null);
   const [showWarehouse, setShowWarehouse] = useState(false);
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
+  const [variablesModal, setVariablesModal] = useState<{
+    section: { id: string; title: string; content: string; variables: string[] };
+    values: Record<string, string>;
+  } | null>(null);
   
+  // פונקציה לחילוץ משתנים מתוכן
+  const extractVariablesFromContent = (content: string): string[] => {
+    const matches = content.match(/\{\{([^}]+)\}\}/g);
+    return matches ? [...new Set(matches.map(match => match.replace(/\{\{|\}\}/g, '')))] : [];
+  };
+
   // טעינת תבניות JSON
   useEffect(() => {
     loadTemplates();
@@ -1092,10 +1102,26 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
                       key={item.id}
                       className="bg-white p-4 rounded-lg border border-purple-200 hover:border-purple-400 cursor-pointer transition"
                       onClick={() => {
-                        setCustomSections(prev => [...prev, {
-                          title: `${item.id}: ${item.title}`,
-                          content: item.content
-                        }]);
+                        // בדיקה אם יש משתנים שצריכים להשלים
+                        const variables = extractVariablesFromContent(item.content);
+                        if (variables.length > 0) {
+                          // פתיחת חלון למילוי משתנים
+                          setVariablesModal({
+                            section: {
+                              id: item.id,
+                              title: item.title,
+                              content: item.content,
+                              variables: variables
+                            },
+                            values: {}
+                          });
+                        } else {
+                          // אין משתנים - הוספה ישירה
+                          setCustomSections(prev => [...prev, {
+                            title: `${item.id}: ${item.title}`,
+                            content: item.content
+                          }]);
+                        }
                       }}
                     >
                       <div className="flex items-start justify-between mb-2">
@@ -1204,6 +1230,101 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
           />
         </div>
       </div>
+
+      {/* חלון מילוי משתנים */}
+      {variablesModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <h3 className="text-xl font-bold text-gray-900 mb-4">
+              השלמת פרטים לסעיף: {variablesModal.section.title}
+            </h3>
+            
+            <div className="space-y-4 mb-6">
+              {variablesModal.section.variables.map((variable) => (
+                <div key={variable}>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    {getVariableLabel(variable)}:
+                  </label>
+                  <input
+                    type="text"
+                    value={variablesModal.values[variable] || ''}
+                    onChange={(e) => {
+                      setVariablesModal(prev => ({
+                        ...prev!,
+                        values: {
+                          ...prev!.values,
+                          [variable]: e.target.value
+                        }
+                      }));
+                    }}
+                    placeholder={`הזן ${getVariableLabel(variable)}`}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500"
+                    dir="rtl"
+                  />
+                </div>
+              ))}
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setVariablesModal(null)}
+                className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
+              >
+                ביטול
+              </button>
+              <button
+                onClick={() => {
+                  // החלפת משתנים בתוכן
+                  let finalContent = variablesModal.section.content;
+                  Object.keys(variablesModal.values).forEach(key => {
+                    const value = variablesModal.values[key];
+                    finalContent = finalContent.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'g'), value);
+                  });
+
+                  // הוספה לסעיפים מותאמים
+                  setCustomSections(prev => [...prev, {
+                    title: `${variablesModal.section.id}: ${variablesModal.section.title}`,
+                    content: finalContent
+                  }]);
+
+                  setVariablesModal(null);
+                }}
+                disabled={!Object.values(variablesModal.values).every(v => v.trim() !== '')}
+                className="flex-1 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition disabled:bg-gray-300 disabled:cursor-not-allowed"
+              >
+                הוסף סעיף
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
+}
+
+// פונקציה לקבלת תווית ידידותית למשתנה
+function getVariableLabel(variable: string): string {
+  const labels: Record<string, string> = {
+    'heir_name': 'שם היורש',
+    'business_name': 'שם העסק',
+    'property_address': 'כתובת הנכס',
+    'amount': 'סכום',
+    'percentage': 'אחוז',
+    'guardian_name': 'שם האפוטרופוס',
+    'child_name': 'שם הילד',
+    'digital_asset': 'נכס דיגיטלי',
+    'burial_place': 'מקום קבורה',
+    'pension_fund': 'קרן פנסיה',
+    'residence_address': 'כתובת מגורים',
+    'mortgage_amount': 'סכום משכנתא',
+    'distribution_stage': 'שלב חלוקה',
+    'business_instructions': 'הוראות עסק',
+    'date': 'תאריך',
+    'name': 'שם',
+    'address': 'כתובת',
+    'phone': 'טלפון',
+    'email': 'אימייל'
+  };
+  
+  return labels[variable] || variable;
 }
