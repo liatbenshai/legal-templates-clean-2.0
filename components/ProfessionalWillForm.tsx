@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus, X, Building, User, CreditCard, Users, FileText, Calendar, BookOpen, Sparkles } from 'lucide-react';
 import GenderSelector from './GenderSelector';
 import ProfessionalWordExporter from './ProfessionalWordExporter';
@@ -133,6 +133,46 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
   const [customSections, setCustomSections] = useState<Array<{title: string, content: string}>>([]);
   const [showWarehouse, setShowWarehouse] = useState(false);
   const [heirsDisplayMode, setHeirsDisplayMode] = useState<'table' | 'list'>('list');
+  
+  // תבניות JSON
+  const [jsonTemplate, setJsonTemplate] = useState<any>(null);
+  const [sectionsWarehouse, setSectionsWarehouse] = useState<any>(null);
+  
+  // טעינת תבניות JSON
+  useEffect(() => {
+    loadTemplates();
+  }, [testator.gender, willType]);
+  
+  const loadTemplates = async () => {
+    try {
+      // בחירת תבנית לפי סוג וגדר
+      let templateFile = '';
+      if (willType === 'mutual') {
+        templateFile = 'will-mutual';
+      } else {
+        templateFile = testator.gender === 'male' ? 'will-individual-male' : 'will-individual-female';
+      }
+      
+      const [template, warehouse] = await Promise.all([
+        fetch(`/templates/${templateFile}.json`).then(r => r.json()),
+        fetch('/templates/clauses/sections-warehouse.json').then(r => r.json())
+      ]);
+      
+      setJsonTemplate(template);
+      setSectionsWarehouse(warehouse);
+      
+      // טען עדים ברירת מחדל מהתבנית
+      if (template.defaultWitnesses && witnesses.length === 2 && !witnesses[0].name) {
+        setWitnesses(template.defaultWitnesses.map((w: any) => ({
+          name: w.full_name,
+          id: w.id_number,
+          address: w.address
+        })));
+      }
+    } catch (error) {
+      console.error('Error loading templates:', error);
+    }
+  };
 
   const addProperty = () => {
     setProperties(prev => [...prev, {
