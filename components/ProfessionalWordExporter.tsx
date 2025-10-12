@@ -797,9 +797,9 @@ export default function ProfessionalWordExporter({
                 bottom: 1440, 
                 left: 1440 
               }
-              // Note: rightToLeft is not supported in this docx version
-              // RTL is handled via textDirection and alignment instead
-            }
+            },
+            // RTL handled via paragraph alignment and TextRun rightToLeft property
+            textDirection: 'rtl' as any
           },
           headers: {
             default: new Header({
