@@ -543,7 +543,7 @@ ________________               ________________
     <div className={`${className}`}>
       <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-300 rounded-lg p-6">
         <div className="flex items-center gap-3 mb-4">
-          <FileText className="w-6 h-6 text-blue-600" />
+          <span className="text-2xl text-blue-600">📄</span>
           <h3 className="text-xl font-bold text-blue-900">ייצוא Word מקצועי עם כל הסעיפים</h3>
         </div>
 
@@ -563,7 +563,7 @@ ________________               ________________
         {!isFormValid() && (
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
             <div className="flex items-start gap-2">
-              <AlertCircle className="w-4 h-4 text-yellow-600 mt-1" />
+              <span className="text-lg text-yellow-600 mt-1">⚠️</span>
               <div className="text-sm text-yellow-800">
                 <div className="font-bold">נתונים חסרים:</div>
                 <div>יש למלא: שם מצווה, ת.ז, לפחות נכס אחד, יורש אחד, ושני עדים.</div>
@@ -584,7 +584,7 @@ ________________               ________________
             </>
           ) : (
             <>
-              <FileDown className="w-6 h-6" />
+              <span className="text-2xl">⬇️</span>
               <span>ייצוא צוואה מקצועית ל-Word</span>
             </>
           )}
