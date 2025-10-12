@@ -788,9 +788,7 @@ export default function ProfessionalWordExporter({
                 bottom: 1440, 
                 left: 1440 
               }
-            },
-            rtl: true,
-            bidiVisual: true
+            }
           },
           headers: {
             default: new Header({
