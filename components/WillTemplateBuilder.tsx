@@ -59,7 +59,7 @@ export default function WillTemplateBuilder() {
 
   const loadTemplate = async (type: string) => {
     try {
-      const response = await fetch(`/lib/templates/will-${type}.json`);
+      const response = await fetch(`/templates/will-${type}.json`);
       const data = await response.json();
       setTemplate(data);
     } catch (error) {
@@ -70,10 +70,10 @@ export default function WillTemplateBuilder() {
   const loadWarehouses = async () => {
     try {
       const [sections, openings, closings, witnesses] = await Promise.all([
-        fetch('/lib/templates/clauses/sections-warehouse.json').then(r => r.json()),
-        fetch('/lib/templates/clauses/openings-warehouse.json').then(r => r.json()),
-        fetch('/lib/templates/clauses/closings-warehouse.json').then(r => r.json()),
-        fetch('/lib/templates/clauses/witnesses-warehouse.json').then(r => r.json())
+        fetch('/templates/clauses/sections-warehouse.json').then(r => r.json()),
+        fetch('/templates/clauses/openings-warehouse.json').then(r => r.json()),
+        fetch('/templates/clauses/closings-warehouse.json').then(r => r.json()),
+        fetch('/templates/clauses/witnesses-warehouse.json').then(r => r.json())
       ]);
       
       setSectionsWarehouse(sections);
