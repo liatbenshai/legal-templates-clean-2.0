@@ -1,0 +1,34 @@
+קבצים שתוקנו ויש להעלות ל-Vercel:
+=========================================
+
+1. components/SectionsManager.tsx
+   - תיקון: ייבוא סעיפים נשמר במפתח הנכון לפי warehouse
+
+2. components/SectionsWarehouse.tsx
+   - תיקון: טעינה ותצוגה של סעיפים מותאמים בעורך הצוואה
+
+3. public/clear-old-imports.html
+   - כלי עזר: דף לניקוי ייבואים ישנים
+
+איך להעלות:
+=========================================
+
+דרך 1 - Vercel Dashboard (מומלץ):
+1. כנס ל: https://vercel.com/dashboard
+2. פתח את legal-templates-clean
+3. לחץ על Settings → Git
+4. אם אין Git מחובר:
+   - לחץ על הכרטיסייה "Deployments"
+   - בחר את הפריסה האחרונה
+   - לחץ על "..." → "Redeploy"
+   
+5. אם יש Git מחובר:
+   - עדכן את הקבצים ב-Git repository
+   - Vercel יעשה auto-deploy
+
+דרך 2 - העלאה ידנית:
+1. צור תיקייה חדשה
+2. העתק את כל הקבצים מהפרויקט
+3. החלף את 3 הקבצים המתוקנים למעלה
+4. ב-Vercel Dashboard: Import Project → Upload
+

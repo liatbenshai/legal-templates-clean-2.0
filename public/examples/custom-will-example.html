@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>תבנית צוואה מותאמת</title>
+    <style>
+        body {
+            font-family: 'David', 'Times New Roman', serif;
+            font-size: 13pt;
+            line-height: 1.6;
+            direction: rtl;
+            margin: 0;
+            padding: 20px;
+            background: white;
+        }
+        
+        .document-container {
+            max-width: 210mm;
+            margin: 0 auto;
+            padding: 30px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #333;
+            padding-bottom: 20px;
+        }
+        
+        .title {
+            font-size: 24pt;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .section {
+            margin-bottom: 25px;
+        }
+        
+        .section-title {
+            font-size: 16pt;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        .field {
+            display: inline-block;
+            min-width: 100px;
+            border-bottom: 1px solid #666;
+            padding: 2px 5px;
+            margin: 0 5px;
+        }
+        
+        .signature-area {
+            margin-top: 50px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+        }
+        
+        .signature-block {
+            border: 1px solid #ddd;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .signature-line {
+            border-bottom: 1px solid #333;
+            height: 30px;
+            margin: 10px 0;
+            width: 200px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        @media print {
+            .document-container {
+                padding: 0;
+                max-width: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="document-container">
+        <div class="header">
+            <div class="title">צוואה</div>
+            <div>מספר צוואה: <span class="field">{{will_number}}</span></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">פרטי המצווה</div>
+            <p>
+                אני הח"מ <span class="field">{{testator_name}}</span>, 
+                ת.ז. <span class="field">{{testator_id}}</span>, 
+                מען: <span class="field">{{testator_address}}</span>,
+            </p>
+            <p>
+                {{#if testator_gender}}
+                {{#if testator_gender.male}}בהיותי{{/if}}
+                {{#if testator_gender.female}}בהיותי{{/if}}
+                {{/if}}
+                בדעה צלולה ובבריאות הנפש, מצווה בזה צוואתי האחרונה:
+            </p>
+        </div>
+
+        <div class="section">
+            <div class="section-title">ירושה</div>
+            {{#if heirs}}
+            <p>אני מוריש את רכושי לפי החלוקה הבאה:</p>
+            {{#each heirs}}
+            <p>
+                {{@index}}. <span class="field">{{this.name}}</span>
+                (ת.ז. <span class="field">{{this.id}}</span>)
+                - קרבת משפחה: <span class="field">{{this.relationship}}</span>
+                - אחוז ירושה: <span class="field">{{this.percentage}}%</span>
+            </p>
+            {{/each}}
+            {{else}}
+            <p>
+                אני מוריש את כל רכושי ל: <span class="field">{{main_heir_name}}</span>
+                ת.ז: <span class="field">{{main_heir_id}}</span>
+            </p>
+            {{/if}}
+        </div>
+
+        {{#if properties}}
+        <div class="section">
+            <div class="section-title">נכסים ספציפיים</div>
+            {{#each properties}}
+            <p>
+                • <span class="field">{{this.type}}</span> 
+                ב<span class="field">{{this.address}}</span>
+                {{#if this.value}}בשווי <span class="field">{{this.value}}</span>{{/if}}
+            </p>
+            {{/each}}
+        </div>
+        {{/if}}
+
+        {{#if executor}}
+        <div class="section">
+            <div class="section-title">מנהל עזבון</div>
+            <p>
+                אני ממנה כמנהל עזבון את: <span class="field">{{executor.name}}</span>
+                ת.ז. <span class="field">{{executor.id}}</span>
+            </p>
+        </div>
+        {{/if}}
+
+        {{#if special_instructions}}
+        <div class="section">
+            <div class="section-title">הוראות מיוחדות</div>
+            <p>{{special_instructions}}</p>
+        </div>
+        {{/if}}
+
+        <div class="section">
+            <div class="section-title">ביטול צוואות קודמות</div>
+            <p>צוואה זו מבטלת כל צוואה שכתבתי קודם לכן.</p>
+        </div>
+
+        <div class="section">
+            <p>
+                נחתם ביום <span class="field">{{signature_date}}</span> 
+                במקום: <span class="field">{{signature_location}}</span>
+            </p>
+        </div>
+
+        <div class="signature-area">
+            <div class="signature-block">
+                <h4>חתימת המצווה</h4>
+                <div class="signature-line"></div>
+                <p>{{testator_name}}</p>
+            </div>
+
+            {{#if witnesses}}
+            {{#each witnesses}}
+            <div class="signature-block">
+                <h4>עד {{@index}}</h4>
+                <p>שם: <span class="field">{{this.name}}</span></p>
+                <p>ת.ז: <span class="field">{{this.id}}</span></p>
+                <div class="signature-line"></div>
+                <p>חתימה</p>
+            </div>
+            {{/each}}
+            {{/if}}
+
+            {{#if lawyer}}
+            <div class="signature-block">
+                <h4>אישור עורך דין</h4>
+                <p>עו"ד: <span class="field">{{lawyer.name}}</span></p>
+                <p>מס' רישיון: <span class="field">{{lawyer.license}}</span></p>
+                <div class="signature-line"></div>
+                <p>חתימה וחותמת</p>
+            </div>
+            {{/if}}
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,16 @@
+name,label,type,required,options,placeholder,validation
+testator_name,שם המצווה,text,true,,הזן שם מלא,^[א-ת\s]{2,50}$
+testator_id,תעודת זהות המצווה,text,true,,123456789,^\d{9}$
+heir_name,שם היורש,text,true,,הזן שם היורש,
+heir_relationship,קרבת המשפחה,select,true,בן|בת|אח|אחות|נכד|נכדה,,
+inheritance_percentage,אחוז הירושה,number,true,,50,^(100|[1-9]?\d)$
+witness_1_name,שם העד הראשון,text,true,,שם העד,
+witness_1_id,תעודת זהות עד ראשון,text,true,,123456789,^\d{9}$
+witness_2_name,שם העד השני,text,true,,שם העד,
+witness_2_id,תעודת זהות עד שני,text,true,,123456789,^\d{9}$
+executor_name,שם מנהל העזבון,text,true,,שם מנהל העזבון,
+property_description,תיאור הנכס,textarea,false,,בית/דירה/קרקע וכו',
+bank_name,שם הבנק,text,false,,שם הבנק,
+account_number,מספר חשבון,text,false,,1234567,
+will_date,תאריך הצוואה,date,true,,,
+location,מקום חתימת הצוואה,text,true,,עיר

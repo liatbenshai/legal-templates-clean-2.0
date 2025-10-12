@@ -1,0 +1,37 @@
+services:
+  legal-templates:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: legal-templates-app
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # אופציונלי: nginx כ-reverse proxy
+  nginx:
+    image: nginx:alpine
+    container_name: legal-templates-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - legal-templates
+    restart: unless-stopped
+    profiles:
+      - with-nginx
+
+networks:
+  default:
+    name: legal-templates-network
+

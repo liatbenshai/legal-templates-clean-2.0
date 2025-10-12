@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>בדיקת סעיף מותאם</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2196f3;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .info {
+            background: #e3f2fd;
+            border: 2px solid #2196f3;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        button {
+            background: #4caf50;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px;
+            width: 200px;
+        }
+        button:hover {
+            background: #388e3c;
+        }
+        .results {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 בדיקת סעיף מותאם</h1>
+        
+        <div class="info">
+            <strong>ℹ️ מידע:</strong> זה יוצר סעיף מותאם אחד לבדיקה אם המערכת עובדת.
+        </div>
+        
+        <div style="text-align: center;">
+            <button onclick="createTestSection()">➕ צור סעיף בדיקה</button>
+            <button onclick="checkSections()">🔍 בדוק סעיפים</button>
+            <button onclick="goToWillEditor()">📝 לך לעורך הצוואות</button>
+        </div>
+        
+        <div id="results" class="results" style="display: none;"></div>
+    </div>
+
+    <script>
+        function showResults(message, isError = false) {
+            const results = document.getElementById('results');
+            results.style.display = 'block';
+            results.style.backgroundColor = isError ? '#ffebee' : '#e8f5e8';
+            results.style.borderColor = isError ? '#f44336' : '#4caf50';
+            results.innerHTML = message;
+        }
+
+        function createTestSection() {
+            const testSection = {
+                id: `custom_test_${Date.now()}`,
+                title: 'סעיף בדיקה - ירושת רכב',
+                category: 'property',
+                content: 'במקרה של פטירתי, כל הרכב הרשום על שמי יעבור לידי {{vehicle_inheritor}} (ת.ז. {{vehicle_inheritor_id}}).',
+                variables: ['vehicle_inheritor', 'vehicle_inheritor_id'],
+                aiPrompt: 'סעיף בדיקה לירושת רכב',
+                usageInstructions: 'סעיף לבדיקה שהמערכת עובדת',
+                isCustom: true,
+                warehouse: 'wills',
+                createdAt: new Date().toISOString(),
+                modifiedAt: new Date().toISOString()
+            };
+
+            // שמור במפתח הנכון
+            const storageKey = 'customSections_wills';
+            const existing = localStorage.getItem(storageKey);
+            let sections = [];
+            
+            if (existing) {
+                try {
+                    sections = JSON.parse(existing);
+                } catch (e) {
+                    console.error('Error parsing existing sections:', e);
+                }
+            }
+            
+            sections.push(testSection);
+            localStorage.setItem(storageKey, JSON.stringify(sections));
+            
+            showResults(`✅ סעיף בדיקה נוצר בהצלחה!<br><strong>כותרת:</strong> ${testSection.title}<br><strong>נשמר ב:</strong> ${storageKey}<br><strong>מספר סעיפים:</strong> ${sections.length}`);
+        }
+
+        function checkSections() {
+            const storageKey = 'customSections_wills';
+            const stored = localStorage.getItem(storageKey);
+            
+            if (!stored) {
+                showResults('❌ אין סעיפים מותאמים במחסן הצוואות', true);
+                return;
+            }
+            
+            try {
+                const sections = JSON.parse(stored);
+                let report = '<h3>📋 סעיפים מותאמים במחסן הצוואות:</h3>';
+                
+                sections.forEach((section, index) => {
+                    report += `<div style="margin: 10px 0; padding: 10px; background: #f0f0f0; border-radius: 5px;">`;
+                    report += `<strong>${index + 1}. ${section.title}</strong><br>`;
+                    report += `<small>קטגוריה: ${section.category} | משתנים: ${section.variables.length}</small><br>`;
+                    report += `<small>תוכן: ${section.content.substring(0, 100)}...</small>`;
+                    report += `</div>`;
+                });
+                
+                report += `<p><strong>סה"כ: ${sections.length} סעיפים</strong></p>`;
+                
+                showResults(report);
+            } catch (e) {
+                showResults('❌ שגיאה בקריאת הסעיפים: ' + e.message, true);
+            }
+        }
+
+        function goToWillEditor() {
+            window.open('https://legal-templates-clean.vercel.app/documents/will', '_blank');
+        }
+    </script>
+</body>
+</html>
