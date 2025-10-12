@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Plus, X, Building, User, CreditCard, Users, FileText, Calendar, BookOpen, Sparkles } from 'lucide-react';
+// import { Plus, X, Building, User, CreditCard, Users, FileText, Calendar, BookOpen } from 'lucide-react';
 import GenderSelector from './GenderSelector';
 import ProfessionalWordExporter from './ProfessionalWordExporter';
 import SectionsWarehouse from './SectionsWarehouse';
@@ -131,12 +131,13 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
   const [copyNumber, setCopyNumber] = useState('1');
   const [totalCopies, setTotalCopies] = useState('3');
   const [customSections, setCustomSections] = useState<Array<{title: string, content: string}>>([]);
-  const [showWarehouse, setShowWarehouse] = useState(false);
   const [heirsDisplayMode, setHeirsDisplayMode] = useState<'table' | 'list'>('list');
   
   // תבניות JSON
   const [jsonTemplate, setJsonTemplate] = useState<any>(null);
   const [sectionsWarehouse, setSectionsWarehouse] = useState<any>(null);
+  const [showWarehouse, setShowWarehouse] = useState(false);
+  const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   
   // טעינת תבניות JSON
   useEffect(() => {
@@ -282,7 +283,7 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
         {jsonTemplate && (
           <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
             <div className="flex items-start gap-3">
-              <Sparkles className="w-5 h-5 text-blue-600 mt-0.5" />
+              <span className="text-blue-600 text-lg">📖</span>
               <div className="flex-1">
                 <h3 className="font-bold text-blue-900 mb-1">תבנית מבוססת מחקר</h3>
                 <p className="text-sm text-blue-800">
@@ -1006,7 +1007,7 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
               onClick={() => setShowWarehouse(!showWarehouse)}
               className="flex items-center gap-2 px-3 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition text-sm"
             >
-              <Sparkles className="w-4 h-4" />
+              <span className="text-white text-sm">📚</span>
               {showWarehouse ? 'הסתר מחסן' : 'הצג מחסן סעיפים'}
             </button>
           </div>
@@ -1051,15 +1052,23 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
         {/* סעיפים מהמחסן המשודרג */}
         {sectionsWarehouse && (
           <section className="bg-purple-50 p-6 rounded-lg border border-purple-200">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                <BookOpen className="w-5 h-5" />
-                סעיפים מהמחסן המשודרג
-              </h2>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+              <span className="text-purple-600 text-lg">📚</span>
+              סעיפים מהמחסן המשודרג
+            </h2>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setShowWarehouse(!showWarehouse)}
+                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm font-medium"
+              >
+                {showWarehouse ? 'הסתר הכל' : 'הצג הכל'}
+              </button>
               <span className="text-sm text-purple-600 font-medium">
                 {sectionsWarehouse.metadata?.totalItems || '60+'} סעיפים זמינים
               </span>
             </div>
+          </div>
             
             <div className="mb-4 p-4 bg-purple-100 rounded-lg">
               <p className="text-sm text-purple-900 font-medium">
@@ -1078,7 +1087,7 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
                 <p className="text-sm text-purple-700 mb-3">{category.description}</p>
                 
                 <div className="grid gap-3">
-                  {category.items.slice(0, 3).map((item: any) => (
+                  {(showWarehouse || expandedCategory === category.id ? category.items : category.items.slice(0, 3)).map((item: any) => (
                     <div
                       key={item.id}
                       className="bg-white p-4 rounded-lg border border-purple-200 hover:border-purple-400 cursor-pointer transition"
@@ -1111,20 +1120,23 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
                             </div>
                           )}
                         </div>
-                        <button className="text-purple-600 hover:text-purple-800 mr-3">
-                          <Plus className="w-5 h-5" />
+                        <button className="text-purple-600 hover:text-purple-800 mr-3 text-lg">
+                          ➕
                         </button>
                       </div>
                     </div>
                   ))}
                   
-                  {category.items.length > 3 && (
+                  {category.items.length > 3 && !showWarehouse && (
                     <div className="text-center">
                       <button
-                        onClick={() => setShowWarehouse(true)}
+                        onClick={() => setExpandedCategory(expandedCategory === category.id ? null : category.id)}
                         className="text-purple-600 hover:text-purple-800 text-sm font-medium"
                       >
-                        + הצג עוד {category.items.length - 3} סעיפים
+                        {expandedCategory === category.id 
+                          ? `הסתר סעיפים` 
+                          : `+ הצג עוד ${category.items.length - 3} סעיפים`
+                        }
                       </button>
                     </div>
                   )}
