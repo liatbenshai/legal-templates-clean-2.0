@@ -3,6 +3,7 @@
  */
 
 import { sectionsWarehouse as willsSections } from '../professional-will-texts';
+import { willsSectionsWarehouse } from './wills-warehouse';
 import { courtSectionsWarehouse } from './court-warehouse';
 import { feeAgreementsWarehouse } from './fee-agreements-warehouse';
 import { poaSectionsWarehouse } from './power-of-attorney-warehouse';
@@ -17,6 +18,7 @@ import { mutualWillsSectionsWarehouse } from './mutual-wills-warehouse';
 // הגדרת סוגי מחסנים
 export type WarehouseType = 
   | 'wills'
+  | 'wills-enhanced'
   | 'court'
   | 'fee-agreements'
   | 'power-of-attorney'
@@ -45,6 +47,13 @@ export const WAREHOUSES: WarehouseInfo[] = [
     icon: '📜',
     description: 'סעיפים לצוואות מקצועיות ומורכבות',
     color: 'blue'
+  },
+  {
+    id: 'wills-enhanced',
+    name: 'צוואות משודרגות',
+    icon: '⭐',
+    description: '60+ סעיפים מבוססים על צוואות אמיתיות',
+    color: 'purple'
   },
   {
     id: 'individual-wills',
@@ -123,6 +132,8 @@ export function getSectionsByWarehouse(warehouseType: WarehouseType): any[] {
   switch (warehouseType) {
     case 'wills':
       return willsSections;
+    case 'wills-enhanced':
+      return willsSectionsWarehouse;
     case 'court':
       return courtSectionsWarehouse;
     case 'fee-agreements':
@@ -152,6 +163,7 @@ export function getSectionsByWarehouse(warehouseType: WarehouseType): any[] {
 export function getAllSections(): any[] {
   return [
     ...willsSections.map(s => ({ ...s, warehouse: 'wills' as WarehouseType })),
+    ...willsSectionsWarehouse.map(s => ({ ...s, warehouse: 'wills-enhanced' as WarehouseType })),
     ...courtSectionsWarehouse.map(s => ({ ...s, warehouse: 'court' as WarehouseType })),
     ...feeAgreementsWarehouse.map(s => ({ ...s, warehouse: 'fee-agreements' as WarehouseType })),
     ...poaSectionsWarehouse.map(s => ({ ...s, warehouse: 'power-of-attorney' as WarehouseType })),

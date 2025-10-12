@@ -118,6 +118,7 @@ export default function SimpleExportButtons({
               text: line.trim() || ' ', // שורה ריקה
               font: 'David',
               size: 26, // 13pt * 2
+              rightToLeft: true
             })
           ]
         })

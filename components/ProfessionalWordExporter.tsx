@@ -437,6 +437,18 @@ ${data.spouse?.fullName || '[שם בעל צוואה 2]'}, נושא${data.spouse?
       });
     }
 
+    // סעיפים מותאמים מהמחסן
+    let sectionCounter = data.type === 'mutual' ? 7 : 6;
+    if (data.customSections && data.customSections.length > 0) {
+      data.customSections.forEach((section: any) => {
+        sectionCounter++;
+        content += `${sectionCounter}. ${section.title || 'סעיף מותאם'}:
+${section.content || ''}
+
+`;
+      });
+    }
+
     // סעיפי סיום סטנדרטיים
     const nextSection = data.type === 'mutual' ? 8 : 7;
     const finalSectionStart = nextSection + (data.customSections?.length || 0);

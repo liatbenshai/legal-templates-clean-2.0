@@ -11,6 +11,8 @@ export interface WillSectionTemplate {
   aiPrompt: string;
   usageInstructions: string;
   willTypes: ('individual' | 'mutual')[];
+  isRequired?: boolean;
+  tags?: string[];
 }
 
 export const willsSectionsWarehouse: WillSectionTemplate[] = [
@@ -620,6 +622,214 @@ export const willsSectionsWarehouse: WillSectionTemplate[] = [
     aiPrompt: 'מלא פרטי העסק והילדים המעורבים',
     usageInstructions: 'שימוש כאשר יש עסק משפחתי',
     willTypes: ['individual', 'mutual']
+  },
+
+  // ===== סעיפים חדשים מהמחסן המשודרג =====
+  
+  // סעיפים מקדמים - ביטול צוואות קודמות
+  {
+    id: 'B2-V1-revocation-standard',
+    title: 'ביטול צוואות קודמות (סטנדרטי)',
+    category: 'debts',
+    content: 'אני מבטל/ת בזאת ביטול גמור כל צוואה אחרת שאולי עשיתי לפני כן.',
+    variables: [],
+    aiPrompt: 'שמור על הנוסח הפשוט והבהיר',
+    usageInstructions: 'שימוש חובה בכל צוואה - ביטול צוואות קודמות',
+    willTypes: ['individual', 'mutual'],
+    isRequired: true,
+    tags: ['ביטול', 'צוואות קודמות', 'בסיסי']
+  },
+  {
+    id: 'B2-V2-revocation-detailed',
+    title: 'ביטול צוואות (מפורט)',
+    category: 'debts',
+    content: 'אני מבטל/ת בזאת ביטול גמור את כל הצוואות וההוראות והכתבים, בכתב או בעל פה שנתתי לפני כן, וצוואה זו היא צוואתי האחרונה.',
+    variables: [],
+    aiPrompt: 'שמור על הנוסח המפורט והבהיר',
+    usageInstructions: 'שימוש חובה בכל צוואה - ביטול צוואות קודמות',
+    willTypes: ['individual', 'mutual'],
+    isRequired: true,
+    tags: ['ביטול', 'צוואות קודמות', 'מפורט']
+  },
+  {
+    id: 'B2-V5-revocation-full',
+    title: 'ביטול צוואות קודמות (מלא ומפורט)',
+    category: 'debts',
+    content: 'אני מבטל/ת בזאת ביטול גמור, מוחלט ושלם כל צוואה ו/או הוראה שנתתי בעבר לפני תאריך חתימה על צוואה זו, בין בכתב ובין בעל פה בקשור לרכושי ולנכסיי, כל מסמך, או כתב, כל שיחה שבעל פה, שיש בה מעין גילוי דעת על מה שיש ברצוני שייעשה בעיזבוני לאחר מותי.',
+    variables: [],
+    aiPrompt: 'שמור על הנוסח המשפטי המדויק',
+    usageInstructions: 'שימוש חובה בכל צוואה - ביטול צוואות קודמות',
+    willTypes: ['individual', 'mutual'],
+    isRequired: true,
+    tags: ['ביטול', 'צוואות קודמות', 'מלא', 'משפטי']
+  },
+
+  // סעיפים מיוחדים - איסור מתנות
+  {
+    id: 'F1-V1-gift-prohibition',
+    title: 'איסור מתנות ללא תמורה',
+    category: 'conditions',
+    content: 'אני מודיע/ת בזאת כי לא נתתי ולא אתן כל מתנה או העברה אחרת של נכסיי ללא תמורה מלאה, למעט מתנות עתקיות או מתנות לצרכים רפואיים או הומניטריים דחופים, וכן למעט מתנות לזולת בהתאם למסורת ולמנהג המקובל באירועים משפחתיים וחגיגיים.',
+    variables: [],
+    aiPrompt: 'התאם למצב המשפחתי והכלכלי של המצווה',
+    usageInstructions: 'מומלץ למצווה עם נכסים רבים או משפחה מורכבת',
+    willTypes: ['individual'],
+    isRequired: false,
+    tags: ['מתנות', 'הגנה', 'נכסים']
+  },
+
+  // סעיפים משפחתיים - הסכמי קדם נישואין
+  {
+    id: 'F2-V1-prenup-requirement',
+    title: 'דרישת הסכם קדם נישואין',
+    category: 'family',
+    content: 'אני מצווה כי כל יורש שלי, טרם נישואיו, יערוך הסכם קדם נישואין עם בן/בת זוגו, אשר יקבע כי כל רכוש שיהיה לו/לה טרם הנישואין ורכוש שירש או יקבל במתנה במהלך הנישואין, יישאר בבעלותו הבלעדית ויעבור ליורשיו בלבד, ולא ייחשב כרכוש משותף.',
+    variables: [],
+    aiPrompt: 'התאם למצב המשפחתי והתרבותי של המשפחה',
+    usageInstructions: 'מומלץ למשפחות עם נכסים רבים או בעלי מסורת משפחתית',
+    willTypes: ['individual'],
+    isRequired: false,
+    tags: ['נישואין', 'הגנה', 'משפחה']
+  },
+
+  // סעיפי ביטול אוטומטי
+  {
+    id: 'F3-V1-auto-cancellation',
+    title: 'ביטול אוטומטי במקרה של נישואין',
+    category: 'conditions',
+    content: 'אני מצווה כי צוואה זו תתבטל באופן אוטומטי אם אתחתן/אתחתן בעתיד, וכל הרכוש יעבור לפי חוק הירושה, אלא אם כן אערוך צוואה חדשה לאחר הנישואין.',
+    variables: [],
+    aiPrompt: 'התאם למצב המשפחתי הנוכחי של המצווה',
+    usageInstructions: 'מומלץ למצווה רווק/ה או גרוש/ה',
+    willTypes: ['individual'],
+    isRequired: false,
+    tags: ['נישואין', 'ביטול', 'אוטומטי']
+  },
+
+  // סעיפי אפוטרופסות
+  {
+    id: 'F5-V3-guardianship',
+    title: 'מינוי אפוטרופוס לילדים',
+    category: 'guardianship',
+    content: 'אני ממנה את {{guardian_name}}, ת.ז. {{guardian_id}}, להיות האפוטרופוס של ילדיי הקטינים במקרה של פטירתי. האפוטרופוס יטפל בכל צרכיהם החומריים, החינוכיים והרגשיים, ויקבל את כל ההחלטות הדרושות לטובתם.',
+    variables: ['guardian_name', 'guardian_id'],
+    aiPrompt: 'התאם למצב המשפחתי ולאפוטרופוס הנבחר',
+    usageInstructions: 'חובה למצווה עם ילדים קטינים',
+    willTypes: ['individual'],
+    isRequired: false,
+    tags: ['אפוטרופסות', 'ילדים', 'משפחה']
+  },
+
+  // סעיפי נכסים דיגיטליים
+  {
+    id: 'E9-V1-digital-assets',
+    title: 'נכסים דיגיטליים וחשבונות אונליין',
+    category: 'digital',
+    content: 'אני מצווה כי כל הנכסים הדיגיטליים שלי, כולל חשבונות בנק אונליין, חשבונות רשתות חברתיות, קבצים דיגיטליים, תמונות וסרטונים, יעברו לידי {{heir_name}}, ת.ז. {{heir_id}}, אשר יקבל את כל הסיסמאות וההרשאות הדרושות.',
+    variables: ['heir_name', 'heir_id'],
+    aiPrompt: 'התאם לסוג הנכסים הדיגיטליים ולמיומנות היורש',
+    usageInstructions: 'מומלץ לכל מצווה עם נוכחות דיגיטלית',
+    willTypes: ['individual', 'mutual'],
+    isRequired: false,
+    tags: ['דיגיטלי', 'טכנולוגיה', 'חשבונות']
+  },
+
+  // סעיפי קבורה
+  {
+    id: 'F10-burial-instructions',
+    title: 'הוראות קבורה וטקס',
+    category: 'funeral',
+    content: 'אני מצווה כי קבורתי תיערך ב{{burial_place}}, והטקס יתבצע לפי המסורת {{tradition_type}}. אני מבקש כי לא ייערכו טקסים מיותרים ויוצמדו למינימום ההכרחי.',
+    variables: ['burial_place', 'tradition_type'],
+    aiPrompt: 'התאם לאמונות הדתיות והמשפחתיות של המצווה',
+    usageInstructions: 'מומלץ לכל מצווה עם העדפות ספציפיות',
+    willTypes: ['individual', 'mutual'],
+    isRequired: false,
+    tags: ['קבורה', 'טקס', 'מסורת']
+  },
+
+  // סעיפי קופות פנסיה
+  {
+    id: 'E12-V1-pension-beneficiaries',
+    title: 'יורשי קופות פנסיה וביטוח חיים',
+    category: 'property',
+    content: 'אני מצווה כי כל הכספים בקופות הפנסיה שלי, קרנות השתלמות וביטוחי החיים, יעברו לידי {{pension_heir_name}}, ת.ז. {{pension_heir_id}}, בסכום של {{amount}} ש"ח.',
+    variables: ['pension_heir_name', 'pension_heir_id', 'amount'],
+    aiPrompt: 'התאם לסוג הקופה ולסכומים המדויקים',
+    usageInstructions: 'חובה למצווה עם קופות פנסיה',
+    willTypes: ['individual', 'mutual'],
+    isRequired: false,
+    tags: ['פנסיה', 'ביטוח', 'כספים']
+  },
+
+  // סעיף איסור ערעור
+  {
+    id: 'F11-no-contest',
+    title: 'איסור ערעור על הצוואה',
+    category: 'conditions',
+    content: 'כל אדם שיערער על צוואה זו או ינהל הליכים משפטיים נגדה, יאבד את כל זכויותיו לירושה ויקבל במקום זאת סכום סימלי של שקל אחד בלבד.',
+    variables: [],
+    aiPrompt: 'שמור על הנוסח המשפטי הקשוח',
+    usageInstructions: 'מומלץ למשפחות עם היסטוריה של סכסוכים',
+    willTypes: ['individual', 'mutual'],
+    isRequired: false,
+    tags: ['ערעור', 'הגנה', 'סכסוכים']
+  },
+
+  // סעיף זכות מגורים
+  {
+    id: 'F12-residence-rights',
+    title: 'זכות מגורים ברכוש',
+    category: 'property',
+    content: 'אני מצווה כי {{resident_name}}, ת.ז. {{resident_id}}, יקבל זכות מגורים בבית ב{{residence_address}} למשך כל חייו, ללא תשלום שכר דירה, בתנאי שהוא ישמור על הנכס ויתחזק אותו כראוי.',
+    variables: ['resident_name', 'resident_id', 'residence_address'],
+    aiPrompt: 'התאם לסוג הנכס ולמגורים הנדרשים',
+    usageInstructions: 'מומלץ למצווה שרוצה להבטיח מגורים לבן משפחה',
+    willTypes: ['individual'],
+    isRequired: false,
+    tags: ['מגורים', 'זכות', 'נכס']
+  },
+
+  // סעיף איסור משכנתא
+  {
+    id: 'F13-mortgage-prohibition',
+    title: 'איסור משכנתא על נכס',
+    category: 'property',
+    content: 'אני מצווה כי על הנכס ב{{property_address}} לא תוטל משכנתא ולא ייערך כל עיקול או שעבוד אחר, למעט משכנתא קיימת בסכום של {{existing_mortgage_amount}} ש"ח.',
+    variables: ['property_address', 'existing_mortgage_amount'],
+    aiPrompt: 'התאם למצב המשכנתא הקיים על הנכס',
+    usageInstructions: 'מומלץ למצווה עם נכסים עם משכנתא',
+    willTypes: ['individual', 'mutual'],
+    isRequired: false,
+    tags: ['משכנתא', 'איסור', 'נכס']
+  },
+
+  // סעיף חלוקה מדורגת
+  {
+    id: 'F14-staged-distribution',
+    title: 'חלוקה מדורגת לפי גיל',
+    category: 'heirs',
+    content: 'אני מצווה כי חלקו של {{heir_name}}, ת.ז. {{heir_id}}, יועבר אליו בגיל {{distribution_age}}, ולפני כן יעמוד הנכס בחזקת נאמן שיקבל את ההחלטות לטובתו.',
+    variables: ['heir_name', 'heir_id', 'distribution_age'],
+    aiPrompt: 'התאם לגיל היורש ולסוג הנכס',
+    usageInstructions: 'מומלץ ליורשים צעירים או לא אחראיים',
+    willTypes: ['individual', 'mutual'],
+    isRequired: false,
+    tags: ['חלוקה', 'גיל', 'נאמן']
+  },
+
+  // סעיף הוראות עסק
+  {
+    id: 'F8-V1-business-instructions',
+    title: 'הוראות לעסק או חברה',
+    category: 'business',
+    content: 'אני מצווה כי העסק {{business_name}} יעבור לידי {{heir_name}}, ת.ז. {{heir_id}}, שיקבל את כל הזכויות והחובות הקשורים לעסק. היורש ימשיך לנהל את העסק בהתאם ל{{business_instructions}}.',
+    variables: ['business_name', 'heir_name', 'heir_id', 'business_instructions'],
+    aiPrompt: 'התאם לסוג העסק ולמיומנות היורש',
+    usageInstructions: 'חובה למצווה עם עסק או חברה',
+    willTypes: ['individual'],
+    isRequired: false,
+    tags: ['עסק', 'חברה', 'ניהול']
   }
 ];
 
@@ -629,6 +839,24 @@ export const willsSectionsWarehouse: WillSectionTemplate[] = [
 export function getWillSectionsForType(willType: 'individual' | 'mutual'): WillSectionTemplate[] {
   return willsSectionsWarehouse.filter(section => 
     section.willTypes.includes(willType)
+  );
+}
+
+/**
+ * פונקציה לקבלת סעיפים חובה לפי סוג צוואה
+ */
+export function getRequiredWillSections(willType: 'individual' | 'mutual'): WillSectionTemplate[] {
+  return willsSectionsWarehouse.filter(section => 
+    section.willTypes.includes(willType) && section.isRequired === true
+  );
+}
+
+/**
+ * פונקציה לקבלת סעיפים לפי קטגוריה וסוג צוואה
+ */
+export function getWillSectionsByCategoryAndType(willType: 'individual' | 'mutual', category: string): WillSectionTemplate[] {
+  return willsSectionsWarehouse.filter(section => 
+    section.willTypes.includes(willType) && section.category === category
   );
 }
 
