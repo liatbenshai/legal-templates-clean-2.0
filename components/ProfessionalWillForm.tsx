@@ -264,7 +264,37 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-8">
       <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">יצירת צוואה מקצועית</h1>
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold text-gray-900">יצירת צוואה מקצועית</h1>
+          
+          {jsonTemplate && (
+            <div className="flex items-center gap-2 text-sm">
+              <span className="px-3 py-1.5 bg-green-100 text-green-800 rounded-lg font-medium">
+                ✅ תבנית: {jsonTemplate.title}
+              </span>
+              <span className="text-xs text-gray-500">
+                v{jsonTemplate.version}
+              </span>
+            </div>
+          )}
+        </div>
+
+        {jsonTemplate && (
+          <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <div className="flex items-start gap-3">
+              <Sparkles className="w-5 h-5 text-blue-600 mt-0.5" />
+              <div className="flex-1">
+                <h3 className="font-bold text-blue-900 mb-1">תבנית מבוססת מחקר</h3>
+                <p className="text-sm text-blue-800">
+                  {jsonTemplate.description}
+                </p>
+                <p className="text-xs text-blue-600 mt-1">
+                  מבוסס על: {jsonTemplate.metadata?.basedOn || '9 צוואות אמיתיות'}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
         
         {/* בחירת סוג צוואה */}
         <div className="grid md:grid-cols-2 gap-4 mb-8">
@@ -1014,6 +1044,101 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
                   </div>
                 </div>
               ))}
+            </div>
+          </section>
+        )}
+
+        {/* סעיפים מהמחסן המשודרג */}
+        {sectionsWarehouse && (
+          <section className="bg-purple-50 p-6 rounded-lg border border-purple-200">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                <BookOpen className="w-5 h-5" />
+                סעיפים מהמחסן המשודרג
+              </h2>
+              <span className="text-sm text-purple-600 font-medium">
+                {sectionsWarehouse.metadata?.totalItems || '60+'} סעיפים זמינים
+              </span>
+            </div>
+            
+            <div className="mb-4 p-4 bg-purple-100 rounded-lg">
+              <p className="text-sm text-purple-900 font-medium">
+                💡 סעיפים אלו מבוססים על {sectionsWarehouse.basedOn || '9 צוואות אמיתיות'}
+              </p>
+            </div>
+
+            {sectionsWarehouse.categories && sectionsWarehouse.categories.map((category: any) => (
+              <div key={category.id} className="mb-6">
+                <h3 className="text-lg font-bold text-purple-900 mb-2 flex items-center gap-2">
+                  {category.name}
+                  <span className="text-xs bg-purple-200 text-purple-800 px-2 py-1 rounded">
+                    {category.items.length} סעיפים
+                  </span>
+                </h3>
+                <p className="text-sm text-purple-700 mb-3">{category.description}</p>
+                
+                <div className="grid gap-3">
+                  {category.items.slice(0, 3).map((item: any) => (
+                    <div
+                      key={item.id}
+                      className="bg-white p-4 rounded-lg border border-purple-200 hover:border-purple-400 cursor-pointer transition"
+                      onClick={() => {
+                        setCustomSections(prev => [...prev, {
+                          title: `${item.id}: ${item.title}`,
+                          content: item.content
+                        }]);
+                      }}
+                    >
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="font-bold text-purple-900">{item.title}</span>
+                            {item.isRequired && (
+                              <span className="px-2 py-0.5 bg-red-100 text-red-800 text-xs rounded">
+                                חובה
+                              </span>
+                            )}
+                            <span className="text-xs text-purple-600 font-mono">{item.id}</span>
+                          </div>
+                          <p className="text-sm text-gray-700 line-clamp-2">{item.content}</p>
+                          {item.tags && (
+                            <div className="flex gap-1 mt-2 flex-wrap">
+                              {item.tags.slice(0, 3).map((tag: string) => (
+                                <span key={tag} className="px-2 py-0.5 bg-purple-100 text-purple-700 text-xs rounded">
+                                  {tag}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        <button className="text-purple-600 hover:text-purple-800 mr-3">
+                          <Plus className="w-5 h-5" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {category.items.length > 3 && (
+                    <div className="text-center">
+                      <button
+                        onClick={() => setShowWarehouse(true)}
+                        className="text-purple-600 hover:text-purple-800 text-sm font-medium"
+                      >
+                        + הצג עוד {category.items.length - 3} סעיפים
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+
+            <div className="mt-6 p-4 bg-white rounded-lg border border-purple-300">
+              <p className="text-sm text-gray-700 mb-2">
+                <strong>💡 טיפ:</strong> לחץ על סעיף כדי להוסיף אותו לצוואה
+              </p>
+              <p className="text-xs text-gray-500">
+                מקור: {sectionsWarehouse.metadata?.author || 'Legal Templates Pro'}
+              </p>
             </div>
           </section>
         )}
