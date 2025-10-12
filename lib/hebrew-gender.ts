@@ -111,7 +111,7 @@ export const hebrewDictionary: Record<string, GenderedWord> = {
   
   // יורשים וזכאים
   'יורש': { male: 'יורש', female: 'יורשת', plural: 'יורשים' },
-  'היורש': { male: 'היורש', female: 'היורשת', plural: 'היורשים' },
+  // 'היורש' already defined above in line 53
   'זכאי_לירושה': { male: 'זכאי לירושה', female: 'זכאית לירושה', plural: 'זכאים לירושה' },
   'מקבל': { male: 'מקבל', female: 'מקבלת', plural: 'מקבלים' },
   'המקבל': { male: 'המקבל', female: 'המקבלת', plural: 'המקבלים' },
