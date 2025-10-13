@@ -80,7 +80,7 @@ export default function DocumentsPage() {
       icon: FileText,
       description: 'ייפוי כוח מתמשך - מסמך מקיף לניהול רכוש, בריאות וחיים עם מחסן סעיפים',
       color: 'teal',
-      href: '/documents/advance-directives',
+      href: '/documents/advance-directives-new',
     },
   ];
 
