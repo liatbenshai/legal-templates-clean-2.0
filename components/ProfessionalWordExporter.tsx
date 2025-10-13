@@ -611,8 +611,6 @@ export default function ProfessionalWordExporter({
             width: { size: 9360, type: WidthType.DXA },
             margins: { top: 100, bottom: 100, left: 100, right: 100 },
             rows: tableRows,
-            // הוספת bidi לטבלה
-            bidirectional: true
           })
         );
       }
