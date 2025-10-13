@@ -412,7 +412,7 @@ export default function AdvanceDirectivesDocument() {
                             }
                             
                             // התאמת כל התוכן למגדר
-                            processedContent = applyGenderToText(processedContent, attorney.gender || principal.gender);
+                            processedContent = applyGenderToText(processedContent, attorneys[0]?.gender || principal.gender);
                             
                             return processedContent;
                           })()}

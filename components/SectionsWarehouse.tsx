@@ -9,7 +9,7 @@ import SectionEditor from './SectionEditor';
 import GenderSelector from './GenderSelector';
 import { Gender } from '@/lib/hebrew-gender';
 
-import { getGenderSuffix } from '@/lib/hebrew-verbs-learning';
+// import { getGenderSuffix } from '@/lib/hebrew-verbs-learning';
 
 interface SectionsWarehouseProps {
   onAddSection: (content: string, title: string) => void;
@@ -155,12 +155,14 @@ export default function SectionsWarehouse({ onAddSection, selectedWillType }: Se
     
     // החלף משתני מגדר
     Object.entries(variablesModal.genders).forEach(([key, gender]) => {
-      let context = 'other';
-      if (key.includes('child')) context = 'child';
-      else if (key.includes('heir')) context = 'heir';
-      else if (key.includes('guardian')) context = 'guardian';
+      let genderSuffix = '';
       
-      const genderSuffix = getGenderSuffix(key, context, gender);
+      // לוגיקה פשוטה למגדר
+      if (key.includes('child') || key.includes('heir')) {
+        genderSuffix = gender === 'female' ? 'ה' : gender === 'plural' ? 'ו' : '';
+      } else {
+        genderSuffix = gender === 'female' ? 'ת' : gender === 'plural' ? 'ים' : '';
+      }
       
       const genderRegex = new RegExp(`{{${key}_gender_suffix}}`, 'g');
       content = content.replace(genderRegex, genderSuffix);
