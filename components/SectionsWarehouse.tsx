@@ -8,6 +8,7 @@ import EnhancedAIImprover from './EnhancedAIImprover';
 import SectionEditor from './SectionEditor';
 import GenderSelector from './GenderSelector';
 import { Gender } from '@/lib/hebrew-gender';
+
 import { getGenderSuffix } from '@/lib/hebrew-verbs-learning';
 
 interface SectionsWarehouseProps {
