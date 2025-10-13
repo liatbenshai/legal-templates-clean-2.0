@@ -313,6 +313,44 @@ export default function LawyerFeeAgreement() {
       ...prev,
       fees: { ...prev.fees, [field]: value }
     }));
+    
+    // עדכון הסעיפים עם הסכומים החדשים
+    updateSectionsWithNewFees(field, value);
+  };
+
+  const updateSectionsWithNewFees = (field: keyof typeof agreementData.fees, value: string) => {
+    if (!selectedServiceType) return;
+    
+    const service = feeAgreementTemplates.serviceCategories[selectedServiceType as keyof typeof feeAgreementTemplates.serviceCategories];
+    if (!service) return;
+
+    const newFees = { ...agreementData.fees, [field]: value };
+    
+    // עדכון הסעיפים עם הסכומים החדשים
+    const updatedSections = service.clauses.map(clause => {
+      let updatedText = clause.text;
+      
+      // החלפת סכומים בתוך הטקסט
+      if (clause.id.includes('_002') || clause.id.includes('_003')) { // סעיפי שכר טרחה
+        if (newFees.type === 'קבוע' && newFees.fixedAmount) {
+          updatedText = updatedText.replace(/_______ ש\"ח/g, `${newFees.fixedAmount} ש\"ח`);
+          updatedText = updatedText.replace(/________ ש\"ח/g, `${newFees.fixedAmount} ש\"ח`);
+        }
+        if (newFees.advancePayment) {
+          const advancePercent = newFees.fixedAmount ? 
+            Math.round((parseInt(newFees.advancePayment) / parseInt(newFees.fixedAmount)) * 100) : 50;
+          updatedText = updatedText.replace(/50%/g, `${advancePercent}%`);
+          updatedText = updatedText.replace(/היתרה בשיעור 50%/g, `היתרה בשיעור ${100 - advancePercent}%`);
+        }
+      }
+      
+      return {
+        title: clause.title,
+        content: updatedText
+      };
+    });
+    
+    setCustomSections(updatedSections);
   };
 
   const updateTerms = (field: keyof typeof agreementData.terms, value: string) => {
@@ -320,6 +358,42 @@ export default function LawyerFeeAgreement() {
       ...prev,
       terms: { ...prev.terms, [field]: value }
     }));
+    
+    // עדכון הסעיפים עם תנאי התשלום החדשים
+    updateSectionsWithNewTerms(field, value);
+  };
+
+  const updateSectionsWithNewTerms = (field: keyof typeof agreementData.terms, value: string) => {
+    if (!selectedServiceType) return;
+    
+    const service = feeAgreementTemplates.serviceCategories[selectedServiceType as keyof typeof feeAgreementTemplates.serviceCategories];
+    if (!service) return;
+
+    const newTerms = { ...agreementData.terms, [field]: value };
+    
+    // עדכון הסעיפים עם תנאי התשלום החדשים
+    const updatedSections = service.clauses.map(clause => {
+      let updatedText = clause.text;
+      
+      // עדכון תנאי תשלום
+      if (field === 'paymentTerms' && (clause.id.includes('_002') || clause.id.includes('_003'))) {
+        // החלפת תנאי התשלום בתוך הטקסט
+        if (newTerms.paymentTerms.includes('50%')) {
+          // אם המשתמש עדיין משתמש ב-50%, נשאיר את זה
+        } else {
+          // אם המשתמש שינה את תנאי התשלום, נחליף את הטקסט הסטנדרטי
+          updatedText = updatedText.replace(/וישולם כלהלן: 50% במעמד החתימה על הסכם זה, והיתרה בשיעור 50%.*?\./g, 
+            newTerms.paymentTerms);
+        }
+      }
+      
+      return {
+        title: clause.title,
+        content: updatedText
+      };
+    });
+    
+    setCustomSections(updatedSections);
   };
 
   const handleAddSection = (content: string, title: string) => {
@@ -814,7 +888,7 @@ ________________________           ________________________
           <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
             <p className="text-sm text-blue-700">
               💡 <strong>טיפ:</strong> הסכומים נטענו אוטומטית בהתאם לסוג השירות שבחרת. 
-              תוכלי לשנות אותם כאן לפי הצורך.
+              כשתשני את הסכומים כאן - הם יתעדכנו אוטומטית גם בסעיפים למטה!
             </p>
           </div>
           
@@ -984,7 +1058,7 @@ ________________________           ________________________
           <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
             <p className="text-sm text-green-700">
               💡 <strong>טיפ:</strong> תנאי התשלום נטענו אוטומטית. 
-              תוכלי לערוך אותם כאן לפי הצורך.
+              כשתשני אותם כאן - הם יתעדכנו אוטומטית גם בסעיפים למטה!
             </p>
           </div>
           
