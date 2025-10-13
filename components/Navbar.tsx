@@ -242,7 +242,18 @@ export default function Navbar() {
               </div>
             ) : mounted ? (
               <>
-                {/* Authentication removed - system is now open */}
+                <Link
+                  href="/login"
+                  className="px-4 py-2 text-gray-700 hover:text-primary font-medium"
+                >
+                  התחבר
+                </Link>
+                <Link
+                  href="/register"
+                  className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-blue-700 transition font-medium"
+                >
+                  הרשם
+                </Link>
               </>
             ) : null}
           </div>
@@ -383,7 +394,22 @@ export default function Navbar() {
               ) : mounted ? (
                 <>
                   <div className="border-t border-gray-200 my-2 pt-2">
-                    {/* Authentication removed - system is now open */}
+                    <Link
+                      href="/login"
+                      className="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <User className="w-5 h-5" />
+                      <span>התחבר</span>
+                    </Link>
+                    <Link
+                      href="/register"
+                      className="flex items-center gap-3 px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-700 transition"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <User className="w-5 h-5" />
+                      <span>הרשם</span>
+                    </Link>
                   </div>
                 </>
               ) : null}
