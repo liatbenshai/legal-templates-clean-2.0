@@ -48,7 +48,7 @@ export default function DocumentsPage() {
       icon: Handshake,
       description: 'הסכם שכר טרחה בין עורך דין ללקוח - מקצועי ומפורט',
       color: 'amber',
-      href: '/documents/contract',
+      href: '/documents/fee-agreement',
     },
     {
       id: 'affidavit',
