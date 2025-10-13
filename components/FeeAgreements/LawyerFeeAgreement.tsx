@@ -810,6 +810,14 @@ ________________________           ________________________
             מבנה תמחור
           </h2>
           
+          {/* הודעה ברורה */}
+          <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-sm text-blue-700">
+              💡 <strong>טיפ:</strong> הסכומים נטענו אוטומטית בהתאם לסוג השירות שבחרת. 
+              תוכלי לשנות אותם כאן לפי הצורך.
+            </p>
+          </div>
+          
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-2">סוג תמחור</label>
             <select
@@ -971,6 +979,14 @@ ________________________           ________________________
         {/* תנאים מיוחדים */}
         <section className="bg-orange-50 p-6 rounded-lg border border-orange-200 mb-6">
           <h2 className="text-xl font-bold text-orange-900 mb-4">תנאי ההסכם</h2>
+          
+          {/* הודעה ברורה */}
+          <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+            <p className="text-sm text-green-700">
+              💡 <strong>טיפ:</strong> תנאי התשלום נטענו אוטומטית. 
+              תוכלי לערוך אותם כאן לפי הצורך.
+            </p>
+          </div>
           
           <div className="space-y-4">
             <div>
