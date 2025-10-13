@@ -31,23 +31,17 @@ interface FeeAgreementData {
   // פרטי התיק
   case: {
     subject: string;
-    court: string;
     description: string;
-    complexity: 'פשוט' | 'בינוני' | 'מורכב';
   };
 
   // תמחור
   fees: {
-    type: 'שעתי' | 'קבוע' | 'הצלחה' | 'מעורב';
-    hourlyRate?: string;
-    fixedAmount?: string;
-    successPercentage?: string;
+    type: 'סכום_כולל' | 'מקדמה_והצלחה';
+    totalAmount?: string;
+    paymentStructure?: string; // "מלא מראש" או "50%-50%" או "שלבים"
     advancePayment?: string;
-    estimatedHours?: string;
-    // מעורב: מקדמה + אחוזים
-    mixedAdvance?: string; // תשלום ראשוני קבוע
-    mixedPercentage?: string; // אחוז מהתוצאה
-    mixedMinimum?: string; // תשלום מינימלי גם אם אין הצלחה
+    successPercentage?: string;
+    stages?: string; // פירוט שלבים אם נבחר
   };
 
   // תנאים
@@ -80,17 +74,15 @@ export default function LawyerFeeAgreement() {
     },
     case: {
       subject: '',
-      court: '',
-      description: '',
-      complexity: 'בינוני'
+      description: ''
     },
     fees: {
-      type: 'שעתי',
-      hourlyRate: '',
-      fixedAmount: '',
-      successPercentage: '',
+      type: 'סכום_כולל',
+      totalAmount: '',
+      paymentStructure: 'מלא מראש',
       advancePayment: '',
-      estimatedHours: ''
+      successPercentage: '',
+      stages: ''
     },
     terms: {
       paymentTerms: '',
@@ -143,13 +135,12 @@ export default function LawyerFeeAgreement() {
 
       // עדכון סכומים ותנאי תשלום אוטומטית בהתאם לסוג השירות
       let defaultFees = {
-        type: 'שעתי' as const,
-        hourlyRate: '',
-        estimatedHours: '',
-        fixedAmount: '',
-        successFee: '',
-        mixedFee: '',
-        advancePayment: ''
+        type: 'סכום_כולל' as const,
+        totalAmount: '',
+        paymentStructure: 'מלא מראש',
+        advancePayment: '',
+        successPercentage: '',
+        stages: ''
       };
 
       let defaultTerms = {
@@ -162,117 +153,108 @@ export default function LawyerFeeAgreement() {
       switch (selectedServiceType) {
         case 'הסכמי_ממון':
           defaultFees = {
-            type: 'קבוע',
-            hourlyRate: '',
-            estimatedHours: '',
-            fixedAmount: '5000',
-            successFee: '',
-            mixedFee: '',
-            advancePayment: '2500'
+            type: 'סכום_כולל',
+            totalAmount: '5000',
+            paymentStructure: '50%-50%',
+            advancePayment: '',
+            successPercentage: '',
+            stages: ''
           };
           defaultTerms.paymentTerms = '50% במעמד החתימה על הסכם זה, והיתרה בשיעור 50% לאחר אישור טיוטת ההסכם על ידי הלקוח ובטרם חתימתו.';
           break;
         
         case 'צוואת_יחיד':
           defaultFees = {
-            type: 'קבוע',
-            hourlyRate: '',
-            estimatedHours: '',
-            fixedAmount: '3000',
-            successFee: '',
-            mixedFee: '',
-            advancePayment: '1500'
+            type: 'סכום_כולל',
+            totalAmount: '3000',
+            paymentStructure: '50%-50%',
+            advancePayment: '',
+            successPercentage: '',
+            stages: ''
           };
           defaultTerms.paymentTerms = '50% במעמד החתימה על הסכם זה, והיתרה בשיעור 50% במעמד חתימת הצוואה בפני העדים.';
           break;
 
         case 'צוואה_הדדית':
           defaultFees = {
-            type: 'קבוע',
-            hourlyRate: '',
-            estimatedHours: '',
-            fixedAmount: '5500',
-            successFee: '',
-            mixedFee: '',
-            advancePayment: '2750'
+            type: 'סכום_כולל',
+            totalAmount: '5500',
+            paymentStructure: '50%-50%',
+            advancePayment: '',
+            successPercentage: '',
+            stages: ''
           };
           defaultTerms.paymentTerms = '50% במעמד החתימה על הסכם זה, והיתרה בשיעור 50% במעמד חתימת הצוואות בפני העדים.';
           break;
 
         case 'ייפוי_כוח_מתמשך':
           defaultFees = {
-            type: 'קבוע',
-            hourlyRate: '',
-            estimatedHours: '',
-            fixedAmount: '4000',
-            successFee: '',
-            mixedFee: '',
-            advancePayment: '2000'
+            type: 'סכום_כולל',
+            totalAmount: '4000',
+            paymentStructure: '50%-50%',
+            advancePayment: '',
+            successPercentage: '',
+            stages: ''
           };
           defaultTerms.paymentTerms = '50% במעמד החתימה על הסכם זה, והיתרה בשיעור 50% במעמד החתימה על ייפוי הכוח.';
           break;
 
         case 'התנגדות_לצוואה':
           defaultFees = {
-            type: 'שעתי',
-            hourlyRate: '900',
-            estimatedHours: '20',
-            fixedAmount: '',
-            successFee: '5',
-            mixedFee: '',
-            advancePayment: '12000'
+            type: 'מקדמה_והצלחה',
+            totalAmount: '',
+            paymentStructure: '',
+            advancePayment: '12000',
+            successPercentage: '5',
+            stages: ''
           };
           defaultTerms.paymentTerms = 'מקדמה חודשית בסך 10,000 ש\"ח על חשבון שכר הטרחה. בתום כל חודש תיערך התחשבנות.';
           break;
 
         case 'אפוטרופסות':
           defaultFees = {
-            type: 'קבוע',
-            hourlyRate: '',
-            estimatedHours: '',
-            fixedAmount: '8000',
-            successFee: '',
-            mixedFee: '',
-            advancePayment: '4000'
+            type: 'סכום_כולל',
+            totalAmount: '8000',
+            paymentStructure: 'מלא מראש',
+            advancePayment: '',
+            successPercentage: '',
+            stages: ''
           };
           defaultTerms.paymentTerms = 'תשלום מלא עם החתימה על ההסכם.';
           break;
 
         case 'פירוק_שיתוף':
           defaultFees = {
-            type: 'מעורב',
-            hourlyRate: '850',
-            estimatedHours: '25',
-            fixedAmount: '',
-            successFee: '4',
-            mixedFee: '15000',
-            advancePayment: '8000'
+            type: 'מקדמה_והצלחה',
+            totalAmount: '',
+            paymentStructure: '',
+            advancePayment: '15000',
+            successPercentage: '4',
+            stages: ''
           };
           defaultTerms.paymentTerms = 'מקדמה חודשית בסך 8,000 ש\"ח על חשבון שכר הטרחה. בסוף כל חודש תיערך התחשבנות.';
           break;
 
         case 'תביעה_כספית':
           defaultFees = {
-            type: 'הצלחה',
-            hourlyRate: '',
-            estimatedHours: '',
-            fixedAmount: '',
-            successFee: '12',
-            mixedFee: '',
-            advancePayment: '5000'
+            type: 'מקדמה_והצלחה',
+            totalAmount: '',
+            paymentStructure: '',
+            advancePayment: '5000',
+            successPercentage: '12',
+            stages: ''
           };
           defaultTerms.paymentTerms = 'מקדמה ראשונית בסך 30% משכר הטרחה המוערך עם החתימה על הסכם זה. יתרת התשלום תשולם בשלבים או בסיום ההליך.';
           break;
 
         case 'ייעוץ_משפטי':
           defaultFees = {
-            type: 'שעתי',
-            hourlyRate: '750',
-            estimatedHours: '10',
-            fixedAmount: '',
-            successFee: '',
-            mixedFee: '',
-            advancePayment: ''
+            type: 'סכום_כולל',
+            totalAmount: '7500',
+            paymentStructure: 'מלא מראש',
+            advancePayment: '',
+            successPercentage: '',
+            stages: ''
           };
           defaultTerms.paymentTerms = 'תשלום יבוצע על בסיס חודשי לפי דו\"ח שעות מפורט.';
           break;
@@ -833,37 +815,15 @@ ________________________           ________________________
             )}
           </div>
           
-          <div className="grid md:grid-cols-2 gap-4 mb-4">
+          <div className="mb-4">
             <input
               type="text"
               value={agreementData.case.subject}
               onChange={(e) => updateCase('subject', e.target.value)}
               placeholder="נושא התיק (תביעה, הסכם, ייעוץ...)"
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-purple-500 focus:border-purple-500"
-              dir="rtl"
-            />
-            
-            <input
-              type="text"
-              value={agreementData.case.court}
-              onChange={(e) => updateCase('court', e.target.value)}
-              placeholder="בית משפט/דין רלוונטי"
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-purple-500 focus:border-purple-500"
-              dir="rtl"
-            />
-          </div>
-
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">רמת מורכבות</label>
-            <select
-              value={agreementData.case.complexity}
-              onChange={(e) => updateCase('complexity', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-purple-500 focus:border-purple-500"
-            >
-              <option value="פשוט">פשוט - טיפול בסיסי</option>
-              <option value="בינוני">בינוני - דורש מחקר וכנה</option>
-              <option value="מורכב">מורכב - דורש עבודה מקצועית נרחבת</option>
-            </select>
+              dir="rtl"
+            />
           </div>
 
           <textarea
@@ -899,223 +859,81 @@ ________________________           ________________________
               onChange={(e) => updateFees('type', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-yellow-500 focus:border-yellow-500"
             >
-              <option value="שעתי">תמחור שעתי</option>
-              <option value="קבוע">סכום קבוע חד פעמי</option>
-              <option value="הצלחה">אחוז הצלחה</option>
-              <option value="מעורב">מעורב (מקדמה + הצלחה)</option>
+              <option value="סכום_כולל">סכום כולל</option>
+              <option value="מקדמה_והצלחה">מקדמה + אחוז הצלחה</option>
             </select>
           </div>
 
           {/* שדות תמחור דינמיים */}
           <div className="space-y-4">
-            {agreementData.fees.type === 'שעתי' && (
+            {agreementData.fees.type === 'סכום_כולל' && (
+              <>
+                <input
+                  type="text"
+                  value={agreementData.fees.totalAmount || ''}
+                  onChange={(e) => updateFees('totalAmount', e.target.value)}
+                  placeholder="סכום כולל (₪)"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-yellow-500 focus:border-yellow-500"
+                  dir="ltr"
+                />
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">מבנה התשלום</label>
+                  <select
+                    value={agreementData.fees.paymentStructure || 'מלא מראש'}
+                    onChange={(e) => updateFees('paymentStructure', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-yellow-500 focus:border-yellow-500"
+                  >
+                    <option value="מלא מראש">תשלום מלא מראש</option>
+                    <option value="50%-50%">חלוקה 50%-50%</option>
+                    <option value="שלבים">חלוקה לשלבים</option>
+                  </select>
+                </div>
+
+                {agreementData.fees.paymentStructure === 'שלבים' && (
+                  <textarea
+                    value={agreementData.fees.stages || ''}
+                    onChange={(e) => updateFees('stages', e.target.value)}
+                    placeholder="פרט את השלבים (למשל: 30% עם החתימה, 40% בסיום הטיוטה, 30% עם החתימה על ההסכם)"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-yellow-500 focus:border-yellow-500"
+                    rows={3}
+                    dir="rtl"
+                  />
+                )}
+              </>
+            )}
+
+            {agreementData.fees.type === 'מקדמה_והצלחה' && (
               <>
                 <div className="grid md:grid-cols-2 gap-4">
                   <input
                     type="text"
-                    value={agreementData.fees.hourlyRate || ''}
-                    onChange={(e) => updateFees('hourlyRate', e.target.value)}
-                    placeholder="תעריף שעתי (₪)"
+                    value={agreementData.fees.advancePayment || ''}
+                    onChange={(e) => updateFees('advancePayment', e.target.value)}
+                    placeholder="מקדמה מראש (₪)"
                     className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-yellow-500 focus:border-yellow-500"
                     dir="ltr"
                   />
                   
                   <input
                     type="text"
-                    value={agreementData.fees.estimatedHours || ''}
-                    onChange={(e) => updateFees('estimatedHours', e.target.value)}
-                    placeholder="הערכת שעות עבודה"
+                    value={agreementData.fees.successPercentage || ''}
+                    onChange={(e) => updateFees('successPercentage', e.target.value)}
+                    placeholder="אחוז הצלחה (%)"
                     className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-yellow-500 focus:border-yellow-500"
                     dir="ltr"
                   />
                 </div>
                 
-                {agreementData.fees.hourlyRate && agreementData.fees.estimatedHours && (
-                  <div className="bg-white p-3 rounded border border-yellow-300 text-sm">
-                    <strong>הערכת עלות כוללת: </strong>
-                    {(parseInt(agreementData.fees.hourlyRate || '0') * parseInt(agreementData.fees.estimatedHours || '0')).toLocaleString()} ₪
-                  </div>
-                )}
-              </>
-            )}
-
-            {agreementData.fees.type === 'קבוע' && (
-              <input
-                type="text"
-                value={agreementData.fees.fixedAmount || ''}
-                onChange={(e) => updateFees('fixedAmount', e.target.value)}
-                placeholder="סכום קבוע (₪)"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-yellow-500 focus:border-yellow-500"
-                dir="ltr"
-              />
-            )}
-
-            {agreementData.fees.type === 'הצלחה' && (
-              <>
-                <input
-                  type="text"
-                  value={agreementData.fees.successPercentage || ''}
-                  onChange={(e) => updateFees('successPercentage', e.target.value)}
-                  placeholder="אחוז הצלחה (%)"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-yellow-500 focus:border-yellow-500"
-                  dir="ltr"
-                />
-                <input
-                  type="text"
-                  value={agreementData.fees.advancePayment || ''}
-                  onChange={(e) => updateFees('advancePayment', e.target.value)}
-                  placeholder="מקדמה להוצאות (₪) - אופציונלי"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-yellow-500 focus:border-yellow-500"
-                  dir="ltr"
-                />
-              </>
-            )}
-
-            {agreementData.fees.type === 'מעורב' && (
-              <>
-                <div className="bg-white border-2 border-yellow-400 rounded-lg p-4 mb-4">
-                  <h3 className="font-bold text-yellow-900 mb-3">💰 מבנה תשלום מעורב</h3>
-                  <p className="text-sm text-yellow-800 mb-4">
-                    שילוב של תשלום קבוע ראשוני + אחוז מהתוצאה בהצלחה
-                  </p>
-                  
-                  <div className="space-y-3">
-                    <div>
-                      <label className="block text-sm font-medium text-yellow-900 mb-1">
-                        תשלום ראשוני קבוע (מקדמה)
-                      </label>
-                      <input
-                        type="text"
-                        value={agreementData.fees.mixedAdvance || ''}
-                        onChange={(e) => updateFees('mixedAdvance', e.target.value)}
-                        placeholder="סכום קבוע ששולם בחתימה (₪)"
-                        className="w-full px-3 py-2 border border-yellow-300 rounded-lg focus:ring-yellow-500 focus:border-yellow-500"
-                        dir="ltr"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-yellow-900 mb-1">
-                        אחוז מהתוצאה (במקרה הצלחה)
-                      </label>
-                      <input
-                        type="text"
-                        value={agreementData.fees.mixedPercentage || ''}
-                        onChange={(e) => updateFees('mixedPercentage', e.target.value)}
-                        placeholder="אחוז מהסכום שיתקבל (%)"
-                        className="w-full px-3 py-2 border border-yellow-300 rounded-lg focus:ring-yellow-500 focus:border-yellow-500"
-                        dir="ltr"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-yellow-900 mb-1">
-                        תשלום מינימלי (גם ללא הצלחה) - אופציונלי
-                      </label>
-                      <input
-                        type="text"
-                        value={agreementData.fees.mixedMinimum || ''}
-                        onChange={(e) => updateFees('mixedMinimum', e.target.value)}
-                        placeholder="סכום מינימלי שישולם בכל מקרה (₪)"
-                        className="w-full px-3 py-2 border border-yellow-300 rounded-lg focus:ring-yellow-500 focus:border-yellow-500"
-                        dir="ltr"
-                      />
-                    </div>
-                  </div>
-                  
-                  {agreementData.fees.mixedAdvance && agreementData.fees.mixedPercentage && (
-                    <div className="mt-4 p-3 bg-yellow-100 border border-yellow-400 rounded text-sm">
-                      <strong>📊 דוגמת חישוב:</strong>
-                      <ul className="mt-2 mr-4 space-y-1">
-                        <li>• תשלום ראשוני: {parseInt(agreementData.fees.mixedAdvance || '0').toLocaleString()} ₪</li>
-                        <li>• אם תתקבל תוצאה של 100,000 ₪: {(100000 * parseInt(agreementData.fees.mixedPercentage || '0') / 100).toLocaleString()} ₪</li>
-                        <li>• <strong>סה"כ:</strong> {(parseInt(agreementData.fees.mixedAdvance || '0') + (100000 * parseInt(agreementData.fees.mixedPercentage || '0') / 100)).toLocaleString()} ₪</li>
-                      </ul>
-                    </div>
-                  )}
+                <div className="bg-white p-3 rounded border border-yellow-300 text-sm">
+                  <strong>דוגמה:</strong> מקדמה 5,000 ₪ + 10% מהסכום שיתקבל בפועל
                 </div>
               </>
             )}
 
-            {(agreementData.fees.type === 'קבוע' || agreementData.fees.type === 'שעתי') && (
-              <input
-                type="text"
-                value={agreementData.fees.advancePayment || ''}
-                onChange={(e) => updateFees('advancePayment', e.target.value)}
-                placeholder="מקדמה (₪) - אופציונלי"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-yellow-500 focus:border-yellow-500"
-                dir="ltr"
-              />
-            )}
           </div>
         </section>
 
-        {/* תנאים מיוחדים */}
-        <section className="bg-orange-50 p-6 rounded-lg border border-orange-200 mb-6">
-          <h2 className="text-xl font-bold text-orange-900 mb-4">תנאי ההסכם</h2>
-          
-          {/* הודעה ברורה */}
-          <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-            <p className="text-sm text-green-700">
-              💡 <strong>טיפ:</strong> תנאי התשלום נטענו אוטומטית. 
-              כשתשני אותם כאן - הם יתעדכנו אוטומטית גם בסעיפים למטה!
-            </p>
-          </div>
-          
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">תנאי תשלום</label>
-              <textarea
-                value={agreementData.terms.paymentTerms}
-                onChange={(e) => updateTerms('paymentTerms', e.target.value)}
-                placeholder="מתי ואיך ישולם השכר (תוך 30 ימים, במקדמות...)"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 resize-none"
-                rows={2}
-                dir="rtl"
-                style={{ fontFamily: 'David', fontSize: '13pt' }}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">כיסוי הוצאות</label>
-              <textarea
-                value={agreementData.terms.expensesCoverage}
-                onChange={(e) => updateTerms('expensesCoverage', e.target.value)}
-                placeholder="מי משלם הוצאות משפט, מומחים, נסיעות וכו'"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 resize-none"
-                rows={2}
-                dir="rtl"
-                style={{ fontFamily: 'David', fontSize: '13pt' }}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">סיום ההתקשרות</label>
-              <textarea
-                value={agreementData.terms.terminationClause}
-                onChange={(e) => updateTerms('terminationClause', e.target.value)}
-                placeholder="תנאי סיום ההסכם, הודעה מוקדמת, זכויות הצדדים"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 resize-none"
-                rows={2}
-                dir="rtl"
-                style={{ fontFamily: 'David', fontSize: '13pt' }}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">תנאים מיוחדים</label>
-              <textarea
-                value={agreementData.terms.specialConditions}
-                onChange={(e) => updateTerms('specialConditions', e.target.value)}
-                placeholder="תנאים נוספים, הגבלות, זכויות מיוחדות"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 resize-none"
-                rows={3}
-                dir="rtl"
-                style={{ fontFamily: 'David', fontSize: '13pt' }}
-              />
-            </div>
-          </div>
-        </section>
 
         {/* עוזר AI */}
         <section className="bg-indigo-50 p-6 rounded-lg border border-indigo-200 mb-6">
