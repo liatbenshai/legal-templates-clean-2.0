@@ -216,15 +216,6 @@ export default function Navbar() {
                       <span>המסמכים שלי</span>
                     </Link>
 
-                    <Link
-                      href="/settings"
-                      className="flex items-center gap-3 px-4 py-2 hover:bg-gray-100 transition"
-                      onClick={() => setIsUserMenuOpen(false)}
-                    >
-                      <Settings className="w-4 h-4 text-gray-600" />
-                      <span>הגדרות</span>
-                    </Link>
-
                     <div className="border-t border-gray-200 my-2"></div>
 
                     <button
