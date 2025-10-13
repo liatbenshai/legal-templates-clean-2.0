@@ -594,3 +594,4 @@ export default function SectionsWarehouse({ onAddSection, selectedWillType }: Se
     </div>
   );
 }
+
