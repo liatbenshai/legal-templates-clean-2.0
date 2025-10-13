@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { AuthService } from '@/lib/auth';
-import { User as UserIcon, Mail, Phone, Building, Lock, Save, LogOut } from 'lucide-react';
+import { User as UserIcon, Mail, Phone, Building, Lock, Save, LogOut, Scale } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 export default function ProfilePage() {
