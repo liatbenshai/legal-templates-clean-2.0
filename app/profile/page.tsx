@@ -133,7 +133,7 @@ export default function ProfilePage() {
           {/* פרטים אישיים */}
           <div className="bg-white rounded-xl shadow-md p-6">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-gray-900">פרטים אישיים</h2>
+              <h2 className="text-xl font-bold text-gray-900">פרטים אישיים ✨</h2>
               {!isEditing ? (
                 <button
                   onClick={() => setIsEditing(true)}
