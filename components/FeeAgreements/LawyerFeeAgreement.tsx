@@ -140,6 +140,150 @@ export default function LawyerFeeAgreement() {
           subject: service.serviceName
         }
       }));
+
+      // עדכון סכומים ותנאי תשלום אוטומטית בהתאם לסוג השירות
+      let defaultFees = {
+        type: 'שעתי' as const,
+        hourlyRate: '',
+        estimatedHours: '',
+        fixedAmount: '',
+        successFee: '',
+        mixedFee: '',
+        advancePayment: ''
+      };
+
+      let defaultTerms = {
+        paymentTerms: 'חשבונית תישלח מדי חודש ותשולם תוך 30 ימים מקבלתה.',
+        expensesCoverage: 'הוצאות משפט (אגרות, עלויות מומחים, נסיעות) יחולו על הלקוח ויחויבו בנפרד.',
+        terminationClause: 'כל צד יכול לסיים את ההתקשרות בהודעה של 14 ימים מראש.'
+      };
+
+      // הגדרות ספציפיות לפי סוג השירות
+      switch (selectedServiceType) {
+        case 'הסכמי_ממון':
+          defaultFees = {
+            type: 'קבוע',
+            hourlyRate: '',
+            estimatedHours: '',
+            fixedAmount: '5000',
+            successFee: '',
+            mixedFee: '',
+            advancePayment: '2500'
+          };
+          defaultTerms.paymentTerms = '50% במעמד החתימה על הסכם זה, והיתרה בשיעור 50% לאחר אישור טיוטת ההסכם על ידי הלקוח ובטרם חתימתו.';
+          break;
+        
+        case 'צוואת_יחיד':
+          defaultFees = {
+            type: 'קבוע',
+            hourlyRate: '',
+            estimatedHours: '',
+            fixedAmount: '3000',
+            successFee: '',
+            mixedFee: '',
+            advancePayment: '1500'
+          };
+          defaultTerms.paymentTerms = '50% במעמד החתימה על הסכם זה, והיתרה בשיעור 50% במעמד חתימת הצוואה בפני העדים.';
+          break;
+
+        case 'צוואה_הדדית':
+          defaultFees = {
+            type: 'קבוע',
+            hourlyRate: '',
+            estimatedHours: '',
+            fixedAmount: '5500',
+            successFee: '',
+            mixedFee: '',
+            advancePayment: '2750'
+          };
+          defaultTerms.paymentTerms = '50% במעמד החתימה על הסכם זה, והיתרה בשיעור 50% במעמד חתימת הצוואות בפני העדים.';
+          break;
+
+        case 'ייפוי_כוח_מתמשך':
+          defaultFees = {
+            type: 'קבוע',
+            hourlyRate: '',
+            estimatedHours: '',
+            fixedAmount: '4000',
+            successFee: '',
+            mixedFee: '',
+            advancePayment: '2000'
+          };
+          defaultTerms.paymentTerms = '50% במעמד החתימה על הסכם זה, והיתרה בשיעור 50% במעמד החתימה על ייפוי הכוח.';
+          break;
+
+        case 'התנגדות_לצוואה':
+          defaultFees = {
+            type: 'שעתי',
+            hourlyRate: '900',
+            estimatedHours: '20',
+            fixedAmount: '',
+            successFee: '5',
+            mixedFee: '',
+            advancePayment: '12000'
+          };
+          defaultTerms.paymentTerms = 'מקדמה חודשית בסך 10,000 ש\"ח על חשבון שכר הטרחה. בתום כל חודש תיערך התחשבנות.';
+          break;
+
+        case 'אפוטרופסות':
+          defaultFees = {
+            type: 'קבוע',
+            hourlyRate: '',
+            estimatedHours: '',
+            fixedAmount: '8000',
+            successFee: '',
+            mixedFee: '',
+            advancePayment: '4000'
+          };
+          defaultTerms.paymentTerms = 'תשלום מלא עם החתימה על ההסכם.';
+          break;
+
+        case 'פירוק_שיתוף':
+          defaultFees = {
+            type: 'מעורב',
+            hourlyRate: '850',
+            estimatedHours: '25',
+            fixedAmount: '',
+            successFee: '4',
+            mixedFee: '15000',
+            advancePayment: '8000'
+          };
+          defaultTerms.paymentTerms = 'מקדמה חודשית בסך 8,000 ש\"ח על חשבון שכר הטרחה. בסוף כל חודש תיערך התחשבנות.';
+          break;
+
+        case 'תביעה_כספית':
+          defaultFees = {
+            type: 'הצלחה',
+            hourlyRate: '',
+            estimatedHours: '',
+            fixedAmount: '',
+            successFee: '12',
+            mixedFee: '',
+            advancePayment: '5000'
+          };
+          defaultTerms.paymentTerms = 'מקדמה ראשונית בסך 30% משכר הטרחה המוערך עם החתימה על הסכם זה. יתרת התשלום תשולם בשלבים או בסיום ההליך.';
+          break;
+
+        case 'ייעוץ_משפטי':
+          defaultFees = {
+            type: 'שעתי',
+            hourlyRate: '750',
+            estimatedHours: '10',
+            fixedAmount: '',
+            successFee: '',
+            mixedFee: '',
+            advancePayment: ''
+          };
+          defaultTerms.paymentTerms = 'תשלום יבוצע על בסיס חודשי לפי דו\"ח שעות מפורט.';
+          break;
+      }
+
+      // עדכון הנתונים
+      setAgreementData(prev => ({
+        ...prev,
+        fees: defaultFees,
+        terms: defaultTerms
+      }));
     }
   }, [selectedServiceType]);
 
