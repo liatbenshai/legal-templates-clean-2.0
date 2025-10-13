@@ -98,6 +98,7 @@ export class AuthService {
    * התנתקות
    */
   static logout(): void {
+    if (typeof window === 'undefined') return;
     localStorage.removeItem(this.CURRENT_USER_KEY);
     localStorage.removeItem(this.SESSION_KEY);
     this.deleteCookie('currentUser');
@@ -107,6 +108,7 @@ export class AuthService {
    * קבלת משתמש נוכחי
    */
   static getCurrentUser(): User | null {
+    if (typeof window === 'undefined') return null;
     try {
       const userStr = localStorage.getItem(this.CURRENT_USER_KEY);
       if (!userStr) return null;
@@ -170,6 +172,7 @@ export class AuthService {
 
   // פונקציות פרטיות
   private static getUsers(): User[] {
+    if (typeof window === 'undefined') return [];
     try {
       const usersStr = localStorage.getItem(this.USERS_KEY);
       return usersStr ? JSON.parse(usersStr) : [];
@@ -179,15 +182,18 @@ export class AuthService {
   }
 
   private static saveUsers(users: User[]): void {
+    if (typeof window === 'undefined') return;
     localStorage.setItem(this.USERS_KEY, JSON.stringify(users));
   }
 
   private static setCurrentUser(user: User): void {
+    if (typeof window === 'undefined') return;
     localStorage.setItem(this.CURRENT_USER_KEY, JSON.stringify(user));
     localStorage.setItem(this.SESSION_KEY, Date.now().toString());
   }
 
   private static getPasswords(): Record<string, string> {
+    if (typeof window === 'undefined') return {};
     try {
       const pwdStr = localStorage.getItem('passwords');
       return pwdStr ? JSON.parse(pwdStr) : {};
@@ -197,21 +203,25 @@ export class AuthService {
   }
 
   private static savePasswords(passwords: Record<string, string>): void {
+    if (typeof window === 'undefined') return;
     localStorage.setItem('passwords', JSON.stringify(passwords));
   }
 
   // פונקציות Cookies
   private static setCookie(name: string, value: string, days: number = 7): void {
+    if (typeof window === 'undefined') return;
     const expires = new Date();
     expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
     document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/`;
   }
 
   private static deleteCookie(name: string): void {
+    if (typeof window === 'undefined') return;
     document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/`;
   }
 
   private static getCookie(name: string): string | null {
+    if (typeof window === 'undefined') return null;
     const nameEQ = name + "=";
     const ca = document.cookie.split(';');
     for (let i = 0; i < ca.length; i++) {
