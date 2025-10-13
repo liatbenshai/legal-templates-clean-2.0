@@ -119,30 +119,9 @@ export default function Navbar() {
                 <FileText className="w-4 h-4 text-blue-600" />
                 <span>צוואות</span>
               </Link>
-              <Link href="/documents/court-petition" className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition">
-                <Scale className="w-4 h-4 text-green-600" />
-                <span>כתבי בית דין</span>
-              </Link>
-              <Link href="/documents/fee-agreement" className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition">
-                <DollarSign className="w-4 h-4 text-yellow-600" />
-                <span>הסכמי שכ"ט</span>
-              </Link>
-              <Link href="/documents/power-of-attorney-pro" className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition">
-                <HandHeart className="w-4 h-4 text-purple-600" />
-                <span>ייפוי כוח</span>
-              </Link>
-              <Link href="/documents/affidavit-pro" className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition">
-                <CheckCircle className="w-4 h-4 text-green-600" />
-                <span>תצהיר</span>
-              </Link>
               <Link href="/documents/advance-directives" className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition">
                 <FileText className="w-4 h-4 text-teal-600" />
                 <span>הנחיות מקדימות</span>
-              </Link>
-              <div className="border-t border-gray-200 my-2"></div>
-              <Link href="/documents" className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition text-blue-600">
-                <FileText className="w-4 h-4" />
-                <span className="font-medium">כל המסמכים</span>
               </Link>
             </DropdownMenu>
 
@@ -312,17 +291,8 @@ export default function Navbar() {
                   <Link href="/documents/will" className="block px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-lg transition" onClick={() => setIsMenuOpen(false)}>
                     צוואות
                   </Link>
-                  <Link href="/documents/court-petition" className="block px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-lg transition" onClick={() => setIsMenuOpen(false)}>
-                    כתבי בית דין
-                  </Link>
-                  <Link href="/documents/fee-agreement" className="block px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-lg transition" onClick={() => setIsMenuOpen(false)}>
-                    הסכמי שכ"ט
-                  </Link>
-                  <Link href="/documents/power-of-attorney-pro" className="block px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-lg transition" onClick={() => setIsMenuOpen(false)}>
-                    ייפוי כוח
-                  </Link>
-                  <Link href="/documents/affidavit-pro" className="block px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-lg transition" onClick={() => setIsMenuOpen(false)}>
-                    תצהיר
+                  <Link href="/documents/advance-directives" className="block px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-lg transition" onClick={() => setIsMenuOpen(false)}>
+                    הנחיות מקדימות
                   </Link>
                 </div>
               </div>
