@@ -110,7 +110,17 @@ export class AuthService {
     try {
       const userStr = localStorage.getItem(this.CURRENT_USER_KEY);
       if (!userStr) return null;
-      return JSON.parse(userStr);
+      const user = JSON.parse(userStr);
+      
+      // Migration: הוספת שדות חדשים למשתמשים ישנים
+      if (user && (user.licenseNumber === undefined || user.officeAddress === undefined)) {
+        user.licenseNumber = user.licenseNumber || '';
+        user.officeAddress = user.officeAddress || '';
+        this.setCurrentUser(user);
+        this.updateUser(user);
+      }
+      
+      return user;
     } catch {
       return null;
     }
