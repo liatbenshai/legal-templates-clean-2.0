@@ -38,7 +38,7 @@ interface FeeAgreementData {
 
   // תמחור
   fees: {
-    type: 'שעתי' | 'חד פעמי' | 'הצלחה' | 'מעורב';
+    type: 'שעתי' | 'קבוע' | 'הצלחה' | 'מעורב';
     hourlyRate?: string;
     fixedAmount?: string;
     successPercentage?: string;
@@ -493,7 +493,7 @@ ________________________           ________________________
 
 הסכם זה נחתם בשני עותקים, עותק לכל צד.`;
 
-      case 'חד פעמי':
+      case 'קבוע':
         return `${baseAgreement}2.1. שכר הטרחה הוא סכום חד פעמי וקבוע: ${agreementData.fees.fixedAmount || '[סכום]'} ₪.
 
 2.2. הסכום יכלול את כל השירותים המשפטיים הנדרשים לטיפול בתיק.
@@ -900,7 +900,7 @@ ________________________           ________________________
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-yellow-500 focus:border-yellow-500"
             >
               <option value="שעתי">תמחור שעתי</option>
-              <option value="חד פעמי">סכום קבוע חד פעמי</option>
+              <option value="קבוע">סכום קבוע חד פעמי</option>
               <option value="הצלחה">אחוז הצלחה</option>
               <option value="מעורב">מעורב (מקדמה + הצלחה)</option>
             </select>
@@ -939,7 +939,7 @@ ________________________           ________________________
               </>
             )}
 
-            {agreementData.fees.type === 'חד פעמי' && (
+            {agreementData.fees.type === 'קבוע' && (
               <input
                 type="text"
                 value={agreementData.fees.fixedAmount || ''}
@@ -1037,7 +1037,7 @@ ________________________           ________________________
               </>
             )}
 
-            {(agreementData.fees.type === 'חד פעמי' || agreementData.fees.type === 'שעתי') && (
+            {(agreementData.fees.type === 'קבוע' || agreementData.fees.type === 'שעתי') && (
               <input
                 type="text"
                 value={agreementData.fees.advancePayment || ''}
