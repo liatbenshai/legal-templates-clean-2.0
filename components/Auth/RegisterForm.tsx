@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { AuthService } from '@/lib/auth';
-import { Mail, Lock, User, Phone, Building, Eye, EyeOff, UserPlus } from 'lucide-react';
+import { Mail, Lock, User, Phone, Building, Eye, EyeOff, UserPlus, Scale } from 'lucide-react';
 
 interface RegisterFormProps {
   onSuccess?: () => void;
@@ -17,6 +17,8 @@ export default function RegisterForm({ onSuccess, onLoginClick }: RegisterFormPr
     name: '',
     phone: '',
     company: '',
+    licenseNumber: '',
+    officeAddress: '',
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -47,6 +49,8 @@ export default function RegisterForm({ onSuccess, onLoginClick }: RegisterFormPr
         name: formData.name,
         phone: formData.phone || undefined,
         company: formData.company || undefined,
+        licenseNumber: formData.licenseNumber || undefined,
+        officeAddress: formData.officeAddress || undefined,
       });
 
       if (result.success) {
@@ -154,6 +158,42 @@ export default function RegisterForm({ onSuccess, onLoginClick }: RegisterFormPr
                 onChange={(e) => handleChange('company', e.target.value)}
                 className="w-full pr-10 pl-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                 placeholder="שם משרד עורכי דין"
+                dir="rtl"
+              />
+            </div>
+          </div>
+
+          {/* מספר רישיון עו"ד */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              מספר רישיון עו"ד <span className="text-gray-400 text-xs">(אופציונלי)</span>
+            </label>
+            <div className="relative">
+              <Scale className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <input
+                type="text"
+                value={formData.licenseNumber}
+                onChange={(e) => handleChange('licenseNumber', e.target.value)}
+                className="w-full pr-10 pl-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                placeholder="מס' רישיון - לעורכי דין בלבד"
+                dir="ltr"
+              />
+            </div>
+          </div>
+
+          {/* כתובת משרד */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              כתובת משרד <span className="text-gray-400 text-xs">(אופציונלי)</span>
+            </label>
+            <div className="relative">
+              <Building className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <input
+                type="text"
+                value={formData.officeAddress}
+                onChange={(e) => handleChange('officeAddress', e.target.value)}
+                className="w-full pr-10 pl-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                placeholder="כתובת מלאה של המשרד"
                 dir="rtl"
               />
             </div>

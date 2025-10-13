@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FileText, DollarSign, Calendar, User, Scale, BookOpen, X, Download } from 'lucide-react';
 import SimpleExportButtons from '../SimpleExportButtons';
 import SimpleAIImprover from '../SimpleAIImprover';
 import UniversalSectionsWarehouse from '../UniversalSectionsWarehouse';
 import { exportFeeAgreementToWord } from './FeeAgreementExporter';
+import { AuthService } from '@/lib/auth';
 
 interface FeeAgreementData {
   // פרטי עורך הדין
@@ -58,13 +59,16 @@ interface FeeAgreementData {
 }
 
 export default function LawyerFeeAgreement() {
+  // טעינת פרטי המשתמש המחובר
+  const currentUser = AuthService.getCurrentUser();
+  
   const [agreementData, setAgreementData] = useState<FeeAgreementData>({
     lawyer: {
-      name: '',
-      license: '',
-      address: '',
-      phone: '',
-      email: ''
+      name: currentUser?.name || '',
+      license: currentUser?.licenseNumber || '',
+      address: currentUser?.officeAddress || '',
+      phone: currentUser?.phone || '',
+      email: currentUser?.email || ''
     },
     client: {
       name: '',
@@ -99,6 +103,22 @@ export default function LawyerFeeAgreement() {
   const [showAI, setShowAI] = useState(false);
   const [showSectionsWarehouse, setShowSectionsWarehouse] = useState(false);
   const [customSections, setCustomSections] = useState<Array<{title: string, content: string}>>([]);
+
+  // עדכון פרטי עורך הדין אם המשתמש משתנה
+  useEffect(() => {
+    if (currentUser) {
+      setAgreementData(prev => ({
+        ...prev,
+        lawyer: {
+          name: currentUser.name || '',
+          license: currentUser.licenseNumber || '',
+          address: currentUser.officeAddress || '',
+          phone: currentUser.phone || '',
+          email: currentUser.email || ''
+        }
+      }));
+    }
+  }, [currentUser]);
 
   const updateLawyer = (field: keyof typeof agreementData.lawyer, value: string) => {
     setAgreementData(prev => ({
@@ -415,10 +435,25 @@ ________________________           ________________________
 
         {/* פרטי עורך הדין */}
         <section className="bg-blue-50 p-6 rounded-lg border border-blue-200 mb-6">
-          <h2 className="text-xl font-bold text-blue-900 mb-4 flex items-center gap-2">
-            <Scale className="w-5 h-5" />
-            פרטי עורך הדין
-          </h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-blue-900 flex items-center gap-2">
+              <Scale className="w-5 h-5" />
+              פרטי עורך הדין
+            </h2>
+            {currentUser && (
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-green-700 bg-green-100 px-3 py-1 rounded-full">
+                  ✓ נטען מהפרופיל
+                </span>
+                <a 
+                  href="/profile" 
+                  className="text-sm text-blue-600 hover:text-blue-800 underline"
+                >
+                  עדכן בפרופיל
+                </a>
+              </div>
+            )}
+          </div>
           
           <div className="grid md:grid-cols-2 gap-4 mb-4">
             <input

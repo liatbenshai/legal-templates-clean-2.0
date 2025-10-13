@@ -14,6 +14,8 @@ export default function ProfilePage() {
     email: user?.email || '',
     phone: user?.phone || '',
     company: user?.company || '',
+    licenseNumber: user?.licenseNumber || '',
+    officeAddress: user?.officeAddress || '',
   });
   const [passwordData, setPasswordData] = useState({
     oldPassword: '',
@@ -38,6 +40,8 @@ export default function ProfilePage() {
       email: formData.email,
       phone: formData.phone,
       company: formData.company,
+      licenseNumber: formData.licenseNumber,
+      officeAddress: formData.officeAddress,
     };
 
     AuthService.updateUser(updatedUser);
@@ -154,6 +158,8 @@ export default function ProfilePage() {
                         email: user.email,
                         phone: user.phone || '',
                         company: user.company || '',
+                        licenseNumber: user.licenseNumber || '',
+                        officeAddress: user.officeAddress || '',
                       });
                     }}
                     className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition"
@@ -231,6 +237,44 @@ export default function ProfilePage() {
                     value={formData.company}
                     onChange={(e) => setFormData({ ...formData, company: e.target.value })}
                     disabled={!isEditing}
+                    className="w-full pr-10 pl-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary disabled:bg-gray-50"
+                    dir="rtl"
+                  />
+                </div>
+              </div>
+
+              {/* מספר רישיון עו"ד */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  מספר רישיון עו"ד
+                </label>
+                <div className="relative">
+                  <Scale className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                  <input
+                    type="text"
+                    value={formData.licenseNumber}
+                    onChange={(e) => setFormData({ ...formData, licenseNumber: e.target.value })}
+                    disabled={!isEditing}
+                    placeholder="אופציונלי - רק לעורכי דין"
+                    className="w-full pr-10 pl-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary disabled:bg-gray-50"
+                    dir="ltr"
+                  />
+                </div>
+              </div>
+
+              {/* כתובת משרד */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  כתובת משרד עו"ד
+                </label>
+                <div className="relative">
+                  <Building className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                  <input
+                    type="text"
+                    value={formData.officeAddress}
+                    onChange={(e) => setFormData({ ...formData, officeAddress: e.target.value })}
+                    disabled={!isEditing}
+                    placeholder="אופציונלי - כתובת מלאה של המשרד"
                     className="w-full pr-10 pl-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary disabled:bg-gray-50"
                     dir="rtl"
                   />

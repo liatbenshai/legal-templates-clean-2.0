@@ -5,6 +5,8 @@ export interface User {
   role: 'user' | 'admin';
   phone?: string;
   company?: string;
+  licenseNumber?: string;  // מספר רישיון עו"ד
+  officeAddress?: string;  // כתובת משרד עו"ד
   createdAt: string;
   lastLogin: string;
   settings: UserSettings;
@@ -34,6 +36,8 @@ export interface RegisterData {
   name: string;
   phone?: string;
   company?: string;
+  licenseNumber?: string;
+  officeAddress?: string;
 }
 
 export interface ResetPasswordData {
