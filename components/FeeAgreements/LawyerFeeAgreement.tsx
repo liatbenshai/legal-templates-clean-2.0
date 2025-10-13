@@ -7,6 +7,7 @@ import SimpleAIImprover from '../SimpleAIImprover';
 import UniversalSectionsWarehouse from '../UniversalSectionsWarehouse';
 import { exportFeeAgreementToWord } from './FeeAgreementExporter';
 import { AuthService } from '@/lib/auth';
+import feeAgreementTemplates from '@/lib/fee-agreement-templates.json';
 
 interface FeeAgreementData {
   // פרטי עורך הדין
@@ -103,6 +104,7 @@ export default function LawyerFeeAgreement() {
   const [showAI, setShowAI] = useState(false);
   const [showSectionsWarehouse, setShowSectionsWarehouse] = useState(false);
   const [customSections, setCustomSections] = useState<Array<{title: string, content: string}>>([]);
+  const [selectedServiceType, setSelectedServiceType] = useState<string>('');
 
   // עדכון פרטי עורך הדין אם המשתמש משתנה
   useEffect(() => {
@@ -119,6 +121,27 @@ export default function LawyerFeeAgreement() {
       }));
     }
   }, [currentUser]);
+
+  // טעינת סעיפים אוטומטית בהתאם לסוג השירות
+  useEffect(() => {
+    if (selectedServiceType && feeAgreementTemplates.serviceCategories[selectedServiceType as keyof typeof feeAgreementTemplates.serviceCategories]) {
+      const service = feeAgreementTemplates.serviceCategories[selectedServiceType as keyof typeof feeAgreementTemplates.serviceCategories];
+      const autoSections = service.clauses.map(clause => ({
+        title: clause.title,
+        content: clause.text
+      }));
+      setCustomSections(autoSections);
+      
+      // עדכון פרטי התיק
+      setAgreementData(prev => ({
+        ...prev,
+        case: {
+          ...prev.case,
+          subject: service.serviceName
+        }
+      }));
+    }
+  }, [selectedServiceType]);
 
   const updateLawyer = (field: keyof typeof agreementData.lawyer, value: string) => {
     setAgreementData(prev => ({
@@ -566,6 +589,31 @@ ________________________           ________________________
         {/* פרטי התיק */}
         <section className="bg-purple-50 p-6 rounded-lg border border-purple-200 mb-6">
           <h2 className="text-xl font-bold text-purple-900 mb-4">פרטי התיק</h2>
+          
+          {/* בחירת סוג שירות */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">בחירת סוג שירות</label>
+            <select
+              value={selectedServiceType}
+              onChange={(e) => setSelectedServiceType(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-purple-500 focus:border-purple-500"
+              dir="rtl"
+            >
+              <option value="">בחר סוג שירות...</option>
+              {Object.entries(feeAgreementTemplates.serviceCategories).map(([key, service]) => (
+                <option key={key} value={key}>
+                  {service.serviceName}
+                </option>
+              ))}
+            </select>
+            {selectedServiceType && (
+              <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+                <p className="text-sm text-green-700">
+                  ✅ נטענו אוטומטית {feeAgreementTemplates.serviceCategories[selectedServiceType as keyof typeof feeAgreementTemplates.serviceCategories]?.clauses.length} סעיפים מותאמים אישית
+                </p>
+              </div>
+            )}
+          </div>
           
           <div className="grid md:grid-cols-2 gap-4 mb-4">
             <input
