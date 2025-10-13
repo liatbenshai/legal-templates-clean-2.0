@@ -28,7 +28,7 @@ export const advanceDirectivesSectionsWarehouse: AdvanceDirectivesSectionTemplat
     subcategory: 'real_estate',
     title: 'מכירת נכס - מותרת',
     titleEn: 'Property Sale - Allowed',
-    content: `מיופה_הכוח רשאי למכור את הנכס במקרים הבאים:
+    content: `מיופה{{attorney_gender_suffix}} הכוח רשאי{{attorney_gender_suffix}} למכור את הנכס במקרים הבאים:
 - צורך כספי דחוף (הוצאות רפואיות, טיפול סיעודי)
 - מעבר למוסד סיעודי או בית אבות
 - אי יכולת תחזוקה
@@ -42,7 +42,7 @@ export const advanceDirectivesSectionsWarehouse: AdvanceDirectivesSectionTemplat
 
 **במקרה של מכירה בגלל מעבר למוסד:**
 הכספים ישמשו לתשלום עבור הטיפול והמגורים במוסד.`,
-    variables: [],
+    variables: ['attorney_gender_suffix'],
     tags: ['נדלן', 'מכירה', 'נכס', 'דירה']
   },
   
@@ -52,7 +52,7 @@ export const advanceDirectivesSectionsWarehouse: AdvanceDirectivesSectionTemplat
     subcategory: 'real_estate',
     title: 'מכירת נכס - אסורה',
     titleEn: 'Property Sale - Prohibited',
-    content: `אני מבקש באופן מפורש שלא למכור את הנכס בשום מקרה.
+    content: `אני מבקש{{principal_gender_suffix}} באופן מפורש שלא למכור את הנכס בשום מקרה.
 
 הנכס יישאר בבעלותי ויועבר בירושה.
 
@@ -64,7 +64,7 @@ export const advanceDirectivesSectionsWarehouse: AdvanceDirectivesSectionTemplat
 
 **חריג יחיד:**
 מכירה תאושר רק במקרה קיצון של חוב עצום שאי תשלומו יוביל לעיקול ממילא.`,
-    variables: [],
+    variables: ['principal_gender_suffix'],
     tags: ['נדלן', 'איסור', 'ירושה', 'נכס']
   },
   
@@ -74,7 +74,7 @@ export const advanceDirectivesSectionsWarehouse: AdvanceDirectivesSectionTemplat
     subcategory: 'real_estate',
     title: 'השכרת נכס',
     titleEn: 'Property Rental',
-    content: `מיופה_הכוח רשאי להשכיר את הנכס במקרים הבאים:
+    content: `מיופה{{attorney_gender_suffix}} הכוח רשאי{{attorney_gender_suffix}} להשכיר את הנכס במקרים הבאים:
 - מעבר שלי למוסד / בית אבות / דיור מוגן
 - אי יכולת להתגורר בנכס
 - צורך בהכנסה נוספת
@@ -90,7 +90,7 @@ export const advanceDirectivesSectionsWarehouse: AdvanceDirectivesSectionTemplat
 - אפשרות להעסיק חברת ניהול
 - הכנסות יועברו לחשבון הבנק שלי
 - יש לוודא תשלום מס הכנסה`,
-    variables: [],
+    variables: ['attorney_gender_suffix'],
     tags: ['נדלן', 'השכרה', 'שכירות', 'הכנסה']
   },
   
@@ -100,7 +100,7 @@ export const advanceDirectivesSectionsWarehouse: AdvanceDirectivesSectionTemplat
     subcategory: 'real_estate',
     title: 'תחזוקת נכס',
     titleEn: 'Property Maintenance',
-    content: `מיופה_הכוח אחראי על תחזוקת הנכס:
+    content: `מיופה{{attorney_gender_suffix}} הכוח אחראי{{attorney_gender_suffix}} על תחזוקת הנכס:
 
 **תחזוקה שוטפת:**
 - תשלום ארנונה במועד
@@ -112,7 +112,7 @@ export const advanceDirectivesSectionsWarehouse: AdvanceDirectivesSectionTemplat
 - תיקוני חירום - מיידי
 - תיקונים שוטפים - תוך שבוע-שבועיים
 - שיפוצים גדולים - בתיאום`,
-    variables: [],
+    variables: ['attorney_gender_suffix'],
     tags: ['נדלן', 'תחזוקה', 'ארנונה', 'תיקונים']
   },
 
@@ -122,7 +122,7 @@ export const advanceDirectivesSectionsWarehouse: AdvanceDirectivesSectionTemplat
     subcategory: 'banking',
     title: 'ניהול חשבון בנק',
     titleEn: 'Bank Account Management',
-    content: `מיופה_הכוח מוסמך לנהל את חשבונות הבנק:
+    content: `מיופה{{attorney_gender_suffix}} הכוח מוסמך{{attorney_gender_suffix}} לנהל את חשבונות הבנק:
 
 **פעולות מותרות:**
 - משיכת כסף מזומן (לצרכים יומיומיים)
@@ -136,7 +136,7 @@ export const advanceDirectivesSectionsWarehouse: AdvanceDirectivesSectionTemplat
 - תשלום הוצאות קבועות במועד
 - מעקב אחר התנועות
 - תיעוד כל פעולה`,
-    variables: [],
+    variables: ['attorney_gender_suffix'],
     tags: ['בנק', 'חשבון', 'ניהול', 'כסף']
   },
 
@@ -155,11 +155,11 @@ export const advanceDirectivesSectionsWarehouse: AdvanceDirectivesSectionTemplat
 - חשמל וגז, מים
 - תרופות / קופת חולים
 
-**אחריות מיופה כוח:**
+**אחריות מיופה{{attorney_gender_suffix}} הכוח:**
 - לוודא שהוראות הקבע פעילות
 - יתרה מספקת לפני חיוב
 - עדכון סכומים במידת הצורך`,
-    variables: [],
+    variables: ['attorney_gender_suffix'],
     tags: ['בנק', 'הוראות קבע', 'תשלומים אוטומטיים']
   },
 
@@ -172,14 +172,14 @@ export const advanceDirectivesSectionsWarehouse: AdvanceDirectivesSectionTemplat
     content: `כספי חיסכון וקרנות פנסיה:
 
 **איסור נגיעה:**
-מיופה_הכוח לא ייגע בכספי החיסכון, אלא במקרים חריגים:
+מיופה{{attorney_gender_suffix}} הכוח לא ייגע בכספי החיסכון, אלא במקרים חריגים:
 - חשבון חיסכון, קרן השתלמות, קופת גמל, פיקדונות
 
 **שימוש מותר רק:**
 - הוצאות רפואיות דחופות
 - טיפול סיעודי ממושך
 - מצוקה כלכלית חמורה`,
-    variables: [],
+    variables: ['attorney_gender_suffix'],
     tags: ['חיסכון', 'פנסיה', 'הגנה', 'איסור']
   },
 
@@ -197,12 +197,12 @@ export const advanceDirectivesSectionsWarehouse: AdvanceDirectivesSectionTemplat
 - תוספת השלמה
 - קצבת ניידות
 
-**אחריות מיופה כוח:**
+**אחריות מיופה{{attorney_gender_suffix}} הכוח:**
 - וידוא העברה לחשבון
 - בדיקת זכאות לתוספות
 - הגשת בקשות
 - טיפול בבעיות`,
-    variables: [],
+    variables: ['attorney_gender_suffix'],
     tags: ['קצבאות', 'ביטוח לאומי', 'זקנה']
   },
 
@@ -221,11 +221,11 @@ export const advanceDirectivesSectionsWarehouse: AdvanceDirectivesSectionTemplat
 - ביטוח רפואי מורחב
 - מוסדות נופש
 
-**אחריות מיופה כוח:**
+**אחריות מיופה{{attorney_gender_suffix}} הכוח:**
 - מימוש כל הזכויות
 - קשר עם משרד הביטחון
 - תיאום טיפולים`,
-    variables: [],
+    variables: ['attorney_gender_suffix'],
     tags: ['משרד הביטחון', 'נכה צהל', 'קצבה']
   },
 
@@ -257,11 +257,11 @@ export const advanceDirectivesSectionsWarehouse: AdvanceDirectivesSectionTemplat
     content: `מכירה מיידית:
 אין צורך ברכב.
 
-מיופה_הכוח ימכור במחיר שוק הוגן.
+מיופה{{attorney_gender_suffix}} הכוח ימכור במחיר שוק הוגן.
 
 **תמורה:**
 העברה לחשבון הבנק.`,
-    variables: [],
+    variables: ['attorney_gender_suffix'],
     tags: ['רכב', 'מכירה']
   },
 
@@ -273,14 +273,14 @@ export const advanceDirectivesSectionsWarehouse: AdvanceDirectivesSectionTemplat
     titleEn: 'Gift Prohibition',
     content: `איסור מתנות מנכסים:
 
-**איסור מוחלט** על מיופה_הכוח להעניק מתנות לכל גורם.
+**איסור מוחלט** על מיופה{{attorney_gender_suffix}} הכוח להעניק מתנות לכל גורם.
 
 **למעט:**
 - מתנות סמליות (עד 500 ₪)
 - תרומות לעמותות (עד 2,000 ₪)
 
-**מטרה:** שמירה על הנכסים לטובת הממנה.`,
-    variables: [],
+**מטרה:** שמירה על הנכסים לטובת הממנה{{principal_gender_suffix}}.`,
+    variables: ['attorney_gender_suffix', 'principal_gender_suffix'],
     tags: ['איסור', 'מתנות', 'הגנה']
   },
 
@@ -292,14 +292,14 @@ export const advanceDirectivesSectionsWarehouse: AdvanceDirectivesSectionTemplat
     titleEn: 'Will Protection',
     content: `איסור שינוי צוואה:
 
-**מיופה_הכוח אינו רשאי:**
+**מיופה{{attorney_gender_suffix}} הכוח אינו רשאי{{attorney_gender_suffix}}:**
 - לשנות / לבטל צוואה
 - ליצור צוואה חדשה
 - להוסיף או להסיר מוטבים
 
 **יוצא מן הכלל:**
 שינוי טכני - באישור עורך דין ומשפחה.`,
-    variables: [],
+    variables: ['attorney_gender_suffix'],
     tags: ['צוואה', 'ירושה', 'איסור']
   },
 
@@ -311,13 +311,13 @@ export const advanceDirectivesSectionsWarehouse: AdvanceDirectivesSectionTemplat
     subcategory: 'residence',
     title: 'להישאר בבית - חזק',
     titleEn: 'Stay Home - Strong',
-    content: `רצוני להישאר במקום מגוריי הנוכחי בכל מצב.
+    content: `רצוני{{principal_gender_suffix}} להישאר במקום מגוריי הנוכחי בכל מצב.
 
 מעבר למוסד אפשרי רק במקרים קיצוניים:
 - אין אפשרות לטיפול ביתי הולם
 - המצב הרפואי מחייב טיפול מוסדי
 - באישור בית משפט`,
-    variables: [],
+    variables: ['principal_gender_suffix'],
     tags: ['מגורים', 'בית', 'סיעוד']
   },
 
@@ -327,12 +327,12 @@ export const advanceDirectivesSectionsWarehouse: AdvanceDirectivesSectionTemplat
     subcategory: 'residence',
     title: 'להישאר בבית - מוחלט',
     titleEn: 'Stay Home - Absolute',
-    content: `אני מצהיר באופן חד משמעי: אינני מעוניין לעבור לבית אבות בשום צורה.
+    content: `אני מצהיר{{principal_gender_suffix}} באופן חד משמעי: אינני מעוניין{{principal_gender_suffix}} לעבור לבית אבות בשום צורה.
 
 גם אם הטיפול יהיה מורכב - להישאר בביתי.
 
 הנחיה זו מוחלטת.`,
-    variables: [],
+    variables: ['principal_gender_suffix'],
     tags: ['מגורים', 'בית', 'מוחלט']
   },
 
@@ -344,10 +344,10 @@ export const advanceDirectivesSectionsWarehouse: AdvanceDirectivesSectionTemplat
     titleEn: 'Flexible Residence',
     content: `העדפה להישאר בבית ככל האפשר.
 
-אם לא ניתן - מיופה_הכוח יחליט על מוסד מתאים.
+אם לא ניתן - מיופה{{attorney_gender_suffix}} הכוח יחליט על מוסד מתאים.
 
 החלטה בשיקול דעת + התייעצות רפואית.`,
-    variables: [],
+    variables: ['attorney_gender_suffix'],
     tags: ['מגורים', 'גמישות']
   },
 
@@ -367,8 +367,8 @@ export const advanceDirectivesSectionsWarehouse: AdvanceDirectivesSectionTemplat
 - צוות מקצועי
 
 **החלטה:**
-בהחלטת מיופה_כוח + התייעצות רפואית.`,
-    variables: [],
+בהחלטת מיופה{{attorney_gender_suffix}} הכוח + התייעצות רפואית.`,
+    variables: ['attorney_gender_suffix'],
     tags: ['בית אבות', 'תנאים', 'סיעוד']
   },
 

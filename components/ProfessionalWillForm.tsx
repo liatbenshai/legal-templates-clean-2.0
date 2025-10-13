@@ -138,6 +138,14 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
   const [customSections, setCustomSections] = useState<Array<{title: string, content: string}>>([]);
   const [heirsDisplayMode, setHeirsDisplayMode] = useState<'table' | 'list'>('list');
   
+  // אפוטרופוס לקטינים (רלוונטי לצוואה הדדית)
+  const [guardian, setGuardian] = useState({
+    name: '',
+    id: '',
+    address: '',
+    gender: 'male' as Gender
+  });
+  
   // תבניות JSON
   const [jsonTemplate, setJsonTemplate] = useState<any>(null);
   const [sectionsWarehouse, setSectionsWarehouse] = useState<any>(null);
@@ -277,7 +285,9 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
     specialInstructions,
     vehicleInstructions,
     digitalAssets: true,
-    customSections // הוספת הסעיפים מהמחסן!
+    customSections, // הוספת הסעיפים מהמחסן!
+    guardian: guardian.name ? guardian : undefined, // אפוטרופוס אם מולא
+    guardianGender: guardian.gender // מגדר האפוטרופוס
   });
 
   return (
@@ -1213,6 +1223,72 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
               <p className="text-xs text-gray-500">
                 מקור: {sectionsWarehouse.metadata?.author || 'Legal Templates Pro'}
               </p>
+            </div>
+          </section>
+        )}
+
+        {/* אפוטרופוס לקטינים - רק בצוואה הדדית */}
+        {willType === 'mutual' && (
+          <section className="bg-indigo-50 p-6 rounded-lg border border-indigo-200">
+            <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <span className="text-lg">👨‍👩‍👧‍👦</span>
+              אפוטרופוס לקטינים (אופציונלי)
+            </h2>
+            
+            <div className="bg-indigo-100 border border-indigo-300 rounded-lg p-3 mb-4">
+              <p className="text-sm text-indigo-900">
+                💡 אם יש לכם ילדים קטינים (מתחת לגיל 18), מומלץ למנות אפוטרופוס שידאג להם במקרה ששניכם תלכו לעולמכם.
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-4 mb-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">שם מלא</label>
+                <input
+                  type="text"
+                  value={guardian.name}
+                  onChange={(e) => setGuardian(prev => ({ ...prev, name: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder="שם פרטי ושם משפחה"
+                  dir="rtl"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">תעודת זהות</label>
+                <input
+                  type="text"
+                  value={guardian.id}
+                  onChange={(e) => setGuardian(prev => ({ ...prev, id: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder="123456789"
+                  maxLength={9}
+                  dir="ltr"
+                />
+              </div>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">כתובת מלאה</label>
+                <input
+                  type="text"
+                  value={guardian.address}
+                  onChange={(e) => setGuardian(prev => ({ ...prev, address: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder="רחוב, מספר, עיר"
+                  dir="rtl"
+                />
+              </div>
+              
+              <div>
+                <GenderSelector
+                  value={guardian.gender}
+                  onChange={(gender) => setGuardian(prev => ({ ...prev, gender }))}
+                  label="מגדר האפוטרופוס"
+                  size="medium"
+                />
+              </div>
             </div>
           </section>
         )}

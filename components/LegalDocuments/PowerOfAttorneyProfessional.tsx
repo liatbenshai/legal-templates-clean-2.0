@@ -6,6 +6,7 @@ import GenderSelector from '../GenderSelector';
 import SimpleExportButtons from '../SimpleExportButtons';
 import SimpleAIImprover from '../SimpleAIImprover';
 import type { Gender } from '@/lib/hebrew-gender';
+import { applyGenderToText } from '@/lib/hebrew-gender';
 
 interface Authority {
   description: string;
@@ -29,7 +30,8 @@ export default function PowerOfAttorneyProfessional() {
     id: '',
     address: '',
     phone: '',
-    relationship: ''
+    relationship: '',
+    gender: 'male' as Gender // הוספת מגדר לבא כוח
   });
 
   // בא כוח חלופי
@@ -37,7 +39,8 @@ export default function PowerOfAttorneyProfessional() {
     name: '',
     id: '',
     address: '',
-    phone: ''
+    phone: '',
+    gender: 'male' as Gender // הוספת מגדר לבא כוח חלופי
   });
 
   const [powerType, setPowerType] = useState<'כללי' | 'מיוחד'>('כללי');
@@ -59,30 +62,49 @@ export default function PowerOfAttorneyProfessional() {
   };
 
   const generatePowerOfAttorney = (): string => {
+    // התאמת טקסט למגדר נותן הייפוי כוח
+    const grantorText = grantor.gender === 'female' 
+      ? 'בהיותי בדעה צלולה ומרצוני החופשי, הנני ממנה בזאת'
+      : 'בהיותי בדעה צלולה ומרצוני החופשי, הנני ממנה בזאת';
+    
+    const grantorLabel = grantor.gender === 'female' ? 'המייפה' : 'המייפה';
+    
+    // התאמת טקסט למגדר בא הכוח
+    const attorneyLabel = attorney.gender === 'female' ? 'בת הכוח' : 'בא הכוח';
+    const attorneyRelationText = attorney.relationship 
+      ? `(${attorney.gender === 'female' ? 'קרבתה' : 'קרבתו'} אלי: ${attorney.relationship})`
+      : '';
+    
+    // התאמת טקסט למגדר בא כוח חלופי
+    const altAttorneyText = alternateAttorney.gender === 'female'
+      ? 'ובמקרה שהיא לא תוכל לפעול, אני ממנה כבת כוח חלופית'
+      : 'ובמקרה שהוא לא יוכל לפעול, אני ממנה כבא כוח חלופי';
+    const altAttorneyLabel = alternateAttorney.gender === 'female' ? 'בת הכוח החלופית' : 'בא הכוח החלופי';
+    
     return `ייפוי כוח ${powerType}
 
 אני הח"מ ${grantor.name || '[שם נותן הייפוי כוח]'}, ת.ז. ${grantor.id || '[תעודת זהות]'}, מכתובת: ${grantor.address || '[כתובת מלאה]'}, טלפון: ${grantor.phone || '[מספר טלפון]'}
 
-(להלן: "המייפה")
+(להלן: "${grantorLabel}")
 
-בהיותי בדעה צלולה ומרצוני החופשי, הנני ממנה בזאת את:
+${grantorText} את:
 
 ${attorney.name || '[שם בא הכוח]'}, ת.ז. ${attorney.id || '[תעודת זהות]'}, מכתובת: ${attorney.address || '[כתובת מלאה]'}, טלפון: ${attorney.phone || '[מספר טלפון]'}
-${attorney.relationship ? `(קרבתו אלי: ${attorney.relationship})` : ''}
+${attorneyRelationText}
 
-(להלן: "בא הכוח")
+(להלן: "${attorneyLabel}")
 
 ${alternateAttorney.name ? `
-ובמקרה שהוא לא יוכל לפעול, אני ממנה כבא כוח חלופי את:
+${altAttorneyText} את:
 
 ${alternateAttorney.name}, ת.ז. ${alternateAttorney.id || '[תעודת זהות]'}, מכתובת: ${alternateAttorney.address || '[כתובת מלאה]'}, טלפון: ${alternateAttorney.phone || '[מספר טלפון]'}
 
-(להלן: "בא הכוח החלופי")
+(להלן: "${altAttorneyLabel}")
 ` : ''}
 
 היקף הסמכויות
 
-אני מייפה את כוחו של בא הכוח לפעול בשמי ומטעמי ${powerType === 'כללי' ? 'בכל עניין שיידרש' : 'בעניינים המפורטים להלן'}:
+אני ${grantor.gender === 'female' ? 'מייפה' : 'מייפה'} את ${attorney.gender === 'female' ? 'כוחה של בת' : 'כוחו של בא'} הכוח לפעול בשמי ומטעמי ${powerType === 'כללי' ? 'בכל עניין שיידרש' : 'בעניינים המפורטים להלן'}:
 
 ${powerType === 'כללי' ? `
 1. לחתום על כל מסמך, הסכם, או מסמך משפטי מכל סוג שהוא
@@ -97,19 +119,19 @@ ${powerType === 'כללי' ? `
 ${authorities.length > 0 ? `
 סמכויות ספציפיות:
 ${authorities.map((auth, index) => `
-${index + 1}. ${auth.description}
+${index + 1}. ${applyGenderToText(auth.description, attorney.gender)}
    היקף: ${auth.scope}
-   ${auth.limitations ? `הגבלות: ${auth.limitations}` : ''}
+   ${auth.limitations ? `הגבלות: ${applyGenderToText(auth.limitations, attorney.gender)}` : ''}
 `).join('')}
 ` : ''}
 
 תנאים והגבלות
 
-${specialConditions || `
-1. בא הכוח יפעל בתום לב ולטובתי בכל עת
+${specialConditions ? applyGenderToText(specialConditions, attorney.gender) : `
+1. ${attorneyLabel} ${attorney.gender === 'female' ? 'תפעל' : 'יפעל'} בתום לב ולטובתי בכל עת
 2. בא הכוח יידע אותי על כל פעולה משמעותית לפני ביצועها
-3. בא הכוח לא יקבל החלטות העלולות לפגוע באינטרסים שלי
-4. בא הכוח ינהל תיעוד של כל פעולה שביצע בשמי
+3. ${attorneyLabel} לא ${attorney.gender === 'female' ? 'תקבל' : 'יקבל'} החלטות העלולות לפגוע באינטרסים שלי
+4. ${attorneyLabel} ${attorney.gender === 'female' ? 'תנהל' : 'ינהל'} תיעוד של כל פעולה ${attorney.gender === 'female' ? 'שביצעה' : 'שביצע'} בשמי
 `}
 
 תוקף הייפוי כוח
@@ -121,26 +143,26 @@ ${validityPeriod ? `
 `}
 
 ${isRevocable ? `
-ביטול: אני שומר לעצמי את הזכות לבטל ייפוי כוח זה בכל עת על ידי הודעה בכתב לבא הכוח ולגורמים הרלוונטיים.
+ביטול: אני ${grantor.gender === 'female' ? 'שומרת' : 'שומר'} לעצמי את הזכות לבטל ייפוי כוח זה בכל עת על ידי הודעה בכתב ל${attorneyLabel} ולגורמים הרלוונטיים.
 ` : `
 אי הדירות: ייפוי כוח זה הוא בלתי הדיר ולא ניתן לביטול, למעט במקרים הקבועים בחוק.
 `}
 
 אחריות וחבות
 
-1. בא הכוח יהיה אחראי לכל נזק שיגרם כתוצאה מרשלנותו או מפעולה שלא בתום לב
+1. ${attorneyLabel} ${attorney.gender === 'female' ? 'תהיה אחראית' : 'יהיה אחראי'} לכל נזק ${attorney.gender === 'female' ? 'שיגרם' : 'שיגרם'} כתוצאה ${attorney.gender === 'female' ? 'מרשלנותה' : 'מרשלנותו'} או מפעולה שלא בתום לב
 
-2. אני מתחייב לפצות את בא הכוח עבור הוצאות סבירות שייגרמו לו במסגרת ביצוע התפקיד
+2. אני ${grantor.gender === 'female' ? 'מתחייבת' : 'מתחייב'} לפצות את ${attorneyLabel} עבור הוצאות סבירות ${attorney.gender === 'female' ? 'שייגרמו לה' : 'שייגרמו לו'} במסגרת ביצוע התפקיד
 
-3. בא הכוח לא יישא באחריות לנזקים שנגרמו שלא כתוצאה מרשלנותו
+3. ${attorneyLabel} לא ${attorney.gender === 'female' ? 'תישא' : 'יישא'} באחריות לנזקים שנגרמו שלא כתוצאה ${attorney.gender === 'female' ? 'מרשלנותה' : 'מרשלנותו'}
 
 הצהרות
 
-אני מצהיר בזה כי:
-1. אני כשיר לתת ייפוי כוח זה מבחינה משפטית ונפשית
-2. נתתי ייפוי כוח זה מרצוני החופשי וללא כל כפייה
-3. הבנתי את המשמעויות המשפטיות של ייפוי כוח זה
-4. אני מכיר את בא הכוח ובוטח בו לפעול לטובתי
+אני ${grantor.gender === 'female' ? 'מצהירה' : 'מצהיר'} בזה כי:
+1. אני ${grantor.gender === 'female' ? 'כשירה' : 'כשיר'} לתת ייפוי כוח זה מבחינה משפטית ונפשית
+2. ${grantor.gender === 'female' ? 'נתתי' : 'נתתי'} ייפוי כוח זה מרצוני החופשי וללא כל כפייה
+3. ${grantor.gender === 'female' ? 'הבנתי' : 'הבנתי'} את המשמעויות המשפטיות של ייפוי כוח זה
+4. אני ${grantor.gender === 'female' ? 'מכירה' : 'מכיר'} את ${attorneyLabel} ו${grantor.gender === 'female' ? 'בוטחת' : 'בוטח'} ${attorney.gender === 'female' ? 'בה' : 'בו'} לפעול לטובתי
 
 נחתם היום ${new Date(signingDate).toLocaleDateString('he-IL')} במקום: ${signingLocation || '[מקום החתימה]'}
 
@@ -155,7 +177,7 @@ ________________________
    ${attorney.name || '[שם]'}
 
 אישור נוטריון/עו״ד:
-אני הח"מ מאשר בזה כי המייפה ${grantor.name || '[שם]'} חתם בפני על ייפוי כוח זה לאחר שהסברתי לו את משמעותו, והוא הצהיר כי נותן אותו מרצונו החופשי.
+אני הח"מ מאשר/ת בזה כי ${grantorLabel} ${grantor.name || '[שם]'} ${grantor.gender === 'female' ? 'חתמה' : 'חתם'} בפני על ייפוי כוח זה לאחר ${grantor.gender === 'female' ? 'שהסברתי לה' : 'שהסברתי לו'} את משמעותו, ו${grantor.gender === 'female' ? 'היא הצהירה' : 'הוא הצהיר'} כי ${grantor.gender === 'female' ? 'נותנת' : 'נותן'} אותו ${grantor.gender === 'female' ? 'מרצונה' : 'מרצונו'} החופשי.
 
 תאריך: ${new Date(signingDate).toLocaleDateString('he-IL')}
 
@@ -306,14 +328,25 @@ ${notaryName || '[שם]'}`;
             />
           </div>
 
-          <input
-            type="text"
-            value={attorney.relationship}
-            onChange={(e) => setAttorney(prev => ({ ...prev, relationship: e.target.value }))}
-            placeholder="קרבה (בן/בת, אח/אחות, עו״ד...)"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-yellow-500 focus:border-yellow-500"
-            dir="rtl"
-          />
+          <div className="grid md:grid-cols-2 gap-4">
+            <input
+              type="text"
+              value={attorney.relationship}
+              onChange={(e) => setAttorney(prev => ({ ...prev, relationship: e.target.value }))}
+              placeholder="קרבה (בן/בת, אח/אחות, עו״ד...)"
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-yellow-500 focus:border-yellow-500"
+              dir="rtl"
+            />
+            
+            <div>
+              <GenderSelector
+                value={attorney.gender}
+                onChange={(gender) => setAttorney(prev => ({ ...prev, gender }))}
+                label="מגדר בא הכוח"
+                size="medium"
+              />
+            </div>
+          </div>
         </section>
 
         {/* בא כוח חלופי */}
@@ -341,7 +374,7 @@ ${notaryName || '[שם]'}`;
             />
           </div>
 
-          <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid md:grid-cols-2 gap-4 mb-4">
             <input
               type="text"
               value={alternateAttorney.address}
@@ -360,6 +393,13 @@ ${notaryName || '[שם]'}`;
               dir="ltr"
             />
           </div>
+          
+          <GenderSelector
+            value={alternateAttorney.gender}
+            onChange={(gender) => setAlternateAttorney(prev => ({ ...prev, gender }))}
+            label="מגדר בא כוח חלופי"
+            size="medium"
+          />
         </section>
 
         {/* סמכויות ספציפיות */}

@@ -23,12 +23,12 @@ export const willsSectionsWarehouse: WillSectionTemplate[] = [
     category: 'special-bequests',
     content: `הורשת נכס מסוים:
 
-אני מצווה בזאת להוריש את {{property_description}} הנמצא ב{{property_location}}, ל{{heir_name}}, ת.ז. {{heir_id}}, {{relationship}}.
+אני מצווה{{testator_gender_suffix}} בזאת להוריש את {{property_description}} הנמצא ב{{property_location}}, ל{{heir_name}}, ת.ז. {{heir_id}}, {{relationship}}.
 
-נכס זה יועבר ליורש בבעלות מלאה וללא כל תנאי, {{additional_terms}}.
+נכס זה יועבר ליורש{{heir_gender_suffix}} בבעלות מלאה וללא כל תנאי, {{additional_terms}}.
 
 במידה והנכס האמור לא יהיה בבעלותי במועד פטירתי, הוראה זו תתבטל ולא תחול על כל נכס אחר.`,
-    variables: ['property_description', 'property_location', 'heir_name', 'heir_id', 'relationship', 'additional_terms'],
+    variables: ['property_description', 'property_location', 'heir_name', 'heir_id', 'relationship', 'additional_terms', 'testator_gender_suffix', 'heir_gender_suffix'],
     aiPrompt: 'התאם את ההורשה לסוג הנכס, וודא בהירות מלאה לגבי זיהוי הנכס והיורש',
     usageInstructions: 'השתמש כאשר רוצים להוריש נכס ספציפי ליורש מסוים',
     willTypes: ['individual', 'mutual']
@@ -40,14 +40,14 @@ export const willsSectionsWarehouse: WillSectionTemplate[] = [
     category: 'special-bequests',
     content: `הורשת תכשיטים וחפצי ערך:
 
-אני מצווה להוריש את {{jewelry_description}} ל{{heir_name}}, ת.ז. {{heir_id}}.
+אני מצווה{{testator_gender_suffix}} להוריש את {{jewelry_description}} ל{{heir_name}}, ת.ז. {{heir_id}}.
 
 חפצים אלו נמסרו לי מ{{origin}} והינם {{sentimental_value}}.
 
-התכשיטים והחפצים יימסרו ליורש {{delivery_timing}}.
+התכשיטים והחפצים יימסרו ליורש{{heir_gender_suffix}} {{delivery_timing}}.
 
 {{special_instructions}}`,
-    variables: ['jewelry_description', 'heir_name', 'heir_id', 'origin', 'sentimental_value', 'delivery_timing', 'special_instructions'],
+    variables: ['jewelry_description', 'heir_name', 'heir_id', 'origin', 'sentimental_value', 'delivery_timing', 'special_instructions', 'testator_gender_suffix', 'heir_gender_suffix'],
     aiPrompt: 'הוסף ערך רגשי ומשפחתי להורשת התכשיטים, שמור על בהירות',
     usageInstructions: 'השתמש להורשת תכשיטים או חפצי ערך רגשי',
     willTypes: ['individual', 'mutual']
@@ -60,7 +60,7 @@ export const willsSectionsWarehouse: WillSectionTemplate[] = [
     category: 'digital',
     content: `ירושת נכסים דיגיטליים - קריפטו:
 
-אני מצווה כי {{heir_name}}, ת.ז. {{heir_id}}, יירש את מלוא האחזקות שלי במטבעות קריפטוגרפיים.
+אני מצווה{{testator_gender_suffix}} כי {{heir_name}}, ת.ז. {{heir_id}}, יירש{{heir_gender_suffix}} את מלוא האחזקות שלי במטבעות קריפטוגרפיים.
 
 המפתחות הפרטיים (Private Keys) נמצאים ב{{keys_location}}.
 
@@ -68,8 +68,8 @@ export const willsSectionsWarehouse: WillSectionTemplate[] = [
 
 הוראות גישה מפורטות נמצאות ב{{instructions_location}}.
 
-על היורש לפעול בזהירות מרבית ולהיוועץ במומחה בתחום לפני ביצוע פעולות.`,
-    variables: ['heir_name', 'heir_id', 'keys_location', 'wallets_list', 'instructions_location'],
+על היורש{{heir_gender_suffix}} לפעול בזהירות מרבית ולהיוועץ במומחה בתחום לפני ביצוע פעולות.`,
+    variables: ['heir_name', 'heir_id', 'keys_location', 'wallets_list', 'instructions_location', 'testator_gender_suffix', 'heir_gender_suffix'],
     aiPrompt: 'התאם להקשר טכנולוגי, הדגש חשיבות אבטחת המידע',
     usageInstructions: 'השתמש כאשר יש נכסים דיגיטליים בקריפטו',
     willTypes: ['individual', 'mutual']
@@ -81,7 +81,7 @@ export const willsSectionsWarehouse: WillSectionTemplate[] = [
     category: 'digital',
     content: `ירושת נכסים דיגיטליים:
 
-אני מצווה כי {{heir_name}}, ת.ז. {{heir_id}}, יקבל גישה לכל הנכסים הדיגיטליים שלי, לרבות:
+אני מצווה{{testator_gender_suffix}} כי {{heir_name}}, ת.ז. {{heir_id}}, יקבל{{heir_gender_suffix}} גישה לכל הנכסים הדיגיטליים שלי, לרבות:
 
 1. חשבונות רשתות חברתיות: {{social_media_accounts}}
 2. חשבונות דואר אלקטרוני: {{email_accounts}}
@@ -91,8 +91,8 @@ export const willsSectionsWarehouse: WillSectionTemplate[] = [
 
 פרטי הגישה (שמות משתמש וסיסמאות) נמצאים ב{{credentials_location}}.
 
-אני מאשר ליורש {{heir_actions}} את התכנים והחשבונות הללו.`,
-    variables: ['heir_name', 'heir_id', 'social_media_accounts', 'email_accounts', 'cloud_storage', 'media_location', 'other_digital_assets', 'credentials_location', 'heir_actions'],
+אני מאשר ליורש{{heir_gender_suffix}} {{heir_actions}} את התכנים והחשבונות הללו.`,
+    variables: ['heir_name', 'heir_id', 'social_media_accounts', 'email_accounts', 'cloud_storage', 'media_location', 'other_digital_assets', 'credentials_location', 'heir_actions', 'testator_gender_suffix', 'heir_gender_suffix'],
     aiPrompt: 'התאם לעידן הדיגיטלי, כלול התייחסות לפרטיות ולרצונות המצווה',
     usageInstructions: 'השתמש כאשר רוצים להסדיר עזבון דיגיטלי',
     willTypes: ['individual', 'mutual']
@@ -107,9 +107,9 @@ export const willsSectionsWarehouse: WillSectionTemplate[] = [
 
 אני מצווה בדבר ירושת העסק {{business_name}}, ח.ת. {{business_id}}, כדלקמן:
 
-1. {{heir1_name}}, ת.ז. {{heir1_id}}, יקבל {{heir1_share}} מהעסק ותפקיד {{heir1_role}}.
+1. {{heir1_name}}, ת.ז. {{heir1_id}}, יקבל{{heir1_gender_suffix}} {{heir1_share}} מהעסק ותפקיד {{heir1_role}}.
 
-2. {{heir2_name}}, ת.ז. {{heir2_id}}, יקבל {{heir2_share}} מהעסק ותפקיד {{heir2_role}}.
+2. {{heir2_name}}, ת.ז. {{heir2_id}}, יקבל{{heir2_gender_suffix}} {{heir2_share}} מהעסק ותפקיד {{heir2_role}}.
 
 3. ניהול העסק יתבצע על ידי {{management_arrangement}}.
 
@@ -118,7 +118,7 @@ export const willsSectionsWarehouse: WillSectionTemplate[] = [
 5. {{additional_business_terms}}
 
 אני מייעץ ליורשים להיוועץ ברואה חשבון ועורך דין לפני קבלת החלטות מהוותיות בעסק.`,
-    variables: ['business_name', 'business_id', 'heir1_name', 'heir1_id', 'heir1_share', 'heir1_role', 'heir2_name', 'heir2_id', 'heir2_share', 'heir2_role', 'management_arrangement', 'dispute_resolution', 'additional_business_terms'],
+    variables: ['business_name', 'business_id', 'heir1_name', 'heir1_id', 'heir1_gender_suffix', 'heir1_share', 'heir1_role', 'heir2_name', 'heir2_id', 'heir2_gender_suffix', 'heir2_share', 'heir2_role', 'management_arrangement', 'dispute_resolution', 'additional_business_terms'],
     aiPrompt: 'התאם להקשר עסקי, הדגש צורך בייעוץ מקצועי והסדרת ממשל תקין',
     usageInstructions: 'השתמש כאשר יש עסק משפחתי להורשה',
     willTypes: ['individual', 'mutual']
@@ -130,14 +130,14 @@ export const willsSectionsWarehouse: WillSectionTemplate[] = [
     category: 'property',
     content: `ירושת מניות ותיקי השקעות:
 
-אני מצווה להוריש את תיק ההשקעות שלי ב{{brokerage_name}}, חשבון מספר {{account_number}}, ל{{heir_name}}, ת.ז. {{heir_id}}.
+אני מצווה{{testator_gender_suffix}} להוריש את תיק ההשקעות שלי ב{{brokerage_name}}, חשבון מספר {{account_number}}, ל{{heir_name}}, ת.ז. {{heir_id}}.
 
 התיק כולל: {{portfolio_description}}.
 
-היורש רשאי {{heir_authority}} את המניות והנכסים הפיננסיים.
+היורש{{heir_gender_suffix}} רשאי{{heir_gender_suffix}} {{heir_authority}} את המניות והנכסים הפיננסיים.
 
 במקרה של ירידת ערך משמעותית בתיק, {{value_drop_instructions}}.`,
-    variables: ['brokerage_name', 'account_number', 'heir_name', 'heir_id', 'portfolio_description', 'heir_authority', 'value_drop_instructions'],
+    variables: ['brokerage_name', 'account_number', 'heir_name', 'heir_id', 'portfolio_description', 'heir_authority', 'value_drop_instructions', 'testator_gender_suffix', 'heir_gender_suffix'],
     aiPrompt: 'התאם להקשר פיננסי, כלול אזהרות וייעוץ מקצועי',
     usageInstructions: 'השתמש כאשר יש תיקי השקעות משמעותיים',
     willTypes: ['individual', 'mutual']
@@ -195,7 +195,7 @@ export const willsSectionsWarehouse: WillSectionTemplate[] = [
     category: 'conditions',
     content: `ירושה מותנית בהשכלה:
 
-אני מצווה כי {{heir_name}}, ת.ז. {{heir_id}}, יקבל את חלקו בירושה רק לאחר {{education_condition}}.
+אני מצווה{{testator_gender_suffix}} כי {{heir_name}}, ת.ז. {{heir_id}}, יקבל{{heir_gender_suffix}} את חלקו בירושה רק לאחר {{education_condition}}.
 
 עד להשלמת התנאי, הכספים יוחזקו בנאמנות על ידי {{trustee_name}}.
 
@@ -203,8 +203,8 @@ export const willsSectionsWarehouse: WillSectionTemplate[] = [
 
 לאחר עמידה בתנאי, הנאמן ישחרר את מלוא הכספים ל{{heir_name}}.
 
-במקרה ש{{heir_name}} לא יעמוד בתנאי עד גיל {{age_limit}}, {{failure_consequence}}.`,
-    variables: ['heir_name', 'heir_id', 'education_condition', 'trustee_name', 'allowed_uses', 'age_limit', 'failure_consequence'],
+במקרה ש{{heir_name}} לא יעמוד{{heir_gender_suffix}} בתנאי עד גיל {{age_limit}}, {{failure_consequence}}.`,
+    variables: ['heir_name', 'heir_id', 'education_condition', 'trustee_name', 'allowed_uses', 'age_limit', 'failure_consequence', 'testator_gender_suffix', 'heir_gender_suffix'],
     aiPrompt: 'וודא שהתנאי ברור, אכיף אך הוגן, כלול מנגנון ליציאה מהתנאי',
     usageInstructions: 'השתמש כאשר רוצים להתנות ירושה בהשכלה או הישג אחר',
     willTypes: ['individual', 'mutual']
@@ -216,16 +216,16 @@ export const willsSectionsWarehouse: WillSectionTemplate[] = [
     category: 'conditions',
     content: `ירושה מדורגת לפי גיל:
 
-אני מצווה כי {{heir_name}}, ת.ז. {{heir_id}}, יקבל את חלקו בירושה באופן מדורג כדלקמן:
+אני מצווה{{testator_gender_suffix}} כי {{heir_name}}, ת.ז. {{heir_id}}, יקבל{{heir_gender_suffix}} את חלקו בירושה באופן מדורג כדלקמן:
 
-1. בהגיעו לגיל {{age1}}: {{percentage1}} מהירושה
-2. בהגיעו לגיל {{age2}}: {{percentage2}} נוספים מהירושה  
-3. בהגיעו לגיל {{age3}}: יתרת הירושה במלואה
+1. בהגיעו{{heir_gender_suffix}} לגיל {{age1}}: {{percentage1}} מהירושה
+2. בהגיעו{{heir_gender_suffix}} לגיל {{age2}}: {{percentage2}} נוספים מהירושה  
+3. בהגיעו{{heir_gender_suffix}} לגיל {{age3}}: יתרת הירושה במלואה
 
-עד להגיעו לגיל {{age3}}, הכספים יוחזקו בנאמנות על ידי {{trustee_name}}.
+עד להגיעו{{heir_gender_suffix}} לגיל {{age3}}, הכספים יוחזקו בנאמנות על ידי {{trustee_name}}.
 
 הנאמן רשאי לשחרר כספים נוספים ל{{heir_name}} {{early_release_conditions}}.`,
-    variables: ['heir_name', 'heir_id', 'age1', 'percentage1', 'age2', 'percentage2', 'age3', 'trustee_name', 'early_release_conditions'],
+    variables: ['heir_name', 'heir_id', 'age1', 'percentage1', 'age2', 'percentage2', 'age3', 'trustee_name', 'early_release_conditions', 'testator_gender_suffix', 'heir_gender_suffix'],
     aiPrompt: 'התאם את דירוג הגילאים לנסיבות, הדגש שיקול דעת סביר לנאמן',
     usageInstructions: 'השתמש כאשר רוצים להעביר ירושה בהדרגה לפי גיל',
     willTypes: ['individual', 'mutual']
@@ -611,14 +611,14 @@ export const willsSectionsWarehouse: WillSectionTemplate[] = [
     id: 'F8-business-instructions',
     title: 'הוראות לעסק משפחתי',
     category: 'business',
-    content: `בנוגע לעסק המשפחתי שלי {{business_name}}, אני מצווה/ה כדלקמן:
+    content: `בנוגע לעסק המשפחתי שלי {{business_name}}, אני מצווה{{testator_gender_suffix}} כדלקמן:
 
 א. העסק יעבור בשליטה משותפת ל{{children_in_business}};
 ב. המשך ניהול העסק יהיה על ידי {{manager_name}};
 ג. במקרה של מחלוקת או רצון של אחד השותפים למכור את חלקו, תינתן זכות סירוב ראשונה לשותפים האחרים.
 
 נוהל הערכת השווי והמכירה יעשה על ידי מעריך שווי חיצוני מוסכם על כל השותפים.`,
-    variables: ['business_name', 'children_in_business', 'manager_name'],
+    variables: ['business_name', 'testator_gender_suffix', 'children_in_business', 'manager_name'],
     aiPrompt: 'מלא פרטי העסק והילדים המעורבים',
     usageInstructions: 'שימוש כאשר יש עסק משפחתי',
     willTypes: ['individual', 'mutual']
@@ -725,8 +725,8 @@ export const willsSectionsWarehouse: WillSectionTemplate[] = [
     id: 'E9-V1-digital-assets',
     title: 'נכסים דיגיטליים וחשבונות אונליין',
     category: 'digital',
-    content: 'אני מצווה כי כל הנכסים הדיגיטליים שלי, כולל חשבונות בנק אונליין, חשבונות רשתות חברתיות, קבצים דיגיטליים, תמונות וסרטונים, יעברו לידי {{heir_name}}, ת.ז. {{heir_id}}, אשר יקבל את כל הסיסמאות וההרשאות הדרושות.',
-    variables: ['heir_name', 'heir_id'],
+    content: 'אני מצווה{{testator_gender_suffix}} כי כל הנכסים הדיגיטליים שלי, כולל חשבונות בנק אונליין, חשבונות רשתות חברתיות, קבצים דיגיטליים, תמונות וסרטונים, יעברו לידי {{heir_name}}, ת.ז. {{heir_id}}, אשר יקבל{{heir_gender_suffix}} את כל הסיסמאות וההרשאות הדרושות.',
+    variables: ['heir_name', 'heir_id', 'testator_gender_suffix', 'heir_gender_suffix'],
     aiPrompt: 'התאם לסוג הנכסים הדיגיטליים ולמיומנות היורש',
     usageInstructions: 'מומלץ לכל מצווה עם נוכחות דיגיטלית',
     willTypes: ['individual', 'mutual'],
@@ -753,8 +753,8 @@ export const willsSectionsWarehouse: WillSectionTemplate[] = [
     id: 'E12-V1-pension-beneficiaries',
     title: 'יורשי קופות פנסיה וביטוח חיים',
     category: 'property',
-    content: 'אני מצווה כי כל הכספים בקופות הפנסיה שלי, קרנות השתלמות וביטוחי החיים, יעברו לידי {{pension_heir_name}}, ת.ז. {{pension_heir_id}}, בסכום של {{amount}} ש"ח.',
-    variables: ['pension_heir_name', 'pension_heir_id', 'amount'],
+    content: 'אני מצווה{{testator_gender_suffix}} כי כל הכספים בקופות הפנסיה שלי, קרנות השתלמות וביטוחי החיים, יעברו לידי {{pension_heir_name}}, ת.ז. {{pension_heir_id}}, בסכום של {{amount}} ש"ח.',
+    variables: ['pension_heir_name', 'pension_heir_id', 'amount', 'testator_gender_suffix'],
     aiPrompt: 'התאם לסוג הקופה ולסכומים המדויקים',
     usageInstructions: 'חובה למצווה עם קופות פנסיה',
     willTypes: ['individual', 'mutual'],
@@ -809,8 +809,8 @@ export const willsSectionsWarehouse: WillSectionTemplate[] = [
     id: 'F14-staged-distribution',
     title: 'חלוקה מדורגת לפי גיל',
     category: 'heirs',
-    content: 'אני מצווה כי חלקו של {{heir_name}}, ת.ז. {{heir_id}}, יועבר אליו בגיל {{distribution_age}}, ולפני כן יעמוד הנכס בחזקת נאמן שיקבל את ההחלטות לטובתו.',
-    variables: ['heir_name', 'heir_id', 'distribution_age'],
+    content: 'אני מצווה{{testator_gender_suffix}} כי חלקו של {{heir_name}}, ת.ז. {{heir_id}}, יועבר אליו{{heir_gender_suffix}} בגיל {{distribution_age}}, ולפני כן יעמוד הנכס בחזקת נאמן שיקבל את ההחלטות לטובתו.',
+    variables: ['heir_name', 'heir_id', 'distribution_age', 'testator_gender_suffix', 'heir_gender_suffix'],
     aiPrompt: 'התאם לגיל היורש ולסוג הנכס',
     usageInstructions: 'מומלץ ליורשים צעירים או לא אחראיים',
     willTypes: ['individual', 'mutual'],
@@ -823,8 +823,8 @@ export const willsSectionsWarehouse: WillSectionTemplate[] = [
     id: 'F8-V1-business-instructions',
     title: 'הוראות לעסק או חברה',
     category: 'business',
-    content: 'אני מצווה כי העסק {{business_name}} יעבור לידי {{heir_name}}, ת.ז. {{heir_id}}, שיקבל את כל הזכויות והחובות הקשורים לעסק. היורש ימשיך לנהל את העסק בהתאם ל{{business_instructions}}.',
-    variables: ['business_name', 'heir_name', 'heir_id', 'business_instructions'],
+    content: 'אני מצווה כי העסק {{business_name}} יעבור לידי {{heir_name}}, ת.ז. {{heir_id}}, שיקבל{{heir_gender_suffix}} את כל הזכויות והחובות הקשורים לעסק. היורש{{heir_gender_suffix}} ימשיך{{heir_gender_suffix}} לנהל את העסק בהתאם ל{{business_instructions}}.',
+    variables: ['business_name', 'heir_name', 'heir_id', 'heir_gender_suffix', 'business_instructions'],
     aiPrompt: 'התאם לסוג העסק ולמיומנות היורש',
     usageInstructions: 'חובה למצווה עם עסק או חברה',
     willTypes: ['individual'],

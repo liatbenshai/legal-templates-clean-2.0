@@ -6,6 +6,9 @@ import { sectionsWarehouse, SectionTemplate } from '@/lib/professional-will-text
 import SimpleAIImprover from './SimpleAIImprover';
 import EnhancedAIImprover from './EnhancedAIImprover';
 import SectionEditor from './SectionEditor';
+import GenderSelector from './GenderSelector';
+import { Gender } from '@/lib/hebrew-gender';
+import { getGenderSuffix } from '@/lib/hebrew-verbs-learning';
 
 interface SectionsWarehouseProps {
   onAddSection: (content: string, title: string) => void;
@@ -42,6 +45,7 @@ export default function SectionsWarehouse({ onAddSection, selectedWillType }: Se
   const [variablesModal, setVariablesModal] = useState<{
     section: SectionTemplate;
     values: Record<string, string>;
+    genders: Record<string, Gender>;
   } | null>(null);
   const [sectionEditor, setSectionEditor] = useState<SectionTemplate | null>(null);
   const [editingSection, setEditingSection] = useState<SectionTemplate | null>(null);
@@ -122,8 +126,15 @@ export default function SectionsWarehouse({ onAddSection, selectedWillType }: Se
     if (section.variables.length > 0) {
       // אם יש משתנים - פתח חלון למילוי
       const initialValues: Record<string, string> = {};
-      section.variables.forEach(v => initialValues[v] = '');
-      setVariablesModal({ section, values: initialValues });
+      const initialGenders: Record<string, Gender> = {};
+      section.variables.forEach(v => {
+        initialValues[v] = '';
+        // אם זה שדה שדורש מגדר - הגדר ברירת מחדל
+        if (v.includes('guardian') || v.includes('heir') || v.includes('inheritor') || v.includes('caregiver') || v.includes('business_heir')) {
+          initialGenders[v] = 'male';
+        }
+      });
+      setVariablesModal({ section, values: initialValues, genders: initialGenders });
     } else {
       // אם אין משתנים - הוסף ישירות
       onAddSection(section.content, section.title);
@@ -139,6 +150,23 @@ export default function SectionsWarehouse({ onAddSection, selectedWillType }: Se
     Object.entries(variablesModal.values).forEach(([key, value]) => {
       const regex = new RegExp(`{{${key}}}`, 'g');
       content = content.replace(regex, value || `[${key}]`);
+    });
+    
+    // החלף משתני מגדר
+    Object.entries(variablesModal.genders).forEach(([key, gender]) => {
+      let context = 'other';
+      if (key.includes('child')) context = 'child';
+      else if (key.includes('heir')) context = 'heir';
+      else if (key.includes('guardian')) context = 'guardian';
+      
+      const genderSuffix = getGenderSuffix(key, context, gender);
+      
+      const genderRegex = new RegExp(`{{${key}_gender_suffix}}`, 'g');
+      content = content.replace(genderRegex, genderSuffix);
+      
+      // החלף גם משתני מגדר ישירים
+      const directGenderRegex = new RegExp(`{{${key}_gender}}`, 'g');
+      content = content.replace(directGenderRegex, gender);
     });
     
     onAddSection(content, variablesModal.section.title);
@@ -188,7 +216,18 @@ export default function SectionsWarehouse({ onAddSection, selectedWillType }: Se
       'heirs_description': 'תיאור היורשים',
       'number_of_children': 'מספר ילדים',
       'number_of_heirs': 'מספר יורשים',
-      'marriage_year': 'שנת נישואין'
+      'marriage_year': 'שנת נישואין',
+      'guardian_name': 'שם האפוטרופוס',
+      'guardian_id': 'ת.ז. האפוטרופוס',
+      'relationship': 'קרבה',
+      'children_names': 'שמות הילדים',
+      'guardianship_scope': 'היקף האפוטרופסות',
+      'reasons': 'סיבות למינוי',
+      'parenting_guidance': 'הדרכה להורות',
+      'backup_guardian_name': 'שם האפוטרופוס החלופי',
+      'backup_guardian_id': 'ת.ז. האפוטרופוס החלופי',
+      'guardian_gender': 'מגדר האפוטרופוס',
+      'business_heir_gender': 'מגדר יורש העסק'
     };
     
     return translations[variable] || variable;
@@ -408,25 +447,48 @@ export default function SectionsWarehouse({ onAddSection, selectedWillType }: Se
             
             <div className="p-6 space-y-4">
               {variablesModal.section.variables.map((variable) => (
-                <div key={variable}>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {translateVariable(variable)}
-                    <span className="text-red-500 mr-1">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={variablesModal.values[variable] || ''}
-                    onChange={(e) => setVariablesModal({
-                      ...variablesModal,
-                      values: {
-                        ...variablesModal.values,
-                        [variable]: e.target.value
-                      }
-                    })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                    placeholder={`הזן ${translateVariable(variable)}`}
-                    dir="rtl"
-                  />
+                <div key={variable} className="space-y-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      {translateVariable(variable)}
+                      <span className="text-red-500 mr-1">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={variablesModal.values[variable] || ''}
+                      onChange={(e) => setVariablesModal({
+                        ...variablesModal,
+                        values: {
+                          ...variablesModal.values,
+                          [variable]: e.target.value
+                        }
+                      })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                      placeholder={`הזן ${translateVariable(variable)}`}
+                      dir="rtl"
+                    />
+                  </div>
+                  
+                  {/* בחירת מגדר לשדות שדורשים מגדר */}
+                  {(variable.includes('guardian') || variable.includes('heir') || variable.includes('inheritor') || variable.includes('caregiver') || variable.includes('business_heir')) && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        מגדר {translateVariable(variable)}
+                      </label>
+                      <GenderSelector
+                        value={variablesModal.genders[variable] || 'male'}
+                        onChange={(gender) => setVariablesModal({
+                          ...variablesModal,
+                          genders: {
+                            ...variablesModal.genders,
+                            [variable]: gender
+                          }
+                        })}
+                        label=""
+                        size="small"
+                      />
+                    </div>
+                  )}
                 </div>
               ))}
               

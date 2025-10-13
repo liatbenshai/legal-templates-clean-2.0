@@ -673,11 +673,12 @@ export const singleWillsSectionsWarehouse: SingleWillSectionTemplate[] = [
     id: 'minors-bank-account-setup',
     title: 'פתיחת חשבון בנק לקטין',
     category: 'minors-property-management',
-    content: `{{guardian_name}} יפתח חשבון בנק על שם {{child_first_name}}, ובו יופקדו כל הכספים והסכומים המגיעים ל{{child_pronoun}} מתוקף צוואתי זו. תוקם הערה בסניף הבנק בדבר היותו של {{guardian_name}} אפוטרופוס של {{child_first_name}}.`,
-    variables: ['guardian_name', 'child_first_name', 'child_pronoun'],
+    content: `{{guardian_name}} יפתח{{guardian_gender_suffix}} חשבון בנק על שם {{child_first_name}}, ובו יופקדו כל הכספים והסכומים המגיעים ל{{child_pronoun}} מתוקף צוואתי זו. תוקם הערה בסניף הבנק בדבר היות{{guardian_gender_suffix}} של {{guardian_name}} אפוטרופוס{{guardian_gender_suffix}} של {{child_first_name}}.`,
+    variables: ['guardian_name', 'guardian_gender_suffix', 'child_first_name', 'child_pronoun'],
     aiPrompt: `הוראה לפתיחת חשבון בנק לקטין. משתנים:
 
 - guardian_name: שם האפוטרופוס (מקוצר)
+- guardian_gender_suffix: "ה" לנקבה, ריק לזכר
 - child_first_name: שם הילד/ה
 - child_pronoun: "לה" לנקבה, "לו" לזכר
 
@@ -727,11 +728,12 @@ export const singleWillsSectionsWarehouse: SingleWillSectionTemplate[] = [
     id: 'minors-guardian-child-consultation',
     title: 'התייעצות עם הקטין',
     category: 'minors-property-management',
-    content: `האפוטרופוס {{guardian_name}} יהיה קשוב לצרכי{{child_gender_suffix}} הייחודיים של {{child_first_name}} ויפעל לטובת{{child_gender_suffix}} המרבית. {{guardian_name}} יתייעץ עם {{child_first_name}} בהתאם לגיל{{child_gender_suffix}} ולבגרות{{child_gender_suffix}} בנוגע להחלטות, ויתחשב ברצונותי{{child_gender_suffix}} ובעדיפויותי{{child_gender_suffix}} ככל שהדבר סביר ומתאים.`,
-    variables: ['guardian_name', 'child_gender_suffix', 'child_first_name'],
+    content: `האפוטרופוס{{guardian_gender_suffix}} {{guardian_name}} יהיה{{guardian_gender_suffix}} קשוב{{guardian_gender_suffix}} לצרכי{{child_gender_suffix}} הייחודיים של {{child_first_name}} ויפעל{{guardian_gender_suffix}} לטובת{{child_gender_suffix}} המרבית. {{guardian_name}} יתייעץ{{guardian_gender_suffix}} עם {{child_first_name}} בהתאם לגיל{{child_gender_suffix}} ולבגרות{{child_gender_suffix}} בנוגע להחלטות, ויתחשב{{guardian_gender_suffix}} ברצונותי{{child_gender_suffix}} ובעדיפויותי{{child_gender_suffix}} ככל שהדבר סביר ומתאים.`,
+    variables: ['guardian_name', 'guardian_gender_suffix', 'child_gender_suffix', 'child_first_name'],
     aiPrompt: `הוראה להתייעצות עם הקטין בהתאם לגילו. משתנים:
 
 - guardian_name: שם האפוטרופוס
+- guardian_gender_suffix: "ה" לנקבה, ריק לזכר
 - child_gender_suffix: "ה" לנקבה, "ו" לזכר
 - child_first_name: שם הילד/ה
 
@@ -743,12 +745,13 @@ export const singleWillsSectionsWarehouse: SingleWillSectionTemplate[] = [
     id: 'minors-education-priority',
     title: 'עדיפות להשכלה',
     category: 'minors-property-management',
-    content: `הואיל ואני רואה{{testator_gender_suffix}} חשיבות רבה בהשכלה ובפיתוח אישי, האפוטרופוס {{guardian_name}} יקדיש תשומת לב מיוחדת להוצאות החינוכיות ולפעילויות העשויות לקדם את התפתחות{{child_gender_suffix}} האישית והמקצועית של {{child_first_name}}.`,
-    variables: ['testator_gender_suffix', 'guardian_name', 'child_gender_suffix', 'child_first_name'],
+    content: `הואיל ואני רואה{{testator_gender_suffix}} חשיבות רבה בהשכלה ובפיתוח אישי, האפוטרופוס{{guardian_gender_suffix}} {{guardian_name}} יקדיש{{guardian_gender_suffix}} תשומת לב מיוחדת להוצאות החינוכיות ולפעילויות העשויות לקדם את התפתחות{{child_gender_suffix}} האישית והמקצועית של {{child_first_name}}.`,
+    variables: ['testator_gender_suffix', 'guardian_name', 'guardian_gender_suffix', 'child_gender_suffix', 'child_first_name'],
     aiPrompt: `הדגשת חשיבות ההשכלה. משתנים:
 
 - testator_gender_suffix: "ה" לנקבה, ריק לזכר (למצווה)
 - guardian_name: שם האפוטרופוס
+- guardian_gender_suffix: "ה" לנקבה, ריק לזכר (לאפוטרופוס)
 - child_gender_suffix: "ה" לנקבה, "ו" לזכר (לילד)
 - child_first_name: שם הילד/ה
 
@@ -776,15 +779,16 @@ export const singleWillsSectionsWarehouse: SingleWillSectionTemplate[] = [
     id: 'minors-financial-education-at-18',
     title: 'הדרכה פיננסית בגיל 18',
     category: 'minors-property-management',
-    content: `{{guardian_name}} יעביר ל{{child_first_name}} הדרכה מקיפה בנוגע לניהול החשבון הבנקאי, לרבות:
+    content: `{{guardian_name}} יעביר{{guardian_gender_suffix}} ל{{child_first_name}} הדרכה מקיפה בנוגע לניהול החשבון הבנקאי, לרבות:
 - הסבר על מצב החשבון הקיים ופעילותו
 - הדרכה בנוגע לעקרונות ניהול כספי אחראי ותקציב אישי
 - הכרת השירותים הבנקאיים הזמינים והדרכים לניהול החשבון
 - הסבר על החובות והזכויות הכספיות`,
-    variables: ['guardian_name', 'child_first_name'],
+    variables: ['guardian_name', 'guardian_gender_suffix', 'child_first_name'],
     aiPrompt: `הדרכה פיננסית בסיסית בגיל 18. משתנים:
 
 - guardian_name: שם האפוטרופוס
+- guardian_gender_suffix: "ה" לנקבה, ריק לזכר
 - child_first_name: שם הילד/ה
 
 אם נדרש, אפשר להוסיף/להסיר נושאים, אך שמור על העקרון:
@@ -796,12 +800,13 @@ export const singleWillsSectionsWarehouse: SingleWillSectionTemplate[] = [
     id: 'minors-ongoing-guidance-after-18',
     title: 'ליווי מתמשך אחרי גיל 18',
     category: 'minors-property-management',
-    content: `{{guardian_name}} יעמוד לרשות{{child_gender_suffix}} של {{child_first_name}} לייעוץ והדרכה נוספים במשך {{guidance_years}} שנים נוספות לאחר מסירת הרכוש, או עד ש{{child_first_name}} תבקש{{child_gender_suffix}} להפסיק את הליווי. הליווי יכלול סיוע בניהול תקציב, ייעוץ בהחלטות כספיות יומיומיות, ותמיכה בפתרון בעיות בנקאיות שעלולות להתעורר.`,
-    variables: ['guardian_name', 'child_gender_suffix', 'child_first_name', 'guidance_years'],
+    content: `{{guardian_name}} יעמוד{{guardian_gender_suffix}} לרשות{{child_gender_suffix}} של {{child_first_name}} לייעוץ והדרכה נוספים במשך {{guidance_years}} שנים נוספות לאחר מסירת הרכוש, או עד ש{{child_first_name}} תבקש{{child_gender_suffix}} להפסיק את הליווי. הליווי יכלול סיוע בניהול תקציב, ייעוץ בהחלטות כספיות יומיומיות, ותמיכה בפתרון בעיות בנקאיות שעלולות להתעורר.`,
+    variables: ['guardian_name', 'guardian_gender_suffix', 'child_gender_suffix', 'child_first_name', 'guidance_years'],
     aiPrompt: `ליווי מתמשך גם אחרי גיל 18. משתנים:
 
 - guardian_name: שם האפוטרופוס
-- child_gender_suffix: "ה" לנקבה, ריק לזכר
+- guardian_gender_suffix: "ה" לנקבה, ריק לזכר (לאפוטרופוס)
+- child_gender_suffix: "ה" לנקבה, ריק לזכר (לילד)
 - child_first_name: שם הילד/ה
 - guidance_years: מספר שנים (בד"כ 2-3)
 

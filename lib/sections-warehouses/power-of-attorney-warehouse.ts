@@ -21,16 +21,16 @@ export const poaSectionsWarehouse: POASectionTemplate[] = [
     category: 'general-powers',
     content: `סמכויות ייצוג כלליות:
 
-אני ממנה את {{attorney_name}} לייצג אותי בפני {{authorities_list}}.
+אני ממנה{{principal_gender_suffix}} את {{attorney_name}} לייצג אותי בפני {{authorities_list}}.
 
-המיופה כוח רשאי:
+המיופה{{attorney_gender_suffix}} כוח רשאי{{attorney_gender_suffix}}:
 - לחתום בשמי על מסמכים
 - לקבל מסמכים ומכתבים בשמי  
 - להגיש בקשות וטפסים בשמי
 - {{additional_representation_powers}}
 
 סמכות זו {{scope_limitation}}.`,
-    variables: ['attorney_name', 'authorities_list', 'additional_representation_powers', 'scope_limitation'],
+    variables: ['principal_gender_suffix', 'attorney_name', 'attorney_gender_suffix', 'authorities_list', 'additional_representation_powers', 'scope_limitation'],
     aiPrompt: 'התאם את סמכויות הייצוג לצרכים הספציפיים, וודא בהירות',
     usageInstructions: 'השתמש לייצוג כללי בפני גופים שונים',
     poaTypes: ['regular', 'enduring']
@@ -43,18 +43,18 @@ export const poaSectionsWarehouse: POASectionTemplate[] = [
     category: 'financial-powers',
     content: `ניהול חשבונות בנק:
 
-אני ממנה את {{attorney_name}} לנהל את חשבון/ות הבנק שלי {{bank_details}}.
+אני ממנה{{principal_gender_suffix}} את {{attorney_name}} לנהל את חשבון/ות הבנק שלי {{bank_details}}.
 
-המיופה כוח רשאי:
+המיופה{{attorney_gender_suffix}} כוח רשאי{{attorney_gender_suffix}}:
 - להפקיד ולמשוך כספים
 - להעביר כספים בין חשבונות
 - לבצע העברות בנקאיות
 - {{banking_powers}}
 
-המיופה כוח {{withdrawal_limit}}.
+המיופה{{attorney_gender_suffix}} כוח {{withdrawal_limit}}.
 
-המיופה כוח {{loan_authority}}.`,
-    variables: ['attorney_name', 'bank_details', 'banking_powers', 'withdrawal_limit', 'loan_authority'],
+המיופה{{attorney_gender_suffix}} כוח {{loan_authority}}.`,
+    variables: ['principal_gender_suffix', 'attorney_name', 'attorney_gender_suffix', 'bank_details', 'banking_powers', 'withdrawal_limit', 'loan_authority'],
     aiPrompt: 'פרט את הסמכויות הבנקאיות, כלול מגבלות סכומים אם רלוונטי',
     usageInstructions: 'השתמש להענקת סמכויות ניהול חשבונות בנק',
     poaTypes: ['regular', 'enduring']
@@ -88,16 +88,16 @@ export const poaSectionsWarehouse: POASectionTemplate[] = [
     category: 'financial-powers',
     content: `ניהול עניינים במס הכנסה:
 
-אני ממנה את {{attorney_name}} לייצג אותי בכל עניין הקשור למס הכנסה.
+אני ממנה{{principal_gender_suffix}} את {{attorney_name}} לייצג אותי בכל עניין הקשור למס הכנסה.
 
-המיופה כוח רשאי:
+המיופה{{attorney_gender_suffix}} כוח רשאי{{attorney_gender_suffix}}:
 - להגיש דוחות שנתיים בשמי
 - לקבל החזרי מס
 - לייצג אותי בהליכים מול רשויות המס
 - {{tax_powers}}
 
-המיופה כוח {{tax_appeal_authority}}.`,
-    variables: ['attorney_name', 'tax_powers', 'tax_appeal_authority'],
+המיופה{{attorney_gender_suffix}} כוח {{tax_appeal_authority}}.`,
+    variables: ['principal_gender_suffix', 'attorney_name', 'attorney_gender_suffix', 'tax_powers', 'tax_appeal_authority'],
     aiPrompt: 'פרט סמכויות מס, הדגש חשיבות דיווח תקין',
     usageInstructions: 'השתמש להענקת סמכויות מול רשויות המס',
     poaTypes: ['regular', 'enduring']
@@ -110,9 +110,9 @@ export const poaSectionsWarehouse: POASectionTemplate[] = [
     category: 'property-powers',
     content: `מכירת נכסי מקרקעין:
 
-אני ממנה את {{attorney_name}} למכור את הנכס/ים שלי {{property_details}}.
+אני ממנה{{principal_gender_suffix}} את {{attorney_name}} למכור את הנכס/ים שלי {{property_details}}.
 
-המיופה כוח רשאי:
+המיופה{{attorney_gender_suffix}} כוח רשאי{{attorney_gender_suffix}}:
 - לנהל משא ומתן עם קונים פוטנציאליים
 - לקבוע מחיר מכירה של לפחות {{minimum_price}}
 - לחתום על הסכם מכר
@@ -120,7 +120,7 @@ export const poaSectionsWarehouse: POASectionTemplate[] = [
 - {{sale_powers}}
 
 תמורת המכירה תועבר ל{{proceeds_destination}}.`,
-    variables: ['attorney_name', 'property_details', 'minimum_price', 'sale_powers', 'proceeds_destination'],
+    variables: ['principal_gender_suffix', 'attorney_name', 'attorney_gender_suffix', 'property_details', 'minimum_price', 'sale_powers', 'proceeds_destination'],
     aiPrompt: 'פרט את סמכויות המכירה, כלול מחיר מינימום להגנה',
     usageInstructions: 'השתמש להענקת סמכות למכירת נכסים',
     poaTypes: ['regular', 'enduring']
@@ -132,18 +132,18 @@ export const poaSectionsWarehouse: POASectionTemplate[] = [
     category: 'property-powers',
     content: `רכישת נכסי מקרקעין:
 
-אני ממנה את {{attorney_name}} לרכוש בשמי נכס מקרקעין {{purchase_criteria}}.
+אני ממנה{{principal_gender_suffix}} את {{attorney_name}} לרכוש בשמי נכס מקרקעין {{purchase_criteria}}.
 
-המיופה כוח רשאי:
+המיופה{{attorney_gender_suffix}} כוח רשאי{{attorney_gender_suffix}}:
 - לחפש נכסים מתאימים
 - לנהל משא ומתן עם מוכרים
 - לחתום על הסכם רכישה בסכום שלא יעלה על {{max_price}}
 - {{purchase_powers}}
 
-המיופה כוח {{purchase_conditions}}.
+המיופה{{attorney_gender_suffix}} כוח {{purchase_conditions}}.
 
 התשלום יבוצע מ{{payment_source}}.`,
-    variables: ['attorney_name', 'purchase_criteria', 'max_price', 'purchase_powers', 'purchase_conditions', 'payment_source'],
+    variables: ['principal_gender_suffix', 'attorney_name', 'attorney_gender_suffix', 'purchase_criteria', 'max_price', 'purchase_powers', 'purchase_conditions', 'payment_source'],
     aiPrompt: 'פרט קריטריונים ברורים לרכישה, כלול מחיר מקסימלי',
     usageInstructions: 'השתמש להענקת סמכות לרכישת נכסים',
     poaTypes: ['regular', 'enduring']
@@ -155,9 +155,9 @@ export const poaSectionsWarehouse: POASectionTemplate[] = [
     category: 'property-powers',
     content: `ניהול נכסי מקרקעין:
 
-אני ממנה את {{attorney_name}} לנהל את הנכס/ים {{property_address}}.
+אני ממנה{{principal_gender_suffix}} את {{attorney_name}} לנהל את הנכס/ים {{property_address}}.
 
-המיופה כוח רשאי:
+המיופה{{attorney_gender_suffix}} כוח רשאי{{attorney_gender_suffix}}:
 - להשכיר את הנכס לדיירים
 - לחתום על הסכמי שכירות
 - לגבות דמי שכירות
@@ -166,7 +166,7 @@ export const poaSectionsWarehouse: POASectionTemplate[] = [
 - {{management_powers}}
 
 דמי השכירות שייגבו {{rent_destination}}.`,
-    variables: ['attorney_name', 'property_address', 'repair_limit', 'management_powers', 'rent_destination'],
+    variables: ['principal_gender_suffix', 'attorney_name', 'attorney_gender_suffix', 'property_address', 'repair_limit', 'management_powers', 'rent_destination'],
     aiPrompt: 'התאם לצרכי ניהול השוטפים, כלול מגבלות סכומים',
     usageInstructions: 'השתמש להענקת סמכות לניהול נכסים',
     poaTypes: ['regular', 'enduring']
@@ -179,18 +179,18 @@ export const poaSectionsWarehouse: POASectionTemplate[] = [
     category: 'medical-powers',
     content: `החלטות רפואיות:
 
-אני ממנה את {{attorney_name}} לקבל החלטות רפואיות בשמי במידה ולא אוכל לעשות זאת בעצמי.
+אני ממנה{{principal_gender_suffix}} את {{attorney_name}} לקבל החלטות רפואיות בשמי במידה ולא אוכל לעשות זאת בעצמי.
 
-המיופה כוח רשאי:
+המיופה{{attorney_gender_suffix}} כוח רשאי{{attorney_gender_suffix}}:
 - לקבל מידע רפואי מלא על מצבי
 - להחליט על טיפולים רפואיים
 - לאשר ניתוחים והליכים רפואיים
 - {{medical_powers}}
 
-העדפותיי הרפואיות: {{medical_preferences}}.
+העדפותיי{{principal_gender_suffix}} הרפואיות: {{medical_preferences}}.
 
 במצב סופני: {{end_of_life_wishes}}.`,
-    variables: ['attorney_name', 'medical_powers', 'medical_preferences', 'end_of_life_wishes'],
+    variables: ['principal_gender_suffix', 'attorney_name', 'attorney_gender_suffix', 'medical_powers', 'medical_preferences', 'end_of_life_wishes'],
     aiPrompt: 'נסח בצורה רגישה, כלול העדפות ברורות לגבי טיפולים',
     usageInstructions: 'השתמש בייפוי כוח מתמשך להחלטות רפואיות',
     poaTypes: ['enduring', 'medical']
@@ -202,18 +202,18 @@ export const poaSectionsWarehouse: POASectionTemplate[] = [
     category: 'medical-powers',
     content: `אשפוז וטיפול:
 
-אני ממנה את {{attorney_name}} להחליט על אשפוז וטיפול רפואי בשמי.
+אני ממנה{{principal_gender_suffix}} את {{attorney_name}} להחליט על אשפוז וטיפול רפואי בשמי.
 
-המיופה כוח רשאי:
+המיופה{{attorney_gender_suffix}} כוח רשאי{{attorney_gender_suffix}}:
 - להחליט על אשפוז בבית חולים או מוסד סיעודי
 - לבחור מוסד רפואי {{facility_preferences}}
 - להחליט על רמת הטיפול הרפואי
 - {{hospitalization_powers}}
 
-העדפותיי: {{care_preferences}}.
+העדפותיי{{principal_gender_suffix}}: {{care_preferences}}.
 
 תקציב: {{care_budget}}.`,
-    variables: ['attorney_name', 'facility_preferences', 'hospitalization_powers', 'care_preferences', 'care_budget'],
+    variables: ['principal_gender_suffix', 'attorney_name', 'attorney_gender_suffix', 'facility_preferences', 'hospitalization_powers', 'care_preferences', 'care_budget'],
     aiPrompt: 'התאם להעדפות אישיות, כלול שיקולים כלכליים',
     usageInstructions: 'השתמש להחלטות על אשפוז וטיפול',
     poaTypes: ['enduring', 'medical']
@@ -226,7 +226,7 @@ export const poaSectionsWarehouse: POASectionTemplate[] = [
     category: 'limitations',
     content: `מגבלות:
 
-על אף הסמכויות שהענקתי למיופה הכוח, הוא אינו רשאי:
+על אף הסמכויות שהענקתי{{principal_gender_suffix}} למיופה{{attorney_gender_suffix}} הכוח, {{attorney_pronoun}} אינו{{attorney_gender_suffix}} רשאי{{attorney_gender_suffix}}:
 
 1. {{limitation1}}
 
@@ -237,7 +237,7 @@ export const poaSectionsWarehouse: POASectionTemplate[] = [
 כל פעולה שנעשתה בניגוד למגבלות אלו תהיה בטלה מעיקרה.
 
 {{additional_limitations}}`,
-    variables: ['limitation1', 'limitation2', 'limitation3', 'additional_limitations'],
+    variables: ['principal_gender_suffix', 'attorney_gender_suffix', 'attorney_pronoun', 'limitation1', 'limitation2', 'limitation3', 'additional_limitations'],
     aiPrompt: 'פרט מגבלות ברורות, הגן על האינטרסים החשובים של הממנה',
     usageInstructions: 'השתמש להגדרת מגבלות על הסמכויות',
     poaTypes: ['regular', 'enduring', 'medical']
@@ -249,7 +249,7 @@ export const poaSectionsWarehouse: POASectionTemplate[] = [
     category: 'limitations',
     content: `דרישת אישור:
 
-המיופה כוח יהיה חייב לקבל אישור מ{{approver_name}} לפני ביצוע הפעולות הבאות:
+המיופה{{attorney_gender_suffix}} הכוח יהיה{{attorney_gender_suffix}} חייב{{attorney_gender_suffix}} לקבל אישור מ{{approver_name}} לפני ביצוע הפעולות הבאות:
 
 1. {{action_requiring_approval1}}
 
@@ -260,7 +260,7 @@ export const poaSectionsWarehouse: POASectionTemplate[] = [
 האישור יינתן בכתב {{approval_method}}.
 
 ללא אישור כאמור, הפעולה לא תהיה תקפה.`,
-    variables: ['approver_name', 'action_requiring_approval1', 'action_requiring_approval2', 'action_requiring_approval3', 'approval_method'],
+    variables: ['attorney_gender_suffix', 'approver_name', 'action_requiring_approval1', 'action_requiring_approval2', 'action_requiring_approval3', 'approval_method'],
     aiPrompt: 'הגדר בהירות מי מאשר ומה דורש אישור, כלול מנגנון אישור',
     usageInstructions: 'השתמש כאשר רוצים בקרה נוספת על פעולות מסוימות',
     poaTypes: ['regular', 'enduring']
@@ -309,14 +309,14 @@ export const poaSectionsWarehouse: POASectionTemplate[] = [
     category: 'duration',
     content: `ביטול ייפוי הכוח:
 
-אני שומר לעצמי את הזכות לבטל ייפוי כוח זה בכל עת {{revocation_conditions}}.
+אני שומר{{principal_gender_suffix}} לעצמי את הזכות לבטל ייפוי כוח זה בכל עת {{revocation_conditions}}.
 
 הביטול ייעשה על ידי {{revocation_method}}.
 
 במקרה של ביטול, {{notice_to_attorney}}.
 
 ייפוי הכוח יתבטל אוטומטית ב{{automatic_revocation_events}}.`,
-    variables: ['revocation_conditions', 'revocation_method', 'notice_to_attorney', 'automatic_revocation_events'],
+    variables: ['principal_gender_suffix', 'revocation_conditions', 'revocation_method', 'notice_to_attorney', 'automatic_revocation_events'],
     aiPrompt: 'הסבר את תנאי הביטול בבהירות, שמור על זכות הממנה לבטל',
     usageInstructions: 'השתמש להגדרת תנאי ביטול',
     poaTypes: ['regular', 'enduring', 'medical']
@@ -329,9 +329,9 @@ export const poaSectionsWarehouse: POASectionTemplate[] = [
     category: 'special',
     content: `ניהול נכסים דיגיטליים:
 
-אני ממנה את {{attorney_name}} לנהל את הנכסים הדיגיטליים שלי.
+אני ממנה{{principal_gender_suffix}} את {{attorney_name}} לנהל את הנכסים הדיגיטליים שלי.
 
-המיופה כוח רשאי לגשת ל:
+המיופה{{attorney_gender_suffix}} כוח רשאי{{attorney_gender_suffix}} לגשת ל:
 - חשבונות דואר אלקטרוני: {{email_accounts}}
 - רשתות חברתיות: {{social_media}}
 - אחסון בענן: {{cloud_storage}}
@@ -339,8 +339,8 @@ export const poaSectionsWarehouse: POASectionTemplate[] = [
 
 פרטי גישה נמצאים ב{{credentials_location}}.
 
-המיופה כוח רשאי {{digital_powers}}.`,
-    variables: ['attorney_name', 'email_accounts', 'social_media', 'cloud_storage', 'crypto_wallets', 'credentials_location', 'digital_powers'],
+המיופה{{attorney_gender_suffix}} כוח רשאי{{attorney_gender_suffix}} {{digital_powers}}.`,
+    variables: ['principal_gender_suffix', 'attorney_name', 'attorney_gender_suffix', 'email_accounts', 'social_media', 'cloud_storage', 'crypto_wallets', 'credentials_location', 'digital_powers'],
     aiPrompt: 'התאם לעידן הדיגיטלי, כלול הגנה על פרטיות',
     usageInstructions: 'השתמש להענקת סמכויות על נכסים דיגיטליים',
     poaTypes: ['regular', 'enduring']
@@ -352,18 +352,18 @@ export const poaSectionsWarehouse: POASectionTemplate[] = [
     category: 'special',
     content: `ניהול עסק:
 
-אני ממנה את {{attorney_name}} לנהל את העסק שלי {{business_name}}, ח.פ. {{business_id}}.
+אני ממנה{{principal_gender_suffix}} את {{attorney_name}} לנהל את העסק שלי {{business_name}}, ח.פ. {{business_id}}.
 
-המיופה כוח רשאי:
+המיופה{{attorney_gender_suffix}} כוח רשאי{{attorney_gender_suffix}}:
 - לחתום על חוזים מסחריים
 - לנהל עובדים (גיוס, פיטורין, משכורות)
 - לקבוע מדיניות עסקית
 - {{business_powers}}
 
-מגבלות: המיופה כוח {{business_limitations}}.
+מגבלות: המיופה{{attorney_gender_suffix}} הכוח {{business_limitations}}.
 
-המיופה כוח מתחייב {{business_commitments}}.`,
-    variables: ['attorney_name', 'business_name', 'business_id', 'business_powers', 'business_limitations', 'business_commitments'],
+המיופה{{attorney_gender_suffix}} כוח מתחייב{{attorney_gender_suffix}} {{business_commitments}}.`,
+    variables: ['principal_gender_suffix', 'attorney_name', 'attorney_gender_suffix', 'business_name', 'business_id', 'business_powers', 'business_limitations', 'business_commitments'],
     aiPrompt: 'התאם לסוג העסק, כלול מגבלות והגנות',
     usageInstructions: 'השתמש להענקת סמכויות לניהול עסק',
     poaTypes: ['regular', 'enduring']
@@ -375,18 +375,18 @@ export const poaSectionsWarehouse: POASectionTemplate[] = [
     category: 'special',
     content: `ייצוג משפטי:
 
-אני ממנה את {{attorney_name}} לייצג אותי בהליכים משפטיים {{proceedings_scope}}.
+אני ממנה{{principal_gender_suffix}} את {{attorney_name}} לייצג אותי בהליכים משפטיים {{proceedings_scope}}.
 
-המיופה כוח רשאי:
+המיופה{{attorney_gender_suffix}} כוח רשאי{{attorney_gender_suffix}}:
 - להגיש תביעות וכתבי הגנה בשמי
 - להתייצב לדיונים
 - לנהל משא ומתן לפשרה
 - {{legal_powers}}
 
-המיופה כוח {{settlement_authority}}.
+המיופה{{attorney_gender_suffix}} כוח {{settlement_authority}}.
 
-המיופה כוח מתחייב {{legal_commitments}}.`,
-    variables: ['attorney_name', 'proceedings_scope', 'legal_powers', 'settlement_authority', 'legal_commitments'],
+המיופה{{attorney_gender_suffix}} כוח מתחייב{{attorney_gender_suffix}} {{legal_commitments}}.`,
+    variables: ['principal_gender_suffix', 'attorney_name', 'attorney_gender_suffix', 'proceedings_scope', 'legal_powers', 'settlement_authority', 'legal_commitments'],
     aiPrompt: 'פרט את היקף הייצוג המשפטי, כלול סמכות לפשרה',
     usageInstructions: 'השתמש להענקת סמכות ייצוג בהליכים משפטיים',
     poaTypes: ['regular', 'enduring']
@@ -399,12 +399,12 @@ export const poaSectionsWarehouse: POASectionTemplate[] = [
     category: 'closing',
     content: `שיפוי:
 
-אני מתחייב לשפות את {{attorney_name}} בגין כל נזק, הוצאה או תביעה שייגרמו לו {{indemnification_scope}}.
+אני מתחייב{{principal_gender_suffix}} לשפות את {{attorney_name}} בגין כל נזק, הוצאה או תביעה שייגרמו ל{{attorney_pronoun}} {{indemnification_scope}}.
 
 השיפוי לא יחול ב{{indemnification_exceptions}}.
 
 {{additional_indemnification_terms}}`,
-    variables: ['attorney_name', 'indemnification_scope', 'indemnification_exceptions', 'additional_indemnification_terms'],
+    variables: ['principal_gender_suffix', 'attorney_name', 'attorney_pronoun', 'indemnification_scope', 'indemnification_exceptions', 'additional_indemnification_terms'],
     aiPrompt: 'הגדר שיפוי הוגן, כלול חריגים למקרי רשלנות',
     usageInstructions: 'השתמש להגנה על המיופה כוח מתביעות',
     poaTypes: ['regular', 'enduring', 'medical']
@@ -416,12 +416,12 @@ export const poaSectionsWarehouse: POASectionTemplate[] = [
     category: 'closing',
     content: `מיופה כוח חלופי:
 
-במקרה ש{{attorney_name}} לא יוכל או לא יסכים לשמש כמיופה כוח, אני ממנה במקומו את {{substitute_attorney_name}}, ת.ז. {{substitute_attorney_id}}.
+במקרה ש{{attorney_name}} לא יוכל או לא יסכים לשמש כמיופה כוח, אני ממנה{{principal_gender_suffix}} במקומו את {{substitute_attorney_name}}, ת.ז. {{substitute_attorney_id}}.
 
-המיופה החלופי יקבל את אותן סמכויות ומגבלות כמיופה הכוח הראשי.
+המיופה{{substitute_attorney_gender_suffix}} החלופי{{substitute_attorney_gender_suffix}} יקבל{{substitute_attorney_gender_suffix}} את אותן סמכויות ומגבלות כמיופה הכוח הראשי.
 
 {{substitution_conditions}}`,
-    variables: ['attorney_name', 'substitute_attorney_name', 'substitute_attorney_id', 'substitution_conditions'],
+    variables: ['principal_gender_suffix', 'attorney_name', 'substitute_attorney_name', 'substitute_attorney_gender_suffix', 'substitute_attorney_id', 'substitution_conditions'],
     aiPrompt: 'הגדר מיופה כוח חלופי, וודא רצף סמכויות',
     usageInstructions: 'השתמש למינוי מיופה כוח חלופי',
     poaTypes: ['regular', 'enduring', 'medical']

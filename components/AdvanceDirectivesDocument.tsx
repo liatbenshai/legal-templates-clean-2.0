@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import AdvanceDirectivesWarehouse from './AdvanceDirectivesWarehouse';
 import ProfessionalWordExporter from './ProfessionalWordExporter';
 import SimpleAIImprover from './SimpleAIImprover';
+import { applyGenderToText } from '@/lib/hebrew-gender';
 
 interface Attorney {
   fullName: string;
@@ -27,7 +28,8 @@ export default function AdvanceDirectivesDocument() {
     birthDate: '',
     address: '',
     phone: '',
-    maritalStatus: 'single' as 'single' | 'married' | 'divorced' | 'widowed'
+    maritalStatus: 'single' as 'single' | 'married' | 'divorced' | 'widowed',
+    gender: 'male' as 'male' | 'female' // הוספת מגדר לממנה
   });
 
   // מגדר מיופה כוח (לנטיות)
@@ -193,6 +195,18 @@ export default function AdvanceDirectivesDocument() {
                 className="w-full px-4 py-2 border rounded-lg"
                 placeholder="050-1234567"
               />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2">מגדר הממנה</label>
+              <select
+                value={principal.gender}
+                onChange={(e) => setPrincipal({ ...principal, gender: e.target.value as 'male' | 'female' })}
+                className="w-full px-4 py-2 border rounded-lg font-bold"
+              >
+                <option value="male">זכר</option>
+                <option value="female">נקבה</option>
+              </select>
             </div>
           </div>
         </section>
@@ -385,7 +399,23 @@ export default function AdvanceDirectivesDocument() {
                         </div>
                       ) : (
                         <div className="text-gray-700 text-sm whitespace-pre-wrap">
-                          {section.content}
+                          {(() => {
+                            let processedContent = section.content;
+                            
+                            // החלפת משתני מגדר
+                            if (principal.gender === 'female') {
+                              processedContent = processedContent.replace(/\{\{principal_gender_suffix\}\}/g, 'ת');
+                              processedContent = processedContent.replace(/\{\{attorney_gender_suffix\}\}/g, 'ת');
+                            } else {
+                              processedContent = processedContent.replace(/\{\{principal_gender_suffix\}\}/g, '');
+                              processedContent = processedContent.replace(/\{\{attorney_gender_suffix\}\}/g, '');
+                            }
+                            
+                            // התאמת כל התוכן למגדר
+                            processedContent = applyGenderToText(processedContent, attorney.gender || principal.gender);
+                            
+                            return processedContent;
+                          })()}
                         </div>
                       )}
                     </div>
@@ -419,12 +449,23 @@ export default function AdvanceDirectivesDocument() {
           <button className="px-8 py-3 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700">
             👁️ תצוגה מקדימה
           </button>
-          <button className="px-8 py-3 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700">
-            📄 ייצא ל-Word
-          </button>
           <button className="px-8 py-3 bg-purple-600 text-white rounded-lg font-bold hover:bg-purple-700">
             💾 שמור טיוטה
           </button>
+        </div>
+        
+        {/* ייצוא מקצועי */}
+        <div className="mt-8">
+          <ProfessionalWordExporter
+            willData={{
+              type: 'advance-directives',
+              testator: principal,
+              attorneys,
+              customSections,
+              attorneyGender: attorneys[0]?.gender || 'male'
+            }}
+            className="w-full"
+          />
         </div>
       </div>
     </div>

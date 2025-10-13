@@ -264,11 +264,11 @@ export const sectionsWarehouse: SectionTemplate[] = [
     id: 'digital-assets-full',
     title: 'נכסים דיגיטליים מפורט',
     category: 'property',
-    content: `אני מורה בזה כי כל נכסיי הדיגיטליים, בכל מקום בו הם נמצאים ובכל פלטפורמה או מדיום דיגיטלי, יעברו ל{{digital_heir}} לרשותו המלאה והבלעדית.
+    content: `אני מורה{{testator_gender_suffix}} בזה כי כל נכסיי הדיגיטליים, בכל מקום בו הם נמצאים ובכל פלטפורמה או מדיום דיגיטלי, יעברו ל{{digital_heir}} לרשותו{{digital_heir_gender_suffix}} המלאה והבלעדית.
 
 לצורך הוראה זו, נכסים דיגיטליים משמעם כל המידע, הנתונים, הקבצים והתכנים השמורים במכשירי האלקטרוניים שלי או בחשבונות דיגיטליים הרשומים על שמי.
 
-אני מצווה במפורש כי כל הנכסים הדיגיטליים הנ"ל יישמרו ולא יימחקו או יושמדו.
+אני מצווה{{testator_gender_suffix}} במפורש כי כל הנכסים הדיגיטליים הנ"ל יישמרו ולא יימחקו או יושמדו.
 
 הנכסים הדיגיטליים כוללים, בין השאר, את כל המידע הקיים בטלפון הנייד ובמחשב שלי, לרבות:
 - מסמכים דיגיטליים מכל סוג שהוא
@@ -278,7 +278,7 @@ export const sectionsWarehouse: SectionTemplate[] = [
 - הודעות SMS ו-WhatsApp
 - קבצי אודיו ווידאו
 - יומנים דיגיטליים ואפליקציות`,
-    variables: ['digital_heir'],
+    variables: ['digital_heir', 'testator_gender_suffix', 'digital_heir_gender_suffix'],
     aiPrompt: 'הרחב וכתוב סעיף מפורט על נכסים דיגיטליים בעברית משפטית תקינה - חשבונות, קבצים, מידע, קריפטו',
     usageInstructions: 'שימוש במקרה שיש נכסים דיגיטליים חשובים - חשבונות, מידע, קריפטו'
   },
@@ -288,14 +288,14 @@ export const sectionsWarehouse: SectionTemplate[] = [
     id: 'business-inheritance-full',
     title: 'ירושת עסק מלא',
     category: 'business',
-    content: `אני מורה בזה כי עסקי {{business_name}} ח.פ. {{business_id}}, לרבות כל הזכויות, הרישיונות, הלקוחות, המלאי, הציוד וכל הנכסים הקשורים לעסק, יעברו ל{{business_heir}} שיהיה אחראי לניהולו והמשך פעילותו.
+    content: `אני מורה{{testator_gender_suffix}} בזה כי עסקי {{business_name}} ח.פ. {{business_id}}, לרבות כל הזכויות, הרישיונות, הלקוחות, המלאי, הציוד וכל הנכסים הקשורים לעסק, יעברו ל{{business_heir}} שיהיה{{business_heir_gender_suffix}} אחראי{{business_heir_gender_suffix}} לניהולו והמשך פעילותו.
 
-{{business_heir}} מתחייב לשמור על רמת השירות ועל שם הטוב של העסק, ויהיה אחראי לכל החובות והתחייבויות העסקיות הקיימות במועד פטירתי.
+{{business_heir}} מתחייב{{business_heir_gender_suffix}} לשמור על רמת השירות ועל שם הטוב של העסק, ויהיה{{business_heir_gender_suffix}} אחראי{{business_heir_gender_suffix}} לכל החובות והתחייבויות העסקיות הקיימות במועד פטירתי.
 
 שאר היורשים יהיו זכאים לקבלת דו"ח כספי שנתי על פעילות העסק ורווחיותו, אך לא תהיה להם זכות התערבות בניהולו.
 
 במקרה שהעסק יסגר או יימכר, התמורה תחולק בין כלל היורשים לפי החלוקה הקבועה בצוואתי זו.`,
-    variables: ['business_name', 'business_id', 'business_heir'],
+    variables: ['business_name', 'business_id', 'business_heir', 'testator_gender_suffix', 'business_heir_gender_suffix', 'business_heir_gender'],
     aiPrompt: 'כתוב סעיף מפורט לירושת עסק בעברית משפטית - זכויות, חובות, ניהול, רישיונות',
     usageInstructions: 'לשימוש כאשר המצווה הוא בעל עסק ורוצה להעביר אותו ליורש ספציפי'
   },
@@ -305,8 +305,8 @@ export const sectionsWarehouse: SectionTemplate[] = [
     id: 'specific-vehicle-transfer',
     title: 'העברת רכב ספציפי',
     category: 'property',
-    content: `במקרה של פטירת {{vehicle_owner}}, ובתנאי שהרכב מסוג {{vehicle_type}} מספר רישוי {{vehicle_plate}} עדיין קיים ורשום על שמו/ה במועד הפטירה, זכויות הבעלות ברכב זה בלבד יועברו באופן מיידי ומוחלט ל{{vehicle_inheritor}} הנושא/ת ת.ז. {{vehicle_inheritor_id}}, ללא תנאי וללא תמורה. הוראה זו חלה אך ורק על הרכב הספציפי הנ"ל.`,
-    variables: ['vehicle_owner', 'vehicle_type', 'vehicle_plate', 'vehicle_inheritor', 'vehicle_inheritor_id'],
+    content: `במקרה של פטירת {{vehicle_owner}}, ובתנאי שהרכב מסוג {{vehicle_type}} מספר רישוי {{vehicle_plate}} עדיין קיים ורשום על שמו/ה במועד הפטירה, זכויות הבעלות ברכב זה בלבד יועברו באופן מיידי ומוחלט ל{{vehicle_inheritor}} הנושא{{vehicle_inheritor_gender_suffix}} ת.ז. {{vehicle_inheritor_id}}, ללא תנאי וללא תמורה. הוראה זו חלה אך ורק על הרכב הספציפי הנ"ל.`,
+    variables: ['vehicle_owner', 'vehicle_type', 'vehicle_plate', 'vehicle_inheritor', 'vehicle_inheritor_id', 'vehicle_inheritor_gender_suffix'],
     aiPrompt: 'כתוב סעיף מפורט להעברת רכב ספציפי ליורש מסוים - פרטי רכב, יורש, תנאים',
     usageInstructions: 'לשימוש כאשר רוצים להעביר רכב ספציפי ליורש מסוים ולא לכולם'
   },
@@ -473,7 +473,7 @@ export const sectionsWarehouse: SectionTemplate[] = [
     id: 'pet-care-advanced',
     title: 'טיפול בחיות מחמד מתקדם',
     category: 'special',
-    content: `אני מורה בזה כי חיות המחמד שלי: {{pets_list}}, יועברו לטיפולו של {{pet_caregiver}} שיהיה אחראי לטיפול, מזון, טיפול וטרינרי וכל הצרכים הנדרשים.
+    content: `אני מורה{{testator_gender_suffix}} בזה כי חיות המחמד שלי: {{pets_list}}, יועברו לטיפולו{{pet_caregiver_gender_suffix}} של {{pet_caregiver}} שיהיה{{pet_caregiver_gender_suffix}} אחראי{{pet_caregiver_gender_suffix}} לטיפול, מזון, טיפול וטרינרי וכל הצרכים הנדרשים.
 
 לצורך זה, אני מוריש סכום של {{pet_care_amount}} ש"ח שיועבר ל{{pet_caregiver}} למטרת טיפול בחיות המחמד. הכסף יועבר בתשלומים חודשיים של {{monthly_amount}} ש"ח או לפי הצורך לטיפול וטרינרי.
 
@@ -482,7 +482,7 @@ export const sectionsWarehouse: SectionTemplate[] = [
 במקרה ש{{pet_caregiver}} לא יוכל להמשיך לטפל בהן, עליו למצוא בית חם ואוהב אחר לחיות, ולהודיע לכל היורשים על ההעברה. אסור בהחלט להעביר את החיות למקלט או לוותר עליהן.
 
 יתרת הכספים שלא נוצלו לטיפול בחיות תחזור לעיזבון לחלוקה בין היורשים.`,
-    variables: ['pets_list', 'pet_caregiver', 'pet_care_amount', 'monthly_amount'],
+    variables: ['pets_list', 'pet_caregiver', 'pet_care_amount', 'monthly_amount', 'testator_gender_suffix', 'pet_caregiver_gender_suffix'],
     aiPrompt: 'כתוב סעיף מפורט לטיפול בחיות מחמד - תקציב, חובות המטפל, תנאים',
     usageInstructions: 'לשימוש כאשר למצווה יש חיות מחמד חשובות שדורשות טיפול מיוחד'
   },
@@ -492,7 +492,7 @@ export const sectionsWarehouse: SectionTemplate[] = [
     id: 'charity-bequest-advanced',
     title: 'הוראה לתרומה מתקדמת',
     category: 'special',
-    content: `אני מורה בזה כי סכום של {{donation_amount}} ש"ח ({{donation_amount_words}}) יועבר כתרומה ל{{charity_name}} ע.ר. {{charity_id}}, הפועל בתחום {{charity_field}}.
+    content: `אני מורה{{testator_gender_suffix}} בזה כי סכום של {{donation_amount}} ש"ח ({{donation_amount_words}}) יועבר כתרומה ל{{charity_name}} ע.ר. {{charity_id}}, הפועל בתחום {{charity_field}}.
 
 תרומה זו תשולם מתוך עיזבוני לפני חלוקת היתרה ליורשים, ותהווה ביטוי לערכיי ולמחויבותי החברתית לקידום {{charity_cause}}.
 
@@ -501,9 +501,30 @@ export const sectionsWarehouse: SectionTemplate[] = [
 במקרה שהארגון הנ"ל יפסיק לפעול או יאבד את מעמדו כארגון ציבורי, התרומה תועבר לארגון צדקה דומה בתחום {{charity_field}} שייבחר על ידי רוב היורשים.
 
 אם לא יימצא ארגון חלופי מתאים, הסכום יחזור לחלוקה בין היורשים.`,
-    variables: ['donation_amount', 'donation_amount_words', 'charity_name', 'charity_id', 'charity_field', 'charity_cause', 'donation_timeframe'],
+    variables: ['donation_amount', 'donation_amount_words', 'charity_name', 'charity_id', 'charity_field', 'charity_cause', 'donation_timeframe', 'testator_gender_suffix'],
     aiPrompt: 'כתוב סעיף מפורט לתרומה צדקה בצוואה - סכום, ארגון, הוראות ביצוע, תנאים',
     usageInstructions: 'לשימוש כאשר המצווה רוצה לתרום חלק מהעיזבון לצדקה בצורה מקצועית'
+  },
+
+  // אפוטרופסות על ילדים קטינים
+  {
+    id: 'guardianship-minor-children',
+    title: 'מינוי אפוטרופוס לקטינים (מפורט)',
+    category: 'family',
+    content: `מינוי אפוטרופוס לילדים קטינים:
+
+אני ממנה בזאת את {{guardian_name}}, ת.ז. {{guardian_id}}, {{relationship}}, כאפוטרופוס{{guardian_gender_suffix}} על ילדיי הקטינים: {{children_names}}.
+
+האפוטרופוס{{guardian_gender_suffix}} יהיה{{guardian_gender_suffix}} אחראי{{guardian_gender_suffix}} על {{guardianship_scope}}.
+
+בחרתי באפוטרופוס זה מהטעמים הבאים: {{reasons}}.
+
+אני מייעץ לאפוטרופוס{{guardian_gender_suffix}} {{parenting_guidance}}.
+
+במקרה שהאפוטרופוס{{guardian_gender_suffix}} שמיניתי לא יוכל או לא יסכים לשמש בתפקיד, אני ממנה במקומו את {{backup_guardian_name}}, ת.ז. {{backup_guardian_id}}.`,
+    variables: ['guardian_name', 'guardian_id', 'relationship', 'children_names', 'guardianship_scope', 'reasons', 'parenting_guidance', 'backup_guardian_name', 'backup_guardian_id', 'guardian_gender_suffix', 'guardian_gender'],
+    aiPrompt: 'התאם בצורה רגישה לנושא גידול ילדים, הדגש את חשיבות החלטה זו',
+    usageInstructions: 'השתמש כאשר יש ילדים קטינים וצריך למנות אפוטרופוס'
   },
 
   // 60 סעיפים חדשים מבוססים על צוואות אמיתיות
@@ -1100,8 +1121,8 @@ export const enhancedWillSections: ProfessionalWillSection[] = [
     id: 'F9',
     title: 'נכסים דיגיטליים',
     category: 'both',
-    content: 'בנוגע לנכסים הדיגיטליים שלי, לרבות:\n\nא. חשבונות רשתות חברתיות (פייסבוק, אינסטגרם, לינקדאין);\nב. תיקיות ענן (Google Drive, Dropbox, iCloud);\nג. ארנקים דיגיטליים וקריפטו;\nד. אתרים ודומיינים;\nה. זכויות יוצרים דיגיטליות.\n\nאני מצווה/ה ל{{digital_heir}} את כל הגישה והזכויות לנכסים הדיגיטליים שלי. פרטי הגישה מצויים ב{{password_manager}} או במעטפה חתומה אצל {{password_location}}.',
-    variables: ['digital_heir', 'password_manager', 'password_location'],
+    content: 'בנוגע לנכסים הדיגיטליים שלי, לרבות:\n\nא. חשבונות רשתות חברתיות (פייסבוק, אינסטגרם, לינקדאין);\nב. תיקיות ענן (Google Drive, Dropbox, iCloud);\nג. ארנקים דיגיטליים וקריפטו;\nד. אתרים ודומיינים;\nה. זכויות יוצרים דיגיטליות.\n\nאני מצווה{{testator_gender_suffix}} ל{{digital_heir}} את כל הגישה והזכויות לנכסים הדיגיטליים שלי. פרטי הגישה מצויים ב{{password_manager}} או במעטפה חתומה אצל {{password_location}}.',
+    variables: ['digital_heir', 'password_manager', 'password_location', 'testator_gender_suffix'],
     required: false,
     order: 23
   },
