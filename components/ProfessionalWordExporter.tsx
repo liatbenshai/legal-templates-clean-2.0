@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { hebrewVerbsLearning, getGenderSuffix } from '@/lib/hebrew-verbs-learning';
-import VerbCorrectionModal from './VerbCorrectionModal';
+// import { hebrewVerbsLearning, getGenderSuffix } from '@/lib/hebrew-verbs-learning';
+// import VerbCorrectionModal from './VerbCorrectionModal';
 
 interface ProfessionalWordExporterProps {
   willData: any;
@@ -15,13 +15,13 @@ export default function ProfessionalWordExporter({
 }: ProfessionalWordExporterProps) {
   const [isExporting, setIsExporting] = useState(false);
   const [exportStatus, setExportStatus] = useState<string | null>(null);
-  const [correctionModal, setCorrectionModal] = useState<{
-    isOpen: boolean;
-    verb: string;
-    context: string;
-    gender: string;
-    currentSuffix: string;
-  } | null>(null);
+  // const [correctionModal, setCorrectionModal] = useState<{
+  //   isOpen: boolean;
+  //   verb: string;
+  //   context: string;
+  //   gender: string;
+  //   currentSuffix: string;
+  // } | null>(null);
 
   const exportToWord = async () => {
     setIsExporting(true);
@@ -648,14 +648,14 @@ export default function ProfessionalWordExporter({
             sectionContent = sectionContent.replace(/\{\{child_first_name\}\}/g, firstHeir.firstName || '[שם ילד]');
             
             // לוגיקה מותאמת לפעלים עם child_gender_suffix
-            const childGenderSuffix = getGenderSuffix('child', 'child', firstHeir.gender);
+            const childGenderSuffix = firstHeir.gender === 'female' ? 'ה' : firstHeir.gender === 'plural' ? 'ו' : '';
             sectionContent = sectionContent.replace(/\{\{child_gender_suffix\}\}/g, childGenderSuffix);
             
             sectionContent = sectionContent.replace(/\{\{child_pronoun\}\}/g, firstHeir.gender === 'female' ? 'לה' : 'לו');
             sectionContent = sectionContent.replace(/\{\{heir_first_name\}\}/g, firstHeir.firstName || '[שם יורש]');
             
             // לוגיקה מותאמת לפעלים עם heir_gender_suffix
-            const heirGenderSuffix = getGenderSuffix('heir', 'heir', firstHeir.gender);
+            const heirGenderSuffix = firstHeir.gender === 'female' ? 'ה' : firstHeir.gender === 'plural' ? 'ו' : '';
             sectionContent = sectionContent.replace(/\{\{heir_gender_suffix\}\}/g, heirGenderSuffix);
             
             // משתנים של יורש שני (לעסק)
@@ -1123,13 +1123,13 @@ export default function ProfessionalWordExporter({
             const firstHeir = willData.heirs[0];
             sectionContent = sectionContent.replace(/\{\{child_first_name\}\}/g, firstHeir.firstName || '[שם ילד]');
             // לוגיקה מותאמת לפעלים עם child_gender_suffix
-            const childGenderSuffixPdf = getGenderSuffix('child', 'child', firstHeir.gender);
+            const childGenderSuffixPdf = firstHeir.gender === 'female' ? 'ה' : firstHeir.gender === 'plural' ? 'ו' : '';
             sectionContent = sectionContent.replace(/\{\{child_gender_suffix\}\}/g, childGenderSuffixPdf);
             
             sectionContent = sectionContent.replace(/\{\{heir_first_name\}\}/g, firstHeir.firstName || '[שם יורש]');
             
             // לוגיקה מותאמת לפעלים עם heir_gender_suffix
-            const heirGenderSuffixPdf = getGenderSuffix('heir', 'heir', firstHeir.gender);
+            const heirGenderSuffixPdf = firstHeir.gender === 'female' ? 'ה' : firstHeir.gender === 'plural' ? 'ו' : '';
             sectionContent = sectionContent.replace(/\{\{heir_gender_suffix\}\}/g, heirGenderSuffixPdf);
             
             // משתנים של יורש שני (לעסק)
@@ -1380,7 +1380,8 @@ export default function ProfessionalWordExporter({
             )}
           </button>
 
-          <button
+          {/* כפתור תיקון פעלים בעברית - זמנית מושבת */}
+          {/* <button
             onClick={() => setCorrectionModal({
               isOpen: true,
               verb: 'תבקש',
@@ -1392,7 +1393,7 @@ export default function ProfessionalWordExporter({
           >
             <span className="text-2xl">🧠</span>
             <span>תיקון פעלים בעברית</span>
-          </button>
+          </button> */}
         </div>
 
         {exportStatus && (
@@ -1436,8 +1437,8 @@ export default function ProfessionalWordExporter({
           </div>
         )}
 
-        {/* מודל תיקון פעלים */}
-        {correctionModal && (
+        {/* מודל תיקון פעלים - זמנית מושבת */}
+        {/* {correctionModal && (
           <VerbCorrectionModal
             isOpen={correctionModal.isOpen}
             onClose={() => setCorrectionModal(null)}
@@ -1457,7 +1458,7 @@ export default function ProfessionalWordExporter({
               setCorrectionModal(null);
             }}
           />
-        )}
+        )} */}
       </div>
     </div>
   );
