@@ -404,6 +404,22 @@ export default function UnifiedWarehouse({ onSectionSelect, userId, willType = '
     return CATEGORIES.find(cat => cat.id === categoryId) || CATEGORIES[0];
   };
 
+  // מיפוי צבעים סטטי עבור Tailwind
+  const getCategoryColorClasses = (color: string) => {
+    const colorMap: Record<string, string> = {
+      'gray': 'bg-gray-100 text-gray-800 border-gray-300 hover:bg-gray-200',
+      'green': 'bg-green-100 text-green-800 border-green-300 hover:bg-green-200',
+      'blue': 'bg-blue-100 text-blue-800 border-blue-300 hover:bg-blue-200',
+      'purple': 'bg-purple-100 text-purple-800 border-purple-300 hover:bg-purple-200',
+      'red': 'bg-red-100 text-red-800 border-red-300 hover:bg-red-200',
+      'pink': 'bg-pink-100 text-pink-800 border-pink-300 hover:bg-pink-200',
+      'yellow': 'bg-yellow-100 text-yellow-800 border-yellow-300 hover:bg-yellow-200',
+      'indigo': 'bg-indigo-100 text-indigo-800 border-indigo-300 hover:bg-indigo-200',
+      'cyan': 'bg-cyan-100 text-cyan-800 border-cyan-300 hover:bg-cyan-200'
+    };
+    return colorMap[color] || colorMap['gray'];
+  };
+
   return (
     <div className="space-y-6">
       {/* כותרת וסטטיסטיקות */}
@@ -479,7 +495,7 @@ export default function UnifiedWarehouse({ onSectionSelect, userId, willType = '
               onClick={() => setSelectedCategory(category.id)}
               className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition ${
                 selectedCategory === category.id
-                  ? `bg-${category.color}-100 text-${category.color}-800 border border-${category.color}-300`
+                  ? `${getCategoryColorClasses(category.color)} border`
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
@@ -613,7 +629,7 @@ export default function UnifiedWarehouse({ onSectionSelect, userId, willType = '
                         <select
                           value={section.category}
                           onChange={(e) => handleMoveCategorySection(section.id, e.target.value)}
-                          className={`px-2 py-1 text-xs rounded-full bg-${categoryInfo.color}-100 text-${categoryInfo.color}-800 hover:bg-${categoryInfo.color}-200 cursor-pointer appearance-none pr-6 border-none outline-none`}
+                          className={`px-2 py-1 text-xs rounded-full ${getCategoryColorClasses(categoryInfo.color)} cursor-pointer appearance-none pr-6 border-none outline-none`}
                           title="העבר לקטגוריה אחרת"
                         >
                           {CATEGORIES.slice(1).map(cat => (
