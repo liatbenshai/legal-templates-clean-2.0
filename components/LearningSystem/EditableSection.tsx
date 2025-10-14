@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Edit3, Save, X, Lightbulb, BookOpen, Brain, CheckCircle, Sparkles } from 'lucide-react';
 import { EditableSection as EditableSectionType, SectionEditAction } from '@/lib/learning-system/types';
 import { learningEngine } from '@/lib/learning-system/learning-engine';
-import SimpleAIImprover from '../SimpleAIImprover';
+import AdvancedAIImprover from '../AdvancedAIImprover';
 
 interface EditableSectionProps {
   section: EditableSectionType;
@@ -300,10 +300,12 @@ export default function EditableSection({
             עריכה עם AI
           </h4>
           
-          <SimpleAIImprover
-            initialText={section.content}
+          <AdvancedAIImprover
+            originalText={section.content}
             onAccept={handleAIImprove}
-            placeholder="הזן טקסט לשיפור..."
+            onReject={() => setShowAIEditor(false)}
+            context={section.category === 'fee_agreement' ? 'fee-agreement' : 'will-single'}
+            style="formal"
           />
           
           <div className="mt-2 flex gap-2">
