@@ -16,7 +16,8 @@ import {
   Save,
   X,
   RefreshCw,
-  Sparkles
+  Sparkles,
+  MoveHorizontal
 } from 'lucide-react';
 import EditableSection from './LearningSystem/EditableSection';
 import { EditableSection as EditableSectionType } from '@/lib/learning-system/types';
@@ -316,6 +317,31 @@ export default function UnifiedWarehouse({ onSectionSelect, userId, willType = '
     }
   };
 
+  const handleMoveCategorySection = (sectionId: string, newCategory: string) => {
+    const section = sections.find(s => s.id === sectionId);
+    const newCategoryInfo = getCategoryInfo(newCategory);
+    
+    const updated = sections.map(s => 
+      s.id === sectionId ? { ...s, category: newCategory } : s
+    );
+    setSections(updated);
+    saveSections(updated);
+    
+    // הודעת הצלחה
+    if (section) {
+      const notification = document.createElement('div');
+      notification.className = 'fixed top-4 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 flex items-center gap-2';
+      notification.innerHTML = `
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+        </svg>
+        <span>הועבר ל${newCategoryInfo.icon} ${newCategoryInfo.name}</span>
+      `;
+      document.body.appendChild(notification);
+      setTimeout(() => notification.remove(), 2000);
+    }
+  };
+
   const handleSelectSection = (section: WarehouseSection) => {
     // עדכון מונה שימוש
     const updatedSections = sections.map(s => 
@@ -581,9 +607,23 @@ export default function UnifiedWarehouse({ onSectionSelect, userId, willType = '
                     <div className="flex items-center gap-2 mb-2">
                       <span className="text-lg">{categoryInfo.icon}</span>
                       <h4 className="font-semibold text-gray-900">{section.title}</h4>
-                      <span className={`px-2 py-1 text-xs rounded-full bg-${categoryInfo.color}-100 text-${categoryInfo.color}-800`}>
-                        {categoryInfo.name}
-                      </span>
+                      
+                      {/* Dropdown להעברת קטגוריה */}
+                      <div className="relative group">
+                        <select
+                          value={section.category}
+                          onChange={(e) => handleMoveCategorySection(section.id, e.target.value)}
+                          className={`px-2 py-1 text-xs rounded-full bg-${categoryInfo.color}-100 text-${categoryInfo.color}-800 hover:bg-${categoryInfo.color}-200 cursor-pointer appearance-none pr-6 border-none outline-none`}
+                          title="העבר לקטגוריה אחרת"
+                        >
+                          {CATEGORIES.slice(1).map(cat => (
+                            <option key={cat.id} value={cat.id}>
+                              {cat.icon} {cat.name}
+                            </option>
+                          ))}
+                        </select>
+                        <MoveHorizontal className="absolute left-1 top-1/2 transform -translate-y-1/2 w-3 h-3 pointer-events-none text-gray-500" />
+                      </div>
                     </div>
                     <p className="text-sm text-gray-600 mb-2 line-clamp-2">
                       {section.content}
