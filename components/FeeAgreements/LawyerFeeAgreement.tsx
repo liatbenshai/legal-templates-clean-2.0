@@ -353,7 +353,7 @@ export default function LawyerFeeAgreement() {
   };
 
   const generateFeeAgreement = (): string => {
-    const baseAgreement = `הסכם שכר טרחה
+    let baseAgreement = `הסכם שכר טרחה
 
 בין:     ${agreementData.lawyer.name || '[שם עורך הדין]'}
          עו"ד, רישיון מספר: ${agreementData.lawyer.license || '[מספר רישיון]'}
