@@ -81,54 +81,102 @@ export default function UnifiedWarehouse({ onSectionSelect, userId }: UnifiedWar
         return;
       }
       
-      // טעינת סעיפים מהמחסן המשודרג
-      try {
-        console.log('Loading upgraded warehouse...');
-        const response = await fetch('/templates/clauses/sections-warehouse.json');
-        const warehouse = await response.json();
-        
-        const defaultSections: WarehouseSection[] = [];
-        
-        // המרת הקטגוריות והפריטים מהמחסן המשודרג
-        const categoryMap: Record<string, string> = {
-          'preliminary': 'personal',
-          'inheritance': 'financial',
-          'executor': 'personal',
-          'property': 'property',
-          'business': 'business',
-          'family': 'couple',
-          'guardian': 'children',
-          'health': 'health',
-          'digital': 'digital',
-          'funeral': 'personal'
-        };
-        
-        if (warehouse.categories) {
-          warehouse.categories.forEach((category: any) => {
-            category.items.forEach((item: any) => {
-              defaultSections.push({
-                id: item.id,
-                title: item.title,
-                content: item.content,
-                category: categoryMap[item.category] || 'personal',
-                tags: item.tags || [category.name],
-                usageCount: 0,
-                averageRating: 0,
-                isPublic: false,
-                createdBy: 'system',
-                createdAt: new Date().toISOString(),
-                lastUsed: new Date().toISOString()
-              });
-            });
-          });
-        }
-        
-        console.log(`Loaded ${defaultSections.length} sections from upgraded warehouse`);
-        setSections(defaultSections);
-        saveSections(defaultSections);
-        
-        // סימון שהמחסן המשודרג נטען
-        localStorage.setItem('upgraded_warehouse_loaded', 'true');
+        // טעינת סעיפים מכל המחסנים המשודרגים
+        try {
+          console.log('Loading all upgraded warehouses...');
+          
+          // רשימת הקבצים לטעינה
+          const warehouseFiles = [
+            '/templates/clauses/sections-warehouse.json',
+            '/templates/clauses/openings-warehouse.json',
+            '/templates/clauses/closings-warehouse.json',
+            '/templates/clauses/witnesses-warehouse.json'
+          ];
+          
+          const defaultSections: WarehouseSection[] = [];
+          
+          // המרת הקטגוריות והפריטים מכל המחסנים
+          const categoryMap: Record<string, string> = {
+            'preliminary': 'personal',
+            'inheritance': 'financial',
+            'executor': 'personal',
+            'property': 'property',
+            'business': 'business',
+            'family': 'couple',
+            'guardian': 'children',
+            'health': 'health',
+            'digital': 'digital',
+            'funeral': 'personal',
+            'final': 'personal',
+            'assets': 'property',
+            'debts': 'financial',
+            'special': 'personal',
+            'opening': 'personal',
+            'closing': 'personal',
+            'witnesses': 'personal',
+            'protection': 'children',
+            'special-instructions': 'personal',
+            'final-clauses': 'personal'
+          };
+          
+          // טעינה מכל הקבצים
+          for (const file of warehouseFiles) {
+            try {
+              const response = await fetch(file);
+              const warehouse = await response.json();
+              
+              // טעינת סעיפים מקובץ sections-warehouse
+              if (warehouse.categories) {
+                warehouse.categories.forEach((category: any) => {
+                  category.items.forEach((item: any) => {
+                    defaultSections.push({
+                      id: item.id,
+                      title: item.title,
+                      content: item.content,
+                      category: categoryMap[item.category] || 'personal',
+                      tags: item.tags || [category.name],
+                      usageCount: 0,
+                      averageRating: 0,
+                      isPublic: false,
+                      createdBy: 'system',
+                      createdAt: new Date().toISOString(),
+                      lastUsed: new Date().toISOString()
+                    });
+                  });
+                });
+              }
+              
+              // טעינת פריטים מקובץ openings-warehouse, closings-warehouse
+              if (warehouse.items) {
+                warehouse.items.forEach((item: any) => {
+                  defaultSections.push({
+                    id: item.id,
+                    title: item.title,
+                    content: item.content,
+                    category: categoryMap[item.category] || 'personal',
+                    tags: item.tags || [item.category],
+                    usageCount: 0,
+                    averageRating: 0,
+                    isPublic: false,
+                    createdBy: 'system',
+                    createdAt: new Date().toISOString(),
+                    lastUsed: new Date().toISOString()
+                  });
+                });
+              }
+              
+              console.log(`Loaded from ${file}: ${warehouse.categories?.length || warehouse.items?.length || 0} items`);
+            } catch (fileError) {
+              console.warn(`Failed to load ${file}:`, fileError);
+            }
+          }
+          
+          console.log(`Total loaded: ${defaultSections.length} sections from all warehouses`);
+          setSections(defaultSections);
+          saveSections(defaultSections);
+          
+          // סימון שהמחסן המשודרג נטען
+          localStorage.setItem('upgraded_warehouse_loaded', 'true');
         
       } catch (fetchError) {
         console.error('Error loading warehouse:', fetchError);
