@@ -160,6 +160,7 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
   const [variablesModal, setVariablesModal] = useState<{
     section: { id: string; title: string; content: string; variables: string[] };
     values: Record<string, string>;
+    genders: Record<string, 'male' | 'female'>;
   } | null>(null);
 
   // מערכת למידה
@@ -444,7 +445,8 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
           content: genderedContent,
           variables: variables
         },
-        values: variables.reduce((acc, v) => ({ ...acc, [v]: '' }), {})
+        values: variables.reduce((acc, v) => ({ ...acc, [v]: '' }), {}),
+        genders: variables.reduce((acc, v) => ({ ...acc, [v]: 'male' as 'male' | 'female' }), {})
       });
     } else {
       // אם אין משתנים, הוסף ישירות
@@ -1480,10 +1482,15 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
               השלמת פרטים לסעיף: {variablesModal.section.title}
             </h3>
             
+            <div className="mb-4 p-3 bg-blue-50 rounded-lg text-sm text-blue-800">
+              <p className="font-semibold mb-1">💡 טיפ:</p>
+              <p>למשתנים של אנשים (שמות) יש אפשרות לבחור מגדר. זה יעזור להציג את הטקסט הנכון (זכר/נקבה) בצוואה.</p>
+            </div>
+            
             <div className="space-y-4 mb-6">
               {variablesModal.section.variables.map((variable) => (
-                <div key={variable}>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                <div key={variable} className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">
                     {getVariableLabel(variable)}:
                   </label>
                   <input
@@ -1502,6 +1509,53 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500"
                     dir="rtl"
                   />
+                  
+                  {/* בחירת מגדר למשתנים רלוונטיים */}
+                  {isGenderRelevantVariable(variable) && (
+                    <div className="flex gap-4 items-center">
+                      <label className="text-sm text-gray-600">מגדר:</label>
+                      <div className="flex gap-2">
+                        <label className="flex items-center gap-2">
+                          <input
+                            type="radio"
+                            name={`gender_${variable}`}
+                            value="male"
+                            checked={variablesModal.genders[variable] === 'male'}
+                            onChange={(e) => {
+                              setVariablesModal(prev => ({
+                                ...prev!,
+                                genders: {
+                                  ...prev!.genders,
+                                  [variable]: e.target.value as 'male' | 'female'
+                                }
+                              }));
+                            }}
+                            className="text-orange-600 focus:ring-orange-500"
+                          />
+                          <span className="text-sm">זכר</span>
+                        </label>
+                        <label className="flex items-center gap-2">
+                          <input
+                            type="radio"
+                            name={`gender_${variable}`}
+                            value="female"
+                            checked={variablesModal.genders[variable] === 'female'}
+                            onChange={(e) => {
+                              setVariablesModal(prev => ({
+                                ...prev!,
+                                genders: {
+                                  ...prev!.genders,
+                                  [variable]: e.target.value as 'male' | 'female'
+                                }
+                              }));
+                            }}
+                            className="text-orange-600 focus:ring-orange-500"
+                          />
+                          <span className="text-sm">נקבה</span>
+                        </label>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -1515,11 +1569,19 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
               </button>
               <button
                 onClick={() => {
-                  // החלפת משתנים בתוכן
+                  // החלפת משתנים בתוכן עם התחשבות במגדר
                   let finalContent = variablesModal.section.content;
                   Object.keys(variablesModal.values).forEach(key => {
                     const value = variablesModal.values[key];
-                    finalContent = finalContent.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'g'), value);
+                    let replacedValue = value;
+                    
+                    // אם זה משתנה שדורש מגדר, החלף את הטקסט בהתאם
+                    if (isGenderRelevantVariable(key) && variablesModal.genders[key]) {
+                      const { replaceTextWithGender } = require('@/lib/hebrew-gender');
+                      replacedValue = replaceTextWithGender(value, variablesModal.genders[key]);
+                    }
+                    
+                    finalContent = finalContent.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'g'), replacedValue);
                   });
 
                   // הוספה לסעיפים מותאמים
@@ -1541,6 +1603,15 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
       )}
     </div>
   );
+}
+
+// פונקציה לקביעת אם משתנה דורש בחירת מגדר
+function isGenderRelevantVariable(variable: string): boolean {
+  const genderRelevantVariables = [
+    'heir_name', 'guardian_name', 'alternate_guardian', 'child_name', 
+    'manager_name', 'trustee_name', 'spouse_name'
+  ];
+  return genderRelevantVariables.includes(variable);
 }
 
 // פונקציה לקבלת תווית ידידותית למשתנה
