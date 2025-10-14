@@ -180,55 +180,52 @@ export default function UnifiedWarehouse({ onSectionSelect, userId, willType = '
       // סימון שהמחסן המשודרג נטען
       localStorage.setItem('upgraded_warehouse_loaded', 'true');
         
-    } catch (fetchError) {
-      console.error('Error loading warehouse:', fetchError);
-        // אם יש בעיה בטעינה, ניצור סעיפי ברירת מחדל בסיסיים
-        const basicSections: WarehouseSection[] = [
-          {
-            id: 'default-1',
-            title: 'הוראת כספי פנסיה',
-            content: 'כל כספי הפנסיה שלי יועברו ל{{שם היורש}} בהתאם לחוק.',
-            category: 'financial',
-            tags: ['פנסיה', 'כספים'],
-            usageCount: 0,
-            averageRating: 0,
-            isPublic: false,
-            createdBy: userId,
-            createdAt: new Date().toISOString(),
-            lastUsed: new Date().toISOString()
-          },
-          {
-            id: 'default-2',
-            title: 'הוראת טיפול רפואי',
-            content: 'במצב של חוסר הכרה, אני מורה כי הטיפול הרפואי יעשה בהתאם לרצוני המפורש ולפי חוק החולה הנוטה למות.',
-            category: 'health',
-            tags: ['רפואה', 'בריאות'],
-            usageCount: 0,
-            averageRating: 0,
-            isPublic: false,
-            createdBy: userId,
-            createdAt: new Date().toISOString(),
-            lastUsed: new Date().toISOString()
-          },
-          {
-            id: 'default-3',
-            title: 'הוראת נכסים עסקיים',
-            content: 'כל הנכסים העסקיים שלי יועברו ל{{שם היורש}} עם הוראות להמשך הפעלת העסק.',
-            category: 'business',
-            tags: ['עסקים', 'נכסים'],
-            usageCount: 0,
-            averageRating: 0,
-            isPublic: false,
-            createdBy: userId,
-            createdAt: new Date().toISOString(),
-            lastUsed: new Date().toISOString()
-          }
-        ];
-        setSections(basicSections);
-        saveSections(basicSections);
-      }
     } catch (error) {
-      console.error('Error loading sections:', error);
+      console.error('Error loading warehouse:', error);
+      // אם יש בעיה בטעינה, ניצור סעיפי ברירת מחדל בסיסיים
+      const basicSections: WarehouseSection[] = [
+        {
+          id: 'default-1',
+          title: 'הוראת כספי פנסיה',
+          content: 'כל כספי הפנסיה שלי יועברו ל{{שם היורש}} בהתאם לחוק.',
+          category: 'financial',
+          tags: ['פנסיה', 'כספים'],
+          usageCount: 0,
+          averageRating: 0,
+          isPublic: false,
+          createdBy: userId,
+          createdAt: new Date().toISOString(),
+          lastUsed: new Date().toISOString()
+        },
+        {
+          id: 'default-2',
+          title: 'הוראת טיפול רפואי',
+          content: 'במצב של חוסר הכרה, אני מורה כי הטיפול הרפואי יעשה בהתאם לרצוני המפורש ולפי חוק החולה הנוטה למות.',
+          category: 'health',
+          tags: ['רפואה', 'בריאות'],
+          usageCount: 0,
+          averageRating: 0,
+          isPublic: false,
+          createdBy: userId,
+          createdAt: new Date().toISOString(),
+          lastUsed: new Date().toISOString()
+        },
+        {
+          id: 'default-3',
+          title: 'הוראת נכסים עסקיים',
+          content: 'כל הנכסים העסקיים שלי יועברו ל{{שם היורש}} עם הוראות להמשך הפעלת העסק.',
+          category: 'business',
+          tags: ['עסקים', 'נכסים'],
+          usageCount: 0,
+          averageRating: 0,
+          isPublic: false,
+          createdBy: userId,
+          createdAt: new Date().toISOString(),
+          lastUsed: new Date().toISOString()
+        }
+      ];
+      setSections(basicSections);
+      saveSections(basicSections);
     }
   };
 
