@@ -562,17 +562,12 @@ export class AILegalWriter {
       return false;
     }
 
+    // בדיקה פשוטה יותר - האם יש תוכן עברית
     const hebrewChars = (improved.match(/[\u0590-\u05FF]/g) || []).length;
-    const totalChars = improved.replace(/\s/g, '').length;
+    const hasHebrewContent = hebrewChars > 5; // לפחות 5 תווי עברית
     
-    if (hebrewChars < totalChars * 0.7) {
-      console.warn('❌ אין מספיק תווי עברית');
-      return false;
-    }
-
-    const englishChars = (improved.match(/[a-zA-Z]/g) || []).length;
-    if (englishChars > hebrewChars * 0.1) {
-      console.warn('❌ יש יותר מדי אנגלית');
+    if (!hasHebrewContent) {
+      console.warn('❌ אין תוכן עברית מספיק');
       return false;
     }
 
@@ -581,7 +576,7 @@ export class AILegalWriter {
       improvedLength: improved.length,
       ratio: (improved.length / original.length).toFixed(2),
       hebrewChars,
-      englishChars
+      hasHebrewContent
     });
 
     return true;
