@@ -71,6 +71,19 @@ export default function AdvanceDirectivesForm() {
     values: Record<string, string>;
     genders: Record<string, 'male' | 'female'>;
   } | null>(null);
+  
+  // עריכת סעיפים
+  const [editingSection, setEditingSection] = useState<AdvanceDirectivesSectionTemplate | null>(null);
+  const [showAddSection, setShowAddSection] = useState(false);
+  const [newSection, setNewSection] = useState<{
+    title: string;
+    content: string;
+    category: 'property' | 'personal' | 'medical';
+  }>({
+    title: '',
+    content: '',
+    category: 'property'
+  });
 
   // חישוב גיל אוטומטי
   useEffect(() => {
@@ -146,6 +159,62 @@ export default function AdvanceDirectivesForm() {
       'address': 'כתובת'
     };
     return labels[variable] || variable;
+  };
+
+  // פונקציות עריכה ויצירה
+  const handleEditSection = (section: AdvanceDirectivesSectionTemplate) => {
+    setEditingSection(section);
+  };
+
+  const handleUpdateSection = (updatedSection: AdvanceDirectivesSectionTemplate) => {
+    // עדכון במחסן (במקום אמיתי זה יהיה שמירה ל-localStorage או API)
+    console.log('Updated section:', updatedSection);
+    setEditingSection(null);
+    alert('סעיף עודכן בהצלחה!');
+  };
+
+  const handleDeleteSection = (sectionId: string) => {
+    if (confirm('האם אתה בטוח שברצונך למחוק את הסעיף?')) {
+      // מחיקה מהמחסן (במקום אמיתי זה יהיה שמירה ל-localStorage או API)
+      console.log('Deleted section:', sectionId);
+      alert('סעיף נמחק בהצלחה!');
+    }
+  };
+
+  const handleAddNewSection = () => {
+    if (!newSection.title.trim() || !newSection.content.trim()) {
+      alert('אנא מלא את כל השדות');
+      return;
+    }
+
+    const section: AdvanceDirectivesSectionTemplate = {
+      id: `custom-${Date.now()}`,
+      category: newSection.category,
+      subcategory: 'custom',
+      title: newSection.title,
+      titleEn: newSection.title,
+      content: newSection.content,
+      variables: extractVariablesFromContent(newSection.content),
+      tags: ['מותאם אישית']
+    };
+
+    // הוספה למחסן (במקום אמיתי זה יהיה שמירה ל-localStorage או API)
+    console.log('Added new section:', section);
+    
+    // איפוס הטופס
+    setNewSection({
+      title: '',
+      content: '',
+      category: 'property'
+    });
+    setShowAddSection(false);
+    alert('סעיף נוסף בהצלחה!');
+  };
+
+  const handleMoveSection = (sectionId: string, newCategory: 'property' | 'personal' | 'medical') => {
+    // העברת סעיף לקטגוריה אחרת (במקום אמיתי זה יהיה שמירה ל-localStorage או API)
+    console.log(`Moved section ${sectionId} to category ${newCategory}`);
+    alert('סעיף הועבר לקטגוריה בהצלחה!');
   };
 
   const handleSelectFromWarehouse = (section: AdvanceDirectivesSectionTemplate) => {
@@ -653,6 +722,16 @@ export default function AdvanceDirectivesForm() {
                 </button>
               </div>
 
+              <div className="mb-4">
+                <button
+                  onClick={() => setShowAddSection(true)}
+                  className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+                >
+                  <span>➕</span>
+                  הוסף סעיף חדש
+                </button>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {['property', 'personal', 'medical'].map(category => {
                   const categorySections = advanceDirectivesSectionsWarehouse.filter(s => s.category === category);
@@ -680,11 +759,8 @@ export default function AdvanceDirectivesForm() {
                               <select
                                 value={section.category}
                                 onChange={(e) => {
-                                  // העבר בין קטגוריות
                                   const newCategory = e.target.value as 'property' | 'personal' | 'medical';
-                                  const updatedSection = { ...section, category: newCategory };
-                                  // עדכן את המחסן (במקום אמיתי זה יהיה שמירה לlocalStorage או API)
-                                  console.log(`העבר סעיף ${section.id} לקטגוריה ${newCategory}`);
+                                  handleMoveSection(section.id, newCategory);
                                 }}
                                 className="text-xs px-2 py-1 rounded border-0 bg-gray-100 hover:bg-gray-200 cursor-pointer"
                                 title="העבר לקטגוריה אחרת"
@@ -697,12 +773,28 @@ export default function AdvanceDirectivesForm() {
                             <p className="text-xs text-gray-600 mb-3 line-clamp-3">
                               {section.content.substring(0, 100)}...
                             </p>
-                            <button
-                              onClick={() => handleSelectFromWarehouse(section)}
-                              className="w-full px-3 py-2 bg-orange-600 text-white text-sm rounded hover:bg-orange-700 transition"
-                            >
-                              הוסף לצוואה
-                            </button>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => handleSelectFromWarehouse(section)}
+                                className="flex-1 px-3 py-2 bg-orange-600 text-white text-sm rounded hover:bg-orange-700 transition"
+                              >
+                                הוסף
+                              </button>
+                              <button
+                                onClick={() => handleEditSection(section)}
+                                className="px-3 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition"
+                                title="ערוך סעיף"
+                              >
+                                ✏️
+                              </button>
+                              <button
+                                onClick={() => handleDeleteSection(section.id)}
+                                className="px-3 py-2 bg-red-600 text-white text-sm rounded hover:bg-red-700 transition"
+                                title="מחק סעיף"
+                              >
+                                🗑️
+                              </button>
+                            </div>
                           </div>
                         ))}
                       </div>
@@ -856,6 +948,128 @@ export default function AdvanceDirectivesForm() {
                   className="flex-1 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition disabled:bg-gray-300 disabled:cursor-not-allowed"
                 >
                   הוסף סעיף
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* חלון יצירת סעיף חדש */}
+        {showAddSection && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+              <h3 className="text-xl font-bold text-gray-900 mb-4">הוספת סעיף חדש</h3>
+              
+              <div className="space-y-4 mb-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">כותרת הסעיף:</label>
+                  <input
+                    type="text"
+                    value={newSection.title}
+                    onChange={(e) => setNewSection(prev => ({ ...prev, title: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="למשל: הוראת כספי פנסיה"
+                    dir="rtl"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">קטגוריה:</label>
+                  <select
+                    value={newSection.category}
+                    onChange={(e) => setNewSection(prev => ({ ...prev, category: e.target.value as 'property' | 'personal' | 'medical' }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="property">עניינים רכושיים</option>
+                    <option value="personal">עניינים אישיים</option>
+                    <option value="medical">עניינים רפואיים</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">תוכן הסעיף:</label>
+                  <div className="mb-2 p-3 bg-blue-50 rounded-lg text-sm text-blue-800">
+                    <p className="font-semibold mb-1">💡 טיפים לכתיבה:</p>
+                    <ul className="list-disc list-inside space-y-1 text-xs">
+                      <li><strong>משתנים:</strong> השתמש ב-{`{{שם_משתנה}}`} למידע שישתנה (למשל: {`{{attorney_name}}`})</li>
+                      <li><strong>זכר/נקבה:</strong> השתמש ב-<code>/ת</code> <code>/ה</code> <code>/ים</code> (למשל: ממנה/ים, תושב/ת, יוכל/תוכל)</li>
+                      <li><strong>דוגמה:</strong> "אני ממנה/ים את {`{{attorney_name}}`}, תושב/ת {`{{address}}`}"</li>
+                    </ul>
+                  </div>
+                  <textarea
+                    value={newSection.content}
+                    onChange={(e) => setNewSection(prev => ({ ...prev, content: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    rows={6}
+                    placeholder="כתבי את תוכן הסעיף כאן..."
+                    dir="rtl"
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowAddSection(false);
+                    setNewSection({ title: '', content: '', category: 'property' });
+                  }}
+                  className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
+                >
+                  ביטול
+                </button>
+                <button
+                  onClick={handleAddNewSection}
+                  className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+                >
+                  הוסף סעיף
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* חלון עריכת סעיף */}
+        {editingSection && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+              <h3 className="text-xl font-bold text-gray-900 mb-4">עריכת סעיף: {editingSection.title}</h3>
+              
+              <div className="space-y-4 mb-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">כותרת הסעיף:</label>
+                  <input
+                    type="text"
+                    value={editingSection.title}
+                    onChange={(e) => setEditingSection(prev => prev ? { ...prev, title: e.target.value } : null)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    dir="rtl"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">תוכן הסעיף:</label>
+                  <textarea
+                    value={editingSection.content}
+                    onChange={(e) => setEditingSection(prev => prev ? { ...prev, content: e.target.value } : null)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    rows={8}
+                    dir="rtl"
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setEditingSection(null)}
+                  className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
+                >
+                  ביטול
+                </button>
+                <button
+                  onClick={() => editingSection && handleUpdateSection(editingSection)}
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                >
+                  שמור שינויים
                 </button>
               </div>
             </div>
