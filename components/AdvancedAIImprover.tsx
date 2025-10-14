@@ -38,7 +38,7 @@ export default function AdvancedAIImprover({
   const [showLearningManager, setShowLearningManager] = useState(false);
 
   const improveText = async () => {
-    if (!originalText.trim()) {
+    if (!originalText || !originalText.trim()) {
       alert('אנא הזן טקסט לשיפור');
       return;
     }
@@ -323,7 +323,7 @@ export default function AdvancedAIImprover({
             שיפור מתקדם עם AI
           </h2>
           <div className="text-sm text-purple-600 bg-white px-3 py-1 rounded-full border">
-            {originalText.length} תווים
+            {originalText?.length || 0} תווים
           </div>
         </div>
         

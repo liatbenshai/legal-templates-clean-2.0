@@ -633,13 +633,22 @@ export default function UnifiedWarehouse({ onSectionSelect, userId }: UnifiedWar
             עריכה עם AI
           </h4>
           
-          <EditableSection
-            section={convertToEditableSection(sections.find(s => s.id === showAIEditor)!)}
-            onUpdate={handleUpdateEditableSection}
-            onSaveToWarehouse={handleSaveToWarehouse}
-            onSaveToLearning={handleSaveToLearning}
-            userId={userId}
-          />
+          {(() => {
+            const section = sections.find(s => s.id === showAIEditor);
+            if (!section) {
+              setShowAIEditor(null);
+              return <div>סעיף לא נמצא</div>;
+            }
+            return (
+              <EditableSection
+                section={convertToEditableSection(section)}
+                onUpdate={handleUpdateEditableSection}
+                onSaveToWarehouse={handleSaveToWarehouse}
+                onSaveToLearning={handleSaveToLearning}
+                userId={userId}
+              />
+            );
+          })()}
           
           <div className="mt-4 flex gap-2">
             <button
