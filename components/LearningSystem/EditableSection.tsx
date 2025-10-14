@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Edit3, Save, X, Lightbulb, BookOpen, Brain, CheckCircle } from 'lucide-react';
+import { Edit3, Save, X, Lightbulb, BookOpen, Brain, CheckCircle, Sparkles } from 'lucide-react';
 import { EditableSection as EditableSectionType, SectionEditAction } from '@/lib/learning-system/types';
 import { learningEngine } from '@/lib/learning-system/learning-engine';
+import SimpleAIImprover from '../SimpleAIImprover';
 
 interface EditableSectionProps {
   section: EditableSectionType;
@@ -25,6 +26,7 @@ export default function EditableSection({
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(section.content);
   const [showAIPanel, setShowAIPanel] = useState(false);
+  const [showAIEditor, setShowAIEditor] = useState(false);
   const [aiInsights, setAiInsights] = useState<any[]>([]);
   const [mounted, setMounted] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -149,6 +151,29 @@ export default function EditableSection({
     }
   };
 
+  const handleAIImprove = (improvedText: string) => {
+    setEditContent(improvedText);
+    setShowAIEditor(false);
+    
+    // שמירת נתוני למידה
+    if (mounted) {
+      learningEngine.saveLearningData({
+        sectionId: section.id,
+        originalText: section.content,
+        editedText: improvedText,
+        editType: 'ai_suggested',
+        userFeedback: 'approved',
+        context: {
+          serviceType: section.serviceType || '',
+          category: section.category,
+          userType: 'lawyer'
+        },
+        timestamp: new Date().toISOString(),
+        userId
+      });
+    }
+  };
+
   useEffect(() => {
     if (showAIInsights) {
       loadAIInsights();
@@ -181,9 +206,19 @@ export default function EditableSection({
           
           {section.isEditable && !isEditing && (
             <button
+              onClick={() => setShowAIEditor(true)}
+              className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition"
+              title="עריכה עם AI"
+            >
+              <Sparkles className="w-4 h-4" />
+            </button>
+          )}
+          
+          {section.isEditable && !isEditing && (
+            <button
               onClick={handleEdit}
               className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"
-              title="עריכה"
+              title="עריכה ידנית"
             >
               <Edit3 className="w-4 h-4" />
             </button>
@@ -253,6 +288,31 @@ export default function EditableSection({
             <div className="text-xs text-gray-500 mr-auto">
               גרסה {section.version} • עודכן: {new Date(section.lastModified).toLocaleDateString('he-IL')}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* עורך AI */}
+      {showAIEditor && (
+        <div className="mt-4 p-4 bg-purple-50 border border-purple-200 rounded-lg">
+          <h4 className="text-sm font-semibold text-purple-800 mb-3 flex items-center gap-2">
+            <Sparkles className="w-4 h-4" />
+            עריכה עם AI
+          </h4>
+          
+          <SimpleAIImprover
+            initialText={section.content}
+            onAccept={handleAIImprove}
+            placeholder="הזן טקסט לשיפור..."
+          />
+          
+          <div className="mt-2 flex gap-2">
+            <button
+              onClick={() => setShowAIEditor(false)}
+              className="px-3 py-1 text-sm bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition"
+            >
+              ביטול
+            </button>
           </div>
         </div>
       )}
