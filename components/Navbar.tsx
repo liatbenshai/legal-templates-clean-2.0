@@ -123,6 +123,10 @@ export default function Navbar() {
                 <FileText className="w-4 h-4 text-teal-600" />
                 <span>הנחיות מקדימות</span>
               </Link>
+              <Link href="/documents/fee-agreement" className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition">
+                <DollarSign className="w-4 h-4 text-yellow-600" />
+                <span>הסכמי שכר טרחה</span>
+              </Link>
             </DropdownMenu>
 
             {/* כלים */}
@@ -295,6 +299,9 @@ export default function Navbar() {
                   </Link>
                   <Link href="/documents/advance-directives" className="block px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-lg transition" onClick={() => setIsMenuOpen(false)}>
                     הנחיות מקדימות
+                  </Link>
+                  <Link href="/documents/fee-agreement" className="block px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-lg transition" onClick={() => setIsMenuOpen(false)}>
+                    הסכמי שכר טרחה
                   </Link>
                 </div>
               </div>
