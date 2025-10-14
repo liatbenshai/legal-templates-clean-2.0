@@ -67,57 +67,103 @@ export default function UnifiedWarehouse({ onSectionSelect, userId }: UnifiedWar
     loadSections();
   }, []);
 
-  const loadSections = () => {
+  const loadSections = async () => {
     try {
       const stored = localStorage.getItem(`warehouse_${userId}`);
       if (stored) {
         const data = JSON.parse(stored);
         setSections(data.sections || []);
       } else {
-        // סעיפים ברירת מחדל
-        const defaultSections: WarehouseSection[] = [
-          {
-            id: 'default-1',
-            title: 'הוראת כספי פנסיה',
-            content: 'כל כספי הפנסיה שלי יועברו ל{{שם היורש}} בהתאם לחוק.',
-            category: 'financial',
-            tags: ['פנסיה', 'כספים'],
-            usageCount: 0,
-            averageRating: 0,
-            isPublic: false,
-            createdBy: userId,
-            createdAt: new Date().toISOString(),
-            lastUsed: new Date().toISOString()
-          },
-          {
-            id: 'default-2',
-            title: 'הוראת טיפול רפואי',
-            content: 'במצב של חוסר הכרה, אני מורה כי הטיפול הרפואי יעשה בהתאם לרצוני המפורש ולפי חוק החולה הנוטה למות.',
-            category: 'health',
-            tags: ['רפואה', 'בריאות'],
-            usageCount: 0,
-            averageRating: 0,
-            isPublic: false,
-            createdBy: userId,
-            createdAt: new Date().toISOString(),
-            lastUsed: new Date().toISOString()
-          },
-          {
-            id: 'default-3',
-            title: 'הוראת נכסים עסקיים',
-            content: 'כל הנכסים העסקיים שלי יועברו ל{{שם היורש}} עם הוראות להמשך הפעלת העסק.',
-            category: 'business',
-            tags: ['עסקים', 'נכסים'],
-            usageCount: 0,
-            averageRating: 0,
-            isPublic: false,
-            createdBy: userId,
-            createdAt: new Date().toISOString(),
-            lastUsed: new Date().toISOString()
+        // טעינת סעיפים מהמחסן המשודרג
+        try {
+          const response = await fetch('/templates/clauses/sections-warehouse.json');
+          const warehouse = await response.json();
+          
+          const defaultSections: WarehouseSection[] = [];
+          
+          // המרת הקטגוריות והפריטים מהמחסן המשודרג
+          const categoryMap: Record<string, string> = {
+            'preliminary': 'personal',
+            'inheritance': 'financial',
+            'executor': 'personal',
+            'property': 'property',
+            'business': 'business',
+            'family': 'couple',
+            'guardian': 'children',
+            'health': 'health',
+            'digital': 'digital',
+            'funeral': 'personal'
+          };
+          
+          if (warehouse.categories) {
+            warehouse.categories.forEach((category: any) => {
+              category.items.forEach((item: any) => {
+                defaultSections.push({
+                  id: item.id,
+                  title: item.title,
+                  content: item.content,
+                  category: categoryMap[item.category] || 'personal',
+                  tags: item.tags || [category.name],
+                  usageCount: 0,
+                  averageRating: 0,
+                  isPublic: false,
+                  createdBy: 'system',
+                  createdAt: new Date().toISOString(),
+                  lastUsed: new Date().toISOString()
+                });
+              });
+            });
           }
-        ];
-        setSections(defaultSections);
-        saveSections(defaultSections);
+          
+          setSections(defaultSections);
+          saveSections(defaultSections);
+        } catch (fetchError) {
+          console.error('Error loading warehouse:', fetchError);
+          // אם יש בעיה בטעינה, ניצור סעיפי ברירת מחדל בסיסיים
+          const basicSections: WarehouseSection[] = [
+            {
+              id: 'default-1',
+              title: 'הוראת כספי פנסיה',
+              content: 'כל כספי הפנסיה שלי יועברו ל{{שם היורש}} בהתאם לחוק.',
+              category: 'financial',
+              tags: ['פנסיה', 'כספים'],
+              usageCount: 0,
+              averageRating: 0,
+              isPublic: false,
+              createdBy: userId,
+              createdAt: new Date().toISOString(),
+              lastUsed: new Date().toISOString()
+            },
+            {
+              id: 'default-2',
+              title: 'הוראת טיפול רפואי',
+              content: 'במצב של חוסר הכרה, אני מורה כי הטיפול הרפואי יעשה בהתאם לרצוני המפורש ולפי חוק החולה הנוטה למות.',
+              category: 'health',
+              tags: ['רפואה', 'בריאות'],
+              usageCount: 0,
+              averageRating: 0,
+              isPublic: false,
+              createdBy: userId,
+              createdAt: new Date().toISOString(),
+              lastUsed: new Date().toISOString()
+            },
+            {
+              id: 'default-3',
+              title: 'הוראת נכסים עסקיים',
+              content: 'כל הנכסים העסקיים שלי יועברו ל{{שם היורש}} עם הוראות להמשך הפעלת העסק.',
+              category: 'business',
+              tags: ['עסקים', 'נכסים'],
+              usageCount: 0,
+              averageRating: 0,
+              isPublic: false,
+              createdBy: userId,
+              createdAt: new Date().toISOString(),
+              lastUsed: new Date().toISOString()
+            }
+          ];
+          setSections(basicSections);
+          saveSections(basicSections);
+        }
       }
     } catch (error) {
       console.error('Error loading sections:', error);
