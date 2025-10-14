@@ -9,11 +9,13 @@ import { useRouter } from 'next/navigation';
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const [currentUser, setCurrentUser] = useState(AuthService.getCurrentUser());
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [mounted, setMounted] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
     // עדכון משתמש נוכחי
+    setMounted(true);
     const user = AuthService.getCurrentUser();
     setCurrentUser(user);
   }, []);

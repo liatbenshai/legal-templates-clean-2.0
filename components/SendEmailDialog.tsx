@@ -26,8 +26,14 @@ export default function SendEmailDialog({
   const [additionalMessage, setAdditionalMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showCc, setShowCc] = useState(false);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [mounted, setMounted] = useState(false);
 
-  const currentUser = AuthService.getCurrentUser();
+  useEffect(() => {
+    setMounted(true);
+    const user = AuthService.getCurrentUser();
+    setCurrentUser(user);
+  }, []);
 
   const handleAddRecipient = () => {
     setRecipients([...recipients, { email: '', name: '' }]);

@@ -59,15 +59,22 @@ interface FeeAgreementData {
 
 export default function LawyerFeeAgreement() {
   // טעינת פרטי המשתמש המחובר
-  const currentUser = AuthService.getCurrentUser();
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    const user = AuthService.getCurrentUser();
+    setCurrentUser(user);
+  }, []);
   
   const [agreementData, setAgreementData] = useState<FeeAgreementData>({
     lawyer: {
-      name: currentUser?.name || '',
-      license: currentUser?.licenseNumber || '',
-      address: currentUser?.officeAddress || '',
-      phone: currentUser?.phone || '',
-      email: currentUser?.email || ''
+      name: '',
+      license: '',
+      address: '',
+      phone: '',
+      email: ''
     },
     client: {
       name: '',
@@ -109,7 +116,7 @@ export default function LawyerFeeAgreement() {
 
   // עדכון פרטי עורך הדין אם המשתמש משתנה
   useEffect(() => {
-    if (currentUser) {
+    if (mounted && currentUser) {
       setAgreementData(prev => ({
         ...prev,
         lawyer: {
@@ -121,7 +128,7 @@ export default function LawyerFeeAgreement() {
         }
       }));
     }
-  }, [currentUser]);
+  }, [currentUser, mounted]);
 
   // פונקציה שמחליפה משתנים בטקסט הסעיפים
   const replaceVariablesInText = (text: string) => {
@@ -385,7 +392,7 @@ export default function LawyerFeeAgreement() {
       isCustom: true,
       version: 1,
       lastModified: new Date().toISOString(),
-      modifiedBy: currentUser?.id || 'anonymous'
+      modifiedBy: (mounted && currentUser?.id) || 'anonymous'
     }));
     setEditableSections(editable);
   };
@@ -497,7 +504,7 @@ ________________________           ________________________
             <Scale className="w-5 h-5" />
             פרטי עורך הדין
           </h2>
-            {currentUser && (
+            {mounted && currentUser && (
               <div className="flex items-center gap-2">
                 <span className="text-sm text-green-700 bg-green-100 px-3 py-1 rounded-full">
                   ✓ נטען מהפרופיל
@@ -848,14 +855,14 @@ ________________________           ________________________
                       onUpdate={handleUpdateEditableSection}
                       onSaveToWarehouse={handleSaveToWarehouse}
                       onSaveToLearning={handleSaveToLearning}
-                      userId={currentUser?.id || 'anonymous'}
+                      userId={(mounted && currentUser?.id) || 'anonymous'}
                       showAIInsights={true}
                     />
                   ))}
                 </div>
               )}
 
-              {learningMode === 'warehouse' && currentUser && typeof window !== 'undefined' && (
+              {learningMode === 'warehouse' && mounted && currentUser && typeof window !== 'undefined' && (
                 <WarehouseManager
                   userId={currentUser.id}
                   onSectionSelect={handleSelectFromWarehouse}

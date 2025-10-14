@@ -7,16 +7,33 @@ import { useRouter } from 'next/navigation';
 
 export default function ProfilePage() {
   const router = useRouter();
-  const [user, setUser] = useState(AuthService.getCurrentUser());
+  const [user, setUser] = useState<any>(null);
+  const [mounted, setMounted] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
-    name: user?.name || '',
-    email: user?.email || '',
-    phone: user?.phone || '',
-    company: user?.company || '',
-    licenseNumber: user?.licenseNumber || '',
-    officeAddress: user?.officeAddress || '',
+    name: '',
+    email: '',
+    phone: '',
+    company: '',
+    licenseNumber: '',
+    officeAddress: '',
   });
+
+  useEffect(() => {
+    setMounted(true);
+    const currentUser = AuthService.getCurrentUser();
+    setUser(currentUser);
+    if (currentUser) {
+      setFormData({
+        name: currentUser.name || '',
+        email: currentUser.email || '',
+        phone: currentUser.phone || '',
+        company: currentUser.company || '',
+        licenseNumber: currentUser.licenseNumber || '',
+        officeAddress: currentUser.officeAddress || '',
+      });
+    }
+  }, []);
   const [passwordData, setPasswordData] = useState({
     oldPassword: '',
     newPassword: '',
