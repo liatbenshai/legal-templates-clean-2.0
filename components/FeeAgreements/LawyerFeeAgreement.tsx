@@ -1,12 +1,16 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FileText, DollarSign, Calendar, User, Scale, BookOpen, X, Download } from 'lucide-react';
+import { FileText, DollarSign, Calendar, User, Scale, BookOpen, X, Download, Brain } from 'lucide-react';
 import SimpleExportButtons from '../SimpleExportButtons';
 import SimpleAIImprover from '../SimpleAIImprover';
 import UniversalSectionsWarehouse from '../UniversalSectionsWarehouse';
+import EditableSection from '../LearningSystem/EditableSection';
+import WarehouseManager from '../LearningSystem/WarehouseManager';
 import { exportFeeAgreementToWord } from './FeeAgreementExporter';
 import { AuthService } from '@/lib/auth';
+import { EditableSection as EditableSectionType } from '@/lib/learning-system/types';
+import { learningEngine } from '@/lib/learning-system/learning-engine';
 import feeAgreementTemplates from '@/lib/fee-agreement-templates.json';
 
 interface FeeAgreementData {
@@ -77,7 +81,7 @@ export default function LawyerFeeAgreement() {
       description: ''
     },
     fees: {
-      type: 'סכום_כולל',
+      type: 'סכום_כולל' as 'סכום_כולל' | 'מקדמה_והצלחה',
       totalAmount: '',
       paymentStructure: 'מלא מראש',
       advancePayment: '',
@@ -97,6 +101,11 @@ export default function LawyerFeeAgreement() {
   const [showSectionsWarehouse, setShowSectionsWarehouse] = useState(false);
   const [customSections, setCustomSections] = useState<Array<{title: string, content: string}>>([]);
   const [selectedServiceType, setSelectedServiceType] = useState<string>('');
+  
+  // מערכת למידה
+  const [showLearningSystem, setShowLearningSystem] = useState(false);
+  const [editableSections, setEditableSections] = useState<EditableSectionType[]>([]);
+  const [learningMode, setLearningMode] = useState<'edit' | 'warehouse'>('edit');
 
   // עדכון פרטי עורך הדין אם המשתמש משתנה
   useEffect(() => {
@@ -161,8 +170,15 @@ export default function LawyerFeeAgreement() {
       }));
 
       // עדכון סכומים ותנאי תשלום אוטומטית בהתאם לסוג השירות
-      let defaultFees = {
-        type: 'סכום_כולל' as const,
+      let defaultFees: {
+        type: 'סכום_כולל' | 'מקדמה_והצלחה';
+        totalAmount: string;
+        paymentStructure: string;
+        advancePayment: string;
+        successPercentage: string;
+        stages: string;
+      } = {
+        type: 'סכום_כולל',
         totalAmount: '',
         paymentStructure: 'מלא מראש',
         advancePayment: '',
@@ -291,7 +307,10 @@ export default function LawyerFeeAgreement() {
       setAgreementData(prev => ({
         ...prev,
         fees: defaultFees,
-        terms: defaultTerms
+        terms: {
+          ...prev.terms,
+          ...defaultTerms
+        }
       }));
     }
   }, [selectedServiceType]);
@@ -352,6 +371,58 @@ export default function LawyerFeeAgreement() {
     setShowSectionsWarehouse(false);
   };
 
+  // פונקציות מערכת למידה
+  const convertToEditableSections = () => {
+    const editable = customSections.map((section, index) => ({
+      id: `section_${index}`,
+      title: section.title,
+      content: section.content,
+      category: 'fee_agreement' as const,
+      serviceType: selectedServiceType,
+      isEditable: true,
+      isCustom: true,
+      version: 1,
+      lastModified: new Date().toISOString(),
+      modifiedBy: currentUser?.id || 'anonymous'
+    }));
+    setEditableSections(editable);
+  };
+
+  const handleUpdateEditableSection = (updatedSection: EditableSectionType) => {
+    setEditableSections(prev => 
+      prev.map(section => 
+        section.id === updatedSection.id ? updatedSection : section
+      )
+    );
+    
+    // עדכון גם ב-customSections
+    setCustomSections(prev => 
+      prev.map((section, index) => 
+        `section_${index}` === updatedSection.id ? 
+          { title: updatedSection.title, content: updatedSection.content } : 
+          section
+      )
+    );
+  };
+
+  const handleSaveToWarehouse = (section: EditableSectionType) => {
+    // הלוגיקה כבר מטופלת ב-EditableSection
+    console.log('Saved to warehouse:', section);
+  };
+
+  const handleSaveToLearning = (section: EditableSectionType) => {
+    // הלוגיקה כבר מטופלת ב-EditableSection
+    console.log('Saved to learning:', section);
+  };
+
+  const handleSelectFromWarehouse = (warehouseSection: any) => {
+    const newSection = {
+      title: warehouseSection.title,
+      content: warehouseSection.content
+    };
+    setCustomSections(prev => [...prev, newSection]);
+  };
+
   const generateFeeAgreement = (): string => {
     let baseAgreement = `הסכם שכר טרחה
 
@@ -407,231 +478,6 @@ ________________________           ________________________
 הסכם זה נחתם בשני עותקים, עותק לכל צד.`;
 
     return baseAgreement;
-
-    // חישוב שכר טרחה לפי סוג (מיותר - מטופל ע"י הסעיפים מהמחסן)
-    switch (agreementData.fees.type) {
-      case 'שעתי':
-        return `${baseAgreement}2.1. שכר הטרחה יחושב לפי שעות עבודה בפועל.
-
-2.2. תעריף שעתי: ${agreementData.fees.hourlyRate || '[סכום]'} ₪ לשעה.
-
-2.3. הערכת שעות עבודה: ${agreementData.fees.estimatedHours || '[מספר]'} שעות.
-
-2.4. סכום הערכה כולל: ${agreementData.fees.hourlyRate && agreementData.fees.estimatedHours ? 
-          (parseInt(agreementData.fees.hourlyRate || '0') * parseInt(agreementData.fees.estimatedHours || '0')).toLocaleString() : '[סכום]'} ₪.
-
-${agreementData.fees.advancePayment ? `2.5. מקדמה: ${agreementData.fees.advancePayment} ₪ תשולם עם החתימה על ההסכם.` : ''}
-
-3. תנאי תשלום
-
-3.1. ${agreementData.terms.paymentTerms || 'חשבונית תישלח מדי חודש ותשולם תוך 30 ימים מקבלתה.'}
-
-3.2. הוצאות: ${agreementData.terms.expensesCoverage || 'הוצאות משפט (אגרות, עלויות מומחים, נסיעות) יחולו על הלקוח ויחויבו בנפרד.'}
-
-4. סיום ההתקשרות
-
-4.1. ${agreementData.terms.terminationClause || 'כל צד יכול לסיים את ההתקשרות בהודעה של 14 ימים מראש.'}
-
-4.2. במקרה סיום ההתקשרות, הלקוח ישלם עבור העבודה שבוצעה עד למועד הסיום.
-
-4.3. עורך הדין יעביר ללקוח את כל החומרים והמסמכים הנוגעים לתיק.
-
-${customSections.length > 0 ? `
-5. סעיפים נוספים
-
-${customSections.map((section, index) => `5.${index + 1}. ${section.title}
-
-${section.content}`).join('\n\n')}
-
-` : ''}
-
-${customSections.length > 0 ? '6' : '5'}. תנאים מיוחדים
-
-${agreementData.terms.specialConditions || 'אין תנאים מיוחדים.'}
-
-${customSections.length > 0 ? '7' : '6'}. תוקף ההסכם
-
-הסכם זה ייכנס לתוקף עם חתימת שני הצדדים ויהיה בתוקף עד לסיום הטיפול בתיק או עד לסיום ההתקשרות על פי סעיף 4.
-
-התאריך: ${new Date(agreementDate).toLocaleDateString('he-IL')}
-
-________________________           ________________________
-    חתימת עורך הדין                    חתימת הלקוח
-     ${agreementData.lawyer.name || '[שם]'}                        ${agreementData.client.name || '[שם]'}
-
-הסכם זה נחתם בשני עותקים, עותק לכל צד.`;
-
-      case 'קבוע':
-        return `${baseAgreement}2.1. שכר הטרחה הוא סכום חד פעמי וקבוע: ${agreementData.fees.fixedAmount || '[סכום]'} ₪.
-
-2.2. הסכום יכלול את כל השירותים המשפטיים הנדרשים לטיפול בתיק.
-
-2.3. ${agreementData.fees.advancePayment ? `מקדמה: ${agreementData.fees.advancePayment} ₪, יתרה בסיום הטיפול.` : 'התשלום יבוצע בסיום הטיפול בתיק.'}
-
-3. תנאי תשלום
-
-3.1. ${agreementData.terms.paymentTerms || 'התשלום יבוצע תוך 7 ימים מסיום הטיפול בתיק.'}
-
-3.2. הוצאות: ${agreementData.terms.expensesCoverage || 'הוצאות משפט יחולו על הלקוח בנפרד.'}
-
-4. סיום ההתקשרות
-
-4.1. ${agreementData.terms.terminationClause || 'אם הלקוח יבחר לסיים את ההתקשרות לפני סיום הטיפול, ישלם יחסית לעבודה שבוצעה.'}
-
-${customSections.length > 0 ? `
-5. סעיפים נוספים
-
-${customSections.map((section, index) => `5.${index + 1}. ${section.title}
-
-${section.content}`).join('\n\n')}
-
-` : ''}
-
-${customSections.length > 0 ? '6' : '5'}. תנאים מיוחדים
-
-${agreementData.terms.specialConditions || 'אין תנאים מיוחדים.'}
-
-${customSections.length > 0 ? '7' : '6'}. תוקף ההסכם
-
-הסכם זה תקף מיום החתימה ועד לסיום הטיפול בתיק.
-
-התאריך: ${new Date(agreementDate).toLocaleDateString('he-IL')}
-
-________________________           ________________________
-    חתימת עורך הדין                    חתימת הלקוח
-     ${agreementData.lawyer.name || '[שם]'}                        ${agreementData.client.name || '[שם]'}`;
-
-      case 'הצלחה':
-        return `${baseAgreement}2.1. שכר הטרחה מותנה בהצלחה בתיק.
-
-2.2. במקרה הצלחה: ${agreementData.fees.successPercentage || '[אחוז]'}% מהסכום שיתקבל בפועל.
-
-2.3. במקרה כישלון: אין תשלום שכר טרחה.
-
-2.4. ${agreementData.fees.advancePayment ? `מקדמה להוצאות: ${agreementData.fees.advancePayment} ₪.` : 'ללא מקדמה.'}
-
-2.5. הצלחה מוגדרת כ: קבלת פסק דין חיובי או הסדר חוץ-משפטי לטובת הלקוח.
-
-3. תנאי תשלום
-
-3.1. התשלום יבוצע תוך 7 ימים מקבלת הכסף בפועל.
-
-3.2. הוצאות משפט יחולו על הלקוח גם במקרה כישלון.
-
-4. סיום ההתקשרות
-
-4.1. הלקוח יכול לסיים את ההתקשרות בכל עת, אך ישלם עבור הוצאות שנגרמו.
-
-4.2. עורך הדין לא יכול לסיים את ההתקשרות ללא סיבה מוצדקת.
-
-${customSections.length > 0 ? `
-5. סעיפים נוספים
-
-${customSections.map((section, index) => `5.${index + 1}. ${section.title}
-
-${section.content}`).join('\n\n')}
-
-` : ''}
-
-${customSections.length > 0 ? '6' : '5'}. תנאים מיוחדים
-
-${agreementData.terms.specialConditions || 'במקרה הסדר חוץ-משפטי, שכר הטרחה יחושב מסכום ההסדר.'}
-
-${customSections.length > 0 ? '7' : '6'}. תוקף ההסכם
-
-הסכם זה תקף עד לסיום התיק או ביטול על ידי הלקוח.
-
-התאריך: ${new Date(agreementDate).toLocaleDateString('he-IL')}
-
-________________________           ________________________
-    חתימת עורך הדין                    חתימת הלקוח
-     ${agreementData.lawyer.name || '[שם]'}                        ${agreementData.client.name || '[שם]'}`;
-
-      case 'מעורב':
-        return `${baseAgreement}2.1. שכר הטרחה כולל שני מרכיבים:
-
-2.1.1. תשלום ראשוני קבוע: ${agreementData.fees.mixedAdvance || '[סכום]'} ₪, ששולם עם חתימת הסכם זה.
-
-2.1.2. תשלום נוסף מותנה בהצלחה: ${agreementData.fees.mixedPercentage || '[אחוז]'}% מהסכום שיתקבל בפועל.
-
-${agreementData.fees.mixedMinimum ? `2.1.3. תשלום מינימלי: ${agreementData.fees.mixedMinimum} ₪ ישולם גם אם התוצאה פחותה מהצפוי.` : ''}
-
-2.2. הצלחה מוגדרת כ: קבלת פסק דין חיובי, הסדר פשרה, או כל תוצאה חיובית אחרת לטובת הלקוח.
-
-2.3. חישוב דוגמה: אם יתקבל סכום של 100,000 ₪, שכר הטרחה הכולל יהיה:
-     - תשלום ראשוני: ${agreementData.fees.mixedAdvance || '0'} ₪
-     - אחוז מהתוצאה: ${agreementData.fees.mixedPercentage ? `${(100000 * parseInt(agreementData.fees.mixedPercentage || '0') / 100).toLocaleString()} ₪` : '0 ₪'}
-     - סה"כ: ${agreementData.fees.mixedAdvance && agreementData.fees.mixedPercentage ? `${(parseInt(agreementData.fees.mixedAdvance || '0') + (100000 * parseInt(agreementData.fees.mixedPercentage || '0') / 100)).toLocaleString()} ₪` : '[סכום]'}
-
-3. תנאי תשלום
-
-3.1. ${agreementData.terms.paymentTerms || 'התשלום הנוסף (אחוז מההצלחה) יבוצע תוך 7 ימים מקבלת הכסף בפועל.'}
-
-3.2. הוצאות: ${agreementData.terms.expensesCoverage || 'הוצאות משפט יחולו על הלקוח ויקוזזו מהסכום המתקבל לפני חישוב שכר הטרחה.'}
-
-4. סיום ההתקשרות
-
-4.1. ${agreementData.terms.terminationClause || 'במקרה סיום ההתקשרות לפני הצלחה, הלקוח ישלם רק את התשלום הראשוני ואת ההוצאות שנגרמו.'}
-
-4.2. במקרה של הסדר פשרה לאחר סיום ההתקשרות, שכר הטרחה יחושב יחסית לתרומת עורך הדין.
-
-${customSections.length > 0 ? `
-5. סעיפים נוספים
-
-${customSections.map((section, index) => `5.${index + 1}. ${section.title}
-
-${section.content}`).join('\n\n')}
-
-` : ''}
-
-${customSections.length > 0 ? '6' : '5'}. תנאים מיוחדים
-
-${agreementData.terms.specialConditions || 'אין תנאים מיוחדים.'}
-
-${customSections.length > 0 ? '7' : '6'}. תוקף ההסכם
-
-הסכם זה ייכנס לתוקף עם חתימת שני הצדדים ויהיה בתוקף עד לסיום הטיפול בתיק.
-
-התאריך: ${new Date(agreementDate).toLocaleDateString('he-IL')}
-
-________________________           ________________________
-    חתימת עורך הדין                    חתימת הלקוח
-     ${agreementData.lawyer.name || '[שם]'}                        ${agreementData.client.name || '[שם]'}`;
-
-      default:
-        return baseAgreement + `2.1. [יש לבחור סוג תמחור]
-
-3. תנאי תשלום
-
-3.1. ${agreementData.terms.paymentTerms || 'התשלום יבוצע בהתאם לתנאים שיקבעו.'}
-
-4. סיום ההתקשרות
-
-4.1. ${agreementData.terms.terminationClause || 'כל צד יכול לסיים את ההתקשרות בהודעה מראש.'}
-
-${customSections.length > 0 ? `
-5. סעיפים נוספים
-
-${customSections.map((section, index) => `5.${index + 1}. ${section.title}
-
-${section.content}`).join('\n\n')}
-
-` : ''}
-
-${customSections.length > 0 ? '6' : '5'}. תנאים מיוחדים
-
-${agreementData.terms.specialConditions || 'אין תנאים מיוחדים.'}
-
-${customSections.length > 0 ? '7' : '6'}. תוקף ההסכם
-
-הסכם זה ייכנס לתוקף עם חתימת שני הצדדים.
-
-התאריך: ${new Date(agreementDate).toLocaleDateString('he-IL')}
-
-________________________           ________________________
-    חתימת עורך הדין                    חתימת הלקוח
-     ${agreementData.lawyer.name || '[שם]'}                        ${agreementData.client.name || '[שם]'}`;
-    }
   };
 
   return (
@@ -927,6 +773,18 @@ ________________________           ________________________
             <h2 className="text-xl font-bold text-indigo-900">🤖 עוזר AI לשיפור הסכמים</h2>
             <div className="flex gap-2">
               <button
+                onClick={() => {
+                  setShowLearningSystem(!showLearningSystem);
+                  if (!showLearningSystem) {
+                    convertToEditableSections();
+                  }
+                }}
+                className="flex items-center gap-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm"
+              >
+                <Brain className="w-4 h-4" />
+                {showLearningSystem ? 'סגור למידה' : 'מערכת למידה'}
+              </button>
+              <button
                 onClick={() => setShowSectionsWarehouse(true)}
                 className="flex items-center gap-2 px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition text-sm"
               >
@@ -948,6 +806,60 @@ ________________________           ________________________
               onAccept={(improvedText) => updateTerms('specialConditions', improvedText)}
               placeholder="לדוגמה: הלקוח משלם רק במקרה הצלחה, עורך הדין מחויב בסודיות..."
             />
+          )}
+
+          {/* מערכת למידה */}
+          {showLearningSystem && (
+            <div className="mt-6 space-y-4">
+              <div className="flex items-center gap-4 mb-4">
+                <button
+                  onClick={() => setLearningMode('edit')}
+                  className={`px-4 py-2 rounded-lg transition ${
+                    learningMode === 'edit' 
+                      ? 'bg-blue-600 text-white' 
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  עריכת סעיפים
+                </button>
+                <button
+                  onClick={() => setLearningMode('warehouse')}
+                  className={`px-4 py-2 rounded-lg transition ${
+                    learningMode === 'warehouse' 
+                      ? 'bg-blue-600 text-white' 
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  מחסן סעיפים
+                </button>
+              </div>
+
+              {learningMode === 'edit' && editableSections.length > 0 && (
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-indigo-800">
+                    סעיפים ניתנים לעריכה עם AI
+                  </h3>
+                  {editableSections.map((section) => (
+                    <EditableSection
+                      key={section.id}
+                      section={section}
+                      onUpdate={handleUpdateEditableSection}
+                      onSaveToWarehouse={handleSaveToWarehouse}
+                      onSaveToLearning={handleSaveToLearning}
+                      userId={currentUser?.id || 'anonymous'}
+                      showAIInsights={true}
+                    />
+                  ))}
+                </div>
+              )}
+
+              {learningMode === 'warehouse' && currentUser && (
+                <WarehouseManager
+                  userId={currentUser.id}
+                  onSectionSelect={handleSelectFromWarehouse}
+                />
+              )}
+            </div>
           )}
         </section>
 
