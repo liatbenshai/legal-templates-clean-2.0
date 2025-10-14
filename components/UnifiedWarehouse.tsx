@@ -15,8 +15,11 @@ import {
   TrendingUp,
   Save,
   X,
-  RefreshCw
+  RefreshCw,
+  Sparkles
 } from 'lucide-react';
+import EditableSection from './LearningSystem/EditableSection';
+import { EditableSection as EditableSectionType } from '@/lib/learning-system/types';
 
 interface WarehouseSection {
   id: string;
@@ -62,6 +65,7 @@ export default function UnifiedWarehouse({ onSectionSelect, userId }: UnifiedWar
     category: 'personal',
     tags: []
   });
+  const [showAIEditor, setShowAIEditor] = useState<string | null>(null);
 
   // טעינת סעיפים
   useEffect(() => {
@@ -322,6 +326,51 @@ export default function UnifiedWarehouse({ onSectionSelect, userId }: UnifiedWar
     onSectionSelect(section);
   };
 
+  // המרת WarehouseSection ל-EditableSectionType
+  const convertToEditableSection = (section: WarehouseSection): EditableSectionType => {
+    return {
+      id: section.id,
+      title: section.title,
+      content: section.content,
+      originalContent: section.content,
+      category: section.category,
+      serviceType: section.category,
+      isEditable: true,
+      isCustom: true,
+      version: 1,
+      lastModified: section.lastUsed,
+      modifiedBy: userId,
+      tags: section.tags
+    };
+  };
+
+  const handleUpdateEditableSection = (updatedSection: EditableSectionType) => {
+    const updatedSections = sections.map(s => 
+      s.id === updatedSection.id 
+        ? { 
+            ...s, 
+            title: updatedSection.title,
+            content: updatedSection.content,
+            lastUsed: new Date().toISOString() 
+          }
+        : s
+    );
+    setSections(updatedSections);
+    saveSections(updatedSections);
+    setShowAIEditor(null);
+  };
+
+  const handleSaveToWarehouse = (section: EditableSectionType) => {
+    // הסעיף כבר במחסן, רק נעדכן אותו
+    handleUpdateEditableSection(section);
+  };
+
+  const handleSaveToLearning = (section: EditableSectionType) => {
+    // שמירה למערכת הלמידה
+    console.log('Saving to learning system:', section);
+    handleUpdateEditableSection(section);
+  };
+
   const getCategoryInfo = (categoryId: string) => {
     return CATEGORIES.find(cat => cat.id === categoryId) || CATEGORIES[0];
   };
@@ -472,68 +521,36 @@ export default function UnifiedWarehouse({ onSectionSelect, userId }: UnifiedWar
         </div>
       )}
 
-      {/* עריכת סעיף */}
+      {/* עריכת סעיף עם AI */}
       {editingSection && (
         <div className="bg-white rounded-lg border border-gray-200 p-6">
           <h4 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
             <Edit3 className="w-5 h-5 text-blue-600" />
-            עריכת סעיף
+            עריכת סעיף עם AI
           </h4>
           
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">כותרת הסעיף:</label>
-              <input
-                type="text"
-                value={editingSection.title}
-                onChange={(e) => setEditingSection(prev => prev ? { ...prev, title: e.target.value } : null)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                dir="rtl"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">קטגוריה:</label>
-              <select
-                value={editingSection.category}
-                onChange={(e) => setEditingSection(prev => prev ? { ...prev, category: e.target.value } : null)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                {CATEGORIES.slice(1).map(category => (
-                  <option key={category.id} value={category.id}>
-                    {category.icon} {category.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">תוכן הסעיף:</label>
-              <textarea
-                value={editingSection.content}
-                onChange={(e) => setEditingSection(prev => prev ? { ...prev, content: e.target.value } : null)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                rows={4}
-                dir="rtl"
-              />
-            </div>
-
-            <div className="flex gap-2">
-              <button
-                onClick={handleSaveEdit}
-                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
-              >
-                <Save className="w-4 h-4" />
-                שמור שינויים
-              </button>
-              <button
-                onClick={() => setEditingSection(null)}
-                className="flex items-center gap-2 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition"
-              >
-                <X className="w-4 h-4" />
-                ביטול
-              </button>
-            </div>
+          <div className="mb-4 p-3 bg-blue-50 rounded-lg">
+            <p className="text-sm text-blue-800">
+              ✨ עכשיו יש לך אפשרות עריכה מלאה עם AI וללא AI!
+            </p>
+          </div>
+          
+          <EditableSection
+            section={convertToEditableSection(editingSection)}
+            onUpdate={handleUpdateEditableSection}
+            onSaveToWarehouse={handleSaveToWarehouse}
+            onSaveToLearning={handleSaveToLearning}
+            userId={userId}
+          />
+          
+          <div className="mt-4 flex gap-2">
+            <button
+              onClick={() => setEditingSection(null)}
+              className="flex items-center gap-2 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition"
+            >
+              <X className="w-4 h-4" />
+              סגור עריכה
+            </button>
           </div>
         </div>
       )}
@@ -574,14 +591,23 @@ export default function UnifiedWarehouse({ onSectionSelect, userId }: UnifiedWar
                       הוסף לצוואה
                     </button>
                     <button
+                      onClick={() => setShowAIEditor(section.id)}
+                      className="p-1 text-purple-500 hover:text-purple-700 transition"
+                      title="עריכה עם AI"
+                    >
+                      <Sparkles className="w-4 h-4" />
+                    </button>
+                    <button
                       onClick={() => handleEditSection(section)}
                       className="p-1 text-gray-500 hover:text-blue-600 transition"
+                      title="עריכה ידנית"
                     >
                       <Edit3 className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => handleDeleteSection(section.id)}
                       className="p-1 text-gray-500 hover:text-red-600 transition"
+                      title="מחק סעיף"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -598,6 +624,34 @@ export default function UnifiedWarehouse({ onSectionSelect, userId }: UnifiedWar
           </div>
         )}
       </div>
+
+      {/* עריכת AI ישירה */}
+      {showAIEditor && (
+        <div className="mt-6 bg-white rounded-lg border border-purple-200 p-6">
+          <h4 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <Sparkles className="w-5 h-5 text-purple-600" />
+            עריכה עם AI
+          </h4>
+          
+          <EditableSection
+            section={convertToEditableSection(sections.find(s => s.id === showAIEditor)!)}
+            onUpdate={handleUpdateEditableSection}
+            onSaveToWarehouse={handleSaveToWarehouse}
+            onSaveToLearning={handleSaveToLearning}
+            userId={userId}
+          />
+          
+          <div className="mt-4 flex gap-2">
+            <button
+              onClick={() => setShowAIEditor(null)}
+              className="flex items-center gap-2 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition"
+            >
+              <X className="w-4 h-4" />
+              סגור עריכה
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
