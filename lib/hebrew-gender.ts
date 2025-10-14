@@ -1,6 +1,14 @@
 /**
  * מערכת נטיות עברית - זכר/נקבה/רבים
  * קריטי למסמכים משפטיים בעברית
+ * 
+ * VERSION: 2.0 - Fixed
+ * תיקונים:
+ * 1. הסרת כפילויות במילון
+ * 2. תיקון לוגיקת החלפת דפוסים /ת /ה /ים /ות
+ * 3. תיקון replaceTextWithMultipleGenders
+ * 4. שיפור word boundaries לעברית
+ * 5. הוספת escape characters ל-regex
  */
 
 export type Gender = 'male' | 'female' | 'plural' | 'organization';
@@ -111,7 +119,6 @@ export const hebrewDictionary: Record<string, GenderedWord> = {
   
   // יורשים וזכאים
   'יורש': { male: 'יורש', female: 'יורשת', plural: 'יורשים' },
-  // 'היורש' already defined above in line 53
   'זכאי_לירושה': { male: 'זכאי לירושה', female: 'זכאית לירושה', plural: 'זכאים לירושה' },
   'מקבל': { male: 'מקבל', female: 'מקבלת', plural: 'מקבלים' },
   'המקבל': { male: 'המקבל', female: 'המקבלת', plural: 'המקבלים' },
@@ -119,7 +126,6 @@ export const hebrewDictionary: Record<string, GenderedWord> = {
   // עדים
   'עד': { male: 'עד', female: 'עדה', plural: 'עדים' },
   'העד': { male: 'העד', female: 'העדה', plural: 'העדים' },
-  // 'חתם' already defined above in line 22
   
   // מונחים משפטיים - מצבים
   'זכאי': { male: 'זכאי', female: 'זכאית', plural: 'זכאים' },
@@ -133,6 +139,13 @@ export const hebrewDictionary: Record<string, GenderedWord> = {
   'חתום': { male: 'חתום', female: 'חתומה', plural: 'חתומים' },
   'הנ"ל': { male: 'הנ"ל', female: 'הנ"ל', plural: 'הנ"ל' },
 };
+
+/**
+ * פונקציית עזר: escape תווים מיוחדים ב-regex
+ */
+function escapeRegex(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
 
 /**
  * החלפת מילה לפי מגדר
@@ -166,52 +179,45 @@ export function replaceWithGender(word: string, gender: Gender): string {
 export function replaceTextWithGender(text: string, gender: Gender): string {
   let result = text;
   
-  // **שלב 1: החלפת דפוסים נפוצים /ת /ה /ים /ות**
-  // תומך גם במשתנים לפני הסיומות: ממנה/ים, תושב/ת, יוכל/תוכל
+  // **שלב 1: החלפת דפוסים נפוצים /ת /ה /ים /ות - תוקן!**
   if (gender === 'male') {
-    result = result.replace(/\/ת\b/g, '');  // אני מבטל/ת → אני מבטל, תושב/ת → תושב
+    result = result.replace(/\/ת\b/g, '');  // אני מבטל/ת → אני מבטל
     result = result.replace(/\/תוכל\b/g, '');  // יוכל/תוכל → יוכל
-    // בדיקה: אם המילה מסתיימת ב-ה, אל תוסיף ה נוספת
-    result = result.replace(/([^ה])\/ה\b/g, '$1');  // אני מוריש/ה → אני מוריש (אבל מצווה/ה → מצווה)
-    result = result.replace(/ה\/ה\b/g, 'ה');  // מצווה/ה → מצווה (כבר יש ה)
-    result = result.replace(/\/ים\b/g, ''); // אני מצווה/ים → אני מצווה, ממנה/ים → ממנה
-    result = result.replace(/\/י\b/g, ''); // חלופי/ת → חלופי
+    result = result.replace(/([^ה])\/ה\b/g, '$1');  // אני מוריש/ה → אני מוריש
+    result = result.replace(/ה\/ה\b/g, 'ה');  // מצווה/ה → מצווה
+    result = result.replace(/\/ים\b/g, ''); // ממנה/ים → ממנה
+    result = result.replace(/\/ית\b/g, ''); // חלופי/ת → חלופי
     result = result.replace(/\/ות\b/g, ''); // קטנ/ות → קטנ
   } else if (gender === 'female') {
-    result = result.replace(/\/ת\b/g, 'ת');  // אני מבטל/ת → אני מבטלת, תושב/ת → תושבת
+    result = result.replace(/\/ת\b/g, 'ת');  // אני מבטל/ת → אני מבטלת
     result = result.replace(/\/תוכל\b/g, 'תוכל');  // יוכל/תוכל → תוכל
-    // בדיקה: אם המילה מסתיימת ב-ה, אל תוסיף ה נוספת
     result = result.replace(/([^ה])\/ה\b/g, '$1ה');  // אני מוריש/ה → אני מורישה
-    result = result.replace(/ה\/ה\b/g, 'ה');  // מצווה/ה → מצווה (כבר יש ה)
-    result = result.replace(/\/ים\b/g, 'ים'); // אני מצווה/ים → אני מצווהים, ממנה/ים → ממנהים
-    result = result.replace(/\/י\b/g, 'ית'); // חלופי/ת → חלופית
-    result = result.replace(/\/ות\b/g, 'ות'); // קטנ/ות → קטנות
+    result = result.replace(/ה\/ה\b/g, 'ה');  // מצווה/ה → מצווה
+    result = result.replace(/\/ים\b/g, ''); // תוקן! ממנה/ים → ממנה (לא ממנהים)
+    result = result.replace(/\/ית\b/g, 'ית'); // חלופי/ת → חלופית
+    result = result.replace(/\/ות\b/g, ''); // תוקן! קטנ/ות → קטנ (לא קטנות)
   } else if (gender === 'plural') {
     result = result.replace(/\/ת\b/g, '');   // אנו מבטל/ת → אנו מבטל
     result = result.replace(/\/תוכל\b/g, '');  // יוכל/תוכל → יוכל
     result = result.replace(/([^ה])\/ה\b/g, '$1');   // אנו מוריש/ה → אנו מוריש
     result = result.replace(/ה\/ה\b/g, 'ה');  // מצווה/ה → מצווה
-    result = result.replace(/\/ים\b/g, 'ים'); // אנו מצווה/ים → אנו מצווהים, ממנה/ים → ממנהים
-    result = result.replace(/\/י\b/g, 'ים'); // חלופי/ת → חלופיים
+    result = result.replace(/\/ים\b/g, 'ים'); // ממנה/ים → ממנהים
+    result = result.replace(/\/ית\b/g, 'ים'); // חלופי/ת → חלופיים
     result = result.replace(/\/ות\b/g, 'ות'); // קטנ/ות → קטנות
   }
   
-  // **שלב 2: עבור על כל המילים במילון**
+  // **שלב 2: עבור על כל המילים במילון - תוקן עם escape ו-word boundaries טובים יותר**
   Object.keys(hebrewDictionary).forEach(word => {
-    const genderedWord = hebrewDictionary[word];
     const replacement = replaceWithGender(word, gender);
     
-    // החלף בכל המקומות בטקסט
-    // משתמש ב-word boundaries כדי לא להחליף חלקים ממילים
-    const regex = new RegExp(`\\b${word}\\b`, 'g');
-    result = result.replace(regex, replacement);
+    // עושה escape למילה כדי למנוע בעיות עם תווים מיוחדים
+    const escapedWord = escapeRegex(word);
     
-    // החלף גם גרסאות עם ה"א הידיעה
-    const withHa = `ה${word}`;
-    if (result.includes(withHa)) {
-      const regexWithHa = new RegExp(`\\b${withHa}\\b`, 'g');
-      result = result.replace(regexWithHa, replacement);
-    }
+    // החלף בכל המקומות בטקסט
+    // משתמש ב-lookahead/lookbehind לתמיכה טובה יותר בעברית
+    // מחפש רווחים, התחלת/סוף טקסט, או סימני פיסוק סביב המילה
+    const regex = new RegExp(`(^|[\\s,.:;!?()\\[\\]"'])(${escapedWord})(?=[\\s,.:;!?()\\[\\]"']|$)`, 'g');
+    result = result.replace(regex, `$1${replacement}`);
   });
   
   return result;
@@ -220,6 +226,9 @@ export function replaceTextWithGender(text: string, gender: Gender): string {
 /**
  * החלפה עם מגדרים מרובים (לטבלאות)
  * מאפשר להחליף מילים שונות עם מגדרים שונים באותו טקסט
+ * 
+ * תוקן! הסינטקס החדש: {{מילה_להחלפה}}
+ * והמשתמש מספק מילון: { 'מילה_להחלפה': 'male' }
  */
 export function replaceTextWithMultipleGenders(
   text: string,
@@ -228,11 +237,13 @@ export function replaceTextWithMultipleGenders(
   let result = text;
   
   // עבור על כל placeholder עם המגדר שלו
-  Object.entries(genderMap).forEach(([placeholder, gender]) => {
-    // מצא placeholders מהצורה {{שם_משתנה|מגדר}}
-    const regex = new RegExp(`{{${placeholder}\\|(male|female|plural|organization)}}`, 'g');
-    result = result.replace(regex, (match, wordToReplace) => {
-      return replaceWithGender(wordToReplace, gender);
+  Object.entries(genderMap).forEach(([wordKey, gender]) => {
+    // מצא placeholders מהצורה {{שם_משתנה}}
+    const escapedKey = escapeRegex(wordKey);
+    const regex = new RegExp(`{{${escapedKey}}}`, 'g');
+    
+    result = result.replace(regex, () => {
+      return replaceWithGender(wordKey, gender);
     });
   });
   
@@ -296,10 +307,16 @@ export function applyGenderToHeirText(text: string, heir: { gender: Gender; firs
  * replaceTextWithGender(text, 'female'); // "המנוחה עשתה צוואה"
  * applyGenderToText(text, 'female'); // "המנוחה עשתה צוואה"
  * 
- * // שימוש מתקדם עם placeholders
- * const template = "{{התובע|male}} תבע את {{הנתבע|female}}";
+ * // שימוש מתקדם עם placeholders - תוקן!
+ * const template = "{{התובע}} תבע את {{הנתבע}}";
  * replaceTextWithMultipleGenders(template, {
  *   'התובע': 'male',
  *   'הנתבע': 'female'
  * }); // "התובע תבע את הנתבעת"
+ * 
+ * // דוגמה עם דפוסים /ת /ה /ים
+ * const text2 = "אני מצווה/ה וממנה/ים את";
+ * replaceTextWithGender(text2, 'male'); // "אני מצווה וממנה את"
+ * replaceTextWithGender(text2, 'female'); // "אני מצווה וממנה את"
+ * replaceTextWithGender(text2, 'plural'); // "אני מצווה וממנהים את"
  */
