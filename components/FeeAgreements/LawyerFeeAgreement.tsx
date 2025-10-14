@@ -295,88 +295,16 @@ export default function LawyerFeeAgreement() {
       ...prev,
       fees: { ...prev.fees, [field]: value }
     }));
-    
-    // עדכון הסעיפים עם הסכומים החדשים
-    updateSectionsWithNewFees(field, value);
   };
 
-  const updateSectionsWithNewFees = (field: keyof typeof agreementData.fees, value: string) => {
-    if (!selectedServiceType) return;
-    
-    const service = feeAgreementTemplates.serviceCategories[selectedServiceType as keyof typeof feeAgreementTemplates.serviceCategories];
-    if (!service) return;
-
-    const newFees = { ...agreementData.fees, [field]: value };
-    
-    // עדכון הסעיפים עם הסכומים החדשים
-    const updatedSections = service.clauses.map(clause => {
-      let updatedText = clause.text;
-      
-      // החלפת סכומים בתוך הטקסט
-      if (clause.id.includes('_002') || clause.id.includes('_003')) { // סעיפי שכר טרחה
-        if (newFees.type === 'קבוע' && newFees.fixedAmount) {
-          updatedText = updatedText.replace(/_______ ש\"ח/g, `${newFees.fixedAmount} ש\"ח`);
-          updatedText = updatedText.replace(/________ ש\"ח/g, `${newFees.fixedAmount} ש\"ח`);
-        }
-        if (newFees.advancePayment) {
-          const advancePercent = newFees.fixedAmount ? 
-            Math.round((parseInt(newFees.advancePayment) / parseInt(newFees.fixedAmount)) * 100) : 50;
-          updatedText = updatedText.replace(/50%/g, `${advancePercent}%`);
-          updatedText = updatedText.replace(/היתרה בשיעור 50%/g, `היתרה בשיעור ${100 - advancePercent}%`);
-        }
-      }
-      
-      return {
-        title: clause.title,
-        content: updatedText
-      };
-    });
-    
-    setCustomSections(updatedSections);
-  };
 
   const updateTerms = (field: keyof typeof agreementData.terms, value: string) => {
     setAgreementData(prev => ({
       ...prev,
       terms: { ...prev.terms, [field]: value }
     }));
-    
-    // עדכון הסעיפים עם תנאי התשלום החדשים
-    updateSectionsWithNewTerms(field, value);
   };
 
-  const updateSectionsWithNewTerms = (field: keyof typeof agreementData.terms, value: string) => {
-    if (!selectedServiceType) return;
-    
-    const service = feeAgreementTemplates.serviceCategories[selectedServiceType as keyof typeof feeAgreementTemplates.serviceCategories];
-    if (!service) return;
-
-    const newTerms = { ...agreementData.terms, [field]: value };
-    
-    // עדכון הסעיפים עם תנאי התשלום החדשים
-    const updatedSections = service.clauses.map(clause => {
-      let updatedText = clause.text;
-      
-      // עדכון תנאי תשלום
-      if (field === 'paymentTerms' && (clause.id.includes('_002') || clause.id.includes('_003'))) {
-        // החלפת תנאי התשלום בתוך הטקסט
-        if (newTerms.paymentTerms.includes('50%')) {
-          // אם המשתמש עדיין משתמש ב-50%, נשאיר את זה
-        } else {
-          // אם המשתמש שינה את תנאי התשלום, נחליף את הטקסט הסטנדרטי
-          updatedText = updatedText.replace(/וישולם כלהלן: 50% במעמד החתימה על הסכם זה, והיתרה בשיעור 50%.*?\./g, 
-            newTerms.paymentTerms);
-        }
-      }
-      
-      return {
-        title: clause.title,
-        content: updatedText
-      };
-    });
-    
-    setCustomSections(updatedSections);
-  };
 
   const handleAddSection = (content: string, title: string) => {
     setCustomSections(prev => [...prev, { title, content }]);
@@ -660,9 +588,9 @@ ________________________           ________________________
         <section className="bg-blue-50 p-6 rounded-lg border border-blue-200 mb-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-blue-900 flex items-center gap-2">
-              <Scale className="w-5 h-5" />
-              פרטי עורך הדין
-            </h2>
+            <Scale className="w-5 h-5" />
+            פרטי עורך הדין
+          </h2>
             {currentUser && (
               <div className="flex items-center gap-2">
                 <span className="text-sm text-green-700 bg-green-100 px-3 py-1 rounded-full">
@@ -868,15 +796,15 @@ ________________________           ________________________
           <div className="space-y-4">
             {agreementData.fees.type === 'סכום_כולל' && (
               <>
-                <input
-                  type="text"
+                  <input
+                    type="text"
                   value={agreementData.fees.totalAmount || ''}
                   onChange={(e) => updateFees('totalAmount', e.target.value)}
                   placeholder="סכום כולל (₪)"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-yellow-500 focus:border-yellow-500"
-                  dir="ltr"
-                />
-                
+                    dir="ltr"
+                  />
+                  
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">מבנה התשלום</label>
                   <select
@@ -889,7 +817,7 @@ ________________________           ________________________
                     <option value="שלבים">חלוקה לשלבים</option>
                   </select>
                 </div>
-
+                
                 {agreementData.fees.paymentStructure === 'שלבים' && (
                   <textarea
                     value={agreementData.fees.stages || ''}
@@ -906,25 +834,25 @@ ________________________           ________________________
             {agreementData.fees.type === 'מקדמה_והצלחה' && (
               <>
                 <div className="grid md:grid-cols-2 gap-4">
-                  <input
-                    type="text"
+              <input
+                type="text"
                     value={agreementData.fees.advancePayment || ''}
                     onChange={(e) => updateFees('advancePayment', e.target.value)}
                     placeholder="מקדמה מראש (₪)"
                     className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-yellow-500 focus:border-yellow-500"
-                    dir="ltr"
-                  />
-                  
-                  <input
-                    type="text"
-                    value={agreementData.fees.successPercentage || ''}
-                    onChange={(e) => updateFees('successPercentage', e.target.value)}
-                    placeholder="אחוז הצלחה (%)"
+                dir="ltr"
+              />
+
+                <input
+                  type="text"
+                  value={agreementData.fees.successPercentage || ''}
+                  onChange={(e) => updateFees('successPercentage', e.target.value)}
+                  placeholder="אחוז הצלחה (%)"
                     className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-yellow-500 focus:border-yellow-500"
-                    dir="ltr"
-                  />
-                </div>
-                
+                        dir="ltr"
+                      />
+                    </div>
+                    
                 <div className="bg-white p-3 rounded border border-yellow-300 text-sm">
                   <strong>דוגמה:</strong> מקדמה 5,000 ₪ + 10% מהסכום שיתקבל בפועל
                 </div>
