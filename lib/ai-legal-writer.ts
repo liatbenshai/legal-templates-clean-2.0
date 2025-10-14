@@ -217,10 +217,14 @@ ${userPrompt}
 
     if (request.documentType) {
       const docTypeNames: Record<string, string> = {
+        'will-single': 'צוואת יחיד',
+        'will-couple': 'צוואה זוגית',
+        'advance-directives': 'הנחיות מקדימות',
+        'fee-agreement': 'הסכם שכר טרחה',
+        'demand-letter': 'מכתב התראה',
+        'court-pleadings': 'כתבי בית דין',
         'lawsuit': 'כתב תביעה',
         'motion': 'בקשה לבית משפט',
-        'contract': 'הסכם',
-        'will': 'צוואה',
         'power-of-attorney': 'ייפוי כוח',
         'appeal': 'ערעור',
         'response': 'כתב הגנה',
@@ -415,6 +419,114 @@ ${userPrompt}
       console.error('Error summarizing text:', error);
       throw new Error('שגיאה בקיצור הטקסט. אנא נסה שוב.');
     }
+  }
+
+  /**
+   * שיפור חכם לפי הקשר וסגנון
+   */
+  async improveWithContext(
+    text: string,
+    context: 'will-single' | 'will-couple' | 'advance-directives' | 'fee-agreement' | 'demand-letter' | 'court-pleadings',
+    style: 'formal' | 'simple' | 'detailed'
+  ): Promise<AIWritingResponse> {
+    
+    const contextInstructions = {
+      'will-single': 'צוואת יחיד - השתמש בלשון גוף ראשון יחיד ("אני", "הנני"), ביטויים: "למען הסר ספק", "הנני מורה", "אני מבטל בזה את כל צוואה קודמת". שפה ברורה וחד-משמעית המבטאת רצון אישי',
+      'will-couple': 'צוואה זוגית - השתמש בלשון רבים ("אנו", "הננו"), ביטויים: "אנו מצהירים", "הננו מורים יחדיו", "בהסכמה מלאה בינינו". הדגש על הסכמה הדדית ורצון משותף של בני הזוג',
+      'advance-directives': 'הנחיות מקדימות (רפואיות) - השתמש בלשון ברורה ופשוטה יחסית, ביטויים: "במצב בו לא אוכל להביע רצוני", "אני מורה למטפלים הרפואיים", "בהיותי בהכרה מלאה". התמקד בהוראות רפואיות והחלטות סוף חיים',
+      'fee-agreement': 'הסכם שכר טרחה - השתמש בלשון עסקית-משפטית, ביטויים: "שכר טרחה", "הצדדים מסכימים", "תנאי התשלום", "היקף השירותים". הדגש על זכויות וחובות הדדיות, תשלומים ושירותים משפטיים',
+      'demand-letter': 'מכתב התראה - השתמש בלשון נחרצת ופורמלית, ביטויים: "בזאת אני מתרה בך", "במידה ולא תפעל", "אני שומר על כל זכויותיי", "תוך 7 ימים". טון נחוש המבהיר השלכות אי-פעולה',
+      'court-pleadings': 'כתבי בית דין - השתמש בלשון פורמלית מאוד, ביטויים: "הואיל ו", "לפיכך", "נוכח האמור", "מתבקש בית המשפט הנכבד", "לאור האמור לעיל". שפה משפטית גבוהה עם מבנה טיעוני מסודר'
+    };
+
+    const styleInstructions = {
+      formal: 'סגנון פורמלי סטנדרטי',
+      simple: 'סגנון פשוט וברור תוך שמירה על מקצועיות',
+      detailed: 'סגנון מפורט עם הסברים והרחבות, הוסף סעיפי משנה וביאורים'
+    };
+
+    try {
+      // השתמש ב-API הקיים במקום API חדש
+      const response = await this.generateText({
+        prompt: `שיפור טקסט משפטי:
+
+הטקסט המקורי:
+"${text}"
+
+סוג המסמך: ${contextInstructions[context]}
+סגנון הניסוח: ${styleInstructions[style]}
+
+משימה:
+1. תקן את העברית לעברית משפטית תקינה
+2. שפר את המבנה והניסוח
+3. ${style === 'detailed' ? 'הרחב עם פרטים משפטיים רלוונטיים, אך אל תמציא עובדות חדשות - רק הוסף ניסוחים משפטיים סטנדרטיים' : 'שמור על אורך דומה למקור'}
+4. שמור על המשמעות המקורית בדיוק
+5. התאם את הטון והסגנון לסוג המסמך
+
+חשוב מאוד:
+- אל תוסיף תוכן שלא קשור למקור
+- אל תמציא פרטים או עובדות
+- השתמש רק בביטויים משפטיים סטנדרטיים
+- כתוב רק בעברית תקנית
+
+ענה רק בטקסט המשופר - ללא הסברים.`,
+        context: contextInstructions[context],
+        documentType: context,
+        tone: style === 'formal' ? 'formal' : 'neutral',
+        length: style === 'detailed' ? 'long' : 'medium'
+      });
+
+      if (!this.validateResponse(text, response.text)) {
+        throw new Error('התשובה מה-AI לא עברה אימות');
+      }
+
+      return {
+        text: response.text,
+        confidence: 0.92,
+      };
+    } catch (error) {
+      console.error('Error improving with context:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * אימות שהתשובה תקינה
+   */
+  private validateResponse(original: string, improved: string): boolean {
+    if (!improved || improved.trim().length < 10) {
+      console.warn('❌ התשובה קצרה מדי');
+      return false;
+    }
+
+    if (improved.length > original.length * 4) {
+      console.warn('❌ התשובה ארוכה מדי:', improved.length, 'vs', original.length);
+      return false;
+    }
+
+    const hebrewChars = (improved.match(/[\u0590-\u05FF]/g) || []).length;
+    const totalChars = improved.replace(/\s/g, '').length;
+    
+    if (hebrewChars < totalChars * 0.7) {
+      console.warn('❌ אין מספיק תווי עברית');
+      return false;
+    }
+
+    const englishChars = (improved.match(/[a-zA-Z]/g) || []).length;
+    if (englishChars > hebrewChars * 0.1) {
+      console.warn('❌ יש יותר מדי אנגלית');
+      return false;
+    }
+
+    console.log('✅ התשובה עברה אימות:', {
+      originalLength: original.length,
+      improvedLength: improved.length,
+      ratio: (improved.length / original.length).toFixed(2),
+      hebrewChars,
+      englishChars
+    });
+
+    return true;
   }
 }
 
