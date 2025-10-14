@@ -11,6 +11,7 @@ import {
 import { selectRelevantModules } from '@/lib/advanceDirectives/moduleSelector';
 import { generateDocument } from '@/lib/advanceDirectives/documentGenerator';
 import { ALL_MODULES, getModulesByCategory } from '@/data/modules';
+import { advanceDirectivesSectionsWarehouse, AdvanceDirectivesSectionTemplate } from '@/lib/sections-warehouses/advance-directives-warehouse';
 
 type FormStep = 'profile' | 'attorneys' | 'modules' | 'details' | 'preview';
 
@@ -62,6 +63,15 @@ export default function AdvanceDirectivesForm() {
   // מסמך שנוצר
   const [generatedDocument, setGeneratedDocument] = useState<string>('');
 
+  // מחסן סעיפים
+  const [showWarehouse, setShowWarehouse] = useState(false);
+  const [selectedSections, setSelectedSections] = useState<AdvanceDirectivesSectionTemplate[]>([]);
+  const [variablesModal, setVariablesModal] = useState<{
+    section: AdvanceDirectivesSectionTemplate;
+    values: Record<string, string>;
+    genders: Record<string, 'male' | 'female'>;
+  } | null>(null);
+
   // חישוב גיל אוטומטי
   useEffect(() => {
     if (userProfile.birthDate) {
@@ -102,6 +112,70 @@ export default function AdvanceDirectivesForm() {
   const removeAttorney = (index: number) => {
     if (attorneys.length > 1) {
       setAttorneys(attorneys.filter((_, i) => i !== index));
+    }
+  };
+
+  // פונקציות עזר למחסן
+  const extractVariablesFromContent = (content: string): string[] => {
+    const matches = content.match(/\{\{([^}]+)\}\}/g);
+    return matches ? [...new Set(matches.map(match => match.replace(/\{\{|\}\}/g, '')))] : [];
+  };
+
+  const isGenderRelevantVariable = (variable: string): boolean => {
+    const genderRelevantVariables = [
+      'attorney_gender_suffix', 'attorney_name', 'family_member_name', 
+      'doctor_name', 'caregiver_name', 'witness_name'
+    ];
+    return genderRelevantVariables.includes(variable);
+  };
+
+  const getVariableLabel = (variable: string): string => {
+    const labels: Record<string, string> = {
+      'attorney_gender_suffix': 'סיומת מגדר מיופה הכוח',
+      'attorney_name': 'שם מיופה הכוח',
+      'family_member_name': 'שם בן משפחה',
+      'doctor_name': 'שם הרופא/ה',
+      'caregiver_name': 'שם המטפל/ת',
+      'witness_name': 'שם העד/ה',
+      'property_address': 'כתובת הנכס',
+      'bank_name': 'שם הבנק',
+      'amount': 'סכום',
+      'percentage': 'אחוז',
+      'date': 'תאריך',
+      'phone': 'טלפון',
+      'address': 'כתובת'
+    };
+    return labels[variable] || variable;
+  };
+
+  const handleSelectFromWarehouse = (section: AdvanceDirectivesSectionTemplate) => {
+    // החלף מגדור בטקסט לפי מגדר מיופה הכוח הראשי
+    const { replaceTextWithGender } = require('@/lib/hebrew-gender');
+    const primaryAttorney = attorneys.find(a => a.isPrimary);
+    const attorneyGender = primaryAttorney?.fullName ? 'male' : 'male'; // default to male
+    
+    const genderedContent = replaceTextWithGender(section.content, attorneyGender);
+    
+    // חלץ משתנים מהתוכן
+    const variables = extractVariablesFromContent(genderedContent);
+    
+    // אם יש משתנים, פתח חלון למילוי
+    if (variables.length > 0) {
+      setVariablesModal({
+        section: {
+          ...section,
+          content: genderedContent
+        },
+        values: variables.reduce((acc, v) => ({ ...acc, [v]: '' }), {}),
+        genders: variables.reduce((acc, v) => ({ ...acc, [v]: 'male' as 'male' | 'female' }), {})
+      });
+    } else {
+      // אם אין משתנים, הוסף ישירות
+      setSelectedSections(prev => [...prev, {
+        ...section,
+        content: genderedContent
+      }]);
+      alert('סעיף נוסף מהמחסן!');
     }
   };
 
@@ -431,6 +505,23 @@ export default function AdvanceDirectivesForm() {
               </p>
             </div>
 
+            <div className="flex gap-4 mb-6">
+              <button
+                onClick={() => setShowWarehouse(true)}
+                className="flex items-center gap-2 px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition"
+              >
+                <span>📚</span>
+                מחסן סעיפים מתקדם
+              </button>
+              <button
+                onClick={() => setCurrentStep('details')}
+                className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+              >
+                <span>✓</span>
+                המשך לפרטים נוספים
+              </button>
+            </div>
+
             {['property', 'personal', 'medical'].map(category => {
               const categoryModules = getModulesByCategory(category as any);
               const categoryNames = {
@@ -542,6 +633,231 @@ export default function AdvanceDirectivesForm() {
               >
                 → חזור לעריכה
               </button>
+            </div>
+          </div>
+        )}
+
+        {/* מחסן סעיפים */}
+        {showWarehouse && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-6xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-2xl font-bold text-gray-900">
+                  📚 מחסן סעיפים להנחיות מקדימות
+                </h3>
+                <button
+                  onClick={() => setShowWarehouse(false)}
+                  className="text-gray-500 hover:text-gray-700 text-2xl"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {['property', 'personal', 'medical'].map(category => {
+                  const categorySections = advanceDirectivesSectionsWarehouse.filter(s => s.category === category);
+                  const categoryNames = {
+                    property: 'עניינים רכושיים',
+                    personal: 'עניינים אישיים', 
+                    medical: 'עניינים רפואיים'
+                  };
+                  const categoryColors = {
+                    property: 'bg-green-50 border-green-200',
+                    personal: 'bg-blue-50 border-blue-200',
+                    medical: 'bg-red-50 border-red-200'
+                  };
+
+                  return (
+                    <div key={category} className={`border rounded-lg p-4 ${categoryColors[category as keyof typeof categoryColors]}`}>
+                      <h4 className="text-lg font-bold mb-4 text-center">
+                        {categoryNames[category as keyof typeof categoryNames]}
+                      </h4>
+                      <div className="space-y-3 max-h-96 overflow-y-auto">
+                        {categorySections.map(section => (
+                          <div key={section.id} className="bg-white rounded-lg p-3 border">
+                            <div className="flex justify-between items-start mb-2">
+                              <h5 className="font-semibold text-sm">{section.title}</h5>
+                              <select
+                                value={section.category}
+                                onChange={(e) => {
+                                  // העבר בין קטגוריות
+                                  const newCategory = e.target.value as 'property' | 'personal' | 'medical';
+                                  const updatedSection = { ...section, category: newCategory };
+                                  // עדכן את המחסן (במקום אמיתי זה יהיה שמירה לlocalStorage או API)
+                                  console.log(`העבר סעיף ${section.id} לקטגוריה ${newCategory}`);
+                                }}
+                                className="text-xs px-2 py-1 rounded border-0 bg-gray-100 hover:bg-gray-200 cursor-pointer"
+                                title="העבר לקטגוריה אחרת"
+                              >
+                                <option value="property">רכושי</option>
+                                <option value="personal">אישי</option>
+                                <option value="medical">רפואי</option>
+                              </select>
+                            </div>
+                            <p className="text-xs text-gray-600 mb-3 line-clamp-3">
+                              {section.content.substring(0, 100)}...
+                            </p>
+                            <button
+                              onClick={() => handleSelectFromWarehouse(section)}
+                              className="w-full px-3 py-2 bg-orange-600 text-white text-sm rounded hover:bg-orange-700 transition"
+                            >
+                              הוסף לצוואה
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="mt-6">
+                <h4 className="text-lg font-bold mb-4">סעיפים שנבחרו ({selectedSections.length})</h4>
+                <div className="space-y-2 max-h-40 overflow-y-auto">
+                  {selectedSections.map((section, index) => (
+                    <div key={index} className="bg-gray-50 rounded-lg p-3 flex justify-between items-center">
+                      <div>
+                        <span className="font-semibold">{section.title}</span>
+                        <span className="text-sm text-gray-500 ml-2">({section.category})</span>
+                      </div>
+                      <button
+                        onClick={() => setSelectedSections(prev => prev.filter((_, i) => i !== index))}
+                        className="text-red-500 hover:text-red-700"
+                      >
+                        ✕ הסר
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* חלון מילוי משתנים */}
+        {variablesModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+              <h3 className="text-xl font-bold text-gray-900 mb-4">
+                השלמת פרטים לסעיף: {variablesModal.section.title}
+              </h3>
+              
+              <div className="mb-4 p-3 bg-blue-50 rounded-lg text-sm text-blue-800">
+                <p className="font-semibold mb-1">💡 טיפ:</p>
+                <p>למשתנים של אנשים (שמות) יש אפשרות לבחור מגדר. זה יעזור להציג את הטקסט הנכון (זכר/נקבה) במסמך.</p>
+              </div>
+              
+              <div className="space-y-4 mb-6">
+                {variablesModal.section.variables.map((variable) => (
+                  <div key={variable} className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">
+                      {getVariableLabel(variable)}:
+                    </label>
+                    <input
+                      type="text"
+                      value={variablesModal.values[variable] || ''}
+                      onChange={(e) => {
+                        setVariablesModal(prev => ({
+                          ...prev!,
+                          values: {
+                            ...prev!.values,
+                            [variable]: e.target.value
+                          }
+                        }));
+                      }}
+                      placeholder={`הזן ${getVariableLabel(variable)}`}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500"
+                      dir="rtl"
+                    />
+                    
+                    {/* בחירת מגדר למשתנים רלוונטיים */}
+                    {isGenderRelevantVariable(variable) && (
+                      <div className="flex gap-4 items-center">
+                        <label className="text-sm text-gray-600">מגדר:</label>
+                        <div className="flex gap-2">
+                          <label className="flex items-center gap-2">
+                            <input
+                              type="radio"
+                              name={`gender_${variable}`}
+                              value="male"
+                              checked={variablesModal.genders[variable] === 'male'}
+                              onChange={(e) => {
+                                setVariablesModal(prev => ({
+                                  ...prev!,
+                                  genders: {
+                                    ...prev!.genders,
+                                    [variable]: e.target.value as 'male' | 'female'
+                                  }
+                                }));
+                              }}
+                              className="text-orange-600 focus:ring-orange-500"
+                            />
+                            <span className="text-sm">זכר</span>
+                          </label>
+                          <label className="flex items-center gap-2">
+                            <input
+                              type="radio"
+                              name={`gender_${variable}`}
+                              value="female"
+                              checked={variablesModal.genders[variable] === 'female'}
+                              onChange={(e) => {
+                                setVariablesModal(prev => ({
+                                  ...prev!,
+                                  genders: {
+                                    ...prev!.genders,
+                                    [variable]: e.target.value as 'male' | 'female'
+                                  }
+                                }));
+                              }}
+                              className="text-orange-600 focus:ring-orange-500"
+                            />
+                            <span className="text-sm">נקבה</span>
+                          </label>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setVariablesModal(null)}
+                  className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
+                >
+                  ביטול
+                </button>
+                <button
+                  onClick={() => {
+                    // החלפת משתנים בתוכן עם התחשבות במגדר
+                    let finalContent = variablesModal.section.content;
+                    Object.keys(variablesModal.values).forEach(key => {
+                      const value = variablesModal.values[key];
+                      let replacedValue = value;
+                      
+                      // אם זה משתנה שדורש מגדר, החלף את הטקסט בהתאם
+                      if (isGenderRelevantVariable(key) && variablesModal.genders[key]) {
+                        const { replaceTextWithGender } = require('@/lib/hebrew-gender');
+                        replacedValue = replaceTextWithGender(value, variablesModal.genders[key]);
+                      }
+                      
+                      finalContent = finalContent.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'g'), replacedValue);
+                    });
+
+                    // הוספה לסעיפים נבחרים
+                    setSelectedSections(prev => [...prev, {
+                      ...variablesModal.section,
+                      content: finalContent
+                    }]);
+
+                    setVariablesModal(null);
+                  }}
+                  disabled={!Object.values(variablesModal.values).every(v => v.trim() !== '')}
+                  className="flex-1 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition disabled:bg-gray-300 disabled:cursor-not-allowed"
+                >
+                  הוסף סעיף
+                </button>
+              </div>
             </div>
           </div>
         )}
