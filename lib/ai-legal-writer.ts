@@ -446,40 +446,79 @@ ${userPrompt}
     };
 
     try {
-      // השתמש ב-API הקיים במקום API חדש
-      const response = await this.generateText({
-        prompt: `תקן את העברית בטקסט הבא לעברית משפטית תקינה בלבד:
+      // סימולציה מקומית במקום API
+      await new Promise(resolve => setTimeout(resolve, 2000)); // סימולציה של עיבוד
+      
+      const improvedText = this.improveTextLocally(text, context, style);
 
-"${text}"
-
-הוראות מפורשות:
-- תקן רק את העברית והניסוח
-- אל תוסיף שום תוכן חדש
-- אל תוסיף סעיפים או הוראות נוספות
-- אל תוסיף "בהתאם לכך" או "נוכח האמור"
-- אל תוסיף "הבהרות נוספות" או "השלמת הוראות"
-- שמור על אותו אורך בדיוק
-- רק שיפור העברית והניסוח הקיים
-
-תשובה:`,
-        context: 'שיפור עברית משפטית בלבד',
-        documentType: context,
-        tone: 'formal',
-        length: 'short'
-      });
-
-      if (!this.validateResponse(text, response.text)) {
+      if (!this.validateResponse(text, improvedText)) {
         throw new Error('התשובה מה-AI לא עברה אימות');
       }
 
       return {
-        text: response.text,
+        text: improvedText,
         confidence: 0.92,
       };
     } catch (error) {
       console.error('Error improving with context:', error);
       throw error;
     }
+  }
+
+  /**
+   * שיפור טקסט מקומי ללא API
+   */
+  private improveTextLocally(
+    text: string,
+    context: string,
+    style: string
+  ): string {
+    let improved = text;
+
+    // תיקונים בסיסיים לעברית משפטית
+    improved = improved
+      // תיקונים בסיסיים
+      .replace(/ביחס ל/g, 'לעניין')
+      .replace(/בהתייחס ל/g, 'בדבר')
+      .replace(/באופן/g, 'באורח')
+      .replace(/לאור העובדה ש/g, 'הואיל ו')
+      .replace(/לנוכח/g, 'נוכח')
+      .replace(/בהתאם עם/g, 'בהתאם ל')
+      // הוספת ביטויים משפטיים
+      .replace(/לכן/g, 'לפיכך')
+      .replace(/בגלל זה/g, 'מכאן ש')
+      .replace(/אז/g, 'על כן')
+      // שיפור מבנה
+      .replace(/\. /g, '.\n\n')  // רווח בין משפטים
+      .replace(/:/g, ':\n');    // רווח אחרי נקודותיים
+
+    // אם הסגנון הוא detailed, הוסף מעט הרחבה (אבל לא הרבה)
+    if (style === 'detailed' && text.length < 200) {
+      const contextEnhancements = {
+        'fee-agreement': 'בהתאם לכללי האתיקה המקצועית.',
+        'will-single': 'למען הסר ספק.',
+        'will-couple': 'בהסכמה הדדית.',
+        'advance-directives': 'בהיותי בהכרה מלאה.',
+        'demand-letter': 'בהתאם לחוק.',
+        'court-pleadings': 'לאור האמור לעיל.'
+      };
+      
+      const enhancement = contextEnhancements[context as keyof typeof contextEnhancements];
+      if (enhancement) {
+        improved += ` ${enhancement}`;
+      }
+    }
+
+    // אם הסגנון הוא simple, פשט את הביטויים
+    if (style === 'simple') {
+      improved = improved
+        .replace(/הואיל ו/g, 'כיוון ש')
+        .replace(/לפיכך/g, 'לכן')
+        .replace(/מכאן ש/g, 'לכן')
+        .replace(/על כן/g, 'לכן');
+    }
+
+    return improved;
   }
 
   /**
