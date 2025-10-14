@@ -432,12 +432,29 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
       willType === 'mutual' ? 'plural' : testator.gender
     );
     
-    const newSection = {
-      title: warehouseSection.title,
-      content: genderedContent
-    };
-    setCustomSections(prev => [...prev, newSection]);
-    alert('סעיף נוסף מהמחסן!');
+    // חלץ משתנים מהתוכן
+    const variables = extractVariablesFromContent(genderedContent);
+    
+    // אם יש משתנים, פתח חלון למילוי
+    if (variables.length > 0) {
+      setVariablesModal({
+        section: {
+          id: warehouseSection.id || 'custom',
+          title: warehouseSection.title,
+          content: genderedContent,
+          variables: variables
+        },
+        values: variables.reduce((acc, v) => ({ ...acc, [v]: '' }), {})
+      });
+    } else {
+      // אם אין משתנים, הוסף ישירות
+      const newSection = {
+        title: warehouseSection.title,
+        content: genderedContent
+      };
+      setCustomSections(prev => [...prev, newSection]);
+      alert('סעיף נוסף מהמחסן!');
+    }
   };
 
   return (

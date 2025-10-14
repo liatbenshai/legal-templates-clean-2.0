@@ -167,25 +167,32 @@ export function replaceTextWithGender(text: string, gender: Gender): string {
   let result = text;
   
   // **שלב 1: החלפת דפוסים נפוצים /ת /ה /ים /ות**
+  // תומך גם במשתנים לפני הסיומות: ממנה/ים, תושב/ת, יוכל/תוכל
   if (gender === 'male') {
-    result = result.replace(/\/ת\b/g, '');  // אני מבטל/ת → אני מבטל
+    result = result.replace(/\/ת\b/g, '');  // אני מבטל/ת → אני מבטל, תושב/ת → תושב
+    result = result.replace(/\/תוכל\b/g, '');  // יוכל/תוכל → יוכל
     // בדיקה: אם המילה מסתיימת ב-ה, אל תוסיף ה נוספת
     result = result.replace(/([^ה])\/ה\b/g, '$1');  // אני מוריש/ה → אני מוריש (אבל מצווה/ה → מצווה)
     result = result.replace(/ה\/ה\b/g, 'ה');  // מצווה/ה → מצווה (כבר יש ה)
-    result = result.replace(/\/ים\b/g, ''); // אני מצווה/ים → אני מצווה
+    result = result.replace(/\/ים\b/g, ''); // אני מצווה/ים → אני מצווה, ממנה/ים → ממנה
+    result = result.replace(/\/י\b/g, ''); // חלופי/ת → חלופי
     result = result.replace(/\/ות\b/g, ''); // קטנ/ות → קטנ
   } else if (gender === 'female') {
-    result = result.replace(/\/ת\b/g, 'ת');  // אני מבטל/ת → אני מבטלת
+    result = result.replace(/\/ת\b/g, 'ת');  // אני מבטל/ת → אני מבטלת, תושב/ת → תושבת
+    result = result.replace(/\/תוכל\b/g, 'תוכל');  // יוכל/תוכל → תוכל
     // בדיקה: אם המילה מסתיימת ב-ה, אל תוסיף ה נוספת
     result = result.replace(/([^ה])\/ה\b/g, '$1ה');  // אני מוריש/ה → אני מורישה
     result = result.replace(/ה\/ה\b/g, 'ה');  // מצווה/ה → מצווה (כבר יש ה)
-    result = result.replace(/\/ים\b/g, 'ים'); // אני מצווה/ים → אני מצווהים (לא נפוץ)
+    result = result.replace(/\/ים\b/g, 'ים'); // אני מצווה/ים → אני מצווהים, ממנה/ים → ממנהים
+    result = result.replace(/\/י\b/g, 'ית'); // חלופי/ת → חלופית
     result = result.replace(/\/ות\b/g, 'ות'); // קטנ/ות → קטנות
   } else if (gender === 'plural') {
     result = result.replace(/\/ת\b/g, '');   // אנו מבטל/ת → אנו מבטל
+    result = result.replace(/\/תוכל\b/g, '');  // יוכל/תוכל → יוכל
     result = result.replace(/([^ה])\/ה\b/g, '$1');   // אנו מוריש/ה → אנו מוריש
     result = result.replace(/ה\/ה\b/g, 'ה');  // מצווה/ה → מצווה
-    result = result.replace(/\/ים\b/g, 'ים'); // אנו מצווה/ים → אנו מצווהים
+    result = result.replace(/\/ים\b/g, 'ים'); // אנו מצווה/ים → אנו מצווהים, ממנה/ים → ממנהים
+    result = result.replace(/\/י\b/g, 'ים'); // חלופי/ת → חלופיים
     result = result.replace(/\/ות\b/g, 'ות'); // קטנ/ות → קטנות
   }
   
