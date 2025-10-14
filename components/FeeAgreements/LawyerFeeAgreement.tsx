@@ -373,6 +373,8 @@ export default function LawyerFeeAgreement() {
 
   // פונקציות מערכת למידה
   const convertToEditableSections = () => {
+    if (typeof window === 'undefined') return; // הגנה מפני SSR
+    
     const editable = customSections.map((section, index) => ({
       id: `section_${index}`,
       title: section.title,
@@ -834,7 +836,7 @@ ________________________           ________________________
                 </button>
               </div>
 
-              {learningMode === 'edit' && editableSections.length > 0 && (
+              {learningMode === 'edit' && editableSections.length > 0 && typeof window !== 'undefined' && (
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold text-indigo-800">
                     סעיפים ניתנים לעריכה עם AI
@@ -853,7 +855,7 @@ ________________________           ________________________
                 </div>
               )}
 
-              {learningMode === 'warehouse' && currentUser && (
+              {learningMode === 'warehouse' && currentUser && typeof window !== 'undefined' && (
                 <WarehouseManager
                   userId={currentUser.id}
                   onSectionSelect={handleSelectFromWarehouse}

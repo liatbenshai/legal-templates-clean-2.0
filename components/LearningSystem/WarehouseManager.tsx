@@ -29,6 +29,7 @@ export default function WarehouseManager({ userId, onSectionSelect }: WarehouseM
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [sortBy, setSortBy] = useState<'recent' | 'popular' | 'rating'>('recent');
   const [showAddForm, setShowAddForm] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const [newSection, setNewSection] = useState({
     title: '',
     content: '',
@@ -38,9 +39,15 @@ export default function WarehouseManager({ userId, onSectionSelect }: WarehouseM
   });
 
   useEffect(() => {
-    loadSections();
-    loadUserProfile();
-  }, [userId]);
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (mounted) {
+      loadSections();
+      loadUserProfile();
+    }
+  }, [userId, mounted]);
 
   const loadSections = () => {
     const profile = learningEngine.getUserProfile(userId);
@@ -55,6 +62,8 @@ export default function WarehouseManager({ userId, onSectionSelect }: WarehouseM
   };
 
   const handleAddSection = () => {
+    if (!mounted) return;
+
     const section: WarehouseSection = {
       id: Date.now().toString(),
       title: newSection.title,
@@ -88,6 +97,8 @@ export default function WarehouseManager({ userId, onSectionSelect }: WarehouseM
   };
 
   const handleDeleteSection = (sectionId: string) => {
+    if (!mounted) return;
+    
     if (confirm('האם למחוק את הסעיף?')) {
       const profile = learningEngine.getUserProfile(userId);
       if (profile) {
@@ -98,6 +109,8 @@ export default function WarehouseManager({ userId, onSectionSelect }: WarehouseM
   };
 
   const handleUseSection = (section: WarehouseSection) => {
+    if (!mounted) return;
+    
     // עדכון מועד שימוש אחרון
     const profile = learningEngine.getUserProfile(userId);
     if (profile) {
@@ -136,7 +149,13 @@ export default function WarehouseManager({ userId, onSectionSelect }: WarehouseM
     });
 
   const categories = ['all', ...new Set(sections.map(s => s.category))];
-  const statistics = learningEngine.getStatistics(userId);
+  const statistics = mounted ? learningEngine.getStatistics(userId) : {
+    totalEdits: 0,
+    uniqueUsers: 0,
+    averageEditLength: 0,
+    mostEditedCategories: [],
+    insights: 0
+  };
 
   return (
     <div className="bg-white rounded-lg shadow-lg p-6">

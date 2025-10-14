@@ -26,7 +26,12 @@ export default function EditableSection({
   const [editContent, setEditContent] = useState(section.content);
   const [showAIPanel, setShowAIPanel] = useState(false);
   const [aiInsights, setAiInsights] = useState<any[]>([]);
+  const [mounted, setMounted] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (isEditing && textareaRef.current) {
@@ -52,20 +57,22 @@ export default function EditableSection({
 
     onUpdate(updatedSection);
 
-    // שמירת נתוני למידה
-    learningEngine.saveLearningData({
-      sectionId: section.id,
-      originalText: section.content,
-      editedText: editContent,
-      editType: 'manual',
-      context: {
-        serviceType: section.serviceType || '',
-        category: section.category,
-        userType: 'lawyer'
-      },
-      timestamp: new Date().toISOString(),
-      userId
-    });
+    // שמירת נתוני למידה (רק אם אנחנו בצד הלקוח)
+    if (mounted) {
+      learningEngine.saveLearningData({
+        sectionId: section.id,
+        originalText: section.content,
+        editedText: editContent,
+        editType: 'manual',
+        context: {
+          serviceType: section.serviceType || '',
+          category: section.category,
+          userType: 'lawyer'
+        },
+        timestamp: new Date().toISOString(),
+        userId
+      });
+    }
 
     setIsEditing(false);
     loadAIInsights();
@@ -79,60 +86,64 @@ export default function EditableSection({
   const handleSaveToWarehouse = () => {
     onSaveToWarehouse(section);
     
-    const action: SectionEditAction = {
-      type: 'save_to_warehouse',
-      sectionId: section.id,
-      newContent: section.content,
-      reason: 'שמירה למחסן האישי',
-      userId,
-      timestamp: new Date().toISOString()
-    };
+    if (mounted) {
+      const action: SectionEditAction = {
+        type: 'save_to_warehouse',
+        sectionId: section.id,
+        newContent: section.content,
+        reason: 'שמירה למחסן האישי',
+        userId,
+        timestamp: new Date().toISOString()
+      };
 
-    learningEngine.saveToWarehouse(action, {
-      id: section.id,
-      title: section.title,
-      content: section.content,
-      category: section.category,
-      tags: [section.category, section.serviceType || 'general'],
-      usageCount: 1,
-      averageRating: 5,
-      isPublic: false,
-      createdBy: userId,
-      createdAt: new Date().toISOString(),
-      lastUsed: new Date().toISOString()
-    });
+      learningEngine.saveToWarehouse(action, {
+        id: section.id,
+        title: section.title,
+        content: section.content,
+        category: section.category,
+        tags: [section.category, section.serviceType || 'general'],
+        usageCount: 1,
+        averageRating: 5,
+        isPublic: false,
+        createdBy: userId,
+        createdAt: new Date().toISOString(),
+        lastUsed: new Date().toISOString()
+      });
+    }
   };
 
   const handleSaveToLearning = () => {
     onSaveToLearning(section);
     
-    const action: SectionEditAction = {
-      type: 'save_to_learning',
-      sectionId: section.id,
-      newContent: section.content,
-      reason: 'שמירה למערכת הלמידה',
-      userId,
-      timestamp: new Date().toISOString()
-    };
+    if (mounted) {
+      const action: SectionEditAction = {
+        type: 'save_to_learning',
+        sectionId: section.id,
+        newContent: section.content,
+        reason: 'שמירה למערכת הלמידה',
+        userId,
+        timestamp: new Date().toISOString()
+      };
 
-    learningEngine.saveToLearning(action, {
-      sectionId: section.id,
-      originalText: section.originalContent || section.content,
-      editedText: section.content,
-      editType: 'manual',
-      userFeedback: 'approved',
-      context: {
-        serviceType: section.serviceType || '',
-        category: section.category,
-        userType: 'lawyer'
-      },
-      timestamp: new Date().toISOString(),
-      userId
-    });
+      learningEngine.saveToLearning(action, {
+        sectionId: section.id,
+        originalText: section.originalContent || section.content,
+        editedText: section.content,
+        editType: 'manual',
+        userFeedback: 'approved',
+        context: {
+          serviceType: section.serviceType || '',
+          category: section.category,
+          userType: 'lawyer'
+        },
+        timestamp: new Date().toISOString(),
+        userId
+      });
+    }
   };
 
   const loadAIInsights = async () => {
-    if (showAIInsights) {
+    if (showAIInsights && mounted) {
       const insights = learningEngine.getInsightsForUser(userId);
       setAiInsights(insights.filter(insight => insight.sectionId === section.id));
     }
