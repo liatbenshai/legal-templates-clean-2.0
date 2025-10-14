@@ -381,17 +381,34 @@ export default function LawyerFeeAgreement() {
 
 1.1. עורך הדין יספק ללקוח שירותים משפטיים בעניין: ${agreementData.case.subject || '[נושא התיק]'}
 
-1.2. בית המשפט/בית הדין: ${agreementData.case.court || '[שם בית המשפט/דין]'}
+${agreementData.case.description ? `1.2. תיאור התיק: ${agreementData.case.description}\n\n` : ''}`;
 
-1.3. תיאור התיק: ${agreementData.case.description || '[תיאור מפורט של התיק והשירותים הנדרשים]'}
+    // הוספת סעיפים מותאמים אישית מהמחסן
+    if (customSections.length > 0) {
+      baseAgreement += '\n2. סעיפים ותנאים\n\n';
+      customSections.forEach((section, index) => {
+        baseAgreement += `2.${index + 1}. ${section.title}\n\n${section.content}\n\n`;
+      });
+      baseAgreement += '\n';
+    }
 
-1.4. רמת מורכבות: ${agreementData.case.complexity}
+    // סיום ההסכם
+    baseAgreement += `
+${customSections.length > 0 ? customSections.length + 2 : '2'}. תוקף ההסכם
 
-2. שכר הטרחה
+הסכם זה ייכנס לתוקף עם חתימת שני הצדדים ויהיה בתוקף עד לסיום הטיפול בתיק או עד לסיום ההתקשרות.
 
-`;
+התאריך: ${new Date(agreementDate).toLocaleDateString('he-IL')}
 
-    // חישוב שכר טרחה לפי סוג
+________________________           ________________________
+    חתימת עורך הדין                    חתימת הלקוח
+     ${agreementData.lawyer.name || '[שם]'}                        ${agreementData.client.name || '[שם]'}
+
+הסכם זה נחתם בשני עותקים, עותק לכל צד.`;
+
+    return baseAgreement;
+
+    // חישוב שכר טרחה לפי סוג (מיותר - מטופל ע"י הסעיפים מהמחסן)
     switch (agreementData.fees.type) {
       case 'שעתי':
         return `${baseAgreement}2.1. שכר הטרחה יחושב לפי שעות עבודה בפועל.
