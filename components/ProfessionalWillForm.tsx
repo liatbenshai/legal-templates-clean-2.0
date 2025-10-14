@@ -7,6 +7,11 @@ import ProfessionalWordExporter from './ProfessionalWordExporter';
 import SectionsWarehouse from './SectionsWarehouse';
 import type { Gender } from '@/lib/hebrew-gender';
 import { generateProfessionalWillContent } from '@/lib/professional-will-texts';
+import { EditableSection as EditableSectionType } from '@/lib/learning-system/types';
+import { learningEngine } from '@/lib/learning-system/learning-engine';
+import EditableSection from './LearningSystem/EditableSection';
+import WarehouseManager from './LearningSystem/WarehouseManager';
+import AILearningManager from './AILearningManager';
 
 interface Property {
   name: string;
@@ -155,6 +160,11 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
     section: { id: string; title: string; content: string; variables: string[] };
     values: Record<string, string>;
   } | null>(null);
+
+  // מערכת למידה
+  const [showLearningSystem, setShowLearningSystem] = useState(false);
+  const [editableSections, setEditableSections] = useState<EditableSectionType[]>([]);
+  const [learningMode, setLearningMode] = useState<'edit' | 'warehouse'>('edit');
   
   // פונקציה לחילוץ משתנים מתוכן
   const extractVariablesFromContent = (content: string): string[] => {
@@ -289,6 +299,138 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
     guardian: guardian.name ? guardian : undefined, // אפוטרופוס אם מולא
     guardianGender: guardian.gender // מגדר האפוטרופוס
   });
+
+  // פונקציות מערכת הלמידה
+  const convertToEditableSections = () => {
+    const sections: EditableSectionType[] = [];
+    
+    // הוספת סעיפים מ-customSections
+    customSections.forEach((section, index) => {
+      sections.push({
+        id: `custom-${index}`,
+        title: section.title,
+        content: section.content,
+        category: 'will',
+        isEditable: true,
+        isCustom: true,
+        lastModified: new Date().toISOString(),
+        modifiedBy: 'user',
+        version: 1,
+      });
+    });
+    
+    // הוספת הוראות מיוחדות
+    if (specialInstructions) {
+      sections.push({
+        id: 'special-instructions',
+        title: 'הוראות מיוחדות',
+        content: specialInstructions,
+        category: 'will',
+        isEditable: true,
+        isCustom: false,
+        lastModified: new Date().toISOString(),
+        modifiedBy: 'user',
+        version: 1,
+      });
+    }
+    
+    // הוספת הוראות רכב
+    if (vehicleInstructions) {
+      sections.push({
+        id: 'vehicle-instructions',
+        title: 'הוראות רכב',
+        content: vehicleInstructions,
+        category: 'will',
+        isEditable: true,
+        isCustom: false,
+        lastModified: new Date().toISOString(),
+        modifiedBy: 'user',
+        version: 1,
+      });
+    }
+    
+    setEditableSections(sections);
+  };
+
+  const handleUpdateEditableSection = (updatedSection: EditableSectionType) => {
+    setEditableSections(prev => 
+      prev.map(section => 
+        section.id === updatedSection.id 
+          ? { ...updatedSection, lastModified: new Date().toISOString() }
+          : section
+      )
+    );
+    
+    // עדכון גם ב-customSections או הוראות מיוחדות
+    if (updatedSection.id.startsWith('custom-')) {
+      const index = parseInt(updatedSection.id.split('-')[1]);
+      setCustomSections(prev => 
+        prev.map((section, i) => 
+          i === index ? { ...section, content: updatedSection.content } : section
+        )
+      );
+    } else if (updatedSection.id === 'special-instructions') {
+      setSpecialInstructions(updatedSection.content);
+    } else if (updatedSection.id === 'vehicle-instructions') {
+      setVehicleInstructions(updatedSection.content);
+    }
+  };
+
+  const handleSaveToWarehouse = (section: EditableSectionType) => {
+    const action = {
+      type: 'save_to_warehouse' as const,
+      sectionId: section.id,
+      newContent: section.content,
+      userId: testator.fullName || 'anonymous',
+      timestamp: new Date().toISOString()
+    };
+    
+    const warehouseSection = {
+      id: section.id,
+      title: section.title,
+      content: section.content,
+      category: section.category,
+      tags: ['צוואה', 'סעיף מותאם אישית'],
+      usageCount: 0,
+      averageRating: 0,
+      isPublic: false,
+      createdBy: testator.fullName || 'anonymous',
+      createdAt: new Date().toISOString(),
+      lastUsed: new Date().toISOString()
+    };
+    
+    learningEngine.saveToWarehouse(action, warehouseSection);
+    alert('סעיף נשמר למחסן האישי!');
+  };
+
+  const handleSaveToLearning = (section: EditableSectionType, userCorrection?: string) => {
+    if (userCorrection) {
+      learningEngine.saveLearningData({
+        sectionId: section.id,
+        originalText: section.content,
+        editedText: userCorrection,
+        editType: 'manual',
+        userFeedback: 'improved',
+        context: {
+          serviceType: willType,
+          category: 'will',
+          userType: 'lawyer'
+        },
+        timestamp: new Date().toISOString(),
+        userId: testator.fullName || 'anonymous'
+      });
+      alert('שינוי נשמר למערכת הלמידה!');
+    }
+  };
+
+  const handleSelectFromWarehouse = (warehouseSection: any) => {
+    const newSection = {
+      title: warehouseSection.title,
+      content: warehouseSection.content
+    };
+    setCustomSections(prev => [...prev, newSection]);
+    alert('סעיף נוסף מהמחסן!');
+  };
 
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-8">
@@ -1059,13 +1201,26 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
               <span className="text-lg">📖</span>
               מחסן סעיפים משפטיים
             </h2>
-            <button
-              onClick={() => setShowWarehouse(!showWarehouse)}
-              className="flex items-center gap-2 px-3 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition text-sm"
-            >
-              <span className="text-white text-sm">📚</span>
-              {showWarehouse ? 'הסתר מחסן' : 'הצג מחסן סעיפים'}
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowWarehouse(!showWarehouse)}
+                className="flex items-center gap-2 px-3 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition text-sm"
+              >
+                <span className="text-white text-sm">📚</span>
+                {showWarehouse ? 'הסתר מחסן' : 'הצג מחסן סעיפים'}
+              </button>
+              
+              <button
+                onClick={() => {
+                  convertToEditableSections();
+                  setShowLearningSystem(!showLearningSystem);
+                }}
+                className="flex items-center gap-2 px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition text-sm"
+              >
+                <span className="text-white text-sm">🧠</span>
+                {showLearningSystem ? 'הסתר מערכת למידה' : 'מערכת למידה'}
+              </button>
+            </div>
           </div>
           
           {showWarehouse && (
@@ -1223,6 +1378,82 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
               <p className="text-xs text-gray-500">
                 מקור: {sectionsWarehouse.metadata?.author || 'Legal Templates Pro'}
               </p>
+            </div>
+          </section>
+        )}
+
+        {/* מערכת למידה */}
+        {showLearningSystem && (
+          <section className="bg-gradient-to-br from-purple-50 to-pink-50 p-6 rounded-lg border border-purple-200">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                <span className="text-purple-600 text-lg">🧠</span>
+                מערכת למידה חכמה
+              </h2>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setLearningMode('edit')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+                    learningMode === 'edit'
+                      ? 'bg-purple-600 text-white'
+                      : 'bg-white text-purple-600 border border-purple-300'
+                  }`}
+                >
+                  עריכת סעיפים
+                </button>
+                <button
+                  onClick={() => setLearningMode('warehouse')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+                    learningMode === 'warehouse'
+                      ? 'bg-purple-600 text-white'
+                      : 'bg-white text-purple-600 border border-purple-300'
+                  }`}
+                >
+                  ניהול מחסן
+                </button>
+              </div>
+            </div>
+
+            <div className="mb-4 p-4 bg-purple-100 rounded-lg">
+              <p className="text-sm text-purple-900 font-medium">
+                🎯 מערכת למידה חכמה שמשפרת את הצוואות שלך עם AI ולומדת מהתיקונים שלך
+              </p>
+            </div>
+
+            {/* עריכת סעיפים */}
+            {learningMode === 'edit' && (
+              <div className="space-y-4">
+                {editableSections.length > 0 ? (
+                  editableSections.map((section) => (
+                    <EditableSection
+                      key={section.id}
+                      section={section}
+                      onUpdate={handleUpdateEditableSection}
+                      onSaveToWarehouse={handleSaveToWarehouse}
+                      onSaveToLearning={handleSaveToLearning}
+                      userId={testator.fullName || 'anonymous'}
+                    />
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <p className="mb-2">אין סעיפים לעריכה כרגע</p>
+                    <p className="text-sm">הוסף הוראות מיוחדות או סעיפים מהמחסן כדי להתחיל</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ניהול מחסן */}
+            {learningMode === 'warehouse' && (
+              <WarehouseManager
+                onSectionSelect={handleSelectFromWarehouse}
+                userId={testator.fullName || 'anonymous'}
+              />
+            )}
+
+            {/* ניהול למידה */}
+            <div className="mt-6 p-4 bg-white rounded-lg border border-purple-300">
+              <AILearningManager />
             </div>
           </section>
         )}
