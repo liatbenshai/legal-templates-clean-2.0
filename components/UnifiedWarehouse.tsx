@@ -80,108 +80,108 @@ export default function UnifiedWarehouse({ onSectionSelect, userId, willType = '
       const stored = localStorage.getItem(`warehouse_${userId}`);
       const hasUpgradedWarehouse = localStorage.getItem('upgraded_warehouse_loaded');
       
-      // אם יש כבר סעיפים וזה לא המחסן המשודרג, נטען אותו
+      // אם יש כבר סעיפים וזה המחסן המשודרג, נטען אותו
       if (stored && hasUpgradedWarehouse) {
         const data = JSON.parse(stored);
         setSections(data.sections || []);
+        console.log(`Loaded ${data.sections?.length || 0} sections from localStorage`);
         return;
       }
       
-        // טעינת סעיפים מכל המחסנים המשודרגים
+      // טעינת סעיפים מכל המחסנים המשודרגים
+      console.log('Loading all upgraded warehouses...');
+      
+      // רשימת הקבצים לטעינה
+      const warehouseFiles = [
+        '/templates/clauses/sections-warehouse.json',
+        '/templates/clauses/openings-warehouse.json',
+        '/templates/clauses/closings-warehouse.json',
+        '/templates/clauses/witnesses-warehouse.json'
+      ];
+      
+      const defaultSections: WarehouseSection[] = [];
+      
+      // המרת הקטגוריות והפריטים מכל המחסנים
+      const categoryMap: Record<string, string> = {
+        // preliminary - לא נטען (סעיפים אוטומטיים בצוואה)
+        'inheritance': 'financial',
+        'protection': 'children',
+        'special': 'personal',
+        'final': 'personal',
+        'opening': 'personal',
+        'closing': 'personal',
+        'witnesses': 'personal',
+        'special-instructions': 'personal',
+        'final-clauses': 'personal'
+      };
+      
+      // טעינה מכל הקבצים
+      for (const file of warehouseFiles) {
         try {
-          console.log('Loading all upgraded warehouses...');
+          const response = await fetch(file);
+          const warehouse = await response.json();
           
-          // רשימת הקבצים לטעינה
-          const warehouseFiles = [
-            '/templates/clauses/sections-warehouse.json',
-            '/templates/clauses/openings-warehouse.json',
-            '/templates/clauses/closings-warehouse.json',
-            '/templates/clauses/witnesses-warehouse.json'
-          ];
-          
-          const defaultSections: WarehouseSection[] = [];
-          
-          // המרת הקטגוריות והפריטים מכל המחסנים
-          const categoryMap: Record<string, string> = {
-            // preliminary - לא נטען (סעיפים אוטומטיים בצוואה)
-            'inheritance': 'financial',
-            'protection': 'children',
-            'special': 'personal',
-            'final': 'personal',
-            'opening': 'personal',
-            'closing': 'personal',
-            'witnesses': 'personal',
-            'special-instructions': 'personal',
-            'final-clauses': 'personal'
-          };
-          
-          // טעינה מכל הקבצים
-          for (const file of warehouseFiles) {
-            try {
-              const response = await fetch(file);
-              const warehouse = await response.json();
-              
-              // טעינת סעיפים מקובץ sections-warehouse
-              if (warehouse.categories) {
-                warehouse.categories.forEach((category: any) => {
-                  // דילוג על קטגוריית preliminary (סעיפים אוטומטיים)
-                  if (category.id === 'preliminary') {
-                    console.log('דילוג על preliminary - סעיפים אוטומטיים בצוואה');
-                    return;
-                  }
-                  
-                  category.items.forEach((item: any) => {
-                    defaultSections.push({
-                      id: item.id,
-                      title: item.title,
-                      content: item.content,
-                      category: categoryMap[item.category] || 'personal',
-                      tags: item.tags || [category.name],
-                      usageCount: 0,
-                      averageRating: 0,
-                      isPublic: false,
-                      createdBy: 'system',
-                      createdAt: new Date().toISOString(),
-                      lastUsed: new Date().toISOString()
-                    });
-                  });
-                });
+          // טעינת סעיפים מקובץ sections-warehouse
+          if (warehouse.categories) {
+            warehouse.categories.forEach((category: any) => {
+              // דילוג על קטגוריית preliminary (סעיפים אוטומטיים)
+              if (category.id === 'preliminary') {
+                console.log('דילוג על preliminary - סעיפים אוטומטיים בצוואה');
+                return;
               }
               
-              // טעינת פריטים מקובץ openings-warehouse, closings-warehouse
-              if (warehouse.items) {
-                warehouse.items.forEach((item: any) => {
-                  defaultSections.push({
-                    id: item.id,
-                    title: item.title,
-                    content: item.content,
-                    category: categoryMap[item.category] || 'personal',
-                    tags: item.tags || [item.category],
-                    usageCount: 0,
-                    averageRating: 0,
-                    isPublic: false,
-                    createdBy: 'system',
-                    createdAt: new Date().toISOString(),
-                    lastUsed: new Date().toISOString()
-                  });
+              category.items.forEach((item: any) => {
+                defaultSections.push({
+                  id: item.id,
+                  title: item.title,
+                  content: item.content,
+                  category: categoryMap[item.category] || 'personal',
+                  tags: item.tags || [category.name],
+                  usageCount: 0,
+                  averageRating: 0,
+                  isPublic: false,
+                  createdBy: 'system',
+                  createdAt: new Date().toISOString(),
+                  lastUsed: new Date().toISOString()
                 });
-              }
-              
-              console.log(`Loaded from ${file}: ${warehouse.categories?.length || warehouse.items?.length || 0} items`);
-            } catch (fileError) {
-              console.warn(`Failed to load ${file}:`, fileError);
-            }
+              });
+            });
           }
           
-          console.log(`Total loaded: ${defaultSections.length} sections from all warehouses`);
-          setSections(defaultSections);
-          saveSections(defaultSections);
+          // טעינת פריטים מקובץ openings-warehouse, closings-warehouse
+          if (warehouse.items) {
+            warehouse.items.forEach((item: any) => {
+              defaultSections.push({
+                id: item.id,
+                title: item.title,
+                content: item.content,
+                category: categoryMap[item.category] || 'personal',
+                tags: item.tags || [item.category],
+                usageCount: 0,
+                averageRating: 0,
+                isPublic: false,
+                createdBy: 'system',
+                createdAt: new Date().toISOString(),
+                lastUsed: new Date().toISOString()
+              });
+            });
+          }
           
-          // סימון שהמחסן המשודרג נטען
-          localStorage.setItem('upgraded_warehouse_loaded', 'true');
+          console.log(`Loaded from ${file}: ${warehouse.categories?.length || warehouse.items?.length || 0} items`);
+        } catch (fileError) {
+          console.warn(`Failed to load ${file}:`, fileError);
+        }
+      }
+          
+      console.log(`Total loaded: ${defaultSections.length} sections from all warehouses`);
+      setSections(defaultSections);
+      saveSections(defaultSections);
+      
+      // סימון שהמחסן המשודרג נטען
+      localStorage.setItem('upgraded_warehouse_loaded', 'true');
         
-      } catch (fetchError) {
-        console.error('Error loading warehouse:', fetchError);
+    } catch (fetchError) {
+      console.error('Error loading warehouse:', fetchError);
         // אם יש בעיה בטעינה, ניצור סעיפי ברירת מחדל בסיסיים
         const basicSections: WarehouseSection[] = [
           {
