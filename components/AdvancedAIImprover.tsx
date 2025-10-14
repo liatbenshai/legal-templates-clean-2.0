@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Sparkles, RefreshCw, Check, X, History, Zap, FileText, Brain } from 'lucide-react';
+import { Sparkles, RefreshCw, Check, X, History, Zap, FileText, Brain, Edit3 } from 'lucide-react';
 import { aiLegalWriter } from '@/lib/ai-legal-writer';
 import { aiLearningSystem } from '@/lib/ai-learning-system';
 import AILearningManager from './AILearningManager';
@@ -206,13 +206,14 @@ export default function AdvancedAIImprover({
                     setEditedText(improvedText);
                   }
                 }}
-                className={`text-xs px-3 py-1 rounded transition ${
+                className={`flex items-center gap-2 text-sm px-4 py-2 rounded-lg transition font-medium ${
                   isEditing 
-                    ? 'bg-blue-600 text-white' 
-                    : 'bg-blue-100 text-blue-800 hover:bg-blue-200'
+                    ? 'bg-blue-600 text-white shadow-lg' 
+                    : 'bg-blue-100 text-blue-800 hover:bg-blue-200 border border-blue-300'
                 }`}
               >
-                {isEditing ? '✏️ עריכה פעילה' : '✏️ ערוך תוצאה'}
+                <Edit3 className="w-4 h-4" />
+                {isEditing ? 'עריכה פעילה - לחץ כדי לסיים' : 'ערוך תוצאה'}
               </button>
             </div>
           </div>
@@ -232,16 +233,28 @@ export default function AdvancedAIImprover({
                   style={{ fontFamily: 'David', fontSize: '13pt' }}
                   placeholder="ערוך את הטקסט כאן..."
                 />
-                <div className="mt-2 text-xs text-blue-700 bg-blue-50 px-3 py-2 rounded">
-                  💡 טיפ: כל שינוי שתעשי יילמד על ידי ה-AI לשיפור עתידי
+                <div className="mt-2 text-sm text-blue-700 bg-blue-50 px-4 py-3 rounded-lg border border-blue-200">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-lg">💡</span>
+                    <span className="font-medium">עריכה מלאה זמינה!</span>
+                  </div>
+                  <p className="text-xs">
+                    ערכי את הטקסט כמו שאת רוצה - כולל משתנים, הוספת/הסרת סעיפים, שינוי ניסוחים.
+                    כל שינוי שתעשי יילמד על ידי ה-AI לשיפור עתידי.
+                  </p>
                 </div>
               </div>
             ) : (
-              <div
-                className="p-4 bg-white border-2 border-green-500 rounded-lg min-h-[200px] whitespace-pre-wrap text-right"
-                style={{ fontFamily: 'David', fontSize: '13pt', direction: 'rtl' }}
-              >
-                {improvedText}
+              <div className="space-y-3">
+                <div
+                  className="p-4 bg-white border-2 border-green-500 rounded-lg min-h-[200px] whitespace-pre-wrap text-right"
+                  style={{ fontFamily: 'David', fontSize: '13pt', direction: 'rtl' }}
+                >
+                  {improvedText}
+                </div>
+                <div className="text-xs text-green-600 bg-green-50 px-3 py-2 rounded border border-green-200">
+                  ✏️ רוצה לערוך? לחצי על "ערוך תוצאה" למעלה
+                </div>
               </div>
             )}
           </div>
@@ -282,8 +295,10 @@ export default function AdvancedAIImprover({
             >
               <Check className="w-5 h-5" />
               {isEditing && editedText !== improvedText 
-                ? '✅ אשר והשתמש בגרסה שלי (AI ילמד מזה!)' 
-                : '✅ אשר שיפורים'}
+                ? '✅ אשר את הגרסה המעודכנת שלי' 
+                : isEditing 
+                  ? '✅ אשר את הגרסה המעודכנת'
+                  : '✅ אשר שיפורים'}
             </button>
             <button
               onClick={handleRejectImprovement}
