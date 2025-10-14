@@ -38,6 +38,7 @@ interface WarehouseSection {
 interface UnifiedWarehouseProps {
   onSectionSelect: (section: WarehouseSection) => void;
   userId: string;
+  willType?: 'individual' | 'mutual'; // סוג הצוואה - לפילטור סעיפים
 }
 
 const CATEGORIES = [
@@ -52,7 +53,7 @@ const CATEGORIES = [
   { id: 'digital', name: 'דיגיטלי', icon: '💻', color: 'cyan' }
 ];
 
-export default function UnifiedWarehouse({ onSectionSelect, userId }: UnifiedWarehouseProps) {
+export default function UnifiedWarehouse({ onSectionSelect, userId, willType = 'individual' }: UnifiedWarehouseProps) {
   const [sections, setSections] = useState<WarehouseSection[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -245,7 +246,13 @@ export default function UnifiedWarehouse({ onSectionSelect, userId }: UnifiedWar
     const matchesSearch = section.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          section.content.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || section.category === selectedCategory;
-    return matchesSearch && matchesCategory;
+    
+    // פילטור לפי סוג צוואה
+    const matchesWillType = willType === 'mutual' 
+      ? true // בצוואה הדדית - הצג הכל
+      : !section.tags.some(tag => tag.includes('הדדית') || tag.includes('הדדי')); // בצוואה יחידה - הסתר סעיפים הדדיים
+    
+    return matchesSearch && matchesCategory && matchesWillType;
   });
 
   const sortedSections = [...filteredSections].sort((a, b) => {
@@ -379,9 +386,17 @@ export default function UnifiedWarehouse({ onSectionSelect, userId }: UnifiedWar
           <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
             <BookOpen className="w-5 h-5 text-blue-600" />
             המחסן האישי שלי
+            {willType === 'mutual' && (
+              <span className="text-xs bg-pink-100 text-pink-700 px-2 py-1 rounded-full">
+                💕 צוואה הדדית
+              </span>
+            )}
           </h3>
           <div className="text-sm text-gray-600">
             {sections.length} סעיפים • {filteredSections.length} תוצאות
+            {willType === 'individual' && (
+              <span className="text-xs text-gray-500 mr-2">(ללא סעיפים הדדיים)</span>
+            )}
           </div>
         </div>
 

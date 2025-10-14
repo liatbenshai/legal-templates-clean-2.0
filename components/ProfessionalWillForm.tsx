@@ -1223,6 +1223,7 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
           <UnifiedWarehouse
             onSectionSelect={handleSelectFromWarehouse}
             userId={testator.fullName || 'anonymous'}
+            willType={willType}
           />
         </section>
 
@@ -1320,6 +1321,7 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
               <UnifiedWarehouse
                 onSectionSelect={handleSelectFromWarehouse}
                 userId={testator.fullName || 'anonymous'}
+                willType={willType}
               />
             )}
 
