@@ -114,13 +114,40 @@ export default function LawyerFeeAgreement() {
     }
   }, [currentUser]);
 
+  // פונקציה שמחליפה משתנים בטקסט הסעיפים
+  const replaceVariablesInText = (text: string) => {
+    let updatedText = text;
+    
+    // החלפת סכומים
+    if (agreementData.fees.totalAmount) {
+      updatedText = updatedText.replace(/_______ ש"ח/g, `${agreementData.fees.totalAmount} ש"ח`);
+      updatedText = updatedText.replace(/________ ש"ח/g, `${agreementData.fees.totalAmount} ש"ח`);
+    }
+    
+    // החלפת מקדמה
+    if (agreementData.fees.advancePayment) {
+      updatedText = updatedText.replace(/מקדמה: _____ ש"ח/g, `מקדמה: ${agreementData.fees.advancePayment} ש"ח`);
+    }
+    
+    // החלפת אחוז הצלחה
+    if (agreementData.fees.successPercentage) {
+      updatedText = updatedText.replace(/___%/g, `${agreementData.fees.successPercentage}%`);
+    }
+    
+    // הסרת שורות עם שדות לא רלוונטיים
+    updatedText = updatedText.replace(/1\.2\. בית המשפט\/בית הדין:.*?\n/g, '');
+    updatedText = updatedText.replace(/1\.4\. רמת מורכבות:.*?\n/g, '');
+    
+    return updatedText;
+  };
+
   // טעינת סעיפים אוטומטית בהתאם לסוג השירות
   useEffect(() => {
     if (selectedServiceType && feeAgreementTemplates.serviceCategories[selectedServiceType as keyof typeof feeAgreementTemplates.serviceCategories]) {
       const service = feeAgreementTemplates.serviceCategories[selectedServiceType as keyof typeof feeAgreementTemplates.serviceCategories];
       const autoSections = service.clauses.map(clause => ({
         title: clause.title,
-        content: clause.text
+        content: replaceVariablesInText(clause.text)
       }));
       setCustomSections(autoSections);
       
@@ -268,6 +295,20 @@ export default function LawyerFeeAgreement() {
       }));
     }
   }, [selectedServiceType]);
+
+  // עדכון הסעיפים כאשר הסכומים משתנים
+  useEffect(() => {
+    if (selectedServiceType && customSections.length > 0) {
+      const service = feeAgreementTemplates.serviceCategories[selectedServiceType as keyof typeof feeAgreementTemplates.serviceCategories];
+      if (service) {
+        const updatedSections = service.clauses.map(clause => ({
+          title: clause.title,
+          content: replaceVariablesInText(clause.text)
+        }));
+        setCustomSections(updatedSections);
+      }
+    }
+  }, [agreementData.fees.totalAmount, agreementData.fees.advancePayment, agreementData.fees.successPercentage]);
 
   const updateLawyer = (field: keyof typeof agreementData.lawyer, value: string) => {
     setAgreementData(prev => ({
