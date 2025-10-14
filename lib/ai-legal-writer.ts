@@ -472,23 +472,36 @@ export class AILegalWriter {
       }
     }
 
-    // תיקונים בסיסיים לעברית משפטית (רק אם אין למידה קודמת)
-    if (relevantCorrections.length === 0) {
+    // תיקונים בסיסיים לעברית משפטית
+    improved = improved
+      // תיקונים בסיסיים
+      .replace(/ביחס ל/g, 'לעניין')
+      .replace(/בהתייחס ל/g, 'בדבר')
+      .replace(/באופן/g, 'באורח')
+      .replace(/לאור העובדה ש/g, 'הואיל ו')
+      .replace(/לנוכח/g, 'נוכח')
+      .replace(/בהתאם עם/g, 'בהתאם ל')
+      // הוספת ביטויים משפטיים
+      .replace(/לכן/g, 'לפיכך')
+      .replace(/בגלל זה/g, 'מכאן ש')
+      .replace(/אז/g, 'על כן')
+      // שיפור מבנה
+      .replace(/\. /g, '.\n\n')  // רווח בין משפטים
+      .replace(/:/g, ':\n');    // רווח אחרי נקודותיים
+
+    // הוספת שיפורים לפי הקשר
+    if (context === 'will-single') {
       improved = improved
-        // תיקונים בסיסיים
-        .replace(/ביחס ל/g, 'לעניין')
-        .replace(/בהתייחס ל/g, 'בדבר')
-        .replace(/באופן/g, 'באורח')
-        .replace(/לאור העובדה ש/g, 'הואיל ו')
-        .replace(/לנוכח/g, 'נוכח')
-        .replace(/בהתאם עם/g, 'בהתאם ל')
-        // הוספת ביטויים משפטיים
-        .replace(/לכן/g, 'לפיכך')
-        .replace(/בגלל זה/g, 'מכאן ש')
-        .replace(/אז/g, 'על כן')
-        // שיפור מבנה
-        .replace(/\. /g, '.\n\n')  // רווח בין משפטים
-        .replace(/:/g, ':\n');    // רווח אחרי נקודותיים
+        .replace(/אני מוריש\/ה/g, 'הנני מוריש/ה')
+        .replace(/אני מצווה\/ה/g, 'הנני מצווה/ה')
+        .replace(/אני מבטל\/ת/g, 'הנני מבטל/ת');
+    }
+    
+    if (context === 'will-couple') {
+      improved = improved
+        .replace(/אנו מורישים/g, 'הננו מורישים')
+        .replace(/אנו מצווים/g, 'הננו מצווים')
+        .replace(/אנו מבטלים/g, 'הננו מבטלים');
     }
 
     // אם הסגנון הוא detailed והוא רוצה הרחבה
@@ -499,19 +512,27 @@ export class AILegalWriter {
       }, 0) / relevantCorrections.length;
     }
     
-    if (style === 'detailed' && text.length < 200 && (relevantCorrections.length === 0 || avgLengthRatio > 1.2)) {
+    // הוספת הרחבות לפי הקשר וסגנון
+    if (style === 'detailed' && (relevantCorrections.length === 0 || avgLengthRatio > 1.2)) {
       const contextEnhancements = {
-        'fee-agreement': 'בהתאם לכללי האתיקה המקצועית.',
-        'will-single': 'למען הסר ספק.',
-        'will-couple': 'בהסכמה הדדית.',
-        'advance-directives': 'בהיותי בהכרה מלאה.',
-        'demand-letter': 'בהתאם לחוק.',
-        'court-pleadings': 'לאור האמור לעיל.'
+        'fee-agreement': 'בהתאם לכללי האתיקה המקצועית ולחוק עורכי הדין.',
+        'will-single': 'למען הסר ספק ולצורך הבהרת רצוני המפורש.',
+        'will-couple': 'בהסכמה הדדית מלאה ובהתאם לחוק הירושה.',
+        'advance-directives': 'בהיותי בהכרה מלאה ובמצב בריאות תקין.',
+        'demand-letter': 'בהתאם לחוק ובהתאם לזכויותיי החוקיות.',
+        'court-pleadings': 'לאור האמור לעיל ולפי הדין החל על העניין.'
       };
       
       const enhancement = contextEnhancements[context as keyof typeof contextEnhancements];
-      if (enhancement) {
+      if (enhancement && !improved.includes(enhancement)) {
         improved += ` ${enhancement}`;
+      }
+    }
+    
+    // הוספת ביטויים משפטיים נוספים
+    if (context === 'will-single' && style !== 'simple') {
+      if (!improved.includes('למען הסר ספק') && text.length < 150) {
+        improved = 'למען הסר ספק, ' + improved;
       }
     }
 
