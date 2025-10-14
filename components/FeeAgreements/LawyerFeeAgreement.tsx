@@ -113,6 +113,13 @@ export default function LawyerFeeAgreement() {
   const [showLearningSystem, setShowLearningSystem] = useState(false);
   const [editableSections, setEditableSections] = useState<EditableSectionType[]>([]);
   const [learningMode, setLearningMode] = useState<'edit' | 'warehouse'>('edit');
+  
+  // חלון מילוי משתנים
+  const [variablesModal, setVariablesModal] = useState<{
+    section: { id: string; title: string; content: string; variables: string[] };
+    values: Record<string, string>;
+    genders: Record<string, 'male' | 'female'>;
+  } | null>(null);
 
   // עדכון פרטי עורך הדין אם המשתמש משתנה
   useEffect(() => {
@@ -424,12 +431,69 @@ export default function LawyerFeeAgreement() {
     console.log('Saved to learning:', section);
   };
 
-  const handleSelectFromWarehouse = (warehouseSection: any) => {
-    const newSection = {
-      title: warehouseSection.title,
-      content: warehouseSection.content
+  // פונקציות עזר למחסן
+  const extractVariablesFromContent = (content: string): string[] => {
+    const matches = content.match(/\{\{([^}]+)\}\}/g);
+    return matches ? [...new Set(matches.map(match => match.replace(/\{\{|\}\}/g, '')))] : [];
+  };
+
+  const isGenderRelevantVariable = (variable: string): boolean => {
+    const genderRelevantVariables = [
+      'lawyer_name', 'client_name', 'attorney_name', 'witness_name',
+      'court_name', 'judge_name', 'expert_name'
+    ];
+    return genderRelevantVariables.includes(variable);
+  };
+
+  const getVariableLabel = (variable: string): string => {
+    const labels: Record<string, string> = {
+      'lawyer_name': 'שם עורך הדין',
+      'client_name': 'שם הלקוח/ה',
+      'attorney_name': 'שם מיופה הכוח',
+      'witness_name': 'שם העד/ה',
+      'court_name': 'שם בית המשפט',
+      'judge_name': 'שם השופט/ת',
+      'expert_name': 'שם המומחה/ית',
+      'case_number': 'מספר התיק',
+      'amount': 'סכום',
+      'percentage': 'אחוז',
+      'date': 'תאריך',
+      'address': 'כתובת',
+      'phone': 'טלפון',
+      'email': 'אימייל'
     };
-    setCustomSections(prev => [...prev, newSection]);
+    return labels[variable] || variable;
+  };
+
+  const handleSelectFromWarehouse = (warehouseSection: any) => {
+    // החלף מגדור בטקסט לפי מגדר הלקוח (default to male)
+    const { replaceTextWithGender } = require('@/lib/hebrew-gender');
+    const genderedContent = replaceTextWithGender(warehouseSection.content, 'male');
+    
+    // חלץ משתנים מהתוכן
+    const variables = extractVariablesFromContent(genderedContent);
+    
+    // אם יש משתנים, פתח חלון למילוי
+    if (variables.length > 0) {
+      setVariablesModal({
+        section: {
+          id: warehouseSection.id || 'custom',
+          title: warehouseSection.title,
+          content: genderedContent,
+          variables: variables
+        },
+        values: variables.reduce((acc, v) => ({ ...acc, [v]: '' }), {}),
+        genders: variables.reduce((acc, v) => ({ ...acc, [v]: 'male' as 'male' | 'female' }), {})
+      });
+    } else {
+      // אם אין משתנים, הוסף ישירות
+      const newSection = {
+        title: warehouseSection.title,
+        content: genderedContent
+      };
+      setCustomSections(prev => [...prev, newSection]);
+      alert('סעיף נוסף מהמחסן!');
+    }
   };
 
   const generateFeeAgreement = (): string => {
@@ -981,6 +1045,134 @@ ________________________           ________________________
                     onAddSection={handleAddSection} 
                   />
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* חלון מילוי משתנים */}
+        {variablesModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+              <h3 className="text-xl font-bold text-gray-900 mb-4">
+                השלמת פרטים לסעיף: {variablesModal.section.title}
+              </h3>
+              
+              <div className="mb-4 p-3 bg-blue-50 rounded-lg text-sm text-blue-800">
+                <p className="font-semibold mb-1">💡 טיפ:</p>
+                <p>למשתנים של אנשים (שמות) יש אפשרות לבחור מגדר. זה יעזור להציג את הטקסט הנכון (זכר/נקבה) במסמך.</p>
+              </div>
+              
+              <div className="space-y-4 mb-6">
+                {variablesModal.section.variables.map((variable) => (
+                  <div key={variable} className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">
+                      {getVariableLabel(variable)}:
+                    </label>
+                    <input
+                      type="text"
+                      value={variablesModal.values[variable] || ''}
+                      onChange={(e) => {
+                        setVariablesModal(prev => ({
+                          ...prev!,
+                          values: {
+                            ...prev!.values,
+                            [variable]: e.target.value
+                          }
+                        }));
+                      }}
+                      placeholder={`הזן ${getVariableLabel(variable)}`}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500"
+                      dir="rtl"
+                    />
+                    
+                    {/* בחירת מגדר למשתנים רלוונטיים */}
+                    {isGenderRelevantVariable(variable) && (
+                      <div className="flex gap-4 items-center">
+                        <label className="text-sm text-gray-600">מגדר:</label>
+                        <div className="flex gap-2">
+                          <label className="flex items-center gap-2">
+                            <input
+                              type="radio"
+                              name={`gender_${variable}`}
+                              value="male"
+                              checked={variablesModal.genders[variable] === 'male'}
+                              onChange={(e) => {
+                                setVariablesModal(prev => ({
+                                  ...prev!,
+                                  genders: {
+                                    ...prev!.genders,
+                                    [variable]: e.target.value as 'male' | 'female'
+                                  }
+                                }));
+                              }}
+                              className="text-orange-600 focus:ring-orange-500"
+                            />
+                            <span className="text-sm">זכר</span>
+                          </label>
+                          <label className="flex items-center gap-2">
+                            <input
+                              type="radio"
+                              name={`gender_${variable}`}
+                              value="female"
+                              checked={variablesModal.genders[variable] === 'female'}
+                              onChange={(e) => {
+                                setVariablesModal(prev => ({
+                                  ...prev!,
+                                  genders: {
+                                    ...prev!.genders,
+                                    [variable]: e.target.value as 'male' | 'female'
+                                  }
+                                }));
+                              }}
+                              className="text-orange-600 focus:ring-orange-500"
+                            />
+                            <span className="text-sm">נקבה</span>
+                          </label>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setVariablesModal(null)}
+                  className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
+                >
+                  ביטול
+                </button>
+                <button
+                  onClick={() => {
+                    // החלפת משתנים בתוכן עם התחשבות במגדר
+                    let finalContent = variablesModal.section.content;
+                    Object.keys(variablesModal.values).forEach(key => {
+                      const value = variablesModal.values[key];
+                      let replacedValue = value;
+                      
+                      // אם זה משתנה שדורש מגדר, החלף את הטקסט בהתאם
+                      if (isGenderRelevantVariable(key) && variablesModal.genders[key]) {
+                        const { replaceTextWithGender } = require('@/lib/hebrew-gender');
+                        replacedValue = replaceTextWithGender(value, variablesModal.genders[key]);
+                      }
+                      
+                      finalContent = finalContent.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'g'), replacedValue);
+                    });
+
+                    // הוספה לסעיפים מותאמים
+                    setCustomSections(prev => [...prev, {
+                      title: variablesModal.section.title,
+                      content: finalContent
+                    }]);
+
+                    setVariablesModal(null);
+                  }}
+                  disabled={!Object.values(variablesModal.values).every(v => v.trim() !== '')}
+                  className="flex-1 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition disabled:bg-gray-300 disabled:cursor-not-allowed"
+                >
+                  הוסף סעיף
+                </button>
               </div>
             </div>
           </div>
