@@ -14,7 +14,8 @@ import {
   BookOpen,
   TrendingUp,
   Save,
-  X
+  X,
+  RefreshCw
 } from 'lucide-react';
 
 interface WarehouseSection {
@@ -69,101 +70,112 @@ export default function UnifiedWarehouse({ onSectionSelect, userId }: UnifiedWar
 
   const loadSections = async () => {
     try {
+      // בדיקה אם יש כבר סעיפים במחסן המשודרג
       const stored = localStorage.getItem(`warehouse_${userId}`);
-      if (stored) {
+      const hasUpgradedWarehouse = localStorage.getItem('upgraded_warehouse_loaded');
+      
+      // אם יש כבר סעיפים וזה לא המחסן המשודרג, נטען אותו
+      if (stored && hasUpgradedWarehouse) {
         const data = JSON.parse(stored);
         setSections(data.sections || []);
-      } else {
-        // טעינת סעיפים מהמחסן המשודרג
-        try {
-          const response = await fetch('/templates/clauses/sections-warehouse.json');
-          const warehouse = await response.json();
-          
-          const defaultSections: WarehouseSection[] = [];
-          
-          // המרת הקטגוריות והפריטים מהמחסן המשודרג
-          const categoryMap: Record<string, string> = {
-            'preliminary': 'personal',
-            'inheritance': 'financial',
-            'executor': 'personal',
-            'property': 'property',
-            'business': 'business',
-            'family': 'couple',
-            'guardian': 'children',
-            'health': 'health',
-            'digital': 'digital',
-            'funeral': 'personal'
-          };
-          
-          if (warehouse.categories) {
-            warehouse.categories.forEach((category: any) => {
-              category.items.forEach((item: any) => {
-                defaultSections.push({
-                  id: item.id,
-                  title: item.title,
-                  content: item.content,
-                  category: categoryMap[item.category] || 'personal',
-                  tags: item.tags || [category.name],
-                  usageCount: 0,
-                  averageRating: 0,
-                  isPublic: false,
-                  createdBy: 'system',
-                  createdAt: new Date().toISOString(),
-                  lastUsed: new Date().toISOString()
-                });
+        return;
+      }
+      
+      // טעינת סעיפים מהמחסן המשודרג
+      try {
+        console.log('Loading upgraded warehouse...');
+        const response = await fetch('/templates/clauses/sections-warehouse.json');
+        const warehouse = await response.json();
+        
+        const defaultSections: WarehouseSection[] = [];
+        
+        // המרת הקטגוריות והפריטים מהמחסן המשודרג
+        const categoryMap: Record<string, string> = {
+          'preliminary': 'personal',
+          'inheritance': 'financial',
+          'executor': 'personal',
+          'property': 'property',
+          'business': 'business',
+          'family': 'couple',
+          'guardian': 'children',
+          'health': 'health',
+          'digital': 'digital',
+          'funeral': 'personal'
+        };
+        
+        if (warehouse.categories) {
+          warehouse.categories.forEach((category: any) => {
+            category.items.forEach((item: any) => {
+              defaultSections.push({
+                id: item.id,
+                title: item.title,
+                content: item.content,
+                category: categoryMap[item.category] || 'personal',
+                tags: item.tags || [category.name],
+                usageCount: 0,
+                averageRating: 0,
+                isPublic: false,
+                createdBy: 'system',
+                createdAt: new Date().toISOString(),
+                lastUsed: new Date().toISOString()
               });
             });
-          }
-          
-          setSections(defaultSections);
-          saveSections(defaultSections);
-        } catch (fetchError) {
-          console.error('Error loading warehouse:', fetchError);
-          // אם יש בעיה בטעינה, ניצור סעיפי ברירת מחדל בסיסיים
-          const basicSections: WarehouseSection[] = [
-            {
-              id: 'default-1',
-              title: 'הוראת כספי פנסיה',
-              content: 'כל כספי הפנסיה שלי יועברו ל{{שם היורש}} בהתאם לחוק.',
-              category: 'financial',
-              tags: ['פנסיה', 'כספים'],
-              usageCount: 0,
-              averageRating: 0,
-              isPublic: false,
-              createdBy: userId,
-              createdAt: new Date().toISOString(),
-              lastUsed: new Date().toISOString()
-            },
-            {
-              id: 'default-2',
-              title: 'הוראת טיפול רפואי',
-              content: 'במצב של חוסר הכרה, אני מורה כי הטיפול הרפואי יעשה בהתאם לרצוני המפורש ולפי חוק החולה הנוטה למות.',
-              category: 'health',
-              tags: ['רפואה', 'בריאות'],
-              usageCount: 0,
-              averageRating: 0,
-              isPublic: false,
-              createdBy: userId,
-              createdAt: new Date().toISOString(),
-              lastUsed: new Date().toISOString()
-            },
-            {
-              id: 'default-3',
-              title: 'הוראת נכסים עסקיים',
-              content: 'כל הנכסים העסקיים שלי יועברו ל{{שם היורש}} עם הוראות להמשך הפעלת העסק.',
-              category: 'business',
-              tags: ['עסקים', 'נכסים'],
-              usageCount: 0,
-              averageRating: 0,
-              isPublic: false,
-              createdBy: userId,
-              createdAt: new Date().toISOString(),
-              lastUsed: new Date().toISOString()
-            }
-          ];
-          setSections(basicSections);
-          saveSections(basicSections);
+          });
         }
+        
+        console.log(`Loaded ${defaultSections.length} sections from upgraded warehouse`);
+        setSections(defaultSections);
+        saveSections(defaultSections);
+        
+        // סימון שהמחסן המשודרג נטען
+        localStorage.setItem('upgraded_warehouse_loaded', 'true');
+        
+      } catch (fetchError) {
+        console.error('Error loading warehouse:', fetchError);
+        // אם יש בעיה בטעינה, ניצור סעיפי ברירת מחדל בסיסיים
+        const basicSections: WarehouseSection[] = [
+          {
+            id: 'default-1',
+            title: 'הוראת כספי פנסיה',
+            content: 'כל כספי הפנסיה שלי יועברו ל{{שם היורש}} בהתאם לחוק.',
+            category: 'financial',
+            tags: ['פנסיה', 'כספים'],
+            usageCount: 0,
+            averageRating: 0,
+            isPublic: false,
+            createdBy: userId,
+            createdAt: new Date().toISOString(),
+            lastUsed: new Date().toISOString()
+          },
+          {
+            id: 'default-2',
+            title: 'הוראת טיפול רפואי',
+            content: 'במצב של חוסר הכרה, אני מורה כי הטיפול הרפואי יעשה בהתאם לרצוני המפורש ולפי חוק החולה הנוטה למות.',
+            category: 'health',
+            tags: ['רפואה', 'בריאות'],
+            usageCount: 0,
+            averageRating: 0,
+            isPublic: false,
+            createdBy: userId,
+            createdAt: new Date().toISOString(),
+            lastUsed: new Date().toISOString()
+          },
+          {
+            id: 'default-3',
+            title: 'הוראת נכסים עסקיים',
+            content: 'כל הנכסים העסקיים שלי יועברו ל{{שם היורש}} עם הוראות להמשך הפעלת העסק.',
+            category: 'business',
+            tags: ['עסקים', 'נכסים'],
+            usageCount: 0,
+            averageRating: 0,
+            isPublic: false,
+            createdBy: userId,
+            createdAt: new Date().toISOString(),
+            lastUsed: new Date().toISOString()
+          }
+        ];
+        setSections(basicSections);
+        saveSections(basicSections);
       }
     } catch (error) {
       console.error('Error loading sections:', error);
@@ -310,6 +322,18 @@ export default function UnifiedWarehouse({ onSectionSelect, userId }: UnifiedWar
           >
             <Plus className="w-4 h-4" />
             סעיף חדש
+          </button>
+
+          <button
+            onClick={() => {
+              localStorage.removeItem('upgraded_warehouse_loaded');
+              localStorage.removeItem(`warehouse_${userId}`);
+              loadSections();
+            }}
+            className="flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+          >
+            <RefreshCw className="w-4 h-4" />
+            טען מחדש מחסן
           </button>
         </div>
 
