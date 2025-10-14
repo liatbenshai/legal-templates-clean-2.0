@@ -146,7 +146,13 @@ export default function HomePage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {featuredCategories.map((category) => (
-              <CategoryCard key={category.id} category={category} />
+              <CategoryCard 
+                key={category.id} 
+                icon={category.icon}
+                title={category.name}
+                description={category.description || ''}
+                href={`/templates?category=${category.id}`}
+              />
             ))}
           </div>
 

@@ -700,7 +700,7 @@ export const sampleTemplates: Template[] = [
 
 2. {{witness2_name}}, ת"ז {{witness2_id}}, מרחוב: {{witness2_address}}
 
-אנו מעידים בזאת שהמצווה: {{testator_name}}, נושא ת"ז מס' {{testator_id}}, חתם בפנינו מרצונו הטוב והחופשי והצהיר כי זו צוואתו.
+אנו מעידים/ות בזאת שהמצווה/ה: {{testator_name}}, נושא/ת ת"ז מס' {{testator_id}}, חתם/ה בפנינו מרצונו/ה הטוב והחופשי והצהיר/ה כי זו צוואתו/ה.
 
 ולראיה באנו על החתום היום: {{signing_day}} בחודש {{signing_month}}, {{signing_year}}
 

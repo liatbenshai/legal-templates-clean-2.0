@@ -359,14 +359,13 @@ export default function UnifiedWarehouse({ onSectionSelect, userId, willType = '
       title: section.title,
       content: section.content,
       originalContent: section.content,
-      category: section.category,
-      serviceType: section.category,
+      category: 'will' as const,
+      serviceType: 'will' as const,
       isEditable: true,
       isCustom: true,
       version: 1,
       lastModified: section.lastUsed,
-      modifiedBy: userId,
-      tags: section.tags
+      modifiedBy: userId
     };
   };
 

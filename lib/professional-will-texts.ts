@@ -1512,6 +1512,14 @@ export function generateProfessionalWillContent(
         sectionContent = sectionContent.replace(/{{gender:([^|]*)\|([^}]*)}}/g, '$1');
         sectionContent = sectionContent.replace(/{{gender:([^}]*)}}/g, '');
       }
+
+      // החלת gender inflection על הטקסט הסופי
+      try {
+        const { replaceTextWithGender } = require('@/lib/hebrew-gender');
+        sectionContent = replaceTextWithGender(sectionContent, data.gender || 'male');
+      } catch (error) {
+        console.warn('Could not apply gender inflection:', error);
+      }
       
       // הוספה לתוכן
       if (section.title.includes('פתיחת') || section.title.includes('הוראות לחלוקת') || section.title.includes('היקף')) {

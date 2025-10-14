@@ -2,9 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { FileText, DollarSign, Calendar, User, Scale, BookOpen, X, Download, Brain } from 'lucide-react';
-import SimpleExportButtons from '../SimpleExportButtons';
-import SimpleAIImprover from '../SimpleAIImprover';
-import UniversalSectionsWarehouse from '../UniversalSectionsWarehouse';
 import EditableSection from '../LearningSystem/EditableSection';
 import WarehouseManager from '../LearningSystem/WarehouseManager';
 import { exportFeeAgreementToWord } from './FeeAgreementExporter';
@@ -12,6 +9,7 @@ import { AuthService } from '@/lib/auth';
 import { EditableSection as EditableSectionType } from '@/lib/learning-system/types';
 import { learningEngine } from '@/lib/learning-system/learning-engine';
 import feeAgreementTemplates from '@/lib/fee-agreement-templates.json';
+import { replaceTextWithGender } from '@/lib/hebrew-gender';
 
 interface FeeAgreementData {
   // פרטי עורך הדין
@@ -104,7 +102,6 @@ export default function LawyerFeeAgreement() {
   });
 
   const [agreementDate, setAgreementDate] = useState(new Date().toISOString().split('T')[0]);
-  const [showAI, setShowAI] = useState(false);
   const [showSectionsWarehouse, setShowSectionsWarehouse] = useState(false);
   const [customSections, setCustomSections] = useState<Array<{title: string, content: string}>>([]);
   const [selectedServiceType, setSelectedServiceType] = useState<string>('');
@@ -864,22 +861,8 @@ ________________________           ________________________
                 <BookOpen className="w-4 h-4" />
                 מחסן סעיפים
               </button>
-              <button
-                onClick={() => setShowAI(!showAI)}
-                className="flex items-center gap-2 px-3 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition text-sm"
-              >
-                {showAI ? 'הסתר AI' : 'הצג AI'}
-              </button>
             </div>
           </div>
-          
-          {showAI && (
-            <SimpleAIImprover
-              initialText={agreementData.terms.specialConditions || 'כתוב כאן תנאים בסיסיים והAI ירחיב לסעיפי הסכם מקצועיים'}
-              onAccept={(improvedText) => updateTerms('specialConditions', improvedText)}
-              placeholder="לדוגמה: הלקוח משלם רק במקרה הצלחה, עורך הדין מחויב בסודיות..."
-            />
-          )}
 
           {/* מערכת למידה */}
           {showLearningSystem && (
@@ -1004,19 +987,6 @@ ________________________           ________________________
             </button>
             
             <div className="space-y-3">
-              <button
-                onClick={() => exportFeeAgreementToWord(generateFeeAgreement(), `הסכם-שכר-טרחה-${agreementData.client.name || 'לקוח'}.docx`)}
-                className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium"
-              >
-                <FileText className="w-5 h-5" />
-                ייצא ל-Word (RTL תקין)
-              </button>
-              
-              <SimpleExportButtons
-                documentContent={generateFeeAgreement()}
-                documentTitle={`הסכם שכר טרחה - ${agreementData.client.name || 'לקוח'}`}
-                className="w-full"
-              />
             </div>
           </div>
           
@@ -1040,10 +1010,7 @@ ________________________           ________________________
                   </button>
                 </div>
                 <div className="p-4 overflow-y-auto max-h-[calc(90vh-80px)]">
-                  <UniversalSectionsWarehouse 
-                    documentType="fee-agreement" 
-                    onAddSection={handleAddSection} 
-                  />
+                  <p className="text-gray-600">מחסן סעיפים בפיתוח...</p>
                 </div>
               </div>
             </div>

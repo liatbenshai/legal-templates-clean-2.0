@@ -1,8 +1,7 @@
 'use client';
 
-import AdvanceDirectivesDocument from '@/components/AdvanceDirectivesDocument';
+import AdvanceDirectivesForm from '@/components/AdvanceDirectivesForm';
 
 export default function AdvanceDirectivesPage() {
-  return <AdvanceDirectivesDocument />;
-}
-"// Force rebuild" 
+  return <AdvanceDirectivesForm />;
+} 

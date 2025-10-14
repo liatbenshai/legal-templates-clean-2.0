@@ -1,44 +1,36 @@
+'use client';
+
 import Link from 'next/link';
-import { TemplateCategory } from '@/lib/types';
-import { ArrowLeft } from 'lucide-react';
 
 interface CategoryCardProps {
-  category: TemplateCategory;
+  icon: string;
+  title: string;
+  description: string;
+  href: string;
+  color?: string;
 }
 
-export default function CategoryCard({ category }: CategoryCardProps) {
+export default function CategoryCard({ 
+  icon, 
+  title, 
+  description, 
+  href,
+  color = 'blue'
+}: CategoryCardProps) {
+  const colorClasses = {
+    blue: 'from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700',
+    green: 'from-green-500 to-green-600 hover:from-green-600 hover:to-green-700',
+    purple: 'from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700',
+    orange: 'from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700',
+    red: 'from-red-500 to-red-600 hover:from-red-600 hover:to-red-700',
+  };
+
   return (
-    <Link href={`/templates?category=${category.id}`}>
-      <div className="bg-white rounded-xl shadow-md hover:shadow-2xl transition-all duration-300 p-6 h-full border-2 border-gray-100 hover:border-primary cursor-pointer group relative overflow-hidden">
-        {/* אפקט רקע */}
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-        
-        <div className="relative">
-          {/* אייקון */}
-          <div className="text-5xl mb-4 transform group-hover:scale-110 transition-transform duration-300">
-            {category.icon}
-          </div>
-
-          {/* שם הקטגוריה */}
-          <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-primary transition-colors">
-            {category.name}
-          </h3>
-
-          {/* תיאור */}
-          {category.description && (
-            <p className="text-gray-600 text-sm mb-4 line-clamp-2 leading-relaxed">
-              {category.description}
-            </p>
-          )}
-
-          {/* מספר תבניות */}
-          <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-            <span className="text-sm text-gray-500">
-              {category.count} תבניות
-            </span>
-            <ArrowLeft className="w-5 h-5 text-primary transform group-hover:-translate-x-2 transition-transform" />
-          </div>
-        </div>
+    <Link href={href}>
+      <div className={`bg-gradient-to-r ${colorClasses[color as keyof typeof colorClasses] || colorClasses.blue} text-white rounded-xl p-6 shadow-lg hover:shadow-xl transition transform hover:-translate-y-1 cursor-pointer`}>
+        <div className="text-4xl mb-4">{icon}</div>
+        <h3 className="text-xl font-bold mb-2">{title}</h3>
+        <p className="text-sm text-white/90">{description}</p>
       </div>
     </Link>
   );

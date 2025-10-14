@@ -1,121 +1,52 @@
-import Link from 'next/link';
-import { FileText, Mail, Phone, MapPin } from 'lucide-react';
+'use client';
 
 export default function Footer() {
-  const currentYear = new Date().getFullYear();
-
   return (
-    <footer className="bg-gray-900 text-gray-300 mt-auto">
-      <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          {/* לוגו ותיאור */}
-          <div className="col-span-1">
-            <div className="flex items-center gap-2 text-white mb-4">
-              <FileText className="w-6 h-6" />
-              <span className="text-lg font-bold">תבניות משפטיות</span>
-            </div>
-            <p className="text-sm leading-relaxed">
-              המערכת המקיפה ביותר לתבניות משפטיות בעברית. 
-              כל מה שעורך דין צריך במקום אחד.
+    <footer className="bg-gray-800 text-white py-8 mt-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div>
+            <h3 className="text-lg font-bold mb-4">מערכת תבניות משפטיות</h3>
+            <p className="text-gray-300 text-sm">
+              המערכת המקיפה ביותר לתבניות משפטיות בעברית
             </p>
           </div>
-
-          {/* קישורים מהירים */}
           <div>
-            <h3 className="text-white font-semibold mb-4">קישורים מהירים</h3>
+            <h3 className="text-lg font-bold mb-4">קישורים מהירים</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/templates" className="hover:text-white transition">
-                  כל התבניות
-                </Link>
+                <a href="/documents" className="text-gray-300 hover:text-white transition">
+                  מסמכים משפטיים
+                </a>
               </li>
               <li>
-                <Link href="/categories" className="hover:text-white transition">
-                  קטגוריות
-                </Link>
-              </li>
-              <li>
-                <Link href="/editor" className="hover:text-white transition">
-                  צור מסמך חדש
-                </Link>
-              </li>
-              <li>
-                <Link href="/my-documents" className="hover:text-white transition">
-                  המסמכים שלי
-                </Link>
+                <a href="/profile" className="text-gray-300 hover:text-white transition">
+                  הפרופיל שלי
+                </a>
               </li>
             </ul>
           </div>
-
-          {/* קטגוריות פופולריות */}
           <div>
-            <h3 className="text-white font-semibold mb-4">קטגוריות פופולריות</h3>
+            <h3 className="text-lg font-bold mb-4">מידע משפטי</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/templates?category=beit-din" className="hover:text-white transition">
-                  כתבי בית דין
-                </Link>
-              </li>
-              <li>
-                <Link href="/templates?category=wills" className="hover:text-white transition">
-                  צוואות
-                </Link>
-              </li>
-              <li>
-                <Link href="/templates?category=power-of-attorney" className="hover:text-white transition">
-                  ייפויי כוח
-                </Link>
-              </li>
-              <li>
-                <Link href="/templates?category=contracts" className="hover:text-white transition">
-                  הסכמים
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* יצירת קשר */}
-          <div>
-            <h3 className="text-white font-semibold mb-4">יצירת קשר</h3>
-            <ul className="space-y-3 text-sm">
-              <li className="flex items-center gap-2">
-                <Mail className="w-4 h-4" />
-                <a href="mailto:info@legal-templates.co.il" className="hover:text-white transition">
-                  info@legal-templates.co.il
+                <a href="/terms" className="text-gray-300 hover:text-white transition">
+                  תנאי שימוש
                 </a>
               </li>
-              <li className="flex items-center gap-2">
-                <Phone className="w-4 h-4" />
-                <a href="tel:03-1234567" className="hover:text-white transition">
-                  03-1234567
+              <li>
+                <a href="/privacy" className="text-gray-300 hover:text-white transition">
+                  מדיניות פרטיות
                 </a>
-              </li>
-              <li className="flex items-center gap-2">
-                <MapPin className="w-4 h-4" />
-                <span>תל אביב, ישראל</span>
               </li>
             </ul>
           </div>
         </div>
-
-        {/* מחיצה */}
-        <div className="border-t border-gray-800 mt-8 pt-8">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm">
-            <p>© {currentYear} מערכת תבניות משפטיות. כל הזכויות שמורות.</p>
-            <div className="flex gap-6">
-              <Link href="/terms" className="hover:text-white transition">
-                תנאי שימוש
-              </Link>
-              <Link href="/privacy" className="hover:text-white transition">
-                מדיניות פרטיות
-              </Link>
-              <Link href="/contact" className="hover:text-white transition">
-                צור קשר
-              </Link>
-            </div>
-          </div>
+        <div className="mt-8 pt-8 border-t border-gray-700 text-center text-sm text-gray-400">
+          <p>© {new Date().getFullYear()} מערכת תבניות משפטיות. כל הזכויות שמורות.</p>
         </div>
       </div>
     </footer>
   );
 }
+

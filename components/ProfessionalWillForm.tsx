@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 // Icons replaced with emojis for compatibility
 import GenderSelector from './GenderSelector';
 import ProfessionalWordExporter from './ProfessionalWordExporter';
-import SectionsWarehouse from './SectionsWarehouse';
 import type { Gender } from '@/lib/hebrew-gender';
 import { generateProfessionalWillContent } from '@/lib/professional-will-texts';
 import { EditableSection as EditableSectionType } from '@/lib/learning-system/types';
@@ -575,7 +574,6 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
                 value={testator.gender}
                 onChange={(gender) => setTestator(prev => ({ ...prev, gender }))}
                 label="מגדר"
-                size="medium"
               />
             </div>
           </div>
@@ -646,7 +644,6 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
                   value={spouse.gender}
                   onChange={(gender) => setSpouse(prev => ({ ...prev, gender }))}
                   label="מגדר בן/בת זוג"
-                  size="medium"
                 />
               </div>
             </div>
@@ -1417,7 +1414,6 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
                   value={guardian.gender}
                   onChange={(gender) => setGuardian(prev => ({ ...prev, gender }))}
                   label="מגדר האפוטרופוס"
-                  size="medium"
                 />
               </div>
             </div>
@@ -1584,6 +1580,11 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
                     finalContent = finalContent.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'g'), replacedValue);
                   });
 
+                  // החלת gender inflection על הטקסט הסופי לפי מגדר המצווה
+                  const { replaceTextWithGender } = require('@/lib/hebrew-gender');
+                  const primaryGender = variablesModal.genders['spouse_name'] || testator.gender;
+                  finalContent = replaceTextWithGender(finalContent, primaryGender);
+
                   // הוספה לסעיפים מותאמים
                   setCustomSections(prev => [...prev, {
                     title: `${variablesModal.section.id}: ${variablesModal.section.title}`,
@@ -1609,7 +1610,7 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
 function isGenderRelevantVariable(variable: string): boolean {
   const genderRelevantVariables = [
     'heir_name', 'guardian_name', 'alternate_guardian', 'child_name', 
-    'manager_name', 'trustee_name', 'spouse_name'
+    'manager_name', 'trustee_name', 'spouse_name', 'guardian_id', 'guardian_address'
   ];
   return genderRelevantVariables.includes(variable);
 }
