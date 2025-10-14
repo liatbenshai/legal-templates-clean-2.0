@@ -410,9 +410,13 @@ export class AILegalWriter {
 
     try {
       // סימולציה מקומית במקום API
-      await new Promise(resolve => setTimeout(resolve, 2000)); // סימולציה של עיבוד
+      await new Promise(resolve => setTimeout(resolve, 1500)); // סימולציה של עיבוד
       
       const improvedText = this.improveTextLocally(text, context, style);
+
+      if (!improvedText || improvedText.trim() === '') {
+        throw new Error('הטקסט המשופר ריק');
+      }
 
       if (!this.validateResponse(text, improvedText)) {
         throw new Error('התשובה מה-AI לא עברה אימות');
@@ -424,7 +428,11 @@ export class AILegalWriter {
       };
     } catch (error) {
       console.error('Error improving with context:', error);
-      throw error;
+      // במקרה של שגיאה, החזר את הטקסט המקורי עם הודעה
+      return {
+        text: text + '\n\n[הערה: לא ניתן היה לשפר את הטקסט עם AI כרגע]',
+        confidence: 0.1,
+      };
     }
   }
 
@@ -439,8 +447,14 @@ export class AILegalWriter {
     let improved = text;
 
     // בדוק אם יש תיקונים קודמים למערכת הלמידה
-    const learningSystem = require('./ai-learning-system').aiLearningSystem;
-    const relevantCorrections = learningSystem.getRelevantCorrections(context, style, 3);
+    let relevantCorrections: any[] = [];
+    try {
+      const learningSystem = require('./ai-learning-system').aiLearningSystem;
+      relevantCorrections = learningSystem.getRelevantCorrections(context, style, 3);
+    } catch (error) {
+      console.warn('לא ניתן לטעון מערכת למידה:', error);
+      relevantCorrections = [];
+    }
     
     // אם יש תיקונים קודמים, למד מהם
     if (relevantCorrections.length > 0) {

@@ -66,6 +66,8 @@ export default function AdvancedAIImprover({
           errorMessage = 'שגיאת תקשורת עם שרת ה-AI.';
         } else if (error.message.includes('אימות')) {
           errorMessage = 'התשובה מה-AI לא תקינה. נסה שוב.';
+        } else if (error.message.includes('ריק')) {
+          errorMessage = 'הטקסט המשופר ריק. נסה שוב.';
         } else {
           errorMessage = error.message;
         }
