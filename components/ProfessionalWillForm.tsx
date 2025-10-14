@@ -425,9 +425,16 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
   };
 
   const handleSelectFromWarehouse = (warehouseSection: any) => {
+    // החלף מגדור בטקסט לפי מגדר המצווה
+    const { replaceTextWithGender } = require('@/lib/hebrew-gender');
+    const genderedContent = replaceTextWithGender(
+      warehouseSection.content,
+      willType === 'mutual' ? 'plural' : testator.gender
+    );
+    
     const newSection = {
       title: warehouseSection.title,
-      content: warehouseSection.content
+      content: genderedContent
     };
     setCustomSections(prev => [...prev, newSection]);
     alert('סעיף נוסף מהמחסן!');

@@ -161,11 +161,30 @@ export function replaceWithGender(word: string, gender: Gender): string {
 /**
  * החלפת טקסט מלא לפי מגדר
  * מחפש כל המילים במילון ומחליף אותן
+ * כולל תמיכה בדפוסים /ת /ה /ים
  */
 export function replaceTextWithGender(text: string, gender: Gender): string {
   let result = text;
   
-  // עבור על כל המילים במילון
+  // **שלב 1: החלפת דפוסים נפוצים /ת /ה /ים /ות**
+  if (gender === 'male') {
+    result = result.replace(/\/ת\b/g, '');  // אני מבטל/ת → אני מבטל
+    result = result.replace(/\/ה\b/g, '');  // אני מוריש/ה → אני מוריש
+    result = result.replace(/\/ים\b/g, ''); // אני מצווה/ים → אני מצווה
+    result = result.replace(/\/ות\b/g, ''); // קטנ/ות → קטנ
+  } else if (gender === 'female') {
+    result = result.replace(/\/ת\b/g, 'ת');  // אני מבטל/ת → אני מבטלת
+    result = result.replace(/\/ה\b/g, 'ה');  // אני מוריש/ה → אני מורישה
+    result = result.replace(/\/ים\b/g, 'ים'); // אני מצווה/ים → אני מצווהים (לא נפוץ)
+    result = result.replace(/\/ות\b/g, 'ות'); // קטנ/ות → קטנות
+  } else if (gender === 'plural') {
+    result = result.replace(/\/ת\b/g, '');   // אנו מבטל/ת → אנו מבטל
+    result = result.replace(/\/ה\b/g, '');   // אנו מוריש/ה → אנו מוריש
+    result = result.replace(/\/ים\b/g, 'ים'); // אנו מצווה/ים → אנו מצווהים
+    result = result.replace(/\/ות\b/g, 'ות'); // קטנ/ות → קטנות
+  }
+  
+  // **שלב 2: עבור על כל המילים במילון**
   Object.keys(hebrewDictionary).forEach(word => {
     const genderedWord = hebrewDictionary[word];
     const replacement = replaceWithGender(word, gender);
