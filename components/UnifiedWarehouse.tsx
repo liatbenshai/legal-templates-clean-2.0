@@ -101,24 +101,14 @@ export default function UnifiedWarehouse({ onSectionSelect, userId }: UnifiedWar
           
           // המרת הקטגוריות והפריטים מכל המחסנים
           const categoryMap: Record<string, string> = {
-            'preliminary': 'personal',
+            // preliminary - לא נטען (סעיפים אוטומטיים בצוואה)
             'inheritance': 'financial',
-            'executor': 'personal',
-            'property': 'property',
-            'business': 'business',
-            'family': 'couple',
-            'guardian': 'children',
-            'health': 'health',
-            'digital': 'digital',
-            'funeral': 'personal',
-            'final': 'personal',
-            'assets': 'property',
-            'debts': 'financial',
+            'protection': 'children',
             'special': 'personal',
+            'final': 'personal',
             'opening': 'personal',
             'closing': 'personal',
             'witnesses': 'personal',
-            'protection': 'children',
             'special-instructions': 'personal',
             'final-clauses': 'personal'
           };
@@ -132,6 +122,12 @@ export default function UnifiedWarehouse({ onSectionSelect, userId }: UnifiedWar
               // טעינת סעיפים מקובץ sections-warehouse
               if (warehouse.categories) {
                 warehouse.categories.forEach((category: any) => {
+                  // דילוג על קטגוריית preliminary (סעיפים אוטומטיים)
+                  if (category.id === 'preliminary') {
+                    console.log('דילוג על preliminary - סעיפים אוטומטיים בצוואה');
+                    return;
+                  }
+                  
                   category.items.forEach((item: any) => {
                     defaultSections.push({
                       id: item.id,
