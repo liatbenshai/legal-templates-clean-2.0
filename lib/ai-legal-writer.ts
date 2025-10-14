@@ -15,9 +15,14 @@ export interface AIWritingResponse {
 
 /**
  * מערכת AI לניסוח משפטי בעברית
+ * 
+ * ⚠️ הערה חשובה: 
+ * הקובץ הזה משתמש כרגע בסימולציה מקומית לצורך פיתוח ובדיקה.
+ * במערכת הסופית יש להחליף את הפונקציות המקומיות (המסתיימות ב-Locally) 
+ * בקריאות ל-API אמיתי של Claude או AI אחר.
  */
 export class AILegalWriter {
-  private apiEndpoint = 'https://api.anthropic.com/v1/messages';
+  private apiEndpoint = 'https://api.anthropic.com/v1/messages'; // ⚠️ יש להחליף ב-API האמיתי
   
   /**
    * פרומפט בסיסי לניסוח משפטי בעברית תקינה
@@ -63,32 +68,11 @@ export class AILegalWriter {
    * ניסוח טקסט חדש
    */
   async generateText(request: AIWritingRequest): Promise<AIWritingResponse> {
-    const userPrompt = this.buildGeneratePrompt(request);
-    
     try {
-      const response = await fetch(this.apiEndpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 2000,
-          messages: [
-            {
-              role: 'user',
-              content: `${this.getSystemPrompt()}
-
-${userPrompt}
-
-חשוב: ענה רק בעברית משפטית תקינה. אל תכלול הסברים או הערות - רק את הטקסט המבוקש.`,
-            },
-          ],
-        }),
-      });
-
-      const data = await response.json();
-      const text = data.content[0].text;
+      // סימולציה מקומית במקום API
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      const text = this.generateTextLocally(request);
 
       return {
         text,
@@ -102,6 +86,38 @@ ${userPrompt}
   }
 
   /**
+   * יצירת טקסט מקומי ללא API
+   */
+  private generateTextLocally(request: AIWritingRequest): string {
+    const { documentType, tone, length } = request;
+    
+    // טקסטים בסיסיים לפי סוג מסמך
+    const documentTemplates = {
+      'will-single': 'אני החתום מטה, בהיותי בהכרה מלאה ובאופן חופשי, מבקש להביע את רצוני האחרון בדבר חלוקת רכושי.',
+      'will-couple': 'אנו החתומים מטה, בהיותנו בהכרה מלאה ובאופן חופשי, מבקשים להביע את רצוננו האחרון בדבר חלוקת רכושנו.',
+      'advance-directives': 'אני החתום מטה, בהיותי בהכרה מלאה, מורה למטפלים הרפואיים שלי כדלקמן.',
+      'fee-agreement': 'הצדדים מסכימים כי שכר הטרחה בעד השירותים המשפטיים יעמוד על הסכום המפורט להלן.',
+      'demand-letter': 'בזאת אני מתרה בך כדלקמן ומבקש כי תפעל בהתאם להוראות החוק.',
+      'court-pleadings': 'הואיל ו, לפיכך מתבקש בית המשפט הנכבד להורות כדלקמן.'
+    };
+    
+    let text = documentTemplates[documentType as keyof typeof documentTemplates] || 'הטקסט הנדרש לפי בקשה.';
+    
+    // התאמה לסגנון
+    if (tone === 'very-formal') {
+      text = text.replace(/אני/g, 'החתום מטה');
+      text = text.replace(/אנו/g, 'החתומים מטה');
+    }
+    
+    // התאמה לאורך
+    if (length === 'long') {
+      text += ' פרטים נוספים יבואו בהמשך בהתאם לצורך והנסיבות.';
+    }
+    
+    return text;
+  }
+
+  /**
    * ניסוח מחדש של טקסט קיים
    */
   async rewriteText(request: AIWritingRequest): Promise<AIWritingResponse> {
@@ -109,37 +125,11 @@ ${userPrompt}
       throw new Error('חסר טקסט קיים לניסוח מחדש');
     }
 
-    const userPrompt = this.buildRewritePrompt(request);
-
     try {
-      const response = await fetch(this.apiEndpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 2000,
-          messages: [
-            {
-              role: 'user',
-              content: `${this.getSystemPrompt()}
-
-${userPrompt}
-
-חשוב: 
-1. שמור על המשמעות והתוכן המקורי
-2. שפר את הניסוח לעברית משפטית תקינה
-3. תקן שגיאות דקדוקיות ומשפטיות
-4. השתמש במונחים משפטיים מקצועיים
-5. ענה רק בגרסה המשופרת - ללא הסברים`,
-            },
-          ],
-        }),
-      });
-
-      const data = await response.json();
-      const text = data.content[0].text;
+      // סימולציה מקומית במקום API
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      const text = this.rewriteTextLocally(request);
 
       return {
         text,
@@ -153,53 +143,61 @@ ${userPrompt}
   }
 
   /**
+   * ניסוח מחדש מקומי ללא API
+   */
+  private rewriteTextLocally(request: AIWritingRequest): string {
+    const { existingText, documentType, tone } = request;
+    
+    if (!existingText) return '';
+    
+    let improved = existingText;
+    
+    // תיקונים בסיסיים
+    improved = improved
+      .replace(/ביחס ל/g, 'לעניין')
+      .replace(/בהתייחס ל/g, 'בדבר')
+      .replace(/באופן/g, 'באורח')
+      .replace(/לאור העובדה ש/g, 'הואיל ו')
+      .replace(/לנוכח/g, 'נוכח')
+      .replace(/בהתאם עם/g, 'בהתאם ל')
+      .replace(/לכן/g, 'לפיכך')
+      .replace(/בגלל זה/g, 'מכאן ש')
+      .replace(/אז/g, 'על כן');
+    
+    // התאמה לסגנון
+    if (tone === 'very-formal') {
+      improved = improved
+        .replace(/אני/g, 'החתום מטה')
+        .replace(/אנו/g, 'החתומים מטה');
+    }
+    
+    return improved;
+  }
+
+  /**
    * הצעות לשיפור טקסט
    */
   async getSuggestions(text: string): Promise<string[]> {
     try {
-      const response = await fetch(this.apiEndpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 1000,
-          messages: [
-            {
-              role: 'user',
-              content: `${this.getSystemPrompt()}
+      // סימולציה מקומית במקום API
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      const suggestions = [
+        'בדוק את הניסוח המשפטי',
+        'הוסף ביטויים משפטיים מתאימים',
+        'שיפור מבנה המשפטים',
+        'תיקון עברית משפטית',
+        'התאמה לסגנון המסמך'
+      ];
 
-הנה טקסט משפטי בעברית:
-
-"${text}"
-
-אנא ספק 3-5 הצעות קצרות לשיפור הניסוח המשפטי.
-כל הצעה צריכה להיות בשורה נפרדת ולהתחיל עם "-"
-
-התמקד ב:
-1. תיקון עברית לא תקינה (תרגום מאנגלית)
-2. שיפור מונחים משפטיים
-3. שיפור מבנה המשפט
-4. הצעות לביטויים משפטיים מקצועיים יותר`,
-            },
-          ],
-        }),
-      });
-
-      const data = await response.json();
-      const suggestionsText = data.content[0].text;
-
-      // פיצול להצעות בודדות
-      const suggestions = suggestionsText
-        .split('\n')
-        .filter((line: string) => line.trim().startsWith('-'))
-        .map((line: string) => line.trim().substring(1).trim());
-
-      return suggestions;
+      return suggestions.slice(0, 3);
     } catch (error) {
       console.error('Error getting suggestions:', error);
-      return [];
+      return [
+        'בדוק את הניסוח המשפטי',
+        'הוסף ביטויים משפטיים מתאימים',
+        'שיפור מבנה המשפטים',
+      ];
     }
   }
 
@@ -277,38 +275,10 @@ ${userPrompt}
    */
   async fixHebrewLegalLanguage(inputText: string): Promise<AIWritingResponse> {
     try {
-      const response: Response = await fetch(this.apiEndpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 2000,
-          messages: [
-            {
-              role: 'user',
-              content: `${this.getSystemPrompt()}
-
-תקן את הטקסט הבא לעברית משפטית תקינה:
-
-"${inputText}"
-
-תקן במיוחד:
-1. ביטויים שהם תרגום מאנגלית
-2. שגיאות דקדוקיות
-3. שימוש לא נכון במילות יחס
-4. מבנה משפטים לא תקין
-5. מונחים משפטיים לא מדויקים
-
-ענה רק בגרסה המתוקנת - ללא הסברים.`,
-            },
-          ],
-        }),
-      });
-
-      const data = await response.json();
-      const text = data.content[0].text;
+      // סימולציה מקומית במקום API
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      const text = this.fixHebrewLocally(inputText);
 
       return {
         text,
@@ -321,42 +291,30 @@ ${userPrompt}
   }
 
   /**
+   * תיקון עברית מקומי ללא API
+   */
+  private fixHebrewLocally(inputText: string): string {
+    return inputText
+      .replace(/ביחס ל/g, 'לעניין')
+      .replace(/בהתייחס ל/g, 'בדבר')
+      .replace(/באופן/g, 'באורח')
+      .replace(/לאור העובדה ש/g, 'הואיל ו')
+      .replace(/לנוכח/g, 'נוכח')
+      .replace(/בהתאם עם/g, 'בהתאם ל')
+      .replace(/לכן/g, 'לפיכך')
+      .replace(/בגלל זה/g, 'מכאן ש')
+      .replace(/אז/g, 'על כן');
+  }
+
+  /**
    * הרחבת טקסט קיים
    */
   async expandText(text: string, direction: string): Promise<AIWritingResponse> {
     try {
-      const response = await fetch(this.apiEndpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 2000,
-          messages: [
-            {
-              role: 'user',
-              content: `${this.getSystemPrompt()}
-
-הטקסט הבסיסי:
-"${text}"
-
-הנחיה להרחבה: ${direction}
-
-הרחב את הטקסט בעברית משפטית תקינה:
-1. שמור על הסגנון והטון
-2. הוסף פרטים ונימוקים רלוונטיים
-3. שמור על עקביות עם הטקסט המקורי
-4. השתמש במונחים משפטיים מקצועיים
-
-ענה רק בטקסט המורחב - ללא הסברים.`,
-            },
-          ],
-        }),
-      });
-
-      const data = await response.json();
-      const expandedText = data.content[0].text;
+      // סימולציה מקומית במקום API
+      await new Promise(resolve => setTimeout(resolve, 1200));
+      
+      const expandedText = this.expandTextLocally(text, direction);
 
       return {
         text: expandedText,
@@ -369,47 +327,31 @@ ${userPrompt}
   }
 
   /**
+   * הרחבת טקסט מקומית ללא API
+   */
+  private expandTextLocally(text: string, direction: string): string {
+    // הרחבה בסיסית לפי הכיוון
+    const expansions = {
+      'הוסף פרטים משפטיים': 'בהתאם לדין החלים ובהתאם לכללי האתיקה המקצועית.',
+      'הוסף הסברים': 'כפי שיפורט להלן ובהתאם לנסיבות העניין.',
+      'הוסף נימוקים': 'לאור האמור לעיל ולצורך השלמת התמונה.',
+      'הוסף סעיפי משנה': 'כפי שיפורט בפרטי הדברים הבאים:'
+    };
+    
+    const expansion = expansions[direction as keyof typeof expansions] || 'בהתאם לנסיבות העניין.';
+    
+    return `${text} ${expansion}`;
+  }
+
+  /**
    * קיצור טקסט
    */
   async summarizeText(text: string, targetLength: 'very-short' | 'short' | 'medium'): Promise<AIWritingResponse> {
-    const lengthMap = {
-      'very-short': '1-2 משפטים',
-      'short': '1 פסקה',
-      'medium': '2-3 פסקאות',
-    };
-
     try {
-      const response = await fetch(this.apiEndpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 1000,
-          messages: [
-            {
-              role: 'user',
-              content: `${this.getSystemPrompt()}
-
-קצר את הטקסט הבא ל-${lengthMap[targetLength]}:
-
-"${text}"
-
-דרישות:
-1. שמור על העיקר והמסר המרכזי
-2. השתמש בעברית משפטית תקינה
-3. שמור על הטון המשפטי
-4. הימנע מאובדן מידע קריטי
-
-ענה רק בטקסט המקוצר - ללא הסברים.`,
-            },
-          ],
-        }),
-      });
-
-      const data = await response.json();
-      const summarizedText = data.content[0].text;
+      // סימולציה מקומית במקום API
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      const summarizedText = this.summarizeTextLocally(text, targetLength);
 
       return {
         text: summarizedText,
@@ -419,6 +361,27 @@ ${userPrompt}
       console.error('Error summarizing text:', error);
       throw new Error('שגיאה בקיצור הטקסט. אנא נסה שוב.');
     }
+  }
+
+  /**
+   * קיצור טקסט מקומי ללא API
+   */
+  private summarizeTextLocally(text: string, targetLength: 'very-short' | 'short' | 'medium'): string {
+    // חלוקה למשפטים
+    const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
+    
+    if (sentences.length === 0) return text;
+    
+    // בחירת משפטים לפי אורך המטרה
+    const targetCount = {
+      'very-short': 1,
+      'short': Math.min(2, sentences.length),
+      'medium': Math.min(3, sentences.length)
+    };
+    
+    const selectedSentences = sentences.slice(0, targetCount[targetLength]);
+    
+    return selectedSentences.join('. ') + '.';
   }
 
   /**
