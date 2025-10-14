@@ -475,25 +475,54 @@ ${userPrompt}
   ): string {
     let improved = text;
 
-    // תיקונים בסיסיים לעברית משפטית
-    improved = improved
-      // תיקונים בסיסיים
-      .replace(/ביחס ל/g, 'לעניין')
-      .replace(/בהתייחס ל/g, 'בדבר')
-      .replace(/באופן/g, 'באורח')
-      .replace(/לאור העובדה ש/g, 'הואיל ו')
-      .replace(/לנוכח/g, 'נוכח')
-      .replace(/בהתאם עם/g, 'בהתאם ל')
-      // הוספת ביטויים משפטיים
-      .replace(/לכן/g, 'לפיכך')
-      .replace(/בגלל זה/g, 'מכאן ש')
-      .replace(/אז/g, 'על כן')
-      // שיפור מבנה
-      .replace(/\. /g, '.\n\n')  // רווח בין משפטים
-      .replace(/:/g, ':\n');    // רווח אחרי נקודותיים
+    // בדוק אם יש תיקונים קודמים למערכת הלמידה
+    const learningSystem = require('./ai-learning-system').aiLearningSystem;
+    const relevantCorrections = learningSystem.getRelevantCorrections(context, style, 3);
+    
+    // אם יש תיקונים קודמים, למד מהם
+    if (relevantCorrections.length > 0) {
+      console.log('🎓 AI לומד מ-' + relevantCorrections.length + ' תיקונים קודמים');
+      
+      // בדוק אם המשתמש העדיף טקסט קצר או ארוך
+      const avgLengthRatio = relevantCorrections.reduce((sum: number, corr: any) => {
+        return sum + (corr.userCorrection.length / corr.aiSuggestion.length);
+      }, 0) / relevantCorrections.length;
+      
+      // אם המשתמש מעדיף טקסט קצר יותר, אל תוסיף כלום
+      if (avgLengthRatio < 1.1) {
+        console.log('📏 משתמש מעדיף טקסט קצר - לא אוסיף הרחבות');
+        return improved; // החזר את הטקסט כמו שהוא
+      }
+    }
 
-    // אם הסגנון הוא detailed, הוסף מעט הרחבה (אבל לא הרבה)
-    if (style === 'detailed' && text.length < 200) {
+    // תיקונים בסיסיים לעברית משפטית (רק אם אין למידה קודמת)
+    if (relevantCorrections.length === 0) {
+      improved = improved
+        // תיקונים בסיסיים
+        .replace(/ביחס ל/g, 'לעניין')
+        .replace(/בהתייחס ל/g, 'בדבר')
+        .replace(/באופן/g, 'באורח')
+        .replace(/לאור העובדה ש/g, 'הואיל ו')
+        .replace(/לנוכח/g, 'נוכח')
+        .replace(/בהתאם עם/g, 'בהתאם ל')
+        // הוספת ביטויים משפטיים
+        .replace(/לכן/g, 'לפיכך')
+        .replace(/בגלל זה/g, 'מכאן ש')
+        .replace(/אז/g, 'על כן')
+        // שיפור מבנה
+        .replace(/\. /g, '.\n\n')  // רווח בין משפטים
+        .replace(/:/g, ':\n');    // רווח אחרי נקודותיים
+    }
+
+    // אם הסגנון הוא detailed והוא רוצה הרחבה
+    let avgLengthRatio = 1.0; // ברירת מחדל
+    if (relevantCorrections.length > 0) {
+      avgLengthRatio = relevantCorrections.reduce((sum: number, corr: any) => {
+        return sum + (corr.userCorrection.length / corr.aiSuggestion.length);
+      }, 0) / relevantCorrections.length;
+    }
+    
+    if (style === 'detailed' && text.length < 200 && (relevantCorrections.length === 0 || avgLengthRatio > 1.2)) {
       const contextEnhancements = {
         'fee-agreement': 'בהתאם לכללי האתיקה המקצועית.',
         'will-single': 'למען הסר ספק.',

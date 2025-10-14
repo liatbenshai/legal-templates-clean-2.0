@@ -1,9 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { Sparkles, RefreshCw, Check, X, History, Zap, FileText } from 'lucide-react';
+import { Sparkles, RefreshCw, Check, X, History, Zap, FileText, Brain } from 'lucide-react';
 import { aiLegalWriter } from '@/lib/ai-legal-writer';
 import { aiLearningSystem } from '@/lib/ai-learning-system';
+import AILearningManager from './AILearningManager';
 
 interface AdvancedAIImproverProps {
   originalText: string;
@@ -34,6 +35,7 @@ export default function AdvancedAIImprover({
   const [selectedContext, setSelectedContext] = useState(context);
   const [isEditing, setIsEditing] = useState(false);
   const [editedText, setEditedText] = useState('');
+  const [showLearningManager, setShowLearningManager] = useState(false);
 
   const improveText = async () => {
     if (!originalText.trim()) {
@@ -366,15 +368,17 @@ export default function AdvancedAIImprover({
         </button>
       </div>
 
-      {/* היסטוריה */}
+      {/* היסטוריה וניהול למידה */}
       <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
         <h3 className="text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
           <History className="w-4 h-4" />
           היסטוריית שיפורים
         </h3>
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-gray-600 mb-3">
           המערכת זוכרת את התיקונים שלך ומשתפרת עם הזמן
         </p>
+        
+        <AILearningManager />
       </div>
     </div>
   );

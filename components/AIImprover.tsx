@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Sparkles, RefreshCw, Check, X, History } from 'lucide-react';
+import { aiLegalWriter } from '@/lib/ai-legal-writer';
 
 /**
  * רכיב לשיפור טקסט משפטי באמצעות AI
@@ -12,7 +13,7 @@ interface AIImproverProps {
   originalText: string;
   onAccept: (improvedText: string) => void;
   onReject: () => void;
-  context?: 'court' | 'will' | 'contract' | 'general';
+  context?: 'will-single' | 'will-couple' | 'advance-directives' | 'fee-agreement' | 'demand-letter' | 'court-pleadings';
   style?: 'formal' | 'simple' | 'detailed';
 }
 
@@ -20,7 +21,7 @@ export default function AIImprover({
   originalText,
   onAccept,
   onReject,
-  context = 'general',
+  context = 'will-single',
   style = 'formal'
 }: AIImproverProps) {
   const [isImproving, setIsImproving] = useState(false);
@@ -30,10 +31,12 @@ export default function AIImprover({
   const [selectedContext, setSelectedContext] = useState(context);
 
   const contextOptions = [
-    { value: 'court', label: 'כתב בית דין', icon: '⚖️' },
-    { value: 'will', label: 'צוואה', icon: '📜' },
-    { value: 'contract', label: 'הסכם', icon: '📄' },
-    { value: 'general', label: 'כללי', icon: '📝' },
+    { value: 'will-single', label: 'צוואת יחיד', icon: '📜' },
+    { value: 'will-couple', label: 'צוואה זוגית', icon: '👥' },
+    { value: 'advance-directives', label: 'הנחיות מקדימות', icon: '🏥' },
+    { value: 'fee-agreement', label: 'הסכם שכר טרחה', icon: '💼' },
+    { value: 'demand-letter', label: 'מכתב התראה', icon: '⚠️' },
+    { value: 'court-pleadings', label: 'כתבי בית דין', icon: '⚖️' },
   ];
 
   const styleOptions = [
@@ -43,28 +46,37 @@ export default function AIImprover({
   ];
 
   const handleImprove = async () => {
+    if (!originalText.trim()) {
+      alert('אנא הזן טקסט לשיפור');
+      return;
+    }
+
+    if (originalText.length > 5000) {
+      alert('הטקסט ארוך מדי. מקסימום 5000 תווים.');
+      return;
+    }
+
     setIsImproving(true);
     
     try {
-      // כאן נקרא ל-AI API
-      // לעת עתה - סימולציה
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      const response = await aiLegalWriter.fixHebrewLegalLanguage(originalText);
+      setImprovedText(response.text);
       
-      // דוגמה לשיפור
-      const improved = originalText
-        .replace(/ביצע/g, 'עשה')
-        .replace(/אמר/g, 'הצהיר')
-        .replace(/נתן/g, 'העניק');
-        
-      setImprovedText(improved);
-      setChanges([
-        'שונה: "ביצע" ← "עשה" (עברית משפטית תקינה)',
-        'שונה: "אמר" ← "הצהיר" (מונח משפטי מדויק)',
-        'שונה: "נתן" ← "העניק" (לשון פורמלית)',
-      ]);
+      const suggestions = await aiLegalWriter.getSuggestions(originalText);
+      setChanges(suggestions.map(s => `💡 ${s}`));
+      
     } catch (error) {
       console.error('שגיאה בשיפור:', error);
-      alert('שגיאה בשיפור הטקסט');
+      
+      let errorMessage = 'שגיאה בשיפור הטקסט.';
+      if (error instanceof Error) {
+        if (error.message.includes('API')) {
+          errorMessage = 'שגיאת תקשורת עם שרת ה-AI. בדוק את החיבור לאינטרנט.';
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      alert(errorMessage);
     } finally {
       setIsImproving(false);
     }
