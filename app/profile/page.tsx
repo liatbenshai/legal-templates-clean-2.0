@@ -36,10 +36,9 @@ export default function ProfilePage() {
       }
     };
     loadUser();
-  }, []); 
+  }, []);
 
   const [passwordData, setPasswordData] = useState({
-    oldPassword: '',
     newPassword: '',
     confirmPassword: '',
   });
@@ -47,33 +46,45 @@ export default function ProfilePage() {
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   useEffect(() => {
-    if (!user) {
+    if (mounted && !user) {
       router.push('/login');
     }
-  }, [user, router]);
+  }, [user, router, mounted]);
 
-  const handleSaveProfile = () => {
+  const handleSaveProfile = async () => {
     if (!user) return;
 
-    const updatedUser = {
-      ...user,
+    const success = await AuthService.updateUser({
+      id: user.id,
       name: formData.name,
       email: formData.email,
       phone: formData.phone,
       company: formData.company,
       licenseNumber: formData.licenseNumber,
       officeAddress: formData.officeAddress,
-    };
+    });
 
-    AuthService.updateUser(updatedUser);
-    setUser(updatedUser);
-    setIsEditing(false);
-    setMessage({ type: 'success', text: 'הפרופיל עודכן בהצלחה!' });
+    if (success) {
+      const updatedUser = {
+        ...user,
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        company: formData.company,
+        licenseNumber: formData.licenseNumber,
+        officeAddress: formData.officeAddress,
+      };
+      setUser(updatedUser);
+      setIsEditing(false);
+      setMessage({ type: 'success', text: 'הפרופיל עודכן בהצלחה!' });
+    } else {
+      setMessage({ type: 'error', text: 'שגיאה בעדכון הפרופיל' });
+    }
     
     setTimeout(() => setMessage(null), 3000);
   };
 
-  const handleChangePassword = () => {
+  const handleChangePassword = async () => {
     if (!user) return;
 
     if (passwordData.newPassword !== passwordData.confirmPassword) {
@@ -86,31 +97,27 @@ export default function ProfilePage() {
       return;
     }
 
-    const success = AuthService.changePassword(
-      user.id,
-      passwordData.oldPassword,
-      passwordData.newPassword
-    );
+    const success = await AuthService.changePassword(passwordData.newPassword);
 
     if (success) {
       setMessage({ type: 'success', text: 'הסיסמה שונתה בהצלחה!' });
       setShowPasswordForm(false);
-      setPasswordData({ oldPassword: '', newPassword: '', confirmPassword: '' });
+      setPasswordData({ newPassword: '', confirmPassword: '' });
     } else {
-      setMessage({ type: 'error', text: 'הסיסמה הישנה שגויה' });
+      setMessage({ type: 'error', text: 'שגיאה בשינוי סיסמה' });
     }
 
     setTimeout(() => setMessage(null), 3000);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     if (confirm('האם אתה בטוח שברצונך להתנתק?')) {
-      AuthService.logout();
+      await AuthService.logout();
       router.push('/');
     }
   };
 
-  if (!user) {
+  if (!mounted || !user) {
     return null;
   }
 
@@ -323,19 +330,6 @@ export default function ProfilePage() {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    סיסמה נוכחית
-                  </label>
-                  <input
-                    type="password"
-                    value={passwordData.oldPassword}
-                    onChange={(e) => setPasswordData({ ...passwordData, oldPassword: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                    dir="ltr"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     סיסמה חדשה
                   </label>
                   <input
@@ -344,6 +338,7 @@ export default function ProfilePage() {
                     onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                     dir="ltr"
+                    placeholder="לפחות 6 תווים"
                   />
                 </div>
 
@@ -357,6 +352,7 @@ export default function ProfilePage() {
                     onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                     dir="ltr"
+                    placeholder="הקלד שוב את הסיסמה החדשה"
                   />
                 </div>
 
@@ -370,7 +366,7 @@ export default function ProfilePage() {
                   <button
                     onClick={() => {
                       setShowPasswordForm(false);
-                      setPasswordData({ oldPassword: '', newPassword: '', confirmPassword: '' });
+                      setPasswordData({ newPassword: '', confirmPassword: '' });
                     }}
                     className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition"
                   >
@@ -382,7 +378,7 @@ export default function ProfilePage() {
 
             {!showPasswordForm && (
               <p className="text-sm text-gray-600">
-                שינוי סיסמה דורש אימות של הסיסמה הנוכחית
+                שינוי סיסמה דורש שתהיה מחובר למערכת
               </p>
             )}
           </div>
@@ -393,7 +389,7 @@ export default function ProfilePage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-blue-50 rounded-lg p-4 text-center">
                 <div className="text-3xl font-bold text-primary mb-1">
-                  {JSON.parse(localStorage.getItem('savedDocuments') || '[]').length}
+                  {typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('savedDocuments') || '[]').length : 0}
                 </div>
                 <div className="text-sm text-gray-600">מסמכים שנוצרו</div>
               </div>
