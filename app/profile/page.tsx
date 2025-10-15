@@ -19,7 +19,7 @@ export default function ProfilePage() {
     officeAddress: '',
   });
 
-  useEffect(() => {
+ useEffect(() => {
     setMounted(true);
     const loadUser = async () => {
       const currentUser = await AuthService.getCurrentUser();
