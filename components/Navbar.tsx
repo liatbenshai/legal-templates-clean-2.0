@@ -81,9 +81,9 @@ export default function Navbar() {
     loadUser();
   }, []);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     if (confirm('האם להתנתק?')) {
-      AuthService.logout();
+      await AuthService.logout();
       setCurrentUser(null);
       router.push('/');
     }
@@ -192,17 +192,17 @@ export default function Navbar() {
                   className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 rounded-lg transition"
                 >
                   <div className="w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center font-bold">
-                    {currentUser.name.charAt(0).toUpperCase()}
+                    {currentUser?.name?.charAt(0)?.toUpperCase() || 'U'}
                   </div>
-                  <span className="text-gray-700 font-medium">{currentUser.name}</span>
+                  <span className="text-gray-700 font-medium">{currentUser?.name || 'משתמש'}</span>
                 </button>
 
                 {/* תפריט משתמש */}
                 {isUserMenuOpen && (
                   <div className="absolute left-0 top-full mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50">
                     <div className="px-4 py-3 border-b border-gray-200">
-                      <p className="font-semibold text-gray-900">{currentUser.name}</p>
-                      <p className="text-sm text-gray-600">{currentUser.email}</p>
+                      <p className="font-semibold text-gray-900">{currentUser?.name || 'משתמש'}</p>
+                      <p className="text-sm text-gray-600">{currentUser?.email || ''}</p>
                     </div>
 
                     <Link
@@ -275,8 +275,8 @@ export default function Navbar() {
             <div className="flex flex-col gap-1">
               {mounted && currentUser && (
                 <div className="px-4 py-3 bg-gray-50 rounded-lg mb-2">
-                  <p className="font-semibold text-gray-900">{currentUser.name}</p>
-                  <p className="text-sm text-gray-600">{currentUser.email}</p>
+                  <p className="font-semibold text-gray-900">{currentUser?.name || 'משתמש'}</p>
+                  <p className="text-sm text-gray-600">{currentUser?.email || ''}</p>
                 </div>
               )}
 
