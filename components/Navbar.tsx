@@ -74,8 +74,11 @@ export default function Navbar() {
   useEffect(() => {
     // עדכון משתמש נוכחי אחרי הטעינה
     setMounted(true);
-    const user = AuthService.getCurrentUser();
-    setCurrentUser(user);
+    const loadUser = async () => {
+      const user = await AuthService.getCurrentUser();
+      setCurrentUser(user);
+    };
+    loadUser();
   }, []);
 
   const handleLogout = () => {
