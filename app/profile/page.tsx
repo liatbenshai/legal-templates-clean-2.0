@@ -36,7 +36,7 @@ export default function ProfilePage() {
       }
     };
     loadUser();
-  }, []);
+  }, []); 
 
   const [passwordData, setPasswordData] = useState({
     oldPassword: '',
