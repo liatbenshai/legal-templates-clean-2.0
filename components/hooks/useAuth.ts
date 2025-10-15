@@ -11,9 +11,12 @@ export function useAuth() {
   const router = useRouter();
 
   useEffect(() => {
-    const currentUser = AuthService.getCurrentUser();
-    setUser(currentUser);
-    setIsLoading(false);
+    const loadUser = async () => {
+      const currentUser = await AuthService.getCurrentUser();
+      setUser(currentUser);
+      setIsLoading(false);
+    };
+    loadUser();
   }, []);
 
   const login = async (email: string, password: string) => {
@@ -32,15 +35,18 @@ export function useAuth() {
     return result;
   };
 
-  const logout = () => {
-    AuthService.logout();
+  const logout = async () => {
+    await AuthService.logout();
     setUser(null);
     router.push('/');
   };
 
-  const updateProfile = (updatedUser: User) => {
-    AuthService.updateUser(updatedUser);
-    setUser(updatedUser);
+  const updateProfile = async (updatedUser: User) => {
+    const success = await AuthService.updateUser(updatedUser);
+    if (success) {
+      setUser(updatedUser);
+    }
+    return success;
   };
 
   return {
@@ -53,4 +59,3 @@ export function useAuth() {
     updateProfile,
   };
 }
-
