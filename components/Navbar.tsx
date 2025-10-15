@@ -192,7 +192,9 @@ export default function Navbar() {
                   className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 rounded-lg transition"
                 >
                   <div className="w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center font-bold">
-                    {currentUser?.name?.charAt(0)?.toUpperCase() || 'U'}
+                    {currentUser?.name && currentUser.name.length > 0
+                      ? currentUser.name.charAt(0).toUpperCase()
+                      : 'U'}
                   </div>
                   <span className="text-gray-700 font-medium">{currentUser?.name || 'משתמש'}</span>
                 </button>
