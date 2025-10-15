@@ -21,19 +21,23 @@ export default function ProfilePage() {
 
   useEffect(() => {
     setMounted(true);
-    const currentUser = AuthService.getCurrentUser();
-    setUser(currentUser);
-    if (currentUser) {
-      setFormData({
-        name: currentUser.name || '',
-        email: currentUser.email || '',
-        phone: currentUser.phone || '',
-        company: currentUser.company || '',
-        licenseNumber: currentUser.licenseNumber || '',
-        officeAddress: currentUser.officeAddress || '',
-      });
-    }
+    const loadUser = async () => {
+      const currentUser = await AuthService.getCurrentUser();
+      setUser(currentUser);
+      if (currentUser) {
+        setFormData({
+          name: currentUser.name || '',
+          email: currentUser.email || '',
+          phone: currentUser.phone || '',
+          company: currentUser.company || '',
+          licenseNumber: currentUser.licenseNumber || '',
+          officeAddress: currentUser.officeAddress || '',
+        });
+      }
+    };
+    loadUser();
   }, []);
+
   const [passwordData, setPasswordData] = useState({
     oldPassword: '',
     newPassword: '',
@@ -406,4 +410,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-
