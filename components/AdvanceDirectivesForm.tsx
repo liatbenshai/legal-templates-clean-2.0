@@ -799,6 +799,18 @@ ${applyAdvanceDirectivesGender(
                 </div>
               )}
 
+              {/* הודעת מידע על AI */}
+              {(selectedSections.length > 0 || Object.values(customInstructions).some(v => v)) && (
+                <div className="bg-purple-50 border-2 border-purple-300 rounded-lg p-4">
+                  <p className="text-sm text-purple-900 font-semibold">
+                    💡 <strong>טיפ:</strong> בשלב הבא תוכל לשפר את הסעיפים עם AI!
+                  </p>
+                  <p className="text-xs text-purple-700 mt-1">
+                    המערכת תציג לך כפתור גדול "🚀 פתח מצב עריכה + שיפור עם AI" 
+                  </p>
+                </div>
+              )}
+
               <div className="flex justify-between pt-6">
                 <button
                   onClick={() => setCurrentStep(2)}
@@ -810,7 +822,7 @@ ${applyAdvanceDirectivesGender(
                   onClick={() => setCurrentStep(4)}
                   className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium"
                 >
-                  המשך לסיכום →
+                  המשך לסיכום + AI →
                 </button>
               </div>
             </div>
@@ -824,42 +836,105 @@ ${applyAdvanceDirectivesGender(
               </h2>
 
               <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
-                <h3 className="font-semibold text-gray-800 mb-2">פרטי הממנה:</h3>
-                <p className="text-sm text-gray-700">{principalInfo.fullName} ({principalInfo.gender === 'male' ? 'זכר' : 'נקבה'})</p>
+                <h3 className="font-semibold text-gray-800 mb-2">📋 סיכום פרטים:</h3>
                 
-                <h3 className="font-semibold text-gray-800 mt-4 mb-2">מיופי כוח:</h3>
-                <ul className="text-sm text-gray-700 list-disc list-inside">
-                  {attorneys.map((att, i) => (
-                    <li key={i}>{att.name} ({att.gender === 'male' ? 'זכר' : 'נקבה'})</li>
-                  ))}
-                </ul>
+                <div className="space-y-3">
+                  <div>
+                    <span className="text-sm font-medium text-gray-600">הממנה: </span>
+                    <span className="text-sm text-gray-900">{principalInfo.fullName || '(לא הוזן)'} - {principalInfo.gender === 'male' ? 'זכר' : 'נקבה'}</span>
+                  </div>
+                  
+                  <div>
+                    <span className="text-sm font-medium text-gray-600">מיופי כוח: </span>
+                    <span className="text-sm text-gray-900">{attorneys.length} מיופי כוח</span>
+                    {attorneys.length > 1 && (
+                      <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded mr-2">רבים</span>
+                    )}
+                  </div>
 
-                {attorneys.length > 1 && (
-                  <div className="bg-blue-100 border border-blue-300 rounded p-3 mt-4">
-                    <p className="text-sm text-blue-800">
-                      💡 יש {attorneys.length} מיופי כוח - הנטיות יהיו ברבים
+                  <div>
+                    <span className="text-sm font-medium text-gray-600">סעיפים מהמחסן: </span>
+                    <span className="text-sm text-gray-900 font-semibold">{selectedSections.length} סעיפים</span>
+                  </div>
+
+                  <div>
+                    <span className="text-sm font-medium text-gray-600">טקסט חופשי: </span>
+                    <span className="text-sm text-gray-900">
+                      {Object.values(customInstructions).some(v => v) ? '✅ יש תוכן' : '❌ אין תוכן'}
+                    </span>
+                  </div>
+
+                  {(selectedSections.length > 0 || Object.values(customInstructions).some(v => v)) && (
+                    <div className="bg-green-100 border border-green-300 rounded p-3 mt-4">
+                      <p className="text-sm text-green-800 font-semibold">
+                        ✅ יש תוכן במסמך - ניתן לשפר עם AI!
+                      </p>
+                    </div>
+                  )}
+
+                  {selectedSections.length === 0 && !Object.values(customInstructions).some(v => v) && (
+                    <div className="bg-yellow-100 border border-yellow-300 rounded p-3 mt-4">
+                      <p className="text-sm text-yellow-800 font-semibold">
+                        ⚠️ אין תוכן במסמך
+                      </p>
+                      <p className="text-xs text-yellow-700 mt-1">
+                        חזור לשלב 3 ובחר סעיפים או כתוב טקסט חופשי
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* כפתור שיפור עם AI - תמיד מוצג! */}
+              <div className={`border-2 rounded-lg p-6 ${
+                !showAILearning 
+                  ? 'bg-gradient-to-r from-purple-50 to-pink-50 border-purple-300' 
+                  : 'bg-gray-50 border-gray-300'
+              }`}>
+                {!showAILearning && (
+                  <>
+                    <h3 className="font-semibold text-purple-900 mb-2 flex items-center gap-2 text-xl">
+                      🤖 שיפור מסמך עם בינה מלאכותית
+                    </h3>
+                    <p className="text-sm text-purple-700 mb-4">
+                      {selectedSections.length > 0 || Object.values(customInstructions).some(v => v) ? (
+                        <>
+                          <strong>✨ יש לך {selectedSections.length} סעיפים במחסן + טקסט חופשי.</strong><br/>
+                          לחץ על הכפתור למטה כדי לפתוח את מצב העריכה המתקדם עם AI!
+                        </>
+                      ) : (
+                        <>
+                          ⚠️ <strong>לא נבחרו סעיפים ולא הוזן טקסט.</strong><br/>
+                          <span className="text-xs">חזור לשלב 3 ובחר סעיפים מהמחסן (📚) או כתוב טקסט חופשי (✍️)</span>
+                        </>
+                      )}
                     </p>
+                    <button
+                      onClick={convertToEditableSections}
+                      disabled={selectedSections.length === 0 && !Object.values(customInstructions).some(v => v)}
+                      className="w-full px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl hover:from-purple-700 hover:to-pink-700 transition font-bold text-lg shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
+                    >
+                      {selectedSections.length === 0 && !Object.values(customInstructions).some(v => v) ? (
+                        <>⚠️ אין תוכן לשיפור - חזור לשלב 3</>
+                      ) : (
+                        <>🚀 פתח מצב עריכה + שיפור עם AI</>
+                      )}
+                    </button>
+                  </>
+                )}
+
+                {showAILearning && (
+                  <div className="text-center">
+                    <p className="text-green-700 font-semibold mb-3">✅ מצב עריכה + AI פעיל!</p>
+                    <button
+                      onClick={() => setShowAILearning(false)}
+                      className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition"
+                    >
+                      ← חזור לתצוגה מקדימה
+                    </button>
                   </div>
                 )}
               </div>
-
-              {/* כפתור שיפור עם AI */}
-              {!showAILearning && (
-                <div className="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-lg p-6">
-                  <h3 className="font-semibold text-purple-900 mb-2 flex items-center gap-2">
-                    🤖 שיפור מסמך עם בינה מלאכותית
-                  </h3>
-                  <p className="text-sm text-purple-700 mb-4">
-                    האם תרצה לשפר את הסעיפים בעזרת AI? המערכת תאפשר לך לערוך כל סעיף ולשפר אותו.
-                  </p>
-                  <button
-                    onClick={convertToEditableSections}
-                    className="w-full px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition font-medium"
-                  >
-                    🚀 שפר עם AI
-                  </button>
-                </div>
-              )}
 
               {/* סעיפים ניתנים לעריכה */}
               {showAILearning && editableSections.length > 0 && (
