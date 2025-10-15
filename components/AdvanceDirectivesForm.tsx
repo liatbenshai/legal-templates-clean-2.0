@@ -9,6 +9,10 @@ import {
   applyAdvanceDirectivesGender,
   getAdvanceDirectivesSectionById 
 } from '@/lib/sections-warehouses/advance-directives-warehouse';
+import { EditableSection as EditableSectionType } from '@/lib/learning-system/types';
+import { learningEngine } from '@/lib/learning-system/learning-engine';
+import EditableSection from './LearningSystem/EditableSection';
+import AILearningManager from './AILearningManager';
 
 // סוג מגדר מצומצם (ללא organization)
 type PersonGender = 'male' | 'female';
@@ -59,6 +63,10 @@ export default function AdvanceDirectivesForm() {
 
   const [currentStep, setCurrentStep] = useState(1);
   const [useWarehouse, setUseWarehouse] = useState(true); // האם להשתמש במחסן או טקסט חופשי
+  
+  // מערכת למידה
+  const [editableSections, setEditableSections] = useState<EditableSectionType[]>([]);
+  const [showAILearning, setShowAILearning] = useState(false);
 
   // הוספת מיופה כוח נוסף
   const addAttorney = () => {
@@ -121,6 +129,167 @@ export default function AdvanceDirectivesForm() {
         return `${index + 1}. ${section!.title}\n\n${content}`;
       })
       .join('\n\n───────────────────\n\n');
+  };
+
+  // המרה לסעיפים ניתנים לעריכה עם AI
+  const convertToEditableSections = () => {
+    const attorneyGender = getAttorneyGender();
+    const sections: EditableSectionType[] = [];
+    
+    // הוספת כל הסעיפים שנבחרו מהמחסן
+    selectedSections.forEach((sectionId, index) => {
+      const section = getAdvanceDirectivesSectionById(sectionId);
+      if (section) {
+        const content = applyAdvanceDirectivesGender(
+          section.content,
+          principalInfo.gender,
+          attorneyGender
+        );
+        
+        sections.push({
+          id: `section-${sectionId}`,
+          title: section.title,
+          content: content,
+          category: 'advance_directive',
+          isEditable: true,
+          isCustom: false,
+          lastModified: new Date().toISOString(),
+          modifiedBy: 'user',
+          version: 1,
+        });
+      }
+    });
+    
+    // הוספת טקסט חופשי אם יש
+    if (customInstructions.property) {
+      sections.push({
+        id: 'custom-property',
+        title: 'הנחיות רכושיות מותאמות אישית',
+        content: applyAdvanceDirectivesGender(customInstructions.property, principalInfo.gender, attorneyGender),
+        category: 'advance_directive',
+        isEditable: true,
+        isCustom: true,
+        lastModified: new Date().toISOString(),
+        modifiedBy: 'user',
+        version: 1,
+      });
+    }
+    
+    if (customInstructions.personal) {
+      sections.push({
+        id: 'custom-personal',
+        title: 'הנחיות אישיות מותאמות אישית',
+        content: applyAdvanceDirectivesGender(customInstructions.personal, principalInfo.gender, attorneyGender),
+        category: 'advance_directive',
+        isEditable: true,
+        isCustom: true,
+        lastModified: new Date().toISOString(),
+        modifiedBy: 'user',
+        version: 1,
+      });
+    }
+    
+    if (customInstructions.medical) {
+      sections.push({
+        id: 'custom-medical',
+        title: 'הנחיות רפואיות מותאמות אישית',
+        content: applyAdvanceDirectivesGender(customInstructions.medical, principalInfo.gender, attorneyGender),
+        category: 'advance_directive',
+        isEditable: true,
+        isCustom: true,
+        lastModified: new Date().toISOString(),
+        modifiedBy: 'user',
+        version: 1,
+      });
+    }
+    
+    if (customInstructions.special) {
+      sections.push({
+        id: 'custom-special',
+        title: 'הוראות מיוחדות',
+        content: applyAdvanceDirectivesGender(customInstructions.special, principalInfo.gender, attorneyGender),
+        category: 'advance_directive',
+        isEditable: true,
+        isCustom: true,
+        lastModified: new Date().toISOString(),
+        modifiedBy: 'user',
+        version: 1,
+      });
+    }
+    
+    setEditableSections(sections);
+    setShowAILearning(true);
+  };
+
+  // עדכון סעיף לאחר שיפור AI
+  const handleUpdateEditableSection = (updatedSection: EditableSectionType) => {
+    setEditableSections(prev => 
+      prev.map(section => 
+        section.id === updatedSection.id 
+          ? { ...updatedSection, lastModified: new Date().toISOString() }
+          : section
+      )
+    );
+    
+    // עדכון גם בטקסט החופשי אם זה סעיף מותאם אישית
+    if (updatedSection.id === 'custom-property') {
+      setCustomInstructions(prev => ({ ...prev, property: updatedSection.content }));
+    } else if (updatedSection.id === 'custom-personal') {
+      setCustomInstructions(prev => ({ ...prev, personal: updatedSection.content }));
+    } else if (updatedSection.id === 'custom-medical') {
+      setCustomInstructions(prev => ({ ...prev, medical: updatedSection.content }));
+    } else if (updatedSection.id === 'custom-special') {
+      setCustomInstructions(prev => ({ ...prev, special: updatedSection.content }));
+    }
+  };
+
+  // שמירה למחסן אישי
+  const handleSaveToWarehouse = (section: EditableSectionType) => {
+    const action = {
+      type: 'save_to_warehouse' as const,
+      sectionId: section.id,
+      newContent: section.content,
+      userId: principalInfo.fullName || 'anonymous',
+      timestamp: new Date().toISOString()
+    };
+    
+    const warehouseSection = {
+      id: section.id,
+      title: section.title,
+      content: section.content,
+      category: section.category,
+      tags: ['הנחיות מקדימות', 'סעיף מותאם אישית'],
+      usageCount: 0,
+      averageRating: 0,
+      isPublic: false,
+      createdBy: principalInfo.fullName || 'anonymous',
+      createdAt: new Date().toISOString(),
+      lastUsed: new Date().toISOString()
+    };
+    
+    learningEngine.saveToWarehouse(action, warehouseSection);
+    alert('סעיף נשמר למחסן האישי!');
+  };
+
+  // שמירה למערכת למידה
+  const handleSaveToLearning = (section: EditableSectionType, userCorrection?: string) => {
+    if (userCorrection) {
+      learningEngine.saveLearningData({
+        sectionId: section.id,
+        originalText: section.content,
+        editedText: userCorrection,
+        editType: 'manual',
+        userFeedback: 'improved',
+        context: {
+          serviceType: 'advance-directives',
+          category: 'advance-directives',
+          userType: 'lawyer'
+        },
+        timestamp: new Date().toISOString(),
+        userId: principalInfo.fullName || 'anonymous'
+      });
+      alert('שינוי נשמר למערכת הלמידה!');
+    }
   };
 
   const generateDocument = () => {
@@ -674,15 +843,64 @@ ${applyAdvanceDirectivesGender(
                 )}
               </div>
 
-              <div className="bg-white border-2 border-gray-300 rounded-lg p-6 max-h-96 overflow-y-auto">
-                <pre className="whitespace-pre-wrap text-sm font-mono text-right" style={{ direction: 'rtl' }}>
-                  {generateDocument()}
-                </pre>
-              </div>
+              {/* כפתור שיפור עם AI */}
+              {!showAILearning && (
+                <div className="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-lg p-6">
+                  <h3 className="font-semibold text-purple-900 mb-2 flex items-center gap-2">
+                    🤖 שיפור מסמך עם בינה מלאכותית
+                  </h3>
+                  <p className="text-sm text-purple-700 mb-4">
+                    האם תרצה לשפר את הסעיפים בעזרת AI? המערכת תאפשר לך לערוך כל סעיף ולשפר אותו.
+                  </p>
+                  <button
+                    onClick={convertToEditableSections}
+                    className="w-full px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition font-medium"
+                  >
+                    🚀 שפר עם AI
+                  </button>
+                </div>
+              )}
+
+              {/* סעיפים ניתנים לעריכה */}
+              {showAILearning && editableSections.length > 0 && (
+                <div className="space-y-4">
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <p className="text-sm text-green-800">
+                      ✅ <strong>מצב עריכה פעיל!</strong> ערוך כל סעיף והשתמש ב-AI לשיפור הטקסט
+                    </p>
+                  </div>
+
+                  {editableSections.map((section) => (
+                    <EditableSection
+                      key={section.id}
+                      section={section}
+                      userId={principalInfo.fullName || 'anonymous'}
+                      onUpdate={handleUpdateEditableSection}
+                      onSaveToWarehouse={handleSaveToWarehouse}
+                      onSaveToLearning={handleSaveToLearning}
+                    />
+                  ))}
+
+                  {/* מנהל למידת AI */}
+                  <AILearningManager />
+                </div>
+              )}
+
+              {/* תצוגה מקדימה */}
+              {!showAILearning && (
+                <div className="bg-white border-2 border-gray-300 rounded-lg p-6 max-h-96 overflow-y-auto">
+                  <pre className="whitespace-pre-wrap text-sm font-mono text-right" style={{ direction: 'rtl' }}>
+                    {generateDocument()}
+                  </pre>
+                </div>
+              )}
 
               <div className="flex justify-between pt-6">
                 <button
-                  onClick={() => setCurrentStep(3)}
+                  onClick={() => {
+                    setCurrentStep(3);
+                    setShowAILearning(false);
+                  }}
                   className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition font-medium"
                 >
                   ← חזור
