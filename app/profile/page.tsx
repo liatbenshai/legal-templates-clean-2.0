@@ -1,5 +1,5 @@
 'use client';
- 
+
 import { useState, useEffect } from 'react';
 import { AuthService } from '@/lib/auth';
 import { User as UserIcon, Mail, Phone, Building, Lock, Save, LogOut, Scale } from 'lucide-react';
@@ -19,7 +19,7 @@ export default function ProfilePage() {
     officeAddress: '',
   });
 
- useEffect(() => {
+  useEffect(() => {
     setMounted(true);
     const loadUser = async () => {
       const currentUser = await AuthService.getCurrentUser();
