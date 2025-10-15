@@ -1108,7 +1108,6 @@ export default function ProfessionalWordExporter({
         creator: 'מערכת צוואות מקצועית',
         title: willData.type === 'mutual' ? 'צוואה הדדית' : 'צוואה',
         description: 'מסמך משפטי בעברית',
-        language: 'he-IL',  // 🔥 הגדרת שפה עברית
         styles: styles,
         numbering: numberingConfig,
         features: {
