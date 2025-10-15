@@ -1,99 +1,176 @@
 'use client';
 
 import { useState } from 'react';
-import { FileText, User, Users, Download } from 'lucide-react';
+import { FileText, User, Users, Download, Plus, Trash2 } from 'lucide-react';
+import GenderSelector from './GenderSelector';
+import type { Gender } from '@/lib/hebrew-gender';
+import { applyAdvanceDirectivesGender } from '@/lib/sections-warehouses/advance-directives-warehouse';
+
+// סוג מגדר מצומצם (ללא organization)
+type PersonGender = 'male' | 'female';
+
+interface Attorney {
+  name: string;
+  id: string;
+  relationship: string;
+  address: string;
+  phone: string;
+  gender: PersonGender;
+}
 
 export default function AdvanceDirectivesForm() {
-  const [formData, setFormData] = useState({
-    // פרטי מצהיר
+  // פרטי הממנה (נותן ההנחיות)
+  const [principalInfo, setPrincipalInfo] = useState({
     fullName: '',
     id: '',
     birthDate: '',
     address: '',
     phone: '',
     email: '',
-    
-    // מיופה כוח ראשי
-    primaryAttorney: {
+    gender: 'male' as PersonGender
+  });
+
+  // מיופי כוח (אפשר כמה)
+  const [attorneys, setAttorneys] = useState<Attorney[]>([
+    {
       name: '',
       id: '',
       relationship: '',
       address: '',
-      phone: ''
-    },
-    
-    // מיופה כוח חלופי
-    alternateAttorney: {
-      name: '',
-      id: '',
-      relationship: '',
-      address: '',
-      phone: ''
-    },
-    
-    // הנחיות רפואיות
-    medicalInstructions: '',
-    
-    // הנחיות נכסים
-    propertyInstructions: '',
-    
-    // הוראות מיוחדות
-    specialInstructions: ''
+      phone: '',
+      gender: 'male'
+    }
+  ]);
+
+  // הנחיות
+  const [instructions, setInstructions] = useState({
+    medical: '',
+    property: '',
+    personal: '',
+    special: ''
   });
 
   const [currentStep, setCurrentStep] = useState(1);
 
-  const updateField = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+  // הוספת מיופה כוח נוסף
+  const addAttorney = () => {
+    setAttorneys([...attorneys, {
+      name: '',
+      id: '',
+      relationship: '',
+      address: '',
+      phone: '',
+      gender: 'male'
+    }]);
   };
 
-  const updateNestedField = (parent: 'primaryAttorney' | 'alternateAttorney', field: string, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [parent]: { ...prev[parent], [field]: value }
-    }));
+  // הסרת מיופה כוח
+  const removeAttorney = (index: number) => {
+    if (attorneys.length > 1) {
+      setAttorneys(attorneys.filter((_, i) => i !== index));
+    }
+  };
+
+  // עדכון פרטי מיופה כוח
+  const updateAttorney = (index: number, field: keyof Attorney, value: string | PersonGender) => {
+    const updated = [...attorneys];
+    updated[index] = { ...updated[index], [field]: value };
+    setAttorneys(updated);
+  };
+
+  // קביעת מגדר מיופה הכוח (רבים אם יש יותר מאחד)
+  const getAttorneyGender = (): 'male' | 'female' | 'plural' => {
+    if (attorneys.length === 0) return 'male';
+    if (attorneys.length === 1) return attorneys[0].gender;
+    return 'plural'; // רבים
   };
 
   const generateDocument = () => {
+    const attorneyGender = getAttorneyGender();
+    
+    // כותרת עם נטיות
+    const genderSuffix = principalInfo.gender === 'female' ? 'ה' : '';
     const doc = `
-צוואה חיה וייפוי כוח מתמשך
+ייפוי כוח מתמשך והנחיות מקדימות
 
 אני הח"מ:
-שם: ${formData.fullName}
-ת.ז: ${formData.id}
-תאריך לידה: ${formData.birthDate}
-כתובת: ${formData.address}
-טלפון: ${formData.phone}
-אימייל: ${formData.email}
+שם מלא: ${principalInfo.fullName}
+ת"ז: ${principalInfo.id}
+תאריך לידה: ${principalInfo.birthDate}
+כתובת: ${principalInfo.address}
+טלפון: ${principalInfo.phone}
+${principalInfo.email ? `דוא"ל: ${principalInfo.email}` : ''}
 
-מצהיר/ה בזאת כדלקמן:
+מצהיר${genderSuffix} בזאת כדלקמן:
 
-1. מיופה כוח ראשי:
-שם: ${formData.primaryAttorney.name}
-ת.ז: ${formData.primaryAttorney.id}
-יחסי קרבה: ${formData.primaryAttorney.relationship}
-כתובת: ${formData.primaryAttorney.address}
-טלפון: ${formData.primaryAttorney.phone}
+═══════════════════════════════════════
+חלק א' - מיופי הכוח
+═══════════════════════════════════════
 
-2. מיופה כוח חלופי:
-שם: ${formData.alternateAttorney.name}
-ת.ז: ${formData.alternateAttorney.id}
-יחסי קרבה: ${formData.alternateAttorney.relationship}
-כתובת: ${formData.alternateAttorney.address}
-טלפון: ${formData.alternateAttorney.phone}
+${attorneys.map((attorney, index) => {
+  const attorneyNum = index + 1;
+  const attorneySuffix = attorney.gender === 'female' ? 'ת' : '';
+  return `${attorneyNum}. מיופה${attorneySuffix} כוח ${index === 0 ? 'ראשי' + attorneySuffix : 'חלופי' + attorneySuffix}:
+   שם: ${attorney.name}
+   ת"ז: ${attorney.id}
+   יחסי קרבה: ${attorney.relationship}
+   כתובת: ${attorney.address}
+   טלפון: ${attorney.phone}`;
+}).join('\n\n')}
 
-3. הנחיות רפואיות:
-${formData.medicalInstructions}
+═══════════════════════════════════════
+חלק ב' - הנחיות רפואיות
+═══════════════════════════════════════
 
-4. הנחיות לניהול נכסים:
-${formData.propertyInstructions}
+${applyAdvanceDirectivesGender(
+  instructions.medical || 'לא צוינו הנחיות רפואיות ספציפיות.',
+  principalInfo.gender,
+  attorneyGender
+)}
 
-5. הוראות מיוחדות:
-${formData.specialInstructions}
+═══════════════════════════════════════
+חלק ג' - הנחיות רכושיות
+═══════════════════════════════════════
 
-תאריך: ${new Date().toLocaleDateString('he-IL')}
+${applyAdvanceDirectivesGender(
+  instructions.property || 'לא צוינו הנחיות רכושיות ספציפיות.',
+  principalInfo.gender,
+  attorneyGender
+)}
 
-חתימת המצהיר/ה: __________________
+═══════════════════════════════════════
+חלק ד' - הנחיות אישיות
+═══════════════════════════════════════
+
+${applyAdvanceDirectivesGender(
+  instructions.personal || 'לא צוינו הנחיות אישיות ספציפיות.',
+  principalInfo.gender,
+  attorneyGender
+)}
+
+═══════════════════════════════════════
+חלק ה' - הוראות מיוחדות
+═══════════════════════════════════════
+
+${applyAdvanceDirectivesGender(
+  instructions.special || 'אין הוראות מיוחדות נוספות.',
+  principalInfo.gender,
+  attorneyGender
+)}
+
+═══════════════════════════════════════
+
+תאריך: ${new Date().toLocaleDateString('he-IL', {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric'
+})}
+
+חתימת ${principalInfo.gender === 'female' ? 'הממנה' : 'הממנה'}: __________________
+
+חתימת עד 1: __________________  שם: ________________  ת"ז: ________________
+
+חתימת עד 2: __________________  שם: ________________  ת"ז: ________________
 `;
     return doc;
   };
@@ -104,7 +181,7 @@ ${formData.specialInstructions}
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `צוואה_חיה_${formData.fullName || 'מסמך'}.txt`;
+    a.download = `ייפוי_כוח_מתמשך_${principalInfo.fullName || 'מסמך'}.txt`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -113,7 +190,7 @@ ${formData.specialInstructions}
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-5xl mx-auto">
         <div className="bg-white rounded-2xl shadow-xl p-8">
           {/* Header */}
           <div className="text-center mb-8">
@@ -121,10 +198,10 @@ ${formData.specialInstructions}
               <FileText className="w-8 h-8 text-blue-600" />
             </div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              צוואה חיה וייפוי כוח מתמשך
+              ייפוי כוח מתמשך והנחיות מקדימות
             </h1>
             <p className="text-gray-600">
-              מלא/י את הפרטים כדי ליצור צוואה חיה וייפוי כוח מתמשך
+              מערכת מתקדמת עם תמיכה מלאה בנטיות מגדר
             </p>
           </div>
 
@@ -140,7 +217,7 @@ ${formData.specialInstructions}
                 >
                   <div className="flex items-center justify-center">
                     <div
-                      className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                      className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold ${
                         currentStep >= step
                           ? 'bg-blue-600 text-white'
                           : 'bg-gray-300 text-gray-600'
@@ -149,28 +226,51 @@ ${formData.specialInstructions}
                       {step}
                     </div>
                   </div>
+                  <div className="text-center mt-2 text-xs text-gray-600">
+                    {step === 1 && 'פרטי הממנה'}
+                    {step === 2 && 'מיופי כוח'}
+                    {step === 3 && 'הנחיות'}
+                    {step === 4 && 'סיכום'}
+                  </div>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Step 1: פרטים אישיים */}
+          {/* Step 1: פרטי הממנה */}
           {currentStep === 1 && (
             <div className="space-y-6">
               <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
                 <User className="w-6 h-6" />
-                פרטים אישיים
+                פרטי הממנה (נותן ההנחיות)
               </h2>
+
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                <p className="text-sm text-blue-800">
+                  💡 <strong>חשוב:</strong> בחירת המגדר תשפיע על כל הנטיות בטקסט (אני מצהיר/מצהירה, ממנה/ממנה וכו')
+                </p>
+              </div>
+
+              {/* בחירת מגדר */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  מגדר הממנה *
+                </label>
+                <GenderSelector
+                  value={principalInfo.gender}
+                  onChange={(gender) => setPrincipalInfo({ ...principalInfo, gender: gender as PersonGender })}
+                />
+              </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
+                <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     שם מלא *
                   </label>
                   <input
                     type="text"
-                    value={formData.fullName}
-                    onChange={(e) => updateField('fullName', e.target.value)}
+                    value={principalInfo.fullName}
+                    onChange={(e) => setPrincipalInfo({ ...principalInfo, fullName: e.target.value })}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="שם פרטי ושם משפחה"
                   />
@@ -182,8 +282,8 @@ ${formData.specialInstructions}
                   </label>
                   <input
                     type="text"
-                    value={formData.id}
-                    onChange={(e) => updateField('id', e.target.value)}
+                    value={principalInfo.id}
+                    onChange={(e) => setPrincipalInfo({ ...principalInfo, id: e.target.value })}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="123456789"
                   />
@@ -195,22 +295,9 @@ ${formData.specialInstructions}
                   </label>
                   <input
                     type="date"
-                    value={formData.birthDate}
-                    onChange={(e) => updateField('birthDate', e.target.value)}
+                    value={principalInfo.birthDate}
+                    onChange={(e) => setPrincipalInfo({ ...principalInfo, birthDate: e.target.value })}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    טלפון *
-                  </label>
-                  <input
-                    type="tel"
-                    value={formData.phone}
-                    onChange={(e) => updateField('phone', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="050-1234567"
                   />
                 </div>
 
@@ -220,21 +307,34 @@ ${formData.specialInstructions}
                   </label>
                   <input
                     type="text"
-                    value={formData.address}
-                    onChange={(e) => updateField('address', e.target.value)}
+                    value={principalInfo.address}
+                    onChange={(e) => setPrincipalInfo({ ...principalInfo, address: e.target.value })}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="רחוב, מספר בית, עיר, מיקוד"
                   />
                 </div>
 
-                <div className="md:col-span-2">
+                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    אימייל
+                    טלפון *
+                  </label>
+                  <input
+                    type="tel"
+                    value={principalInfo.phone}
+                    onChange={(e) => setPrincipalInfo({ ...principalInfo, phone: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="050-1234567"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    דוא"ל
                   </label>
                   <input
                     type="email"
-                    value={formData.email}
-                    onChange={(e) => updateField('email', e.target.value)}
+                    value={principalInfo.email}
+                    onChange={(e) => setPrincipalInfo({ ...principalInfo, email: e.target.value })}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="example@email.com"
                   />
@@ -252,76 +352,121 @@ ${formData.specialInstructions}
             </div>
           )}
 
-          {/* Step 2: מיופה כוח ראשי */}
+          {/* Step 2: מיופי כוח */}
           {currentStep === 2 && (
             <div className="space-y-6">
-              <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <Users className="w-6 h-6" />
-                מיופה כוח ראשי
-              </h2>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    שם מלא *
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.primaryAttorney.name}
-                    onChange={(e) => updateNestedField('primaryAttorney', 'name', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    מספר תעודת זהות *
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.primaryAttorney.id}
-                    onChange={(e) => updateNestedField('primaryAttorney', 'id', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    יחסי קרבה *
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.primaryAttorney.relationship}
-                    onChange={(e) => updateNestedField('primaryAttorney', 'relationship', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="בן/בת, אח/אחות, וכו'"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    טלפון *
-                  </label>
-                  <input
-                    type="tel"
-                    value={formData.primaryAttorney.phone}
-                    onChange={(e) => updateNestedField('primaryAttorney', 'phone', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    כתובת *
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.primaryAttorney.address}
-                    onChange={(e) => updateNestedField('primaryAttorney', 'address', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                  <Users className="w-6 h-6" />
+                  מיופי כוח
+                </h2>
+                <button
+                  onClick={addAttorney}
+                  className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+                >
+                  <Plus className="w-4 h-4" />
+                  הוסף מיופה כוח
+                </button>
               </div>
+
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                <p className="text-sm text-yellow-800">
+                  💡 <strong>כמה מיופי כוח?</strong> אם תוסיף יותר ממיופה כוח אחד, הנטיות יהיו ברבים (מיופי הכוח, רשאים וכו')
+                </p>
+              </div>
+
+              {attorneys.map((attorney, index) => (
+                <div key={index} className="border border-gray-200 rounded-lg p-6 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold text-gray-800">
+                      מיופה כוח #{index + 1} {index === 0 && '(ראשי)'}
+                    </h3>
+                    {attorneys.length > 1 && (
+                      <button
+                        onClick={() => removeAttorney(index)}
+                        className="text-red-600 hover:text-red-800 flex items-center gap-1"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        הסר
+                      </button>
+                    )}
+                  </div>
+
+                  {/* בחירת מגדר למיופה כוח */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      מגדר מיופה הכוח *
+                    </label>
+                    <GenderSelector
+                      value={attorney.gender}
+                      onChange={(gender) => updateAttorney(index, 'gender', gender as PersonGender)}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        שם מלא *
+                      </label>
+                      <input
+                        type="text"
+                        value={attorney.name}
+                        onChange={(e) => updateAttorney(index, 'name', e.target.value)}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        מספר תעודת זהות *
+                      </label>
+                      <input
+                        type="text"
+                        value={attorney.id}
+                        onChange={(e) => updateAttorney(index, 'id', e.target.value)}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        יחסי קרבה *
+                      </label>
+                      <input
+                        type="text"
+                        value={attorney.relationship}
+                        onChange={(e) => updateAttorney(index, 'relationship', e.target.value)}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="בן/בת, אח/אחות, וכו'"
+                      />
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        כתובת *
+                      </label>
+                      <input
+                        type="text"
+                        value={attorney.address}
+                        onChange={(e) => updateAttorney(index, 'address', e.target.value)}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        טלפון *
+                      </label>
+                      <input
+                        type="tel"
+                        value={attorney.phone}
+                        onChange={(e) => updateAttorney(index, 'phone', e.target.value)}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
 
               <div className="flex justify-between">
                 <button
@@ -340,83 +485,75 @@ ${formData.specialInstructions}
             </div>
           )}
 
-          {/* Step 3: מיופה כוח חלופי */}
+          {/* Step 3: הנחיות */}
           {currentStep === 3 && (
             <div className="space-y-6">
-              <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <Users className="w-6 h-6" />
-                מיופה כוח חלופי
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                הנחיות והוראות
               </h2>
 
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-                <p className="text-sm text-blue-800">
-                  💡 מומלץ למנות מיופה כוח חלופי למקרה שהמיופה כוח הראשי לא יוכל למלא את תפקידו
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                <p className="text-sm text-green-800">
+                  ✨ <strong>נטיות אוטומטיות:</strong> כל הטקסט שתכניס כאן יותאם אוטומטית למגדר הממנה ומיופי הכוח!
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    שם מלא
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.alternateAttorney.name}
-                    onChange={(e) => updateNestedField('alternateAttorney', 'name', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    מספר תעודת זהות
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.alternateAttorney.id}
-                    onChange={(e) => updateNestedField('alternateAttorney', 'id', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    יחסי קרבה
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.alternateAttorney.relationship}
-                    onChange={(e) => updateNestedField('alternateAttorney', 'relationship', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    טלפון
-                  </label>
-                  <input
-                    type="tel"
-                    value={formData.alternateAttorney.phone}
-                    onChange={(e) => updateNestedField('alternateAttorney', 'phone', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    כתובת
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.alternateAttorney.address}
-                    onChange={(e) => updateNestedField('alternateAttorney', 'address', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  הנחיות רפואיות
+                </label>
+                <textarea
+                  value={instructions.medical}
+                  onChange={(e) => setInstructions({ ...instructions, medical: e.target.value })}
+                  rows={5}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
+                  placeholder="דוגמה: {{מיופה_כוח}} {{רשאי}} להחליט על טיפולים רפואיים. אני {{מבקש}}/ת לקבל טיפול..."
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  השתמש ב-{`{{מיופה_כוח}}`}, {`{{רשאי}}`}, {`{{אחראי}}`} למילים שצריכות נטייה
+                </p>
               </div>
 
-              <div className="flex justify-between">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  הנחיות לניהול נכסים
+                </label>
+                <textarea
+                  value={instructions.property}
+                  onChange={(e) => setInstructions({ ...instructions, property: e.target.value })}
+                  rows={5}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
+                  placeholder="דוגמה: {{מיופה_כוח}} {{מוסמך}} לנהל את חשבונות הבנק שלי..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  הנחיות אישיות
+                </label>
+                <textarea
+                  value={instructions.personal}
+                  onChange={(e) => setInstructions({ ...instructions, personal: e.target.value })}
+                  rows={5}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
+                  placeholder="דוגמה: אני {{מבקש}}/ת להישאר בביתי. {{מיופה_כוח}} {{אחראי}} על..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  הוראות מיוחדות
+                </label>
+                <textarea
+                  value={instructions.special}
+                  onChange={(e) => setInstructions({ ...instructions, special: e.target.value })}
+                  rows={4}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
+                  placeholder="הוראות נוספות..."
+                />
+              </div>
+
+              <div className="flex justify-between pt-6">
                 <button
                   onClick={() => setCurrentStep(2)}
                   className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition font-medium"
@@ -427,56 +564,43 @@ ${formData.specialInstructions}
                   onClick={() => setCurrentStep(4)}
                   className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium"
                 >
-                  המשך →
+                  המשך לסיכום →
                 </button>
               </div>
             </div>
           )}
 
-          {/* Step 4: הנחיות */}
+          {/* Step 4: סיכום */}
           {currentStep === 4 && (
             <div className="space-y-6">
               <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                הנחיות והוראות
+                סיכום ותצוגה מקדימה
               </h2>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  הנחיות רפואיות
-                </label>
-                <textarea
-                  value={formData.medicalInstructions}
-                  onChange={(e) => updateField('medicalInstructions', e.target.value)}
-                  rows={4}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="הנחיות לגבי טיפולים רפואיים, החייאה, וכו'"
-                />
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
+                <h3 className="font-semibold text-gray-800 mb-2">פרטי הממנה:</h3>
+                <p className="text-sm text-gray-700">{principalInfo.fullName} ({principalInfo.gender === 'male' ? 'זכר' : 'נקבה'})</p>
+                
+                <h3 className="font-semibold text-gray-800 mt-4 mb-2">מיופי כוח:</h3>
+                <ul className="text-sm text-gray-700 list-disc list-inside">
+                  {attorneys.map((att, i) => (
+                    <li key={i}>{att.name} ({att.gender === 'male' ? 'זכר' : 'נקבה'})</li>
+                  ))}
+                </ul>
+
+                {attorneys.length > 1 && (
+                  <div className="bg-blue-100 border border-blue-300 rounded p-3 mt-4">
+                    <p className="text-sm text-blue-800">
+                      💡 יש {attorneys.length} מיופי כוח - הנטיות יהיו ברבים
+                    </p>
+                  </div>
+                )}
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  הנחיות לניהול נכסים
-                </label>
-                <textarea
-                  value={formData.propertyInstructions}
-                  onChange={(e) => updateField('propertyInstructions', e.target.value)}
-                  rows={4}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="הנחיות לגבי ניהול נכסים, חשבונות בנק, וכו'"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  הוראות מיוחדות
-                </label>
-                <textarea
-                  value={formData.specialInstructions}
-                  onChange={(e) => updateField('specialInstructions', e.target.value)}
-                  rows={4}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="הוראות נוספות שברצונך לכלול"
-                />
+              <div className="bg-white border-2 border-gray-300 rounded-lg p-6 max-h-96 overflow-y-auto">
+                <pre className="whitespace-pre-wrap text-sm font-mono text-right" style={{ direction: 'rtl' }}>
+                  {generateDocument()}
+                </pre>
               </div>
 
               <div className="flex justify-between pt-6">
