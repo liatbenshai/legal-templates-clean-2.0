@@ -1,5 +1,5 @@
 'use client';
-
+ 
 import { useState, useEffect } from 'react';
 import { AuthService } from '@/lib/auth';
 import { User as UserIcon, Mail, Phone, Building, Lock, Save, LogOut, Scale } from 'lucide-react';
