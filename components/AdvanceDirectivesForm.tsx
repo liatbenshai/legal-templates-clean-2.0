@@ -3,8 +3,12 @@
 import { useState } from 'react';
 import { FileText, User, Users, Download, Plus, Trash2 } from 'lucide-react';
 import GenderSelector from './GenderSelector';
+import AdvanceDirectivesSectionSelector from './AdvanceDirectivesSectionSelector';
 import type { Gender } from '@/lib/hebrew-gender';
-import { applyAdvanceDirectivesGender } from '@/lib/sections-warehouses/advance-directives-warehouse';
+import { 
+  applyAdvanceDirectivesGender,
+  getAdvanceDirectivesSectionById 
+} from '@/lib/sections-warehouses/advance-directives-warehouse';
 
 // סוג מגדר מצומצם (ללא organization)
 type PersonGender = 'male' | 'female';
@@ -42,8 +46,11 @@ export default function AdvanceDirectivesForm() {
     }
   ]);
 
-  // הנחיות
-  const [instructions, setInstructions] = useState({
+  // הנחיות - סעיפים שנבחרו מהמחסן
+  const [selectedSections, setSelectedSections] = useState<string[]>([]);
+  
+  // הנחיות חופשיות (טקסט נוסף)
+  const [customInstructions, setCustomInstructions] = useState({
     medical: '',
     property: '',
     personal: '',
@@ -51,6 +58,7 @@ export default function AdvanceDirectivesForm() {
   });
 
   const [currentStep, setCurrentStep] = useState(1);
+  const [useWarehouse, setUseWarehouse] = useState(true); // האם להשתמש במחסן או טקסט חופשי
 
   // הוספת מיופה כוח נוסף
   const addAttorney = () => {
@@ -85,11 +93,47 @@ export default function AdvanceDirectivesForm() {
     return 'plural'; // רבים
   };
 
+  // טיפול בבחירת/ביטול סעיף
+  const handleSectionToggle = (sectionId: string) => {
+    setSelectedSections(prev => 
+      prev.includes(sectionId)
+        ? prev.filter(id => id !== sectionId)
+        : [...prev, sectionId]
+    );
+  };
+
+  // קבלת תוכן הסעיפים שנבחרו עם נטיות
+  const getSelectedSectionsContent = (category: 'property' | 'personal' | 'medical') => {
+    const attorneyGender = getAttorneyGender();
+    const sections = selectedSections
+      .map(id => getAdvanceDirectivesSectionById(id))
+      .filter(section => section && section.category === category);
+    
+    if (sections.length === 0) return '';
+    
+    return sections
+      .map((section, index) => {
+        const content = applyAdvanceDirectivesGender(
+          section!.content,
+          principalInfo.gender,
+          attorneyGender
+        );
+        return `${index + 1}. ${section!.title}\n\n${content}`;
+      })
+      .join('\n\n───────────────────\n\n');
+  };
+
   const generateDocument = () => {
     const attorneyGender = getAttorneyGender();
     
     // כותרת עם נטיות
     const genderSuffix = principalInfo.gender === 'female' ? 'ה' : '';
+    
+    // סעיפים לפי קטגוריות
+    const propertySections = getSelectedSectionsContent('property');
+    const personalSections = getSelectedSectionsContent('personal');
+    const medicalSections = getSelectedSectionsContent('medical');
+    
     const doc = `
 ייפוי כוח מתמשך והנחיות מקדימות
 
@@ -119,41 +163,29 @@ ${attorneys.map((attorney, index) => {
 }).join('\n\n')}
 
 ═══════════════════════════════════════
-חלק ב' - הנחיות רפואיות
+חלק ב' - הנחיות רכושיות
 ═══════════════════════════════════════
 
-${applyAdvanceDirectivesGender(
-  instructions.medical || 'לא צוינו הנחיות רפואיות ספציפיות.',
-  principalInfo.gender,
-  attorneyGender
-)}
+${propertySections || customInstructions.property || 'לא צוינו הנחיות רכושיות ספציפיות.'}
 
 ═══════════════════════════════════════
-חלק ג' - הנחיות רכושיות
+חלק ג' - הנחיות אישיות
 ═══════════════════════════════════════
 
-${applyAdvanceDirectivesGender(
-  instructions.property || 'לא צוינו הנחיות רכושיות ספציפיות.',
-  principalInfo.gender,
-  attorneyGender
-)}
+${personalSections || customInstructions.personal || 'לא צוינו הנחיות אישיות ספציפיות.'}
 
 ═══════════════════════════════════════
-חלק ד' - הנחיות אישיות
+חלק ד' - הנחיות רפואיות
 ═══════════════════════════════════════
 
-${applyAdvanceDirectivesGender(
-  instructions.personal || 'לא צוינו הנחיות אישיות ספציפיות.',
-  principalInfo.gender,
-  attorneyGender
-)}
+${medicalSections || customInstructions.medical || 'לא צוינו הנחיות רפואיות ספציפיות.'}
 
 ═══════════════════════════════════════
 חלק ה' - הוראות מיוחדות
 ═══════════════════════════════════════
 
 ${applyAdvanceDirectivesGender(
-  instructions.special || 'אין הוראות מיוחדות נוספות.',
+  customInstructions.special || 'אין הוראות מיוחדות נוספות.',
   principalInfo.gender,
   attorneyGender
 )}
@@ -492,66 +524,111 @@ ${applyAdvanceDirectivesGender(
                 הנחיות והוראות
               </h2>
 
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
-                <p className="text-sm text-green-800">
-                  ✨ <strong>נטיות אוטומטיות:</strong> כל הטקסט שתכניס כאן יותאם אוטומטית למגדר הממנה ומיופי הכוח!
-                </p>
+              {/* בחירה בין מחסן סעיפים לטקסט חופשי */}
+              <div className="flex gap-4 mb-6">
+                <button
+                  onClick={() => setUseWarehouse(true)}
+                  className={`flex-1 p-4 rounded-lg border-2 transition ${
+                    useWarehouse
+                      ? 'border-blue-600 bg-blue-50 text-blue-900'
+                      : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                  }`}
+                >
+                  <div className="text-center">
+                    <div className="text-2xl mb-2">📚</div>
+                    <div className="font-semibold">מחסן סעיפים (מומלץ)</div>
+                    <div className="text-sm mt-1">95 סעיפים מוכנים עם נטיות אוטומטיות</div>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => setUseWarehouse(false)}
+                  className={`flex-1 p-4 rounded-lg border-2 transition ${
+                    !useWarehouse
+                      ? 'border-blue-600 bg-blue-50 text-blue-900'
+                      : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                  }`}
+                >
+                  <div className="text-center">
+                    <div className="text-2xl mb-2">✍️</div>
+                    <div className="font-semibold">טקסט חופשי</div>
+                    <div className="text-sm mt-1">כתוב הנחיות משלך</div>
+                  </div>
+                </button>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  הנחיות רפואיות
-                </label>
-                <textarea
-                  value={instructions.medical}
-                  onChange={(e) => setInstructions({ ...instructions, medical: e.target.value })}
-                  rows={5}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
-                  placeholder="דוגמה: {{מיופה_כוח}} {{רשאי}} להחליט על טיפולים רפואיים. אני {{מבקש}}/ת לקבל טיפול..."
+              {/* מחסן סעיפים */}
+              {useWarehouse && (
+                <AdvanceDirectivesSectionSelector
+                  selectedSections={selectedSections}
+                  onSectionToggle={handleSectionToggle}
+                  principalGender={principalInfo.gender}
+                  attorneyGender={getAttorneyGender()}
                 />
-                <p className="text-xs text-gray-500 mt-1">
-                  השתמש ב-{`{{מיופה_כוח}}`}, {`{{רשאי}}`}, {`{{אחראי}}`} למילים שצריכות נטייה
-                </p>
-              </div>
+              )}
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  הנחיות לניהול נכסים
-                </label>
-                <textarea
-                  value={instructions.property}
-                  onChange={(e) => setInstructions({ ...instructions, property: e.target.value })}
-                  rows={5}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
-                  placeholder="דוגמה: {{מיופה_כוח}} {{מוסמך}} לנהל את חשבונות הבנק שלי..."
-                />
-              </div>
+              {/* טקסט חופשי */}
+              {!useWarehouse && (
+                <div className="space-y-4">
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <p className="text-sm text-green-800">
+                      ✨ <strong>נטיות אוטומטיות:</strong> השתמש ב-{`{{מיופה_כוח}}`}, {`{{רשאי}}`}, {`{{אחראי}}`} או /ת /ה
+                    </p>
+                  </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  הנחיות אישיות
-                </label>
-                <textarea
-                  value={instructions.personal}
-                  onChange={(e) => setInstructions({ ...instructions, personal: e.target.value })}
-                  rows={5}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
-                  placeholder="דוגמה: אני {{מבקש}}/ת להישאר בביתי. {{מיופה_כוח}} {{אחראי}} על..."
-                />
-              </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      הנחיות רכושיות
+                    </label>
+                    <textarea
+                      value={customInstructions.property}
+                      onChange={(e) => setCustomInstructions({ ...customInstructions, property: e.target.value })}
+                      rows={4}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
+                      placeholder="{{מיופה_כוח}} {{מוסמך}} לנהל את חשבונות הבנק שלי..."
+                    />
+                  </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  הוראות מיוחדות
-                </label>
-                <textarea
-                  value={instructions.special}
-                  onChange={(e) => setInstructions({ ...instructions, special: e.target.value })}
-                  rows={4}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
-                  placeholder="הוראות נוספות..."
-                />
-              </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      הנחיות אישיות
+                    </label>
+                    <textarea
+                      value={customInstructions.personal}
+                      onChange={(e) => setCustomInstructions({ ...customInstructions, personal: e.target.value })}
+                      rows={4}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
+                      placeholder="אני מבקש/ת להישאר בביתי..."
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      הנחיות רפואיות
+                    </label>
+                    <textarea
+                      value={customInstructions.medical}
+                      onChange={(e) => setCustomInstructions({ ...customInstructions, medical: e.target.value })}
+                      rows={4}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
+                      placeholder="{{מיופה_כוח}} {{רשאי}} להחליט על טיפולים רפואיים..."
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      הוראות מיוחדות
+                    </label>
+                    <textarea
+                      value={customInstructions.special}
+                      onChange={(e) => setCustomInstructions({ ...customInstructions, special: e.target.value })}
+                      rows={3}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
+                      placeholder="הוראות נוספות..."
+                    />
+                  </div>
+                </div>
+              )}
 
               <div className="flex justify-between pt-6">
                 <button
