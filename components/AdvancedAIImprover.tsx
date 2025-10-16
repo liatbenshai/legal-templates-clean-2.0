@@ -2,8 +2,6 @@
 
 import { useState } from 'react';
 import { Sparkles, RefreshCw, Check, X, History, Zap, FileText, Brain, Edit3 } from 'lucide-react';
-import { aiLegalWriter } from '@/lib/ai-legal-writer';
-import { aiLearningSystem } from '@/lib/ai-learning-system';
 import AILearningManager from './AILearningManager';
 
 interface AdvancedAIImproverProps {
