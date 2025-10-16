@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FileText, User, Users, Download, Plus, Trash2 } from 'lucide-react';
 import GenderSelector from './GenderSelector';
 import AdvanceDirectivesSectionSelector from './AdvanceDirectivesSectionSelector';
