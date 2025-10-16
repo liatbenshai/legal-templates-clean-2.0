@@ -36,13 +36,17 @@ export function useDocuments() {
       }
 
       // בדוק אם קיים סעיף כזה כבר
-      const { data: existing } = await supabase
+      const { data: existing, error: selectError } = await supabase
         .from('saved_documents')
-        .select('id')
+        .select('id, content')
         .eq('user_id', user.id)
         .eq('document_type', documentType)
         .eq('section_name', sectionName)
         .single();
+
+      if (selectError && selectError.code !== 'PGRST116') {
+        throw selectError;
+      }
 
       if (existing) {
         // עדכן את הסעיף הקיים
@@ -50,7 +54,7 @@ export function useDocuments() {
           .from('saved_documents')
           .update({
             content,
-            original_content: originalContent || existing.content,
+            original_content: originalContent || (existing.content as string),
             title: title || null,
             updated_at: new Date().toISOString(),
           })
@@ -81,6 +85,7 @@ export function useDocuments() {
     } catch (err: any) {
       const errorMessage = err.message || 'שגיאה בשמירת הסעיף';
       setError(errorMessage);
+      console.error('Error saving section:', err);
       return { success: false, error: errorMessage };
     } finally {
       setLoading(false);
@@ -107,7 +112,7 @@ export function useDocuments() {
 
       if (fetchError && fetchError.code !== 'PGRST116') throw fetchError;
 
-      return data || null;
+      return data as SavedDocument || null;
     } catch (err) {
       console.error('Error loading section:', err);
       return null;
@@ -132,7 +137,7 @@ export function useDocuments() {
 
       if (fetchError) throw fetchError;
 
-      return data || [];
+      return (data as SavedDocument[]) || [];
     } catch (err) {
       console.error('Error loading document sections:', err);
       return [];
