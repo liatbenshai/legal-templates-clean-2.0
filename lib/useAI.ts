@@ -28,7 +28,7 @@ export function useAI() {
     setError(null);
     
     try {
-      const response = await fetch('/api/ai/improve', {
+      const response = await fetch('/api/will/improve-language', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -66,7 +66,7 @@ export function useAI() {
     setError(null);
 
     try {
-      const response = await fetch('/api/ai/suggestions', {
+      const response = await fetch('/api/will/improve-language', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
