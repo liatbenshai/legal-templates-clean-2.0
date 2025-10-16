@@ -17,7 +17,8 @@ import {
   X,
   RefreshCw,
   Sparkles,
-  MoveHorizontal
+  MoveHorizontal,
+  EyeOff
 } from 'lucide-react';
 import EditableSection from './LearningSystem/EditableSection';
 import { EditableSection as EditableSectionType } from '@/lib/learning-system/types';
@@ -57,8 +58,13 @@ const CATEGORIES = [
 export default function UnifiedWarehouse({ onSectionSelect, userId, willType = 'individual' }: UnifiedWarehouseProps) {
   const [sections, setSections] = useState<WarehouseSection[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedCategory, setSelectedCategory] = useState('financial'); // ברירת מחדל: כספים
   const [sortBy, setSortBy] = useState<'recent' | 'popular' | 'rating'>('recent');
+  const [hiddenSections, setHiddenSections] = useState<string[]>(() => {
+    // טעינת סעיפים מוסתרים מ-localStorage
+    const saved = localStorage.getItem(`hiddenSections_${userId}`);
+    return saved ? JSON.parse(saved) : [];
+  });
   const [isAddingNew, setIsAddingNew] = useState(false);
   const [editingSection, setEditingSection] = useState<WarehouseSection | null>(null);
   const [newSection, setNewSection] = useState({
@@ -240,7 +246,24 @@ export default function UnifiedWarehouse({ onSectionSelect, userId, willType = '
     }
   };
 
+  // שמירת סעיפים מוסתרים
+  const saveHiddenSections = (hidden: string[]) => {
+    localStorage.setItem(`hiddenSections_${userId}`, JSON.stringify(hidden));
+    setHiddenSections(hidden);
+  };
+
+  // הסתרת/הצגת סעיף
+  const toggleHideSection = (sectionId: string) => {
+    const newHidden = hiddenSections.includes(sectionId)
+      ? hiddenSections.filter(id => id !== sectionId)
+      : [...hiddenSections, sectionId];
+    saveHiddenSections(newHidden);
+  };
+
   const filteredSections = sections.filter(section => {
+    // סינון לפי הסתרה
+    if (hiddenSections.includes(section.id)) return false;
+    
     const matchesSearch = section.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          section.content.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || section.category === selectedCategory;
@@ -435,8 +458,30 @@ export default function UnifiedWarehouse({ onSectionSelect, userId, willType = '
             {willType === 'individual' && (
               <span className="text-xs text-gray-500 mr-2">(ללא סעיפים הדדיים)</span>
             )}
+            {hiddenSections.length > 0 && (
+              <span className="text-xs text-orange-600 mr-2">
+                🙈 {hiddenSections.length} מוסתרים
+              </span>
+            )}
           </div>
         </div>
+        
+        {/* הצג כפתור לשחזור סעיפים מוסתרים */}
+        {hiddenSections.length > 0 && (
+          <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 mb-4">
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-orange-800">
+                <strong>{hiddenSections.length} סעיפים מוסתרים</strong> - לא יופיעו ברשימה
+              </p>
+              <button
+                onClick={() => saveHiddenSections([])}
+                className="text-sm px-3 py-1 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition"
+              >
+                הצג את כולם מחדש
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* חיפוש וסינון */}
         <div className="grid md:grid-cols-3 gap-4 mb-4">
@@ -485,7 +530,7 @@ export default function UnifiedWarehouse({ onSectionSelect, userId, willType = '
 
         {/* קטגוריות */}
         <div className="flex flex-wrap gap-2 mb-4">
-          {CATEGORIES.map(category => (
+          {CATEGORIES.filter(c => c.id !== 'all').map(category => (
             <button
               key={category.id}
               onClick={() => setSelectedCategory(category.id)}
@@ -499,6 +544,17 @@ export default function UnifiedWarehouse({ onSectionSelect, userId, willType = '
               {category.name}
             </button>
           ))}
+          <button
+            onClick={() => setSelectedCategory('all')}
+            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition ${
+              selectedCategory === 'all'
+                ? 'bg-gray-800 text-white border border-gray-800'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            <span>📚</span>
+            הכל
+          </button>
         </div>
       </div>
 
@@ -662,6 +718,13 @@ export default function UnifiedWarehouse({ onSectionSelect, userId, willType = '
                       הוסף לצוואה
                     </button>
                     <button
+                      onClick={() => toggleHideSection(section.id)}
+                      className="p-1 text-orange-500 hover:text-orange-700 transition"
+                      title="הסתר סעיף (לא יופיע יותר)"
+                    >
+                      <EyeOff className="w-4 h-4" />
+                    </button>
+                    <button
                       onClick={() => setShowAIEditor(section.id)}
                       className="p-1 text-purple-500 hover:text-purple-700 transition"
                       title="עריכה עם AI"
@@ -678,7 +741,7 @@ export default function UnifiedWarehouse({ onSectionSelect, userId, willType = '
                     <button
                       onClick={() => handleDeleteSection(section.id)}
                       className="p-1 text-gray-500 hover:text-red-600 transition"
-                      title="מחק סעיף"
+                      title="מחק סעיף לצמיתות"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>

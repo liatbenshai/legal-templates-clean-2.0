@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Sparkles, RefreshCw, Check, X, History, Zap, Edit3 } from 'lucide-react';
 import AILearningManager from './AILearningManager';
+import { useAIImprove } from '@/lib/hooks/useAIImprove';
 
 interface AdvancedAIImproverProps {
   originalText: string;
@@ -26,7 +27,7 @@ export default function AdvancedAIImprover({
   context = 'will-single',
   style = 'formal'
 }: AdvancedAIImproverProps) {
-  const [isImproving, setIsImproving] = useState(false);
+  const { improveText: improveTextAPI, loading } = useAIImprove();
   const [improvedText, setImprovedText] = useState<string | null>(null);
   const [suggestions, setSuggestions] = useState<ImprovementSuggestion[]>([]);
   const [selectedStyle, setSelectedStyle] = useState(style);
@@ -34,7 +35,7 @@ export default function AdvancedAIImprover({
   const [isEditing, setIsEditing] = useState(false);
   const [editedText, setEditedText] = useState('');
 
-  const improveText = async () => {
+  const handleImprove = async () => {
     if (!originalText || !originalText.trim()) {
       alert('אנא הזן טקסט לשיפור');
       return;
@@ -45,70 +46,32 @@ export default function AdvancedAIImprover({
       return;
     }
     
-    setIsImproving(true);
     setImprovedText(null);
     setSuggestions([]);
     
     try {
-      const result = await performAdvancedImprovement(originalText, selectedContext, selectedStyle);
-      setImprovedText(result.improvedText);
-      setSuggestions(result.suggestions);
-      
-    } catch (error) {
-      console.error('שגיאה בשיפור:', error);
-      
-      let errorMessage = 'שגיאה בשיפור הטקסט.';
-      if (error instanceof Error) {
-        if (error.message.includes('API')) {
-          errorMessage = 'שגיאת תקשורת עם שרת ה-AI.';
-        } else if (error.message.includes('אימות')) {
-          errorMessage = 'התשובה מה-AI לא תקינה. נסה שוב.';
-        } else if (error.message.includes('ריק')) {
-          errorMessage = 'הטקסט המשופר ריק. נסה שוב.';
-        } else {
-          errorMessage = error.message;
-        }
-      }
-      alert(errorMessage);
-    } finally {
-      setIsImproving(false);
-    }
-  };
-
-  const performAdvancedImprovement = async (
-    text: string, 
-    context: string, 
-    style: string
-  ): Promise<{ improvedText: string; suggestions: ImprovementSuggestion[] }> => {
-    
-    try {
-      const response = await fetch('/api/will/improve-language', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text })
+      // שימוש ב-hook החדש!
+      const improved = await improveTextAPI(originalText, {
+        context: selectedContext,
+        style: selectedStyle
       });
-
-      if (!response.ok) throw new Error('Failed to improve');
       
-      const data = await response.json();
-      const improvedTextContent = data.content?.[0]?.text;
+      setImprovedText(improved);
       
-      if (!improvedTextContent) throw new Error('No content returned');
-
-      const suggestions: ImprovementSuggestion[] = [
+      // הוספת הצעה
+      const newSuggestions: ImprovementSuggestion[] = [
         {
           type: 'enhance',
           title: 'שיפור משפטי',
           description: 'הטקסט שופר לעברית משפטית תקנית ומקצועית',
-          preview: `התאמה לסוג מסמך: ${getContextName(context)}`
+          preview: `התאמה לסוג מסמך: ${getContextName(selectedContext)}`
         }
       ];
-      
-      return { improvedText: improvedTextContent, suggestions };
+      setSuggestions(newSuggestions);
       
     } catch (error) {
-      console.error('שגיאה בשיפור מתקדם:', error);
-      throw new Error(error instanceof Error ? error.message : 'שגיאה לא ידועה');
+      console.error('שגיאה בשיפור:', error);
+      alert('שגיאה בשיפור הטקסט. נסי שוב.');
     }
   };
 
@@ -314,11 +277,11 @@ export default function AdvancedAIImprover({
         </div>
 
         <button
-          onClick={improveText}
-          disabled={isImproving}
+          onClick={handleImprove}
+          disabled={loading}
           className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:from-purple-700 hover:to-indigo-700 transition font-bold text-lg disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isImproving ? (
+          {loading ? (
             <>
               <RefreshCw className="w-5 h-5 animate-spin" />
               מעבד עם AI...

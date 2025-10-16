@@ -8,7 +8,7 @@ import {
   applyAdvanceDirectivesGender,
   type AdvanceDirectivesSectionTemplate 
 } from '@/lib/sections-warehouses/advance-directives-warehouse';
-import { Search, Plus, Check, Eye, EyeOff } from 'lucide-react';
+import { Search, Plus, Check, Eye, EyeOff, X } from 'lucide-react';
 
 interface AdvanceDirectivesSectionSelectorProps {
   selectedSections: string[]; // IDs של הסעיפים שנבחרו
@@ -24,12 +24,34 @@ export default function AdvanceDirectivesSectionSelector({
   attorneyGender
 }: AdvanceDirectivesSectionSelectorProps) {
   const [selectedCategory, setSelectedCategory] = useState<'property' | 'personal' | 'medical'>('property');
-  const [selectedSubcategory, setSelectedSubcategory] = useState<string>('');
+  const [selectedSubcategory, setSelectedSubcategory] = useState<string>('real-estate'); // ברירת מחדל: נדל"ן
   const [searchQuery, setSearchQuery] = useState('');
   const [previewSection, setPreviewSection] = useState<string | null>(null);
+  const [hiddenSections, setHiddenSections] = useState<string[]>(() => {
+    // טעינת סעיפים מוסתרים מ-localStorage
+    const saved = localStorage.getItem('hiddenAdvanceDirectivesSections');
+    return saved ? JSON.parse(saved) : [];
+  });
 
-  // סינון סעיפים לפי קטגוריה, תת-קטגוריה וחיפוש
+  // שמירת סעיפים מוסתרים
+  const saveHiddenSections = (hidden: string[]) => {
+    localStorage.setItem('hiddenAdvanceDirectivesSections', JSON.stringify(hidden));
+    setHiddenSections(hidden);
+  };
+
+  // הסתרת/הצגת סעיף
+  const toggleHideSection = (sectionId: string) => {
+    const newHidden = hiddenSections.includes(sectionId)
+      ? hiddenSections.filter(id => id !== sectionId)
+      : [...hiddenSections, sectionId];
+    saveHiddenSections(newHidden);
+  };
+
+  // סינון סעיפים לפי קטגוריה, תת-קטגוריה, חיפוש והסתרה
   const filteredSections = advanceDirectivesSectionsWarehouse.filter(section => {
+    // סינון לפי הסתרה
+    if (hiddenSections.includes(section.id)) return false;
+    
     // סינון לפי קטגוריה
     if (section.category !== selectedCategory) return false;
     
@@ -104,16 +126,6 @@ export default function AdvanceDirectivesSectionSelector({
       {/* תת-קטגוריות */}
       {currentSubcategories.length > 0 && (
         <div className="flex flex-wrap gap-2">
-          <button
-            onClick={() => setSelectedSubcategory('')}
-            className={`px-3 py-1 rounded-full text-sm font-medium transition ${
-              selectedSubcategory === ''
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}
-          >
-            הכל
-          </button>
           {currentSubcategories.map((sub) => (
             <button
               key={sub.id}
@@ -127,6 +139,16 @@ export default function AdvanceDirectivesSectionSelector({
               {sub.name}
             </button>
           ))}
+          <button
+            onClick={() => setSelectedSubcategory('')}
+            className={`px-3 py-1 rounded-full text-sm font-medium transition ${
+              selectedSubcategory === ''
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
+          >
+            הכל
+          </button>
         </div>
       )}
 
@@ -190,6 +212,14 @@ export default function AdvanceDirectivesSectionSelector({
                     </button>
 
                     <button
+                      onClick={() => toggleHideSection(section.id)}
+                      className="p-2 rounded-lg transition bg-red-100 text-red-600 hover:bg-red-200"
+                      title="הסתר סעיף זה (לא יופיע יותר)"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+
+                    <button
                       onClick={() => onSectionToggle(section.id)}
                       className={`p-2 rounded-lg transition ${
                         isSelected
@@ -208,17 +238,33 @@ export default function AdvanceDirectivesSectionSelector({
         )}
       </div>
 
-      {/* סיכום הבחירה */}
-      {selectedSections.length > 0 && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-          <p className="font-semibold text-green-800">
-            ✅ נבחרו {selectedSections.length} סעיפים
-          </p>
-          <p className="text-sm text-green-700 mt-1">
-            הסעיפים יתווספו למסמך עם הנטיות המתאימות
-          </p>
-        </div>
-      )}
+      {/* סיכום הבחירה וסעיפים מוסתרים */}
+      <div className="grid md:grid-cols-2 gap-4">
+        {selectedSections.length > 0 && (
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+            <p className="font-semibold text-green-800">
+              ✅ נבחרו {selectedSections.length} סעיפים
+            </p>
+            <p className="text-sm text-green-700 mt-1">
+              הסעיפים יתווספו למסמך עם הנטיות המתאימות
+            </p>
+          </div>
+        )}
+        
+        {hiddenSections.length > 0 && (
+          <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+            <p className="font-semibold text-orange-800">
+              🙈 {hiddenSections.length} סעיפים מוסתרים
+            </p>
+            <button
+              onClick={() => saveHiddenSections([])}
+              className="text-sm text-orange-700 hover:text-orange-900 mt-1 underline"
+            >
+              הצג את כל הסעיפים מחדש
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

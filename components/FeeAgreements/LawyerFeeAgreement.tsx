@@ -87,6 +87,25 @@ export default function LawyerFeeAgreement() {
       setCurrentUser(user);
     };
     loadUser();
+    
+    // בדיקה אם יש טקסט מ-ai-learning
+    const savedText = localStorage.getItem('ai-improved-section-fee-agreement');
+    if (savedText) {
+      try {
+        const data = JSON.parse(savedText);
+        if (data.content && confirm('📥 נמצא טקסט משופר מעמוד למידת AI. לטעון אותו?')) {
+          // הוסף את הטקסט למערך הסעיפים
+          setCustomSections(prev => [...prev, {
+            title: 'סעיף משופר מ-AI',
+            content: data.content
+          }]);
+          localStorage.removeItem('ai-improved-section-fee-agreement');
+          alert('✅ הטקסט נטען בהצלחה!');
+        }
+      } catch (err) {
+        console.error('Error loading AI text:', err);
+      }
+    }
   }, []);
   
   const [agreementData, setAgreementData] = useState<FeeAgreementData>({

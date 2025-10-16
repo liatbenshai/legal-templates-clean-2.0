@@ -67,6 +67,27 @@ export default function AdvanceDirectivesForm() {
   // מערכת למידה
   const [editableSections, setEditableSections] = useState<EditableSectionType[]>([]);
   const [showAILearning, setShowAILearning] = useState(false);
+  
+  // בדיקה אם יש טקסט מ-ai-learning
+  useEffect(() => {
+    const savedText = localStorage.getItem('ai-improved-section-advance-directives');
+    if (savedText) {
+      try {
+        const data = JSON.parse(savedText);
+        if (data.content && confirm('📥 נמצא טקסט משופר מעמוד למידת AI. לטעון אותו?')) {
+          // הוסף להנחיות החופשיות
+          setCustomInstructions(prev => ({
+            ...prev,
+            special: prev.special ? prev.special + '\n\n' + data.content : data.content
+          }));
+          localStorage.removeItem('ai-improved-section-advance-directives');
+          alert('✅ הטקסט נטען להנחיות מיוחדות בהצלחה!');
+        }
+      } catch (err) {
+        console.error('Error loading AI text:', err);
+      }
+    }
+  }, []);
 
   // הוספת מיופה כוח נוסף
   const addAttorney = () => {

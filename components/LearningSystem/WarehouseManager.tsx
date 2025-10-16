@@ -26,7 +26,7 @@ export default function WarehouseManager({ userId, onSectionSelect }: WarehouseM
   const [sections, setSections] = useState<WarehouseSection[]>([]);
   const [userProfile, setUserProfile] = useState<UserLearningProfile | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedCategory, setSelectedCategory] = useState('custom'); // ברירת מחדל: מותאם אישית
   const [sortBy, setSortBy] = useState<'recent' | 'popular' | 'rating'>('recent');
   const [showAddForm, setShowAddForm] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -148,7 +148,7 @@ export default function WarehouseManager({ userId, onSectionSelect }: WarehouseM
       }
     });
 
-  const categories = ['all', ...new Set(sections.map(s => s.category))];
+  const categories = [...new Set(sections.map(s => s.category)), 'all'].filter(Boolean);
   const statistics = mounted ? learningEngine.getStatistics(userId) : {
     totalEdits: 0,
     uniqueUsers: 0,
@@ -230,7 +230,7 @@ export default function WarehouseManager({ userId, onSectionSelect }: WarehouseM
         >
           {categories.map(category => (
             <option key={category} value={category}>
-              {category === 'all' ? 'כל הקטגוריות' : category}
+              {category === 'all' ? '🌐 הכל' : category}
             </option>
           ))}
         </select>

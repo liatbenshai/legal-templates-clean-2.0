@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAI } from '@/lib/useAI';
-import { Sparkles, Copy, Download, Loader, BookOpen, TrendingUp, Save, Trash2 } from 'lucide-react';
+import { useAIImprove } from '@/lib/hooks/useAIImprove';
+import { Sparkles, Copy, Download, Loader, BookOpen, TrendingUp, Save, Trash2, FileText, Handshake, Heart } from 'lucide-react';
 import { supabase } from '@/lib/supabase-client';
+import { useRouter } from 'next/navigation';
 
 interface SavedSection {
   id: string;
@@ -13,7 +14,8 @@ interface SavedSection {
 }
 
 export default function AILearningPage() {
-  const { improveText, getSuggestions, loading, error } = useAI();
+  const router = useRouter();
+  const { improveText, getSuggestions, loading, error } = useAIImprove();
   const [text, setText] = useState('');
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState<'editor' | 'suggestions'>('editor');
@@ -22,6 +24,7 @@ export default function AILearningPage() {
   const [sectionTitle, setSectionTitle] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [isLoadingSections, setIsLoadingSections] = useState(true);
+  const [showSaveToDocumentModal, setShowSaveToDocumentModal] = useState(false);
 
   // טעינת סעיפים שמורים בעת טעינת הדף
   useEffect(() => {
@@ -143,6 +146,32 @@ export default function AILearningPage() {
   const handleLoadSection = (section: SavedSection) => {
     setText(section.content);
     setActiveTab('editor');
+  };
+
+  // שמירה למסמך ספציפי
+  const handleSaveToDocument = (documentType: 'will' | 'fee-agreement' | 'advance-directives') => {
+    if (!text || !text.trim()) {
+      alert('אנא הזן טקסט לפני השמירה');
+      return;
+    }
+
+    // שמירה ל-localStorage כדי שהמסמך יוכל לטעון
+    const saveKey = `ai-improved-section-${documentType}`;
+    localStorage.setItem(saveKey, JSON.stringify({
+      content: text,
+      timestamp: Date.now()
+    }));
+
+    alert('✅ הטקסט נשמר! עכשיו עובר לדף המסמך...');
+    
+    // מעבר לדף המסמך
+    const routes = {
+      'will': '/documents/will',
+      'fee-agreement': '/documents/fee-agreement',
+      'advance-directives': '/documents/advance-directives'
+    };
+    
+    router.push(routes[documentType]);
   };
 
   return (
@@ -309,6 +338,36 @@ export default function AILearningPage() {
                 <Save className="w-5 h-5" />
                 שמור סעיף
               </button>
+
+              <div className="pt-3 border-t">
+                <div className="text-xs font-bold text-gray-700 mb-2">💾 שמור ישירות למסמך:</div>
+                <div className="space-y-2">
+                  <button
+                    onClick={() => handleSaveToDocument('will')}
+                    disabled={!text}
+                    className="w-full px-3 py-2 bg-green-100 text-green-800 rounded-lg hover:bg-green-200 disabled:opacity-50 disabled:cursor-not-allowed transition text-sm font-semibold flex items-center justify-center gap-2"
+                  >
+                    <FileText className="w-4 h-4" />
+                    שמור לצוואה
+                  </button>
+                  <button
+                    onClick={() => handleSaveToDocument('fee-agreement')}
+                    disabled={!text}
+                    className="w-full px-3 py-2 bg-amber-100 text-amber-800 rounded-lg hover:bg-amber-200 disabled:opacity-50 disabled:cursor-not-allowed transition text-sm font-semibold flex items-center justify-center gap-2"
+                  >
+                    <Handshake className="w-4 h-4" />
+                    שמור להסכם שכ"ט
+                  </button>
+                  <button
+                    onClick={() => handleSaveToDocument('advance-directives')}
+                    disabled={!text}
+                    className="w-full px-3 py-2 bg-teal-100 text-teal-800 rounded-lg hover:bg-teal-200 disabled:opacity-50 disabled:cursor-not-allowed transition text-sm font-semibold flex items-center justify-center gap-2"
+                  >
+                    <Heart className="w-4 h-4" />
+                    שמור להנחיות מקדימות
+                  </button>
+                </div>
+              </div>
 
               {/* מידע */}
               <div className="pt-4 border-t">

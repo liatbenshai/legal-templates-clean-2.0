@@ -57,6 +57,28 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
   // ← הוסף את useDocuments hook
   const { saveSection } = useDocuments();
   
+  // בדיקה אם יש טקסט מ-ai-learning
+  useEffect(() => {
+    const savedText = localStorage.getItem('ai-improved-section-will');
+    if (savedText) {
+      try {
+        const data = JSON.parse(savedText);
+        if (data.content && confirm('📥 נמצא טקסט משופר מעמוד למידת AI. לטעון אותו?')) {
+          // הוסף את הטקסט למערך הסעיפים הנוספים
+          setAdditionalSections(prev => [...prev, {
+            title: 'סעיף משופר מ-AI',
+            content: data.content
+          }]);
+          // נקה את הזיכרון
+          localStorage.removeItem('ai-improved-section-will');
+          alert('✅ הטקסט נטען בהצלחה!');
+        }
+      } catch (err) {
+        console.error('Error loading AI text:', err);
+      }
+    }
+  }, []);
+  
   // פרטי מצווה ראשי
   const [testator, setTestator] = useState({
     fullName: '',
