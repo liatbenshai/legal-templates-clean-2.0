@@ -2,13 +2,16 @@
 
 import { useState } from 'react';
 import { useAI } from '@/lib/useAI';
-import { Sparkles, Copy, Download, Loader, BookOpen, TrendingUp } from 'lucide-react';
+import { Sparkles, Copy, Download, Loader, BookOpen, TrendingUp, Save } from 'lucide-react';
 
 export default function AILearningPage() {
   const { improveText, getSuggestions, loading, error } = useAI();
   const [text, setText] = useState('');
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState<'editor' | 'suggestions'>('editor');
+  const [savedSections, setSavedSections] = useState<Array<{ id: string; title: string; content: string; timestamp: string }>>([]);
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [sectionTitle, setSectionTitle] = useState('');
 
   const handleImprove = async () => {
     const improved = await improveText(text);
@@ -30,6 +33,44 @@ export default function AILearningPage() {
     setText(suggestion);
     setSuggestions([]);
     setActiveTab('editor');
+  };
+
+  // שמירה למחסן סעיפים
+  const handleSaveSection = () => {
+    if (!text || !text.trim()) {
+      alert('אנא הזן טקסט לפני השמירה');
+      return;
+    }
+
+    if (!sectionTitle || !sectionTitle.trim()) {
+      alert('אנא הזן שם לסעיף');
+      return;
+    }
+
+    const newSection = {
+      id: `section-${Date.now()}`,
+      title: sectionTitle,
+      content: text,
+      timestamp: new Date().toLocaleString('he-IL')
+    };
+
+    // שמור ב-localStorage
+    const existingSections = JSON.parse(localStorage.getItem('savedSections') || '[]');
+    existingSections.push(newSection);
+    localStorage.setItem('savedSections', JSON.stringify(existingSections));
+
+    // עדכן ה-state
+    setSavedSections(existingSections);
+
+    alert(`סעיף "${sectionTitle}" נשמר בהצלחה!`);
+    setSectionTitle('');
+    setShowSaveModal(false);
+  };
+
+  // טעינת סעיפים שמורים
+  const loadSavedSections = () => {
+    const saved = JSON.parse(localStorage.getItem('savedSections') || '[]');
+    setSavedSections(saved);
   };
 
   return (
@@ -188,6 +229,15 @@ export default function AILearningPage() {
                 העתק
               </button>
 
+              <button
+                onClick={() => setShowSaveModal(true)}
+                disabled={!text}
+                className="w-full px-4 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition font-semibold flex items-center justify-center gap-2"
+              >
+                <Save className="w-5 h-5" />
+                שמור סעיף
+              </button>
+
               {/* מידע */}
               <div className="pt-4 border-t">
                 <div className="text-sm text-gray-600 space-y-2">
@@ -198,6 +248,80 @@ export default function AILearningPage() {
             </div>
           </div>
         </div>
+
+        {/* Modal לשמירה */}
+        {showSaveModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full">
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">שמור סעיף חדש</h2>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    שם הסעיף
+                  </label>
+                  <input
+                    type="text"
+                    value={sectionTitle}
+                    onChange={(e) => setSectionTitle(e.target.value)}
+                    placeholder="לדוגמה: הנחיות רכושיות"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div className="bg-gray-50 p-3 rounded-lg max-h-40 overflow-y-auto">
+                  <p className="text-sm font-medium text-gray-700 mb-2">הסעיף:</p>
+                  <p className="text-sm text-gray-600">{text}</p>
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={handleSaveSection}
+                    className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition font-semibold"
+                  >
+                    שמור
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowSaveModal(false);
+                      setSectionTitle('');
+                    }}
+                    className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition font-semibold"
+                  >
+                    ביטול
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* סעיפים שמורים */}
+        {savedSections.length > 0 && (
+          <div className="mt-12">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">סעיפים שמורים ({savedSections.length})</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {savedSections.map((section) => (
+                <div key={section.id} className="bg-white rounded-xl shadow-lg p-4 border-l-4 border-indigo-600">
+                  <h3 className="font-bold text-gray-900 mb-2">{section.title}</h3>
+                  <p className="text-sm text-gray-600 mb-3 line-clamp-3">{section.content}</p>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-gray-500">{section.timestamp}</span>
+                    <button
+                      onClick={() => {
+                        setText(section.content);
+                        setActiveTab('editor');
+                      }}
+                      className="text-xs px-3 py-1 bg-indigo-100 text-indigo-700 rounded hover:bg-indigo-200 transition"
+                    >
+                      טען
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
