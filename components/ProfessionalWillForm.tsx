@@ -65,7 +65,7 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
         const data = JSON.parse(savedText);
         if (data.content && confirm('📥 נמצא טקסט משופר מעמוד למידת AI. לטעון אותו?')) {
           // הוסף את הטקסט למערך הסעיפים הנוספים
-          setAdditionalSections(prev => [...prev, {
+          setCustomSections(prev => [...prev, {
             title: 'סעיף משופר מ-AI',
             content: data.content
           }]);
@@ -402,8 +402,9 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
 
     // ← שמור ל-Supabase
     try {
+      const documentType = willType === 'individual' ? 'will-single' : 'will-couple';
       const result = await saveSection(
-        'will',
+        documentType,
         updatedSection.title,
         updatedSection.content,
         updatedSection.content,

@@ -16,19 +16,29 @@ export default function AILearningManager() {
     }
   }, [isOpen]);
 
-  const loadData = () => {
-    setCorrections(aiLearningSystem.getCorrections());
-    setStats(aiLearningSystem.getStats());
+  const loadData = async () => {
+    try {
+      const data = await aiLearningSystem.getCorrections();
+      setCorrections(data);
+      setStats(aiLearningSystem.getStats());
+    } catch (error) {
+      console.error('Error loading data:', error);
+    }
   };
 
-  const handleExport = () => {
-    const data = aiLearningSystem.exportCorrections();
-    const blob = new Blob([data], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `ai-corrections-${new Date().toISOString().split('T')[0]}.json`;
-    a.click();
+  const handleExport = async () => {
+    try {
+      const data = await aiLearningSystem.exportCorrections();
+      const blob = new Blob([data], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `ai-corrections-${new Date().toISOString().split('T')[0]}.json`;
+      a.click();
+    } catch (error) {
+      console.error('Error exporting:', error);
+      alert('שגיאה בייצוא הנתונים');
+    }
   };
 
   const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -36,10 +46,10 @@ export default function AILearningManager() {
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (event) => {
+    reader.onload = async (event) => {
       try {
-        aiLearningSystem.importCorrections(event.target?.result as string);
-        loadData();
+        await aiLearningSystem.importCorrections(event.target?.result as string);
+        await loadData();
         alert('התיקונים יובאו בהצלחה!');
       } catch (error) {
         alert('שגיאה בייבוא הקובץ');
@@ -48,17 +58,27 @@ export default function AILearningManager() {
     reader.readAsText(file);
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm('למחוק את התיקון הזה?')) {
-      aiLearningSystem.deleteCorrection(id);
-      loadData();
+      try {
+        await aiLearningSystem.deleteCorrection(id);
+        await loadData();
+      } catch (error) {
+        console.error('Error deleting:', error);
+        alert('שגיאה במחיקת התיקון');
+      }
     }
   };
 
-  const handleClearAll = () => {
+  const handleClearAll = async () => {
     if (confirm('למחוק את כל התיקונים? פעולה זו אינה ניתנת לביטול!')) {
-      aiLearningSystem.clearAll();
-      loadData();
+      try {
+        await aiLearningSystem.clearAll();
+        await loadData();
+      } catch (error) {
+        console.error('Error clearing:', error);
+        alert('שגיאה במחיקת הנתונים');
+      }
     }
   };
 

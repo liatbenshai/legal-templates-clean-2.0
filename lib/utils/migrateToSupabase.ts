@@ -111,7 +111,7 @@ export async function migrateLocalStorageToSupabase(userId: string): Promise<Mig
 
         // מיגרציה של פרופיל משתמש
         const userProfiles = new Map(parsed.userProfiles || []);
-        const userProfile = userProfiles.get(userId);
+        const userProfile = userProfiles.get(userId) as any;
         
         if (userProfile) {
           const { error: prefError } = await supabase

@@ -15,13 +15,13 @@ import {
   TrendingUp,
   RefreshCw
 } from 'lucide-react';
-import { WarehouseSection as WarehouseSectionType } from '@/lib/learning-system/types';
-import { useWarehouse } from '@/lib/hooks/useWarehouse';
+import { WarehouseSection as WarehouseSectionFromTypes } from '@/lib/learning-system/types';
+import { useWarehouse, type WarehouseSection } from '@/lib/hooks/useWarehouse';
 import { useLearning } from '@/lib/hooks/useLearning';
 
 interface WarehouseManagerProps {
   userId: string;
-  onSectionSelect: (section: WarehouseSectionType) => void;
+  onSectionSelect: (section: WarehouseSectionFromTypes) => void;
 }
 
 export default function WarehouseManager({ userId, onSectionSelect }: WarehouseManagerProps) {
@@ -53,6 +53,7 @@ export default function WarehouseManager({ userId, onSectionSelect }: WarehouseM
   const handleAddSection = async () => {
     try {
       await addSection({
+        user_id: userId,
         title: newSection.title,
         content: newSection.content,
         category: newSection.category,
@@ -91,9 +92,22 @@ export default function WarehouseManager({ userId, onSectionSelect }: WarehouseM
     }
   };
 
-  const handleUseSection = async (section: WarehouseSectionType) => {
-    // עדכון מונה שימוש ב-Supabase (ה-hook כבר עושה את זה)
-    onSectionSelect(section);
+  const handleUseSection = async (section: WarehouseSection) => {
+    // המרה מ-snake_case ל-camelCase
+    const convertedSection: WarehouseSectionFromTypes = {
+      id: section.id,
+      title: section.title,
+      content: section.content,
+      category: section.category,
+      tags: section.tags,
+      usageCount: section.usage_count,
+      averageRating: section.average_rating,
+      isPublic: section.is_public,
+      createdBy: section.created_by || section.user_id,
+      createdAt: section.created_at,
+      lastUsed: section.last_used
+    };
+    onSectionSelect(convertedSection);
   };
 
   // סינון ומיון
@@ -189,9 +203,9 @@ export default function WarehouseManager({ userId, onSectionSelect }: WarehouseM
         <div className="bg-orange-50 p-4 rounded-lg">
           <div className="flex items-center gap-2 mb-2">
             <Star className="w-5 h-5 text-orange-600" />
-            <span className="font-semibold text-orange-800">תובנות AI</span>
+            <span className="font-semibold text-orange-800">אושרו על ידי AI</span>
           </div>
-          <div className="text-2xl font-bold text-orange-900">{statistics.insights}</div>
+          <div className="text-2xl font-bold text-orange-900">{statistics.aiApproved}</div>
         </div>
       </div>
 
