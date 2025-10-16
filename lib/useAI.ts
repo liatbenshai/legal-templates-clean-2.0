@@ -103,74 +103,11 @@ export function useAI() {
     };
   };
 
-  // בדיקה של איכות הטקסט
-  const checkQuality = async (text: string, options?: AIImproveOptions) => {
-    if (!text || !text.trim()) {
-      return { score: 0, issues: [] };
-    }
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const response = await fetch('/api/ai/quality-check', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          text,
-          context: options?.context
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to check quality');
-      }
-
-      const data = await response.json();
-      return data;
-    } catch (err) {
-      console.error('Quality check error:', err);
-      return { score: 0, issues: [] };
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // ניקוי שגיאות בטקסט
-  const fixGrammar = async (text: string) => {
-    return improveText(text, undefined, { style: 'formal' });
-  };
-
-  // הרחבת טקסט קצר
-  const expandText = async (text: string, options?: AIImproveOptions) => {
-    if (!text || !text.trim()) return text;
-    return improveText(text, undefined, { ...options, style: 'detailed' });
-  };
-
-  // קיצור טקסט ארוך
-  const summarizeText = async (text: string) => {
-    if (!text || !text.trim()) return text;
-    return improveText(text, undefined, { style: 'simple', maxLength: Math.floor(text.length / 2) });
-  };
-
-  // מחיקת שגיאות כתיב
-  const fixSpelling = async (text: string) => {
-    if (!text || !text.trim()) return text;
-    return improveText(text, undefined, { style: 'formal' });
-  };
-
   return {
     // פונקציות בסיסיות
     improveText,
     getSuggestions,
-    
-    // פונקציות שימושיות נוספות
     improveWithComparison,
-    checkQuality,
-    fixGrammar,
-    expandText,
-    summarizeText,
-    fixSpelling,
 
     // סטטוס
     loading,
