@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Sparkles, RefreshCw, Check, X, History, Zap, FileText, Brain, Edit3 } from 'lucide-react';
+import { Sparkles, RefreshCw, Check, X, History, Zap, Edit3 } from 'lucide-react';
 import AILearningManager from './AILearningManager';
 
 interface AdvancedAIImproverProps {
@@ -33,7 +33,6 @@ export default function AdvancedAIImprover({
   const [selectedContext, setSelectedContext] = useState(context);
   const [isEditing, setIsEditing] = useState(false);
   const [editedText, setEditedText] = useState('');
-  const [showLearningManager, setShowLearningManager] = useState(false);
 
   const improveText = async () => {
     if (!originalText || !originalText.trim()) {
@@ -83,50 +82,29 @@ export default function AdvancedAIImprover({
   ): Promise<{ improvedText: string; suggestions: ImprovementSuggestion[] }> => {
     
     try {
-      const response = await aiLegalWriter.improveWithContext(
-        text,
-        context as 'will-single' | 'will-couple' | 'advance-directives' | 'fee-agreement' | 'demand-letter' | 'court-pleadings',
-        style as 'formal' | 'simple' | 'detailed'
-      );
+      const response = await fetch('/api/will/improve-language', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text })
+      });
+
+      if (!response.ok) throw new Error('Failed to improve');
       
-      const improvedText = response.text;
-      const suggestions: ImprovementSuggestion[] = [];
+      const data = await response.json();
+      const improvedTextContent = data.content?.[0]?.text;
       
-      const lengthRatio = improvedText.length / text.length;
-      
-      if (lengthRatio > 1.2) {
-        suggestions.push({
-          type: 'expand',
-          title: 'הרחבת תוכן',
-          description: `הטקסט הורחב ב-${Math.round((lengthRatio - 1) * 100)}%`,
-          preview: `${text.length} תווים → ${improvedText.length} תווים`
-        });
-      }
-      
-      if (improvedText !== text) {
-        suggestions.push({
+      if (!improvedTextContent) throw new Error('No content returned');
+
+      const suggestions: ImprovementSuggestion[] = [
+        {
           type: 'enhance',
           title: 'שיפור משפטי',
           description: 'הטקסט שופר לעברית משפטית תקנית ומקצועית',
           preview: `התאמה לסוג מסמך: ${getContextName(context)}`
-        });
-      }
-      
-      try {
-        const additionalSuggestions = await aiLegalWriter.getSuggestions(improvedText);
-        if (additionalSuggestions.length > 0) {
-          suggestions.push({
-            type: 'enhance',
-            title: `${additionalSuggestions.length} הצעות נוספות`,
-            description: 'הצעות לשיפור נוסף זמינות',
-            preview: additionalSuggestions[0]
-          });
         }
-      } catch (e) {
-        console.warn('לא הצלחנו לקבל הצעות נוספות:', e);
-      }
+      ];
       
-      return { improvedText, suggestions };
+      return { improvedText: improvedTextContent, suggestions };
       
     } catch (error) {
       console.error('שגיאה בשיפור מתקדם:', error);
@@ -149,29 +127,6 @@ export default function AdvancedAIImprover({
   const handleAcceptImprovement = () => {
     if (improvedText) {
       const finalText = isEditing ? editedText : improvedText;
-      
-      // שמור את התיקון למערכת הלמידה
-      if (isEditing && editedText !== improvedText) {
-        // המשתמש ערך - למד מהתיקון!
-        aiLearningSystem.saveCorrection(
-          originalText,
-          improvedText,
-          editedText,
-          selectedContext,
-          selectedStyle
-        );
-        console.log('🎓 AI למד מהתיקון שלך!');
-      } else {
-        // המשתמש קיבל כמו שזה - גם זה טוב ללמוד
-        aiLearningSystem.saveCorrection(
-          originalText,
-          improvedText,
-          improvedText,
-          selectedContext,
-          selectedStyle
-        );
-        console.log('✅ AI למד שההצעה הייתה טובה!');
-      }
       
       onAccept(finalText);
       setImprovedText(null);
@@ -220,7 +175,7 @@ export default function AdvancedAIImprover({
 
           <div>
             <div className="text-sm font-bold text-green-700 mb-2 flex items-center justify-between">
-              <span>טקסט משופר ({improvedText.length} תווים - הרחבה של {Math.round((improvedText.length / originalText.length) * 100 - 100)}%):</span>
+              <span>טקסט משופר ({improvedText.length} תווים):</span>
             </div>
             
             {isEditing ? (
@@ -240,7 +195,6 @@ export default function AdvancedAIImprover({
                   </div>
                   <p className="text-xs">
                     ערכי את הטקסט כמו שאת רוצה - כולל משתנים, הוספת/הסרת סעיפים, שינוי ניסוחים.
-                    כל שינוי שתעשי יילמד על ידי ה-AI לשיפור עתידי.
                   </p>
                 </div>
               </div>
@@ -259,7 +213,6 @@ export default function AdvancedAIImprover({
             )}
           </div>
 
-          {/* הצעות לשיפור */}
           {suggestions.length > 0 && (
             <div className="mt-4">
               <h4 className="text-sm font-bold text-green-700 mb-2">הצעות לשיפור:</h4>
@@ -287,7 +240,6 @@ export default function AdvancedAIImprover({
             </div>
           )}
 
-          {/* כפתורי פעולה */}
           <div className="flex gap-3 mt-6">
             <button
               onClick={handleAcceptImprovement}
@@ -315,7 +267,6 @@ export default function AdvancedAIImprover({
 
   return (
     <div className="space-y-6">
-      {/* כותרת */}
       <div className="bg-gradient-to-r from-purple-50 to-indigo-50 border-2 border-purple-300 rounded-lg p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-bold text-purple-800 flex items-center gap-3">
@@ -328,10 +279,9 @@ export default function AdvancedAIImprover({
         </div>
         
         <p className="text-purple-700 mb-4">
-          מערכת AI מתקדמת שמשפרת טקסט משפטי לפי הקשר וסגנון, עם למידה מתיקונים קודמים
+          מערכת AI מתקדמת שמשפרת טקסט משפטי לפי הקשר וסגנון
         </p>
 
-        {/* הגדרות */}
         <div className="grid md:grid-cols-2 gap-4 mb-4">
           <div>
             <label className="block text-sm font-bold text-gray-700 mb-2">הקשר משפטי:</label>
@@ -363,7 +313,6 @@ export default function AdvancedAIImprover({
           </div>
         </div>
 
-        {/* כפתור שיפור */}
         <button
           onClick={improveText}
           disabled={isImproving}
@@ -383,14 +332,13 @@ export default function AdvancedAIImprover({
         </button>
       </div>
 
-      {/* היסטוריה וניהול למידה */}
       <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
         <h3 className="text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
           <History className="w-4 h-4" />
           היסטוריית שיפורים
         </h3>
         <p className="text-sm text-gray-600 mb-3">
-          המערכת זוכרת את התיקונים שלך ומשתפרת עם הזמן
+          המערכת זוכרת את התיקונים שלך
         </p>
         
         <AILearningManager />
