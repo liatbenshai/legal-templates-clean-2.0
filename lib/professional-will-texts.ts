@@ -1513,10 +1513,27 @@ export function generateProfessionalWillContent(
         sectionContent = sectionContent.replace(/{{gender:([^}]*)}}/g, '');
       }
 
-      // החלת gender inflection על הטקסט הסופי
+      // החלת gender inflection על הטקסט הסופי - משופר!
       try {
-        const { replaceTextWithGender } = require('@/lib/hebrew-gender');
-        sectionContent = replaceTextWithGender(sectionContent, data.gender || 'male');
+        const { replaceTextWithGender, applyGenderFromName, detectGenderFromName } = require('@/lib/hebrew-gender');
+        
+        // אם יש שם, נסה לזהות מגדר אוטומטית
+        let genderToUse = data.gender || 'male';
+        if (!data.gender && data.testator_full_name) {
+          const detectedGender = detectGenderFromName(data.testator_full_name);
+          if (detectedGender) {
+            genderToUse = detectedGender;
+          }
+        }
+        
+        // החל מגדר על הטקסט
+        sectionContent = replaceTextWithGender(sectionContent, genderToUse);
+        
+        // אם זה צוואה זוגית, החל גם על בן/בת הזוג
+        if (willType === 'mutual' && data.spouse_full_name) {
+          const spouseGender = data.spouse_gender || detectGenderFromName(data.spouse_full_name) || (genderToUse === 'male' ? 'female' : 'male');
+          // כאן נוכל להוסיף לוגיקה מתקדמת יותר אם צריך
+        }
       } catch (error) {
         console.warn('Could not apply gender inflection:', error);
       }

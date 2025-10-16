@@ -631,6 +631,666 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
           </div>
         </section>
 
+        {/* בן/בת זוג (לצוואה הדדית) */}
+        {willType === 'mutual' && (
+          <section className="bg-gray-50 p-6 rounded-lg border">
+            <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <span className="text-lg">👥</span>
+              פרטי בן/בת הזוג
+            </h2>
+            
+            <div className="grid md:grid-cols-2 gap-4 mb-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">שם מלא</label>
+                <input
+                  type="text"
+                  value={spouse.fullName}
+                  onChange={(e) => setSpouse(prev => ({ ...prev, fullName: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="שם פרטי ושם משפחה מלא"
+                  dir="rtl"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">שם קצר</label>
+                <input
+                  type="text"
+                  value={spouse.shortName}
+                  onChange={(e) => setSpouse(prev => ({ ...prev, shortName: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="שם פרטי בלבד"
+                  dir="rtl"
+                />
+              </div>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-4 mb-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">תעודת זהות</label>
+                <input
+                  type="text"
+                  value={spouse.id}
+                  onChange={(e) => setSpouse(prev => ({ ...prev, id: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="123456789"
+                  maxLength={9}
+                  dir="ltr"
+                />
+              </div>
+              
+              <div>
+                <GenderSelector
+                  value={spouse.gender}
+                  onChange={(gender) => setSpouse(prev => ({ ...prev, gender }))}
+                  label="מגדר"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">כתובת מלאה</label>
+              <input
+                type="text"
+                value={spouse.address}
+                onChange={(e) => setSpouse(prev => ({ ...prev, address: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                placeholder="רחוב, מספר, דירה, עיר"
+                dir="rtl"
+              />
+            </div>
+          </section>
+        )}
+
+        {/* נכסי מקרקעין */}
+        <section className="bg-gray-50 p-6 rounded-lg border">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+              <span className="text-lg">🏠</span>
+              נכסי מקרקעין
+            </h2>
+            <button
+              onClick={() => setProperties(prev => [...prev, {
+                name: '',
+                address: '',
+                city: '',
+                block: '',
+                plot: '',
+                subPlot: '',
+                ownership: '100%'
+              }])}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+            >
+              + הוסף נכס
+            </button>
+          </div>
+          
+          {properties.map((property, index) => (
+            <div key={index} className="bg-white p-4 rounded-lg border mb-4">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="font-semibold text-gray-800">נכס {index + 1}</h3>
+                {properties.length > 1 && (
+                  <button
+                    onClick={() => setProperties(prev => prev.filter((_, i) => i !== index))}
+                    className="text-red-600 hover:text-red-800"
+                  >
+                    🗑️ מחק
+                  </button>
+                )}
+              </div>
+              
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">שם הנכס</label>
+                  <input
+                    type="text"
+                    value={property.name}
+                    onChange={(e) => setProperties(prev => prev.map((p, i) => 
+                      i === index ? { ...p, name: e.target.value } : p
+                    ))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="דירת המגורים / בית קיץ"
+                    dir="rtl"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">כתובת</label>
+                  <input
+                    type="text"
+                    value={property.address}
+                    onChange={(e) => setProperties(prev => prev.map((p, i) => 
+                      i === index ? { ...p, address: e.target.value } : p
+                    ))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="רחוב, מספר, דירה"
+                    dir="rtl"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">עיר</label>
+                  <input
+                    type="text"
+                    value={property.city}
+                    onChange={(e) => setProperties(prev => prev.map((p, i) => 
+                      i === index ? { ...p, city: e.target.value } : p
+                    ))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="תל אביב"
+                    dir="rtl"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">אחוז בעלות</label>
+                  <input
+                    type="text"
+                    value={property.ownership || '100%'}
+                    onChange={(e) => setProperties(prev => prev.map((p, i) => 
+                      i === index ? { ...p, ownership: e.target.value } : p
+                    ))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="100%"
+                    dir="ltr"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">גוש</label>
+                  <input
+                    type="text"
+                    value={property.block}
+                    onChange={(e) => setProperties(prev => prev.map((p, i) => 
+                      i === index ? { ...p, block: e.target.value } : p
+                    ))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="12345"
+                    dir="ltr"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">חלקה</label>
+                  <input
+                    type="text"
+                    value={property.plot}
+                    onChange={(e) => setProperties(prev => prev.map((p, i) => 
+                      i === index ? { ...p, plot: e.target.value } : p
+                    ))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="67"
+                    dir="ltr"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">תת חלקה</label>
+                  <input
+                    type="text"
+                    value={property.subPlot}
+                    onChange={(e) => setProperties(prev => prev.map((p, i) => 
+                      i === index ? { ...p, subPlot: e.target.value } : p
+                    ))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="12"
+                    dir="ltr"
+                  />
+                </div>
+              </div>
+            </div>
+          ))}
+        </section>
+
+        {/* חשבונות בנק */}
+        <section className="bg-gray-50 p-6 rounded-lg border">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+              <span className="text-lg">🏦</span>
+              חשבונות בנק
+            </h2>
+            <button
+              onClick={() => setBankAccounts(prev => [...prev, {
+                bank: '',
+                bankNumber: '',
+                branch: '',
+                accountNumber: '',
+                location: ''
+              }])}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+            >
+              + הוסף חשבון
+            </button>
+          </div>
+          
+          {bankAccounts.map((account, index) => (
+            <div key={index} className="bg-white p-4 rounded-lg border mb-4">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="font-semibold text-gray-800">חשבון {index + 1}</h3>
+                {bankAccounts.length > 1 && (
+                  <button
+                    onClick={() => setBankAccounts(prev => prev.filter((_, i) => i !== index))}
+                    className="text-red-600 hover:text-red-800"
+                  >
+                    🗑️ מחק
+                  </button>
+                )}
+              </div>
+              
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">שם הבנק</label>
+                  <input
+                    type="text"
+                    value={account.bank}
+                    onChange={(e) => setBankAccounts(prev => prev.map((a, i) => 
+                      i === index ? { ...a, bank: e.target.value } : a
+                    ))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="בנק הפועלים"
+                    dir="rtl"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">מספר בנק</label>
+                  <input
+                    type="text"
+                    value={account.bankNumber}
+                    onChange={(e) => setBankAccounts(prev => prev.map((a, i) => 
+                      i === index ? { ...a, bankNumber: e.target.value } : a
+                    ))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="12"
+                    dir="ltr"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">מספר סניף</label>
+                  <input
+                    type="text"
+                    value={account.branch}
+                    onChange={(e) => setBankAccounts(prev => prev.map((a, i) => 
+                      i === index ? { ...a, branch: e.target.value } : a
+                    ))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="123"
+                    dir="ltr"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">מספר חשבון</label>
+                  <input
+                    type="text"
+                    value={account.accountNumber}
+                    onChange={(e) => setBankAccounts(prev => prev.map((a, i) => 
+                      i === index ? { ...a, accountNumber: e.target.value } : a
+                    ))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="1234567"
+                    dir="ltr"
+                  />
+                </div>
+                
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">מיקום הסניף</label>
+                  <input
+                    type="text"
+                    value={account.location}
+                    onChange={(e) => setBankAccounts(prev => prev.map((a, i) => 
+                      i === index ? { ...a, location: e.target.value } : a
+                    ))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="תל אביב, רחוב דיזנגוף 123"
+                    dir="rtl"
+                  />
+                </div>
+              </div>
+            </div>
+          ))}
+        </section>
+
+        {/* יורשים */}
+        <section className="bg-gray-50 p-6 rounded-lg border">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+              <span className="text-lg">👨‍👩‍👧‍👦</span>
+              יורשים
+            </h2>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setHeirsDisplayMode('list')}
+                className={`px-3 py-1 rounded ${heirsDisplayMode === 'list' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
+              >
+                רשימה
+              </button>
+              <button
+                onClick={() => setHeirsDisplayMode('table')}
+                className={`px-3 py-1 rounded ${heirsDisplayMode === 'table' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
+              >
+                טבלה
+              </button>
+              <button
+                onClick={() => setHeirs(prev => [...prev, {
+                  firstName: '',
+                  lastName: '',
+                  id: '',
+                  relation: '',
+                  share: '100%',
+                  gender: 'male'
+                }])}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+              >
+                + הוסף יורש
+              </button>
+            </div>
+          </div>
+          
+          {heirsDisplayMode === 'list' ? (
+            <div className="space-y-4">
+              {heirs.map((heir, index) => (
+                <div key={index} className="bg-white p-4 rounded-lg border">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="font-semibold text-gray-800">יורש {index + 1}</h3>
+                    {heirs.length > 1 && (
+                      <button
+                        onClick={() => setHeirs(prev => prev.filter((_, i) => i !== index))}
+                        className="text-red-600 hover:text-red-800"
+                      >
+                        🗑️ מחק
+                      </button>
+                    )}
+                  </div>
+                  
+                  <div className="grid md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">שם פרטי</label>
+                      <input
+                        type="text"
+                        value={heir.firstName}
+                        onChange={(e) => setHeirs(prev => prev.map((h, i) => 
+                          i === index ? { ...h, firstName: e.target.value } : h
+                        ))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="דוד"
+                        dir="rtl"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">שם משפחה</label>
+                      <input
+                        type="text"
+                        value={heir.lastName}
+                        onChange={(e) => setHeirs(prev => prev.map((h, i) => 
+                          i === index ? { ...h, lastName: e.target.value } : h
+                        ))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="כהן"
+                        dir="rtl"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">תעודת זהות</label>
+                      <input
+                        type="text"
+                        value={heir.id}
+                        onChange={(e) => setHeirs(prev => prev.map((h, i) => 
+                          i === index ? { ...h, id: e.target.value } : h
+                        ))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="123456789"
+                        maxLength={9}
+                        dir="ltr"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">קרבה</label>
+                      <input
+                        type="text"
+                        value={heir.relation}
+                        onChange={(e) => setHeirs(prev => prev.map((h, i) => 
+                          i === index ? { ...h, relation: e.target.value } : h
+                        ))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="בן / בת / אח / אחות"
+                        dir="rtl"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">חלק</label>
+                      <input
+                        type="text"
+                        value={heir.share}
+                        onChange={(e) => setHeirs(prev => prev.map((h, i) => 
+                          i === index ? { ...h, share: e.target.value } : h
+                        ))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="100% / 50%"
+                        dir="ltr"
+                      />
+                    </div>
+                    
+                    <div>
+                      <GenderSelector
+                        value={heir.gender}
+                        onChange={(gender) => setHeirs(prev => prev.map((h, i) => 
+                          i === index ? { ...h, gender } : h
+                        ))}
+                        label="מגדר"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full bg-white rounded-lg border">
+                <thead className="bg-gray-100">
+                  <tr>
+                    <th className="px-4 py-2 text-right">שם פרטי</th>
+                    <th className="px-4 py-2 text-right">שם משפחה</th>
+                    <th className="px-4 py-2 text-right">ת.ז.</th>
+                    <th className="px-4 py-2 text-right">קרבה</th>
+                    <th className="px-4 py-2 text-right">חלק</th>
+                    <th className="px-4 py-2 text-right">מגדר</th>
+                    <th className="px-4 py-2 text-right">פעולות</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {heirs.map((heir, index) => (
+                    <tr key={index} className="border-t">
+                      <td className="px-4 py-2">
+                        <input
+                          type="text"
+                          value={heir.firstName}
+                          onChange={(e) => setHeirs(prev => prev.map((h, i) => 
+                            i === index ? { ...h, firstName: e.target.value } : h
+                          ))}
+                          className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500"
+                          dir="rtl"
+                        />
+                      </td>
+                      <td className="px-4 py-2">
+                        <input
+                          type="text"
+                          value={heir.lastName}
+                          onChange={(e) => setHeirs(prev => prev.map((h, i) => 
+                            i === index ? { ...h, lastName: e.target.value } : h
+                          ))}
+                          className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500"
+                          dir="rtl"
+                        />
+                      </td>
+                      <td className="px-4 py-2">
+                        <input
+                          type="text"
+                          value={heir.id}
+                          onChange={(e) => setHeirs(prev => prev.map((h, i) => 
+                            i === index ? { ...h, id: e.target.value } : h
+                          ))}
+                          className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500"
+                          dir="ltr"
+                        />
+                      </td>
+                      <td className="px-4 py-2">
+                        <input
+                          type="text"
+                          value={heir.relation}
+                          onChange={(e) => setHeirs(prev => prev.map((h, i) => 
+                            i === index ? { ...h, relation: e.target.value } : h
+                          ))}
+                          className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500"
+                          dir="rtl"
+                        />
+                      </td>
+                      <td className="px-4 py-2">
+                        <input
+                          type="text"
+                          value={heir.share}
+                          onChange={(e) => setHeirs(prev => prev.map((h, i) => 
+                            i === index ? { ...h, share: e.target.value } : h
+                          ))}
+                          className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500"
+                          dir="ltr"
+                        />
+                      </td>
+                      <td className="px-4 py-2">
+                        <select
+                          value={heir.gender}
+                          onChange={(e) => setHeirs(prev => prev.map((h, i) => 
+                            i === index ? { ...h, gender: e.target.value as 'male' | 'female' } : h
+                          ))}
+                          className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500"
+                        >
+                          <option value="male">זכר</option>
+                          <option value="female">נקבה</option>
+                        </select>
+                      </td>
+                      <td className="px-4 py-2">
+                        {heirs.length > 1 && (
+                          <button
+                            onClick={() => setHeirs(prev => prev.filter((_, i) => i !== index))}
+                            className="text-red-600 hover:text-red-800"
+                          >
+                            🗑️
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+
+        {/* סעיפים נוספים */}
+        <section className="bg-gray-50 p-6 rounded-lg border">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+              <span className="text-lg">📝</span>
+              סעיפים נוספים
+            </h2>
+            <button
+              onClick={() => setCustomSections(prev => [...prev, { title: '', content: '' }])}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+            >
+              + הוסף סעיף
+            </button>
+          </div>
+          
+          {customSections.map((section, index) => (
+            <div key={index} className="bg-white p-4 rounded-lg border mb-4">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="font-semibold text-gray-800">סעיף {index + 1}</h3>
+                <button
+                  onClick={() => setCustomSections(prev => prev.filter((_, i) => i !== index))}
+                  className="text-red-600 hover:text-red-800"
+                >
+                  🗑️ מחק
+                </button>
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">כותרת הסעיף</label>
+                  <input
+                    type="text"
+                    value={section.title}
+                    onChange={(e) => setCustomSections(prev => prev.map((s, i) => 
+                      i === index ? { ...s, title: e.target.value } : s
+                    ))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="הוראות מיוחדות לגבי..."
+                    dir="rtl"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">תוכן הסעיף</label>
+                  <textarea
+                    value={section.content}
+                    onChange={(e) => setCustomSections(prev => prev.map((s, i) => 
+                      i === index ? { ...s, content: e.target.value } : s
+                    ))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 resize-none"
+                    rows={4}
+                    placeholder="אני מצווה כי..."
+                    dir="rtl"
+                  />
+                </div>
+              </div>
+            </div>
+          ))}
+        </section>
+
+        {/* מערכת הלמידה והמחסן */}
+        <section className="bg-gray-50 p-6 rounded-lg border">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+              <span className="text-lg">🧠</span>
+              מערכת למידה ומחסן סעיפים
+            </h2>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowLearningSystem(!showLearningSystem)}
+                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
+              >
+                {showLearningSystem ? 'הסתר' : 'הצג'} מערכת למידה
+              </button>
+              <button
+                onClick={() => setShowWarehouse(!showWarehouse)}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+              >
+                {showWarehouse ? 'הסתר' : 'הצג'} מחסן סעיפים
+              </button>
+            </div>
+          </div>
+          
+          {showLearningSystem && (
+            <div className="mb-6">
+              <AILearningManager />
+            </div>
+          )}
+          
+          {showWarehouse && (
+            <div className="mb-6">
+              <UnifiedWarehouse
+                onSectionSelect={handleSelectFromWarehouse}
+                userId={testator.fullName || 'anonymous'}
+                willType={willType}
+              />
+            </div>
+          )}
+        </section>
+
         {/* סטטוס והכנה לייצוא */}
         <div className="bg-white border-2 border-gray-300 rounded-lg p-6">
           <div className="text-center mb-6">
