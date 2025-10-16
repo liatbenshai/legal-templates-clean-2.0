@@ -23,7 +23,7 @@ export default function AIImproveButton({
   buttonText = 'שפר עם AI',
   showComparison = true
 }: AIImproveButtonProps) {
-  const { improveText, loading, error } = useAI();
+  const { improveText, loading, error, clearError } = useAI();
   const [improved, setImproved] = useState<string | null>(null);
   const [showResult, setShowResult] = useState(false);
 
@@ -33,24 +33,33 @@ export default function AIImproveButton({
       return;
     }
 
+    clearError();
     const improvedText = await improveText(text, context);
+    
     if (improvedText && improvedText !== text) {
       setImproved(improvedText);
       setShowResult(true);
+    } else if (!improvedText || improvedText === text) {
+      alert('לא היה ניתן לשפר את הטקסט. נסה שוב.');
     }
   };
 
   const handleAccept = () => {
     if (improved) {
+      // קרא ל-onAccept עם הטקסט המשופר
       onAccept(improved);
+      
+      // אפס את המצב
       setShowResult(false);
       setImproved(null);
+      clearError();
     }
   };
 
   const handleReject = () => {
     setShowResult(false);
     setImproved(null);
+    clearError();
     onCancel?.();
   };
 
@@ -88,7 +97,7 @@ export default function AIImproveButton({
             className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition text-sm font-semibold"
           >
             <Check className="w-4 h-4" />
-            אשר
+            אשר ושמור
           </button>
           <button
             onClick={handleReject}
@@ -101,7 +110,7 @@ export default function AIImproveButton({
 
         {error && (
           <div className="text-xs text-red-600 bg-red-50 p-2 rounded">
-            {error}
+            ⚠️ {error}
           </div>
         )}
       </div>
