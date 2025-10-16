@@ -1079,9 +1079,13 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
                     <div>
                       <GenderSelector
                         value={heir.gender}
-                        onChange={(gender) => setHeirs(prev => prev.map((h, i) => 
-                          i === index ? { ...h, gender } : h
-                        ))}
+                        onChange={(gender) => {
+                          // מוודא שהמגדר הוא רק male או female (לא plural/organization)
+                          const validGender = (gender === 'male' || gender === 'female') ? gender : 'male';
+                          setHeirs(prev => prev.map((h, i) => 
+                            i === index ? { ...h, gender: validGender } : h
+                          ));
+                        }}
                         label="מגדר"
                       />
                     </div>
