@@ -198,6 +198,37 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
     return matches ? [...new Set(matches.map(match => match.replace(/\{\{|\}\}/g, '')))] : [];
   };
 
+  // טעינת עדים שמורים
+  useEffect(() => {
+    const loadSavedWitnesses = () => {
+      const saved1 = localStorage.getItem('witness-1');
+      const saved2 = localStorage.getItem('witness-2');
+      
+      if (saved1 || saved2) {
+        setWitnesses(prev => {
+          const newWitnesses = [...prev];
+          if (saved1) {
+            try {
+              newWitnesses[0] = JSON.parse(saved1);
+            } catch (e) {
+              console.error('Error loading witness 1:', e);
+            }
+          }
+          if (saved2) {
+            try {
+              newWitnesses[1] = JSON.parse(saved2);
+            } catch (e) {
+              console.error('Error loading witness 2:', e);
+            }
+          }
+          return newWitnesses;
+        });
+      }
+    };
+    
+    loadSavedWitnesses();
+  }, []); // טען פעם אחת בלבד
+  
   // טעינת תבניות JSON
   useEffect(() => {
     loadTemplates();
@@ -1193,6 +1224,138 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
               </table>
             </div>
           )}
+        </section>
+
+        {/* עדים */}
+        <section className="bg-gray-50 p-6 rounded-lg border">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+              <span className="text-lg">✍️</span>
+              עדי הצוואה
+            </h2>
+            <button
+              onClick={() => setWitnesses(prev => [...prev, {
+                name: '',
+                id: '',
+                address: '',
+                gender: 'male'
+              }])}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+            >
+              + הוסף עד
+            </button>
+          </div>
+
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+            <p className="text-sm text-blue-800">
+              <strong>💡 טיפ:</strong> לפי חוק הירושה, צוואה דורשת שני עדים לפחות. העדים צריכים להיות נוכחים בעת החתימה.
+            </p>
+          </div>
+          
+          {witnesses.map((witness, index) => (
+            <div key={index} className="bg-white p-4 rounded-lg border mb-4">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="font-semibold text-gray-800">עד {index + 1}</h3>
+                {witnesses.length > 2 && (
+                  <button
+                    onClick={() => setWitnesses(prev => prev.filter((_, i) => i !== index))}
+                    className="text-red-600 hover:text-red-800"
+                  >
+                    🗑️ מחק
+                  </button>
+                )}
+              </div>
+              
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">שם מלא</label>
+                  <input
+                    type="text"
+                    value={witness.name}
+                    onChange={(e) => setWitnesses(prev => prev.map((w, i) => 
+                      i === index ? { ...w, name: e.target.value } : w
+                    ))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="שם פרטי ושם משפחה"
+                    dir="rtl"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">תעודת זהות</label>
+                  <input
+                    type="text"
+                    value={witness.id}
+                    onChange={(e) => setWitnesses(prev => prev.map((w, i) => 
+                      i === index ? { ...w, id: e.target.value } : w
+                    ))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="123456789"
+                    maxLength={9}
+                    dir="ltr"
+                  />
+                </div>
+                
+                <div>
+                  <GenderSelector
+                    value={witness.gender}
+                    onChange={(gender) => {
+                      const validGender = (gender === 'male' || gender === 'female') ? gender : 'male';
+                      setWitnesses(prev => prev.map((w, i) => 
+                        i === index ? { ...w, gender: validGender } : w
+                      ));
+                    }}
+                    label="מגדר"
+                  />
+                </div>
+                
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">כתובת מלאה</label>
+                  <input
+                    type="text"
+                    value={witness.address}
+                    onChange={(e) => setWitnesses(prev => prev.map((w, i) => 
+                      i === index ? { ...w, address: e.target.value } : w
+                    ))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="רחוב, מספר, דירה, עיר"
+                    dir="rtl"
+                  />
+                </div>
+              </div>
+
+              {/* כפתורים לשמירת עד כברירת מחדל */}
+              <div className="mt-4 flex gap-2">
+                <button
+                  onClick={() => {
+                    localStorage.setItem(`witness-${index + 1}`, JSON.stringify(witness));
+                    alert(`✅ עד ${index + 1} נשמר כברירת מחדל`);
+                  }}
+                  className="px-3 py-1 text-sm bg-green-100 text-green-700 rounded hover:bg-green-200 transition"
+                  disabled={!witness.name || !witness.id || !witness.address}
+                >
+                  💾 שמור כעד קבוע
+                </button>
+                <button
+                  onClick={() => {
+                    const saved = localStorage.getItem(`witness-${index + 1}`);
+                    if (saved) {
+                      const savedWitness = JSON.parse(saved);
+                      setWitnesses(prev => prev.map((w, i) => 
+                        i === index ? savedWitness : w
+                      ));
+                      alert(`✅ עד ${index + 1} נטען מהשמירה`);
+                    } else {
+                      alert('❌ אין עד שמור');
+                    }
+                  }}
+                  className="px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition"
+                >
+                  📥 טען עד קבוע
+                </button>
+              </div>
+            </div>
+          ))}
         </section>
 
         {/* סעיפים נוספים */}
