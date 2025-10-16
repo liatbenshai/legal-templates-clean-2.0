@@ -645,6 +645,7 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
                 value={testator.gender}
                 onChange={(gender) => setTestator(prev => ({ ...prev, gender }))}
                 label="מגדר"
+                name="testator-gender"
               />
             </div>
           </div>
@@ -715,6 +716,7 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
                   value={spouse.gender}
                   onChange={(gender) => setSpouse(prev => ({ ...prev, gender }))}
                   label="מגדר"
+                  name="spouse-gender"
                 />
               </div>
             </div>
@@ -1118,6 +1120,7 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
                           ));
                         }}
                         label="מגדר"
+                        name={`heir-gender-${index}`}
                       />
                     </div>
                   </div>
@@ -1306,6 +1309,7 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
                       ));
                     }}
                     label="מגדר"
+                    name={`witness-gender-${index}`}
                   />
                 </div>
                 

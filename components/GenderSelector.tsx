@@ -7,13 +7,15 @@ interface GenderSelectorProps {
   onChange: (gender: Gender) => void;
   label?: string;
   className?: string;
+  name?: string; // הוספת name ייחודי
 }
 
 export default function GenderSelector({ 
   value, 
   onChange, 
   label = 'מגדר',
-  className = ''
+  className = '',
+  name
 }: GenderSelectorProps) {
   return (
     <div className={className}>
@@ -26,7 +28,7 @@ export default function GenderSelector({
         <label className="flex items-center cursor-pointer">
           <input
             type="radio"
-            name={`gender-${label}`}
+            name={name || `gender-${Math.random().toString(36).substr(2, 9)}`}
             value="male"
             checked={value === 'male'}
             onChange={(e) => onChange(e.target.value as Gender)}
@@ -37,7 +39,7 @@ export default function GenderSelector({
         <label className="flex items-center cursor-pointer">
           <input
             type="radio"
-            name={`gender-${label}`}
+            name={name || `gender-${Math.random().toString(36).substr(2, 9)}`}
             value="female"
             checked={value === 'female'}
             onChange={(e) => onChange(e.target.value as Gender)}
