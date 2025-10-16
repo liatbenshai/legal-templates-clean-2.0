@@ -11,10 +11,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (text.length > 5000) {
+      return NextResponse.json(
+        { error: 'Text is too long (max 5000 characters)' },
+        { status: 400 }
+      );
+    }
+
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'x-api-key': process.env.ANTHROPIC_API_KEY!,
+        'anthropic-version': '2023-06-01',
         'content-type': 'application/json',
       },
       body: JSON.stringify({
@@ -24,10 +32,8 @@ export async function POST(request: NextRequest) {
           {
             role: 'user',
             content: `אתה עורך דין מומחה בצוואות בישראל.
-
 טקסט להשיפור:
 ${text}
-
 בקש לשפר את הנוסח המשפטי, לוודא דיוק לשוני, ולשמור על המשמעות המקורית.
 תן רק את הטקסט המשופר, ללא הסברים.`
           }
@@ -46,10 +52,15 @@ ${text}
 
     const data = await response.json();
     
-    // בדוק את התשובה
-    console.log('API Response:', JSON.stringify(data, null, 2));
-    
-    return NextResponse.json(data);
+    // חלץ את הטקסט המשופר
+    const improvedText = data.content?.[0]?.text || '';
+
+    return NextResponse.json({
+      improved: improvedText,
+      content: data.content,
+      original: text
+    });
+
   } catch (error) {
     console.error('Error in improve-language route:', error);
     return NextResponse.json(
