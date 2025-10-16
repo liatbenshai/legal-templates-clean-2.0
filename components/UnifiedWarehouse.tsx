@@ -22,20 +22,12 @@ import {
 } from 'lucide-react';
 import EditableSection from './LearningSystem/EditableSection';
 import { EditableSection as EditableSectionType } from '@/lib/learning-system/types';
+import { useWarehouse, type WarehouseSection as WarehouseSectionType } from '@/lib/hooks/useWarehouse';
+import { useLearning } from '@/lib/hooks/useLearning';
+import { migrateLocalStorageToSupabase, isMigrationCompleted } from '@/lib/utils/migrateToSupabase';
 
-interface WarehouseSection {
-  id: string;
-  title: string;
-  content: string;
-  category: string;
-  tags: string[];
-  usageCount: number;
-  averageRating: number;
-  isPublic: boolean;
-  createdBy: string;
-  createdAt: string;
-  lastUsed: string;
-}
+// Using WarehouseSection from useWarehouse hook
+type WarehouseSection = WarehouseSectionType;
 
 interface UnifiedWarehouseProps {
   onSectionSelect: (section: WarehouseSection) => void;
@@ -56,261 +48,117 @@ const CATEGORIES = [
 ];
 
 export default function UnifiedWarehouse({ onSectionSelect, userId, willType = 'individual' }: UnifiedWarehouseProps) {
-  const [sections, setSections] = useState<WarehouseSection[]>([]);
+  // Supabase hooks
+  const {
+    sections,
+    loading: warehouseLoading,
+    error: warehouseError,
+    addSection,
+    updateSection,
+    deleteSection,
+    toggleHideSection,
+    showAllHidden,
+    incrementUsage,
+    moveToCategory,
+    searchSections,
+    reload
+  } = useWarehouse(userId, { category: undefined, includeHidden: false });
+
+  const { saveLearningData } = useLearning(userId);
+
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('financial'); // ברירת מחדל: כספים
   const [sortBy, setSortBy] = useState<'recent' | 'popular' | 'rating'>('recent');
-  const [hiddenSections, setHiddenSections] = useState<string[]>(() => {
-    // טעינת סעיפים מוסתרים מ-localStorage
-    const saved = localStorage.getItem(`hiddenSections_${userId}`);
-    return saved ? JSON.parse(saved) : [];
-  });
   const [isAddingNew, setIsAddingNew] = useState(false);
   const [editingSection, setEditingSection] = useState<WarehouseSection | null>(null);
   const [newSection, setNewSection] = useState({
     title: '',
     content: '',
     category: 'personal',
-    tags: []
+    tags: [] as string[]
   });
   const [showAIEditor, setShowAIEditor] = useState<string | null>(null);
+  const [migrating, setMigrating] = useState(false);
+  const [migrationComplete, setMigrationComplete] = useState(false);
 
-  // טעינת סעיפים
+  // מיגרציה אוטומטית בטעינה ראשונה
   useEffect(() => {
-    loadSections();
-  }, []);
-
-  const loadSections = async () => {
-    try {
-      // בדיקה אם יש כבר סעיפים במחסן המשודרג
-      const stored = localStorage.getItem(`warehouse_${userId}`);
-      const hasUpgradedWarehouse = localStorage.getItem('upgraded_warehouse_loaded');
-      
-      // אם יש כבר סעיפים וזה המחסן המשודרג, נטען אותו
-      if (stored && hasUpgradedWarehouse) {
-        const data = JSON.parse(stored);
-        setSections(data.sections || []);
-        console.log(`Loaded ${data.sections?.length || 0} sections from localStorage`);
-        return;
-      }
-      
-      // טעינת סעיפים מכל המחסנים המשודרגים
-      console.log('Loading all upgraded warehouses...');
-      
-      // רשימת הקבצים לטעינה
-      const warehouseFiles = [
-        '/templates/clauses/sections-warehouse.json',
-        '/templates/clauses/openings-warehouse.json',
-        '/templates/clauses/closings-warehouse.json',
-        '/templates/clauses/witnesses-warehouse.json'
-      ];
-      
-      const defaultSections: WarehouseSection[] = [];
-      
-      // המרת הקטגוריות והפריטים מכל המחסנים
-      const categoryMap: Record<string, string> = {
-        // preliminary - לא נטען (סעיפים אוטומטיים בצוואה)
-        'inheritance': 'financial',
-        'protection': 'children',
-        'special': 'personal',
-        'final': 'personal',
-        'opening': 'personal',
-        'closing': 'personal',
-        'witnesses': 'personal',
-        'special-instructions': 'personal',
-        'final-clauses': 'personal'
-      };
-      
-      // טעינה מכל הקבצים
-      for (const file of warehouseFiles) {
+    const runMigration = async () => {
+      if (!isMigrationCompleted(userId)) {
+        setMigrating(true);
         try {
-          const response = await fetch(file);
-          const warehouse = await response.json();
-          
-          // טעינת סעיפים מקובץ sections-warehouse
-          if (warehouse.categories) {
-            warehouse.categories.forEach((category: any) => {
-              // דילוג על קטגוריית preliminary (סעיפים אוטומטיים)
-              if (category.id === 'preliminary') {
-                console.log('דילוג על preliminary - סעיפים אוטומטיים בצוואה');
-                return;
-              }
-              
-              category.items.forEach((item: any) => {
-                defaultSections.push({
-                  id: item.id,
-                  title: item.title,
-                  content: item.content,
-                  category: categoryMap[item.category] || 'personal',
-                  tags: item.tags || [category.name],
-                  usageCount: 0,
-                  averageRating: 0,
-                  isPublic: false,
-                  createdBy: 'system',
-                  createdAt: new Date().toISOString(),
-                  lastUsed: new Date().toISOString()
-                });
-              });
-            });
-          }
-          
-          // טעינת פריטים מקובץ openings-warehouse, closings-warehouse
-          if (warehouse.items) {
-            warehouse.items.forEach((item: any) => {
-              defaultSections.push({
-                id: item.id,
-                title: item.title,
-                content: item.content,
-                category: categoryMap[item.category] || 'personal',
-                tags: item.tags || [item.category],
-                usageCount: 0,
-                averageRating: 0,
-                isPublic: false,
-                createdBy: 'system',
-                createdAt: new Date().toISOString(),
-                lastUsed: new Date().toISOString()
-              });
-            });
-          }
-          
-          console.log(`Loaded from ${file}: ${warehouse.categories?.length || warehouse.items?.length || 0} items`);
-        } catch (fileError) {
-          console.warn(`Failed to load ${file}:`, fileError);
+          const result = await migrateLocalStorageToSupabase(userId);
+          console.log('Migration result:', result);
+          setMigrationComplete(true);
+          setTimeout(() => setMigrationComplete(false), 5000);
+          await reload(); // טען מחדש מ-Supabase
+        } catch (err) {
+          console.error('Migration error:', err);
+        } finally {
+          setMigrating(false);
         }
       }
-          
-      console.log(`Total loaded: ${defaultSections.length} sections from all warehouses`);
-      setSections(defaultSections);
-      saveSections(defaultSections);
-      
-      // סימון שהמחסן המשודרג נטען
-      localStorage.setItem('upgraded_warehouse_loaded', 'true');
-        
-    } catch (error) {
-      console.error('Error loading warehouse:', error);
-      // אם יש בעיה בטעינה, ניצור סעיפי ברירת מחדל בסיסיים
-      const basicSections: WarehouseSection[] = [
-        {
-          id: 'default-1',
-          title: 'הוראת כספי פנסיה',
-          content: 'כל כספי הפנסיה שלי יועברו ל{{שם היורש}} בהתאם לחוק.',
-          category: 'financial',
-          tags: ['פנסיה', 'כספים'],
-          usageCount: 0,
-          averageRating: 0,
-          isPublic: false,
-          createdBy: userId,
-          createdAt: new Date().toISOString(),
-          lastUsed: new Date().toISOString()
-        },
-        {
-          id: 'default-2',
-          title: 'הוראת טיפול רפואי',
-          content: 'במצב של חוסר הכרה, אני מורה כי הטיפול הרפואי יעשה בהתאם לרצוני המפורש ולפי חוק החולה הנוטה למות.',
-          category: 'health',
-          tags: ['רפואה', 'בריאות'],
-          usageCount: 0,
-          averageRating: 0,
-          isPublic: false,
-          createdBy: userId,
-          createdAt: new Date().toISOString(),
-          lastUsed: new Date().toISOString()
-        },
-        {
-          id: 'default-3',
-          title: 'הוראת נכסים עסקיים',
-          content: 'כל הנכסים העסקיים שלי יועברו ל{{שם היורש}} עם הוראות להמשך הפעלת העסק.',
-          category: 'business',
-          tags: ['עסקים', 'נכסים'],
-          usageCount: 0,
-          averageRating: 0,
-          isPublic: false,
-          createdBy: userId,
-          createdAt: new Date().toISOString(),
-          lastUsed: new Date().toISOString()
-        }
-      ];
-      setSections(basicSections);
-      saveSections(basicSections);
+    };
+
+    if (userId) {
+      runMigration();
     }
-  };
+  }, [userId]);
 
-  const saveSections = (sectionsToSave: WarehouseSection[]) => {
-    try {
-      localStorage.setItem(`warehouse_${userId}`, JSON.stringify({
-        sections: sectionsToSave,
-        lastUpdated: new Date().toISOString()
-      }));
-    } catch (error) {
-      console.error('Error saving sections:', error);
-    }
-  };
+  // סינון מקומי - Supabase מביא רק סעיפים לא מוסתרים
 
-  // שמירת סעיפים מוסתרים
-  const saveHiddenSections = (hidden: string[]) => {
-    localStorage.setItem(`hiddenSections_${userId}`, JSON.stringify(hidden));
-    setHiddenSections(hidden);
-  };
-
-  // הסתרת/הצגת סעיף
-  const toggleHideSection = (sectionId: string) => {
-    const newHidden = hiddenSections.includes(sectionId)
-      ? hiddenSections.filter(id => id !== sectionId)
-      : [...hiddenSections, sectionId];
-    saveHiddenSections(newHidden);
-  };
-
-  const filteredSections = sections.filter(section => {
-    // סינון לפי הסתרה
-    if (hiddenSections.includes(section.id)) return false;
-    
-    const matchesSearch = section.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  const filteredSections = sections.filter((section: WarehouseSection) => {
+    const matchesSearch = searchTerm === '' || 
+                         section.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          section.content.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || section.category === selectedCategory;
     
     // פילטור לפי סוג צוואה
     const matchesWillType = willType === 'mutual' 
       ? true // בצוואה הדדית - הצג הכל
-      : !section.tags.some(tag => tag.includes('הדדית') || tag.includes('הדדי')); // בצוואה יחידה - הסתר סעיפים הדדיים
+      : !section.tags.some((tag: string) => tag.includes('הדדית') || tag.includes('הדדי')); // בצוואה יחידה - הסתר סעיפים הדדיים
     
     return matchesSearch && matchesCategory && matchesWillType;
   });
 
-  const sortedSections = [...filteredSections].sort((a, b) => {
+  const sortedSections = [...filteredSections].sort((a: WarehouseSection, b: WarehouseSection) => {
     switch (sortBy) {
       case 'recent':
-        return new Date(b.lastUsed).getTime() - new Date(a.lastUsed).getTime();
+        return new Date(b.last_used).getTime() - new Date(a.last_used).getTime();
       case 'popular':
-        return b.usageCount - a.usageCount;
+        return b.usage_count - a.usage_count;
       case 'rating':
-        return b.averageRating - a.averageRating;
+        return b.average_rating - a.average_rating;
       default:
         return 0;
     }
   });
 
-  const handleAddSection = () => {
+  const handleAddSection = async () => {
     if (newSection.title.trim() && newSection.content.trim()) {
-      const section: WarehouseSection = {
-        id: `section_${Date.now()}`,
-        title: newSection.title,
-        content: newSection.content,
-        category: newSection.category,
-        tags: newSection.tags,
-        usageCount: 0,
-        averageRating: 0,
-        isPublic: false,
-        createdBy: userId,
-        createdAt: new Date().toISOString(),
-        lastUsed: new Date().toISOString()
-      };
-      
-      const updatedSections = [...sections, section];
-      setSections(updatedSections);
-      saveSections(updatedSections);
-      
-      setNewSection({ title: '', content: '', category: 'personal', tags: [] });
-      setIsAddingNew(false);
+      try {
+        await addSection({
+          user_id: userId,
+          title: newSection.title,
+          content: newSection.content,
+          category: newSection.category,
+          tags: newSection.tags,
+          usage_count: 0,
+          average_rating: 0,
+          is_public: false,
+          is_hidden: false,
+          created_by: userId
+        });
+        
+        setNewSection({ title: '', content: '', category: 'personal', tags: [] });
+        setIsAddingNew(false);
+        
+        // הודעת הצלחה
+        alert('✅ הסעיף נשמר בהצלחה!');
+      } catch (err) {
+        console.error('Error adding section:', err);
+        alert('❌ שגיאה בשמירת הסעיף');
+      }
     }
   };
 
@@ -318,59 +166,62 @@ export default function UnifiedWarehouse({ onSectionSelect, userId, willType = '
     setEditingSection(section);
   };
 
-  const handleSaveEdit = () => {
+  const handleSaveEdit = async () => {
     if (editingSection) {
-      const updatedSections = sections.map(s => 
-        s.id === editingSection.id ? { ...editingSection, lastUsed: new Date().toISOString() } : s
-      );
-      setSections(updatedSections);
-      saveSections(updatedSections);
-      setEditingSection(null);
+      try {
+        await updateSection(editingSection.id, {
+          title: editingSection.title,
+          content: editingSection.content,
+          category: editingSection.category,
+          tags: editingSection.tags
+        });
+        setEditingSection(null);
+        alert('✅ הסעיף עודכן בהצלחה!');
+      } catch (err) {
+        alert('❌ שגיאה בעדכון הסעיף');
+      }
     }
   };
 
-  const handleDeleteSection = (sectionId: string) => {
-    if (confirm('האם למחוק את הסעיף?')) {
-      const updatedSections = sections.filter(s => s.id !== sectionId);
-      setSections(updatedSections);
-      saveSections(updatedSections);
+  const handleDeleteSection = async (sectionId: string) => {
+    if (confirm('האם למחוק את הסעיף לצמיתות?')) {
+      try {
+        await deleteSection(sectionId);
+        alert('✅ הסעיף נמחק בהצלחה');
+      } catch (err) {
+        alert('❌ שגיאה במחיקת הסעיף');
+      }
     }
   };
 
-  const handleMoveCategorySection = (sectionId: string, newCategory: string) => {
+  const handleMoveCategorySection = async (sectionId: string, newCategory: string) => {
     const section = sections.find(s => s.id === sectionId);
     const newCategoryInfo = getCategoryInfo(newCategory);
     
-    const updated = sections.map(s => 
-      s.id === sectionId ? { ...s, category: newCategory } : s
-    );
-    setSections(updated);
-    saveSections(updated);
-    
-    // הודעת הצלחה
-    if (section) {
-      const notification = document.createElement('div');
-      notification.className = 'fixed top-4 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 flex items-center gap-2';
-      notification.innerHTML = `
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-        </svg>
-        <span>הועבר ל${newCategoryInfo.icon} ${newCategoryInfo.name}</span>
-      `;
-      document.body.appendChild(notification);
-      setTimeout(() => notification.remove(), 2000);
+    try {
+      await moveToCategory(sectionId, newCategory);
+      
+      // הודעת הצלחה
+      if (section) {
+        const notification = document.createElement('div');
+        notification.className = 'fixed top-4 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 flex items-center gap-2';
+        notification.innerHTML = `
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+          </svg>
+          <span>הועבר ל${newCategoryInfo.icon} ${newCategoryInfo.name}</span>
+        `;
+        document.body.appendChild(notification);
+        setTimeout(() => notification.remove(), 2000);
+      }
+    } catch (err) {
+      alert('❌ שגיאה בהעברת הסעיף');
     }
   };
 
-  const handleSelectSection = (section: WarehouseSection) => {
-    // עדכון מונה שימוש
-    const updatedSections = sections.map(s => 
-      s.id === section.id 
-        ? { ...s, usageCount: s.usageCount + 1, lastUsed: new Date().toISOString() }
-        : s
-    );
-    setSections(updatedSections);
-    saveSections(updatedSections);
+  const handleSelectSection = async (section: WarehouseSection) => {
+    // עדכון מונה שימוש ב-Supabase
+    await incrementUsage(section.id);
     
     onSectionSelect(section);
   };
@@ -387,36 +238,49 @@ export default function UnifiedWarehouse({ onSectionSelect, userId, willType = '
       isEditable: true,
       isCustom: true,
       version: 1,
-      lastModified: section.lastUsed,
+      lastModified: section.last_used,
       modifiedBy: userId
     };
   };
 
-  const handleUpdateEditableSection = (updatedSection: EditableSectionType) => {
-    const updatedSections = sections.map(s => 
-      s.id === updatedSection.id 
-        ? { 
-            ...s, 
-            title: updatedSection.title,
-            content: updatedSection.content,
-            lastUsed: new Date().toISOString() 
+  const handleUpdateEditableSection = async (updatedSection: EditableSectionType) => {
+    try {
+      await updateSection(updatedSection.id, {
+        title: updatedSection.title,
+        content: updatedSection.content
+      });
+      
+      // שמירת נתוני למידה אם היה שינוי
+      const originalSection = sections.find(s => s.id === updatedSection.id);
+      if (originalSection && originalSection.content !== updatedSection.content) {
+        await saveLearningData({
+          section_id: updatedSection.id,
+          original_text: originalSection.content,
+          edited_text: updatedSection.content,
+          edit_type: 'manual',
+          user_feedback: 'improved',
+          context: {
+            serviceType: 'will',
+            category: updatedSection.category,
+            userType: 'lawyer'
           }
-        : s
-    );
-    setSections(updatedSections);
-    saveSections(updatedSections);
-    setShowAIEditor(null);
+        });
+      }
+      
+      setShowAIEditor(null);
+    } catch (err) {
+      alert('❌ שגיאה בעדכון הסעיף');
+    }
   };
 
-  const handleSaveToWarehouse = (section: EditableSectionType) => {
+  const handleSaveToWarehouse = async (section: EditableSectionType) => {
     // הסעיף כבר במחסן, רק נעדכן אותו
-    handleUpdateEditableSection(section);
+    await handleUpdateEditableSection(section);
   };
 
-  const handleSaveToLearning = (section: EditableSectionType) => {
+  const handleSaveToLearning = async (section: EditableSectionType) => {
     // שמירה למערכת הלמידה
-    console.log('Saving to learning system:', section);
-    handleUpdateEditableSection(section);
+    await handleUpdateEditableSection(section);
   };
 
   const getCategoryInfo = (categoryId: string) => {
@@ -439,14 +303,43 @@ export default function UnifiedWarehouse({ onSectionSelect, userId, willType = '
     return colorMap[color] || colorMap['gray'];
   };
 
+  // חישוב סעיפים מוסתרים
+  const hiddenCount = sections.filter(s => s.is_hidden).length;
+
   return (
     <div className="space-y-6">
+      {/* מיגרציה בתהליך */}
+      {migrating && (
+        <div className="bg-blue-50 border-2 border-blue-300 rounded-lg p-4">
+          <div className="flex items-center gap-3">
+            <RefreshCw className="w-5 h-5 text-blue-600 animate-spin" />
+            <div>
+              <p className="font-bold text-blue-900">מעביר נתונים ל-Supabase...</p>
+              <p className="text-sm text-blue-700">זה עשוי לקחת מספר שניות</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* מיגרציה הושלמה */}
+      {migrationComplete && (
+        <div className="bg-green-50 border-2 border-green-300 rounded-lg p-4">
+          <div className="flex items-center gap-3">
+            <Star className="w-5 h-5 text-green-600" />
+            <div>
+              <p className="font-bold text-green-900">✅ המעבר ל-Supabase הושלם בהצלחה!</p>
+              <p className="text-sm text-green-700">כל הנתונים שלך כעת מאובטחים בענן</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* כותרת וסטטיסטיקות */}
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
             <BookOpen className="w-5 h-5 text-blue-600" />
-            המחסן האישי שלי
+            המחסן האישי שלי ☁️
             {willType === 'mutual' && (
               <span className="text-xs bg-pink-100 text-pink-700 px-2 py-1 rounded-full">
                 💕 צוואה הדדית
@@ -454,32 +347,45 @@ export default function UnifiedWarehouse({ onSectionSelect, userId, willType = '
             )}
           </h3>
           <div className="text-sm text-gray-600">
-            {sections.length} סעיפים • {filteredSections.length} תוצאות
-            {willType === 'individual' && (
-              <span className="text-xs text-gray-500 mr-2">(ללא סעיפים הדדיים)</span>
-            )}
-            {hiddenSections.length > 0 && (
-              <span className="text-xs text-orange-600 mr-2">
-                🙈 {hiddenSections.length} מוסתרים
-              </span>
+            {warehouseLoading ? (
+              <span>טוען...</span>
+            ) : (
+              <>
+                {sections.length} סעיפים • {filteredSections.length} תוצאות
+                {willType === 'individual' && (
+                  <span className="text-xs text-gray-500 mr-2">(ללא סעיפים הדדיים)</span>
+                )}
+                {hiddenCount > 0 && (
+                  <span className="text-xs text-orange-600 mr-2">
+                    🙈 {hiddenCount} מוסתרים
+                  </span>
+                )}
+              </>
             )}
           </div>
         </div>
         
         {/* הצג כפתור לשחזור סעיפים מוסתרים */}
-        {hiddenSections.length > 0 && (
+        {hiddenCount > 0 && (
           <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 mb-4">
             <div className="flex items-center justify-between">
               <p className="text-sm text-orange-800">
-                <strong>{hiddenSections.length} סעיפים מוסתרים</strong> - לא יופיעו ברשימה
+                <strong>{hiddenCount} סעיפים מוסתרים</strong> - לא יופיעו ברשימה
               </p>
               <button
-                onClick={() => saveHiddenSections([])}
+                onClick={() => showAllHidden()}
                 className="text-sm px-3 py-1 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition"
               >
                 הצג את כולם מחדש
               </button>
             </div>
+          </div>
+        )}
+
+        {/* שגיאות */}
+        {warehouseError && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+            <p className="text-sm text-red-800">❌ {warehouseError}</p>
           </div>
         )}
 
@@ -516,15 +422,12 @@ export default function UnifiedWarehouse({ onSectionSelect, userId, willType = '
           </button>
 
           <button
-            onClick={() => {
-              localStorage.removeItem('upgraded_warehouse_loaded');
-              localStorage.removeItem(`warehouse_${userId}`);
-              loadSections();
-            }}
-            className="flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+            onClick={() => reload()}
+            disabled={warehouseLoading}
+            className="flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:opacity-50"
           >
-            <RefreshCw className="w-4 h-4" />
-            טען מחדש מחסן
+            <RefreshCw className={`w-4 h-4 ${warehouseLoading ? 'animate-spin' : ''}`} />
+            {warehouseLoading ? 'טוען...' : 'טען מחדש'}
           </button>
         </div>
 
@@ -705,8 +608,8 @@ export default function UnifiedWarehouse({ onSectionSelect, userId, willType = '
                       {section.content}
                     </p>
                     <div className="flex items-center gap-4 text-xs text-gray-500">
-                      <span>שימוש: {section.usageCount}</span>
-                      <span>נוצר: {new Date(section.createdAt).toLocaleDateString('he-IL')}</span>
+                      <span>שימוש: {section.usage_count}</span>
+                      <span>נוצר: {new Date(section.created_at).toLocaleDateString('he-IL')}</span>
                     </div>
                   </div>
                   
@@ -718,7 +621,14 @@ export default function UnifiedWarehouse({ onSectionSelect, userId, willType = '
                       הוסף לצוואה
                     </button>
                     <button
-                      onClick={() => toggleHideSection(section.id)}
+                      onClick={async () => {
+                        try {
+                          await toggleHideSection(section.id);
+                          alert('✅ הסעיף הוסתר בהצלחה');
+                        } catch (err) {
+                          alert('❌ שגיאה בהסתרת הסעיף');
+                        }
+                      }}
                       className="p-1 text-orange-500 hover:text-orange-700 transition"
                       title="הסתר סעיף (לא יופיע יותר)"
                     >

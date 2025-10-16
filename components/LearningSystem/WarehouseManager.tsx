@@ -12,24 +12,36 @@ import {
   Clock,
   Tag,
   BookOpen,
-  TrendingUp
+  TrendingUp,
+  RefreshCw
 } from 'lucide-react';
-import { WarehouseSection, UserLearningProfile } from '@/lib/learning-system/types';
-import { learningEngine } from '@/lib/learning-system/learning-engine';
+import { WarehouseSection as WarehouseSectionType } from '@/lib/learning-system/types';
+import { useWarehouse } from '@/lib/hooks/useWarehouse';
+import { useLearning } from '@/lib/hooks/useLearning';
 
 interface WarehouseManagerProps {
   userId: string;
-  onSectionSelect: (section: WarehouseSection) => void;
+  onSectionSelect: (section: WarehouseSectionType) => void;
 }
 
 export default function WarehouseManager({ userId, onSectionSelect }: WarehouseManagerProps) {
-  const [sections, setSections] = useState<WarehouseSection[]>([]);
-  const [userProfile, setUserProfile] = useState<UserLearningProfile | null>(null);
+  // Supabase hooks
+  const {
+    sections,
+    loading,
+    error,
+    addSection,
+    updateSection,
+    deleteSection,
+    reload
+  } = useWarehouse(userId);
+
+  const { preferences, getStatistics } = useLearning(userId);
+
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('custom'); // ברירת מחדל: מותאם אישית
   const [sortBy, setSortBy] = useState<'recent' | 'popular' | 'rating'>('recent');
   const [showAddForm, setShowAddForm] = useState(false);
-  const [mounted, setMounted] = useState(false);
   const [newSection, setNewSection] = useState({
     title: '',
     content: '',
@@ -38,90 +50,49 @@ export default function WarehouseManager({ userId, onSectionSelect }: WarehouseM
     isPublic: false
   });
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const handleAddSection = async () => {
+    try {
+      await addSection({
+        title: newSection.title,
+        content: newSection.content,
+        category: newSection.category,
+        tags: newSection.tags.split(',').map(tag => tag.trim()).filter(Boolean),
+        usage_count: 0,
+        average_rating: 5,
+        is_public: newSection.isPublic,
+        is_hidden: false,
+        created_by: userId
+      });
 
-  useEffect(() => {
-    if (mounted) {
-      loadSections();
-      loadUserProfile();
-    }
-  }, [userId, mounted]);
-
-  const loadSections = () => {
-    const profile = learningEngine.getUserProfile(userId);
-    if (profile) {
-      setSections(profile.customSections);
+      // איפוס הטופס
+      setNewSection({
+        title: '',
+        content: '',
+        category: 'custom',
+        tags: '',
+        isPublic: false
+      });
+      setShowAddForm(false);
+      alert('✅ הסעיף נשמר בהצלחה!');
+    } catch (err) {
+      console.error('Error adding section:', err);
+      alert('❌ שגיאה בשמירת הסעיף');
     }
   };
 
-  const loadUserProfile = () => {
-    const profile = learningEngine.getUserProfile(userId);
-    setUserProfile(profile || null);
-  };
-
-  const handleAddSection = () => {
-    if (!mounted) return;
-
-    const section: WarehouseSection = {
-      id: Date.now().toString(),
-      title: newSection.title,
-      content: newSection.content,
-      category: newSection.category,
-      tags: newSection.tags.split(',').map(tag => tag.trim()).filter(Boolean),
-      usageCount: 0,
-      averageRating: 5,
-      isPublic: newSection.isPublic,
-      createdBy: userId,
-      createdAt: new Date().toISOString(),
-      lastUsed: new Date().toISOString()
-    };
-
-    // עדכון פרופיל המשתמש
-    const profile = learningEngine.getUserProfile(userId);
-    if (profile) {
-      profile.customSections.push(section);
-      setSections([...profile.customSections]);
-    }
-
-    // איפוס הטופס
-    setNewSection({
-      title: '',
-      content: '',
-      category: 'custom',
-      tags: '',
-      isPublic: false
-    });
-    setShowAddForm(false);
-  };
-
-  const handleDeleteSection = (sectionId: string) => {
-    if (!mounted) return;
-    
+  const handleDeleteSection = async (sectionId: string) => {
     if (confirm('האם למחוק את הסעיף?')) {
-      const profile = learningEngine.getUserProfile(userId);
-      if (profile) {
-        profile.customSections = profile.customSections.filter(s => s.id !== sectionId);
-        setSections(profile.customSections);
+      try {
+        await deleteSection(sectionId);
+        alert('✅ הסעיף נמחק בהצלחה');
+      } catch (err) {
+        alert('❌ שגיאה במחיקת הסעיף');
       }
     }
   };
 
-  const handleUseSection = (section: WarehouseSection) => {
-    if (!mounted) return;
-    
-    // עדכון מועד שימוש אחרון
-    const profile = learningEngine.getUserProfile(userId);
-    if (profile) {
-      const sectionIndex = profile.customSections.findIndex(s => s.id === section.id);
-      if (sectionIndex !== -1) {
-        profile.customSections[sectionIndex].lastUsed = new Date().toISOString();
-        profile.customSections[sectionIndex].usageCount++;
-        setSections([...profile.customSections]);
-      }
-    }
-    
+  const handleUseSection = async (section: WarehouseSectionType) => {
+    // עדכון מונה שימוש ב-Supabase (ה-hook כבר עושה את זה)
     onSectionSelect(section);
   };
 
@@ -139,45 +110,62 @@ export default function WarehouseManager({ userId, onSectionSelect }: WarehouseM
     .sort((a, b) => {
       switch (sortBy) {
         case 'popular':
-          return b.usageCount - a.usageCount;
+          return b.usage_count - a.usage_count;
         case 'rating':
-          return b.averageRating - a.averageRating;
+          return b.average_rating - a.average_rating;
         case 'recent':
         default:
-          return new Date(b.lastUsed).getTime() - new Date(a.lastUsed).getTime();
+          return new Date(b.last_used).getTime() - new Date(a.last_used).getTime();
       }
     });
 
   const categories = [...new Set(sections.map(s => s.category)), 'all'].filter(Boolean);
-  const statistics = mounted ? learningEngine.getStatistics(userId) : {
+  const statistics = getStatistics ? getStatistics() : {
     totalEdits: 0,
-    uniqueUsers: 0,
-    averageEditLength: 0,
-    mostEditedCategories: [],
-    insights: 0
+    manualEdits: 0,
+    aiSuggested: 0,
+    aiApproved: 0,
+    byCategory: {},
+    mostEditedCategory: null
   };
 
   return (
     <div className="bg-white rounded-lg shadow-lg p-6">
+      {/* שגיאות */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+          <p className="text-sm text-red-800">❌ {error}</p>
+        </div>
+      )}
+
       {/* כותרת */}
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
             <BookOpen className="w-6 h-6 text-blue-600" />
-            מחסן הסעיפים שלי
+            מחסן הסעיפים שלי ☁️
           </h2>
           <p className="text-gray-600 mt-1">
-            {sections.length} סעיפים • {statistics.totalEdits} עריכות
+            {loading ? 'טוען...' : `${sections.length} סעיפים • ${statistics.totalEdits} עריכות`}
           </p>
         </div>
         
-        <button
-          onClick={() => setShowAddForm(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-        >
-          <Plus className="w-4 h-4" />
-          סעיף חדש
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => reload()}
+            disabled={loading}
+            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:opacity-50"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+          </button>
+          <button
+            onClick={() => setShowAddForm(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+          >
+            <Plus className="w-4 h-4" />
+            סעיף חדש
+          </button>
+        </div>
       </div>
 
       {/* סטטיסטיקות */}
@@ -343,15 +331,15 @@ export default function WarehouseManager({ userId, onSectionSelect }: WarehouseM
                     </span>
                     <span className="flex items-center gap-1">
                       <TrendingUp className="w-3 h-3" />
-                      {section.usageCount} שימושים
+                      {section.usage_count} שימושים
                     </span>
                     <span className="flex items-center gap-1">
                       <Star className="w-3 h-3" />
-                      {section.averageRating.toFixed(1)}
+                      {section.average_rating.toFixed(1)}
                     </span>
                     <span className="flex items-center gap-1">
                       <Clock className="w-3 h-3" />
-                      {new Date(section.lastUsed).toLocaleDateString('he-IL')}
+                      {new Date(section.last_used).toLocaleDateString('he-IL')}
                     </span>
                   </div>
                 </div>

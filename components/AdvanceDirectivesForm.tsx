@@ -754,6 +754,7 @@ ${applyAdvanceDirectivesGender(
                   onSectionToggle={handleSectionToggle}
                   principalGender={principalInfo.gender}
                   attorneyGender={getAttorneyGender()}
+                  userId="current-user" // TODO: replace with actual user ID
                 />
               )}
 

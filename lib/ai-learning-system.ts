@@ -1,9 +1,13 @@
 /**
  * מערכת למידה מתיקוני משתמש בזמן אמת
+ * עודכן לעבודה עם Supabase במקום localStorage
  */
+
+import { supabase } from '@/lib/supabase-client';
 
 export interface UserCorrection {
   id: string;
+  user_id?: string;
   context: string;
   style: string;
   aiSuggestion: string;      // מה שה-AI הציע
@@ -14,26 +18,29 @@ export interface UserCorrection {
 }
 
 export class AILearningSystem {
-  private storageKey = 'ai-learning-corrections';
+  private userId: string;
   private maxCorrections = 100;
+  
+  constructor(userId: string = 'anonymous') {
+    this.userId = userId;
+  }
 
   /**
-   * שמירת תיקון משתמש
+   * שמירת תיקון משתמש ב-Supabase
    */
-  saveCorrection(
+  async saveCorrection(
     original: string,
     aiSuggestion: string,
     userCorrection: string,
     context: string,
     style: string
-  ): void {
-    const corrections = this.getCorrections();
-    
+  ): Promise<void> {
     // זהה את סוג התיקון
     const correctionType = this.analyzeCorrectionType(aiSuggestion, userCorrection);
     
     const newCorrection: UserCorrection = {
       id: this.generateId(),
+      user_id: this.userId,
       original,
       aiSuggestion,
       userCorrection,
@@ -43,36 +50,81 @@ export class AILearningSystem {
       correctionType,
     };
 
-    corrections.unshift(newCorrection);
-    
-    const limited = corrections.slice(0, this.maxCorrections);
-    localStorage.setItem(this.storageKey, JSON.stringify(limited));
-    
-    console.log(`✅ תיקון נשמר (${correctionType}):`, {
-      aiLength: aiSuggestion.length,
-      userLength: userCorrection.length,
-      diff: userCorrection.length - aiSuggestion.length
-    });
+    try {
+      // שמירה ל-Supabase (טבלת learning_data)
+      await supabase.from('learning_data').insert({
+        user_id: this.userId,
+        section_id: 'ai-correction',
+        original_text: original,
+        edited_text: userCorrection,
+        edit_type: correctionType === 'accepted' ? 'ai_approved' : 'manual',
+        user_feedback: correctionType === 'accepted' ? 'approved' : 'improved',
+        context: {
+          aiSuggestion,
+          correctionType,
+          style,
+          contextType: context
+        }
+      });
+
+      console.log(`✅ תיקון נשמר ל-Supabase (${correctionType}):`, {
+        aiLength: aiSuggestion.length,
+        userLength: userCorrection.length,
+        diff: userCorrection.length - aiSuggestion.length
+      });
+    } catch (err) {
+      console.error('Error saving correction to Supabase:', err);
+      // Fallback ל-localStorage
+      const corrections = await this.getCorrections();
+      corrections.unshift(newCorrection);
+      const limited = corrections.slice(0, this.maxCorrections);
+      localStorage.setItem(`ai-corrections-${this.userId}`, JSON.stringify(limited));
+    }
   }
 
   /**
-   * קבלת כל התיקונים
+   * קבלת כל התיקונים מ-Supabase
    */
-  getCorrections(): UserCorrection[] {
+  async getCorrections(): Promise<UserCorrection[]> {
     try {
-      const stored = localStorage.getItem(this.storageKey);
-      return stored ? JSON.parse(stored) : [];
+      const { data, error } = await supabase
+        .from('learning_data')
+        .select('*')
+        .eq('user_id', this.userId)
+        .order('created_at', { ascending: false })
+        .limit(this.maxCorrections);
+
+      if (error) throw error;
+
+      // המרה לפורמט UserCorrection
+      return (data || []).map(item => ({
+        id: item.id,
+        user_id: item.user_id,
+        original: item.original_text,
+        aiSuggestion: item.context?.aiSuggestion || '',
+        userCorrection: item.edited_text,
+        context: item.context?.contextType || '',
+        style: item.context?.style || 'formal',
+        timestamp: new Date(item.created_at).getTime(),
+        correctionType: item.context?.correctionType || 'minor'
+      }));
     } catch (error) {
       console.error('שגיאה בטעינת תיקונים:', error);
-      return [];
+      // Fallback ל-localStorage
+      try {
+        const stored = localStorage.getItem(`ai-corrections-${this.userId}`);
+        return stored ? JSON.parse(stored) : [];
+      } catch {
+        return [];
+      }
     }
   }
 
   /**
    * קבלת תיקונים רלוונטיים
    */
-  getRelevantCorrections(context: string, style: string, limit: number = 5): UserCorrection[] {
-    const corrections = this.getCorrections();
+  async getRelevantCorrections(context: string, style: string, limit: number = 5): Promise<UserCorrection[]> {
+    const corrections = await this.getCorrections();
     
     return corrections
       .filter(c => c.context === context && c.style === style)
@@ -82,12 +134,12 @@ export class AILearningSystem {
   /**
    * בניית prompt משופר מתיקוני משתמש
    */
-  buildEnhancedPrompt(
+  async buildEnhancedPrompt(
     basePrompt: string,
     context: string,
     style: string
-  ): string {
-    const corrections = this.getRelevantCorrections(context, style, 3);
+  ): Promise<string> {
+    const corrections = await this.getRelevantCorrections(context, style, 3);
     
     if (corrections.length === 0) {
       return basePrompt;
@@ -165,8 +217,8 @@ export class AILearningSystem {
   /**
    * סטטיסטיקות למידה
    */
-  getStats() {
-    const corrections = this.getCorrections();
+  async getStats() {
+    const corrections = await this.getCorrections();
     
     const byType = corrections.reduce((acc, c) => {
       acc[c.correctionType] = (acc[c.correctionType] || 0) + 1;
@@ -193,31 +245,75 @@ export class AILearningSystem {
   /**
    * מחיקות
    */
-  deleteCorrection(id: string): void {
-    const corrections = this.getCorrections();
-    const filtered = corrections.filter(c => c.id !== id);
-    localStorage.setItem(this.storageKey, JSON.stringify(filtered));
+  async deleteCorrection(id: string): Promise<void> {
+    try {
+      await supabase
+        .from('learning_data')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', this.userId);
+    } catch (err) {
+      console.error('Error deleting correction:', err);
+    }
   }
 
-  clearAll(): void {
-    localStorage.removeItem(this.storageKey);
+  async clearAll(): Promise<void> {
+    try {
+      await supabase
+        .from('learning_data')
+        .delete()
+        .eq('user_id', this.userId);
+    } catch (err) {
+      console.error('Error clearing all:', err);
+    }
   }
 
   /**
    * ייצוא/ייבוא
    */
-  exportCorrections(): string {
-    return JSON.stringify(this.getCorrections(), null, 2);
+  async exportCorrections(): Promise<string> {
+    const corrections = await this.getCorrections();
+    return JSON.stringify(corrections, null, 2);
   }
 
-  importCorrections(jsonString: string): void {
+  async importCorrections(jsonString: string): Promise<void> {
     const corrections = JSON.parse(jsonString);
-    localStorage.setItem(this.storageKey, JSON.stringify(corrections));
+    
+    try {
+      // מחיקה קודם
+      await this.clearAll();
+      
+      // הוספה ל-Supabase
+      for (const correction of corrections) {
+        await this.saveCorrection(
+          correction.original,
+          correction.aiSuggestion,
+          correction.userCorrection,
+          correction.context,
+          correction.style
+        );
+      }
+    } catch (err) {
+      console.error('Error importing corrections:', err);
+    }
   }
 
   private generateId(): string {
     return `corr_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
+  
+  /**
+   * שינוי משתמש (למשתמש מחובר אחר)
+   */
+  setUserId(newUserId: string): void {
+    this.userId = newUserId;
+  }
 }
 
-export const aiLearningSystem = new AILearningSystem();
+// ייצוא singleton - יצירה עם userId ברירת מחדל
+export const aiLearningSystem = new AILearningSystem('anonymous');
+
+// פונקציה ליצירת instance עם userId ספציפי
+export function createAILearningSystem(userId: string): AILearningSystem {
+  return new AILearningSystem(userId);
+}

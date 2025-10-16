@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   advanceDirectivesSectionsWarehouse, 
   advanceDirectivesCategories, 
@@ -8,44 +8,36 @@ import {
   applyAdvanceDirectivesGender,
   type AdvanceDirectivesSectionTemplate 
 } from '@/lib/sections-warehouses/advance-directives-warehouse';
-import { Search, Plus, Check, Eye, EyeOff, X } from 'lucide-react';
+import { Search, Plus, Check, Eye, EyeOff, X, RefreshCw } from 'lucide-react';
+import { useAdvanceDirectivesHidden } from '@/lib/hooks/useAdvanceDirectivesHidden';
 
 interface AdvanceDirectivesSectionSelectorProps {
   selectedSections: string[]; // IDs של הסעיפים שנבחרו
   onSectionToggle: (sectionId: string) => void;
   principalGender: 'male' | 'female';
   attorneyGender: 'male' | 'female' | 'plural';
+  userId: string; // נדרש ל-Supabase
 }
 
 export default function AdvanceDirectivesSectionSelector({
   selectedSections,
   onSectionToggle,
   principalGender,
-  attorneyGender
+  attorneyGender,
+  userId
 }: AdvanceDirectivesSectionSelectorProps) {
+  // Supabase hook לסעיפים מוסתרים
+  const {
+    hiddenSections,
+    loading: hiddenLoading,
+    toggleHideSection,
+    showAllSections
+  } = useAdvanceDirectivesHidden(userId);
+
   const [selectedCategory, setSelectedCategory] = useState<'property' | 'personal' | 'medical'>('property');
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>('real-estate'); // ברירת מחדל: נדל"ן
   const [searchQuery, setSearchQuery] = useState('');
   const [previewSection, setPreviewSection] = useState<string | null>(null);
-  const [hiddenSections, setHiddenSections] = useState<string[]>(() => {
-    // טעינת סעיפים מוסתרים מ-localStorage
-    const saved = localStorage.getItem('hiddenAdvanceDirectivesSections');
-    return saved ? JSON.parse(saved) : [];
-  });
-
-  // שמירת סעיפים מוסתרים
-  const saveHiddenSections = (hidden: string[]) => {
-    localStorage.setItem('hiddenAdvanceDirectivesSections', JSON.stringify(hidden));
-    setHiddenSections(hidden);
-  };
-
-  // הסתרת/הצגת סעיף
-  const toggleHideSection = (sectionId: string) => {
-    const newHidden = hiddenSections.includes(sectionId)
-      ? hiddenSections.filter(id => id !== sectionId)
-      : [...hiddenSections, sectionId];
-    saveHiddenSections(newHidden);
-  };
 
   // סינון סעיפים לפי קטגוריה, תת-קטגוריה, חיפוש והסתרה
   const filteredSections = advanceDirectivesSectionsWarehouse.filter(section => {
@@ -85,10 +77,17 @@ export default function AdvanceDirectivesSectionSelector({
   return (
     <div className="space-y-6">
       <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
-        <h3 className="font-semibold text-gray-900 mb-2">📚 מחסן הסעיפים - 95 סעיפים מוכנים</h3>
-        <p className="text-sm text-gray-700">
-          בחר סעיפים מהמחסן או כתוב סעיפים משלך. כל הסעיפים יותאמו אוטומטית למגדר שבחרת.
-        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="font-semibold text-gray-900 mb-2">📚 מחסן הסעיפים - 95 סעיפים מוכנים ☁️</h3>
+            <p className="text-sm text-gray-700">
+              בחר סעיפים מהמחסן או כתוב סעיפים משלך. כל הסעיפים יותאמו אוטומטית למגדר שבחרת.
+            </p>
+          </div>
+          {hiddenLoading && (
+            <RefreshCw className="w-5 h-5 text-blue-600 animate-spin" />
+          )}
+        </div>
       </div>
 
       {/* חיפוש */}
@@ -212,7 +211,13 @@ export default function AdvanceDirectivesSectionSelector({
                     </button>
 
                     <button
-                      onClick={() => toggleHideSection(section.id)}
+                      onClick={async () => {
+                        try {
+                          await toggleHideSection(section.id);
+                        } catch (err) {
+                          alert('❌ שגיאה בהסתרת הסעיף');
+                        }
+                      }}
                       className="p-2 rounded-lg transition bg-red-100 text-red-600 hover:bg-red-200"
                       title="הסתר סעיף זה (לא יופיע יותר)"
                     >
@@ -257,7 +262,14 @@ export default function AdvanceDirectivesSectionSelector({
               🙈 {hiddenSections.length} סעיפים מוסתרים
             </p>
             <button
-              onClick={() => saveHiddenSections([])}
+              onClick={async () => {
+                try {
+                  await showAllSections();
+                  alert('✅ כל הסעיפים מוצגים מחדש!');
+                } catch (err) {
+                  alert('❌ שגיאה בהצגת הסעיפים');
+                }
+              }}
               className="text-sm text-orange-700 hover:text-orange-900 mt-1 underline"
             >
               הצג את כל הסעיפים מחדש
