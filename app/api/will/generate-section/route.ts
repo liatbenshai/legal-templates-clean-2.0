@@ -36,29 +36,3 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Failed to generate section' }, { status: 500 });
   }
 }
-```
-
-5. **לחץ "Commit new file"**
-
-## שלב 2: צור קובץ `.env.local`
-
-1. **שוב "Add file"** → **"Create new file"**
-2. **כתוב בשם:**
-```
-.env.local
-```
-
-3. **בעריך**, הוסף:
-```
-ANTHROPIC_API_KEY=sk-ant-...your-key-here...
-```
-
-4. **לחץ "Commit new file"**
-
-## שלב 3: עדכן את `.gitignore`
-
-1. **חפש את קובץ `.gitignore`** בrepo שלך
-2. **לחץ על עיפרון** (edit)
-3. **הוסף את השורה:**
-```
-.env.local
