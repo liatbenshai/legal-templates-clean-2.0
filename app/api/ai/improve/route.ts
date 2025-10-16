@@ -1,10 +1,6 @@
 import { Anthropic } from "@anthropic-ai/sdk";
 import { NextRequest, NextResponse } from "next/server";
 
-const client = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
-
 export async function POST(request: NextRequest) {
   try {
     const { text, context } = await request.json();
@@ -16,6 +12,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) {
+      console.error("ANTHROPIC_API_KEY is not set");
+      return NextResponse.json(
+        { error: "API key not configured" },
+        { status: 500 }
+      );
+    }
+
+    const client = new Anthropic({ apiKey });
+
     const message = await client.messages.create({
       model: "claude-3-5-sonnet-20241022",
       max_tokens: 1024,
@@ -23,11 +30,8 @@ export async function POST(request: NextRequest) {
         {
           role: "user",
           content: `אתה עוזר משפטי ממוקד בעברית. שפר את הטקסט המשפטי הזה. שמור על המשמעות אבל הפוך אותו לניסוח מקצועי יותר:
-
 ${text}
-
 ${context ? `הקשר: ${context}` : ""}
-
 תן רק את הטקסט המשופר, בלי הסברים.`,
         },
       ],
