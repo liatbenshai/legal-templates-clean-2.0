@@ -210,8 +210,24 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
     setImproveError('');
 
     try {
-      const improved = await willAIService.improveLegalLanguage(specialInstructions);
-      setSpecialInstructions(improved);
+      const response = await fetch('/api/will/improve-language', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: specialInstructions })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to improve');
+      }
+
+      const data = await response.json();
+      const improvedText = data.content?.[0]?.text;
+
+      if (!improvedText) {
+        throw new Error('No content returned');
+      }
+
+      setSpecialInstructions(improvedText);
     } catch (error) {
       setImproveError('שגיאה בשיפור הטקסט. אנא נסה שוב.');
       console.error('Error improving text:', error);
@@ -230,8 +246,24 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
     setImproveVehicleError('');
 
     try {
-      const improved = await willAIService.improveLegalLanguage(vehicleInstructions);
-      setVehicleInstructions(improved);
+      const response = await fetch('/api/will/improve-language', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: vehicleInstructions })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to improve');
+      }
+
+      const data = await response.json();
+      const improvedText = data.content?.[0]?.text;
+
+      if (!improvedText) {
+        throw new Error('No content returned');
+      }
+
+      setVehicleInstructions(improvedText);
     } catch (error) {
       setImproveVehicleError('שגיאה בשיפור הטקסט. אנא נסה שוב.');
       console.error('Error improving text:', error);
