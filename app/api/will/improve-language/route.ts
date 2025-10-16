@@ -4,6 +4,13 @@ export async function POST(request: NextRequest) {
   try {
     const { text } = await request.json();
 
+    if (!text || typeof text !== 'string') {
+      return NextResponse.json(
+        { error: 'Text is required' },
+        { status: 400 }
+      );
+    }
+
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -28,10 +35,26 @@ ${text}
       })
     });
 
+    if (!response.ok) {
+      const error = await response.text();
+      console.error('Anthropic API error:', error);
+      return NextResponse.json(
+        { error: 'Failed to improve text' },
+        { status: response.status }
+      );
+    }
+
     const data = await response.json();
+    
+    // בדוק את התשובה
+    console.log('API Response:', JSON.stringify(data, null, 2));
+    
     return NextResponse.json(data);
   } catch (error) {
-    console.error('Error:', error);
-    return NextResponse.json({ error: 'Failed to improve language' }, { status: 500 });
+    console.error('Error in improve-language route:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }
