@@ -13,8 +13,13 @@ export async function POST(request: NextRequest) {
     }
 
     const apiKey = process.env.ANTHROPIC_API_KEY;
+    console.log("API Key check:", {
+      exists: !!apiKey,
+      length: apiKey?.length,
+      prefix: apiKey?.substring(0, 10),
+    });
+
     if (!apiKey) {
-      console.error("ANTHROPIC_API_KEY is not set");
       return NextResponse.json(
         { error: "API key not configured" },
         { status: 500 }
@@ -29,10 +34,7 @@ export async function POST(request: NextRequest) {
       messages: [
         {
           role: "user",
-          content: `אתה עוזר משפטי ממוקד בעברית. שפר את הטקסט המשפטי הזה. שמור על המשמעות אבל הפוך אותו לניסוח מקצועי יותר:
-${text}
-${context ? `הקשר: ${context}` : ""}
-תן רק את הטקסט המשופר, בלי הסברים.`,
+          content: `שפר את הטקסט המשפטי:\n${text}`,
         },
       ],
     });
