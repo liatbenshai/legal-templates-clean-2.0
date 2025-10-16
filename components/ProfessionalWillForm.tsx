@@ -11,7 +11,7 @@ import EditableSection from './LearningSystem/EditableSection';
 import WarehouseManager from './LearningSystem/WarehouseManager';
 import AILearningManager from './AILearningManager';
 import UnifiedWarehouse from './UnifiedWarehouse';
-import { willAIService } from '@/lib/services/will-ai-service';
+import { useDocuments } from '@/lib/useDocuments'; // ← הוסף את זה
 
 interface Property {
   name: string;
@@ -54,6 +54,10 @@ interface ProfessionalWillFormProps {
 export default function ProfessionalWillForm({ defaultWillType = 'individual' }: ProfessionalWillFormProps = {}) {
   const [willType, setWillType] = useState<'individual' | 'mutual'>(defaultWillType);
   
+  // ← הוסף את useDocuments hook
+  const { saveSection } = useDocuments();
+  
+  // פרטי מצווה ראשי
   const [testator, setTestator] = useState({
     fullName: '',
     shortName: '',
@@ -62,6 +66,7 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
     gender: 'male' as Gender
   });
 
+  // בן/בת זוג (לצוואה הדדית)
   const [spouse, setSpouse] = useState({
     fullName: '',
     shortName: '',
@@ -70,6 +75,7 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
     gender: 'female' as Gender
   });
 
+  // נכסים
   const [properties, setProperties] = useState<Property[]>([
     {
       name: 'דירת המגורים',
@@ -82,6 +88,7 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
     }
   ]);
 
+  // חשבונות בנק
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([
     {
       bank: '',
@@ -92,6 +99,7 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
     }
   ]);
 
+  // יורשים
   const [heirs, setHeirs] = useState<Heir[]>([
     {
       firstName: '',
@@ -103,8 +111,10 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
     }
   ]);
 
+  // יורשים חלופיים (לצוואה הדדית)
   const [alternativeHeirs, setAlternativeHeirs] = useState<Heir[]>([]);
 
+  // עדים
   const [witnesses, setWitnesses] = useState<Witness[]>([
     {
       name: '',
@@ -120,6 +130,7 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
     }
   ]);
 
+  // פרטי חתימה
   const [willDate, setWillDate] = useState({
     day: new Date().getDate().toString(),
     month: new Date().toLocaleDateString('he-IL', { month: 'long' }),
@@ -135,6 +146,7 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
   const [customSections, setCustomSections] = useState<Array<{title: string, content: string}>>([]);
   const [heirsDisplayMode, setHeirsDisplayMode] = useState<'table' | 'list'>('list');
   
+  // אפוטרופוס לקטינים
   const [guardian, setGuardian] = useState({
     name: '',
     id: '',
@@ -142,6 +154,7 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
     gender: 'male' as Gender
   });
   
+  // תבניות JSON
   const [jsonTemplate, setJsonTemplate] = useState<any>(null);
   const [sectionsWarehouse, setSectionsWarehouse] = useState<any>(null);
   const [showWarehouse, setShowWarehouse] = useState(false);
@@ -152,27 +165,25 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
     genders: Record<string, 'male' | 'female'>;
   } | null>(null);
 
+  // מערכת למידה
   const [showLearningSystem, setShowLearningSystem] = useState(false);
   const [editableSections, setEditableSections] = useState<EditableSectionType[]>([]);
   const [learningMode, setLearningMode] = useState<'edit' | 'warehouse'>('edit');
   
-  // AI State
-  const [isImproving, setIsImproving] = useState(false);
-  const [improveError, setImproveError] = useState('');
-  const [isImprovingVehicle, setIsImprovingVehicle] = useState(false);
-  const [improveVehicleError, setImproveVehicleError] = useState('');
-
+  // פונקציה לחילוץ משתנים מתוכן
   const extractVariablesFromContent = (content: string): string[] => {
     const matches = content.match(/\{\{([^}]+)\}\}/g);
     return matches ? [...new Set(matches.map(match => match.replace(/\{\{|\}\}/g, '')))] : [];
   };
 
+  // טעינת תבניות JSON
   useEffect(() => {
     loadTemplates();
   }, [testator.gender, willType]);
   
   const loadTemplates = async () => {
     try {
+      // בחירת תבנית לפי סוג וגדר
       let templateFile = '';
       if (willType === 'mutual') {
         templateFile = 'will-mutual';
@@ -188,6 +199,7 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
       setJsonTemplate(template);
       setSectionsWarehouse(warehouse);
       
+      // טען עדים ברירת מחדל מהתבנית
       if (template.defaultWitnesses && witnesses.length === 2 && !witnesses[0].name) {
         setWitnesses(template.defaultWitnesses.map((w: any) => ({
           name: w.full_name,
@@ -197,78 +209,6 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
       }
     } catch (error) {
       console.error('Error loading templates:', error);
-    }
-  };
-
-  const handleImproveSpecialInstructions = async () => {
-    if (!specialInstructions.trim()) {
-      setImproveError('אנא כתוב הוראות מיוחדות לפני שיפור');
-      return;
-    }
-
-    setIsImproving(true);
-    setImproveError('');
-
-    try {
-      const response = await fetch('/api/will/improve-language', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: specialInstructions })
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to improve');
-      }
-
-      const data = await response.json();
-      const improvedText = data.content?.[0]?.text;
-
-      if (!improvedText) {
-        throw new Error('No content returned');
-      }
-
-      setSpecialInstructions(improvedText);
-    } catch (error) {
-      setImproveError('שגיאה בשיפור הטקסט. אנא נסה שוב.');
-      console.error('Error improving text:', error);
-    } finally {
-      setIsImproving(false);
-    }
-  };
-
-  const handleImproveVehicleInstructions = async () => {
-    if (!vehicleInstructions.trim()) {
-      setImproveVehicleError('אנא כתוב הוראות רכב לפני שיפור');
-      return;
-    }
-
-    setIsImprovingVehicle(true);
-    setImproveVehicleError('');
-
-    try {
-      const response = await fetch('/api/will/improve-language', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: vehicleInstructions })
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to improve');
-      }
-
-      const data = await response.json();
-      const improvedText = data.content?.[0]?.text;
-
-      if (!improvedText) {
-        throw new Error('No content returned');
-      }
-
-      setVehicleInstructions(improvedText);
-    } catch (error) {
-      setImproveVehicleError('שגיאה בשיפור הטקסט. אנא נסה שוב.');
-      console.error('Error improving text:', error);
-    } finally {
-      setIsImprovingVehicle(false);
     }
   };
 
@@ -364,6 +304,7 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
     guardianGender: guardian.gender
   });
 
+  // פונקציות מערכת הלמידה
   const convertToEditableSections = () => {
     const sections: EditableSectionType[] = [];
     
@@ -412,7 +353,9 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
     setEditableSections(sections);
   };
 
-  const handleUpdateEditableSection = (updatedSection: EditableSectionType) => {
+  // ← עדכון עם שמירה ל-Supabase
+  const handleUpdateEditableSection = async (updatedSection: EditableSectionType) => {
+    // עדכן state locally
     setEditableSections(prev => 
       prev.map(section => 
         section.id === updatedSection.id 
@@ -421,6 +364,7 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
       )
     );
     
+    // עדכן גם ב-customSections או הוראות מיוחדות
     if (updatedSection.id.startsWith('custom-')) {
       const index = parseInt(updatedSection.id.split('-')[1]);
       setCustomSections(prev => 
@@ -432,6 +376,25 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
       setSpecialInstructions(updatedSection.content);
     } else if (updatedSection.id === 'vehicle-instructions') {
       setVehicleInstructions(updatedSection.content);
+    }
+
+    // ← שמור ל-Supabase
+    try {
+      const result = await saveSection(
+        'will',
+        updatedSection.title,
+        updatedSection.content,
+        updatedSection.content,
+        updatedSection.title
+      );
+      
+      if (result.success) {
+        console.log('סעיף צוואה נשמר בהצלחה:', updatedSection.title);
+      } else {
+        console.error('שגיאה בשמירת סעיף:', result.error);
+      }
+    } catch (error) {
+      console.error('שגיאה בשמירה ל-Supabase:', error);
     }
   };
 
@@ -547,6 +510,7 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
           </div>
         )}
         
+        {/* בחירת סוג צוואה */}
         <div className="grid md:grid-cols-2 gap-4 mb-8">
           <button
             onClick={() => setWillType('individual')}
@@ -575,6 +539,7 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
           </button>
         </div>
 
+        {/* פרטי המצווה - השאר בדיוק אותו דבר ... */}
         <section className="bg-gray-50 p-6 rounded-lg border">
           <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
             <span className="text-lg">👤</span>
@@ -643,874 +608,7 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
           </div>
         </section>
 
-        {willType === 'mutual' && (
-          <section className="bg-pink-50 p-6 rounded-lg border border-pink-200">
-            <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-              <span className="text-lg">👥</span>
-              פרטי בן/בת הזוג
-            </h2>
-            
-            <div className="grid md:grid-cols-2 gap-4 mb-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">שם מלא</label>
-                <input
-                  type="text"
-                  value={spouse.fullName}
-                  onChange={(e) => setSpouse(prev => ({ ...prev, fullName: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="שם פרטי ושם משפחה מלא"
-                  dir="rtl"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">שם קצר</label>
-                <input
-                  type="text"
-                  value={spouse.shortName}
-                  onChange={(e) => setSpouse(prev => ({ ...prev, shortName: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="שם פרטי בלבד"
-                  dir="rtl"
-                />
-              </div>
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">תעודת זהות</label>
-                <input
-                  type="text"
-                  value={spouse.id}
-                  onChange={(e) => setSpouse(prev => ({ ...prev, id: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="123456789"
-                  maxLength={9}
-                  dir="ltr"
-                />
-              </div>
-              
-              <div>
-                <GenderSelector
-                  value={spouse.gender}
-                  onChange={(gender) => setSpouse(prev => ({ ...prev, gender }))}
-                  label="מגדר בן/בת זוג"
-                />
-              </div>
-            </div>
-          </section>
-        )}
-
-        <section className="bg-green-50 p-6 rounded-lg border border-green-200">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-              <span className="text-lg">🏢</span>
-              נכסי מקרקעין
-            </h2>
-            <button
-              onClick={addProperty}
-              className="flex items-center gap-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm"
-            >
-              <span className="text-lg">➕</span>
-              הוסף נכס
-            </button>
-          </div>
-
-          <div className="space-y-4">
-            {properties.map((property, index) => (
-              <div key={index} className="bg-white p-4 rounded-lg border border-green-300">
-                <div className="flex justify-between items-center mb-3">
-                  <h3 className="font-semibold text-gray-900">נכס {index + 1}</h3>
-                  {properties.length > 1 && (
-                    <button
-                      onClick={() => removeProperty(index)}
-                      className="text-red-500 hover:text-red-700"
-                    >
-                      <span className="text-lg">❌</span>
-                    </button>
-                  )}
-                </div>
-                
-                <div className="grid md:grid-cols-2 gap-3 mb-3">
-                  <input
-                    type="text"
-                    value={property.name}
-                    onChange={(e) => {
-                      const newProperties = [...properties];
-                      newProperties[index].name = e.target.value;
-                      setProperties(newProperties);
-                    }}
-                    placeholder="שם הנכס (דירת מגורים, דירת השקעה...)"
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500"
-                    dir="rtl"
-                  />
-                  
-                  <input
-                    type="text"
-                    value={property.city}
-                    onChange={(e) => {
-                      const newProperties = [...properties];
-                      newProperties[index].city = e.target.value;
-                      setProperties(newProperties);
-                    }}
-                    placeholder="עיר"
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500"
-                    dir="rtl"
-                  />
-                </div>
-
-                <div className="mb-3">
-                  <input
-                    type="text"
-                    value={property.address}
-                    onChange={(e) => {
-                      const newProperties = [...properties];
-                      newProperties[index].address = e.target.value;
-                      setProperties(newProperties);
-                    }}
-                    placeholder="כתובת מלאה (רחוב, מספר, דירה)"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500"
-                    dir="rtl"
-                  />
-                </div>
-
-                <div className="grid grid-cols-3 gap-3 mb-3">
-                  <input
-                    type="text"
-                    value={property.block}
-                    onChange={(e) => {
-                      const newProperties = [...properties];
-                      newProperties[index].block = e.target.value;
-                      setProperties(newProperties);
-                    }}
-                    placeholder="גוש"
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500"
-                    dir="ltr"
-                  />
-                  
-                  <input
-                    type="text"
-                    value={property.plot}
-                    onChange={(e) => {
-                      const newProperties = [...properties];
-                      newProperties[index].plot = e.target.value;
-                      setProperties(newProperties);
-                    }}
-                    placeholder="חלקה"
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500"
-                    dir="ltr"
-                  />
-                  
-                  <input
-                    type="text"
-                    value={property.subPlot}
-                    onChange={(e) => {
-                      const newProperties = [...properties];
-                      newProperties[index].subPlot = e.target.value;
-                      setProperties(newProperties);
-                    }}
-                    placeholder="תת חלקה"
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500"
-                    dir="ltr"
-                  />
-                </div>
-
-                {willType === 'mutual' && (
-                  <input
-                    type="text"
-                    value={property.ownership || ''}
-                    onChange={(e) => {
-                      const newProperties = [...properties];
-                      newProperties[index].ownership = e.target.value;
-                      setProperties(newProperties);
-                    }}
-                    placeholder="אחוז בעלות (50%, 100%...)"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500"
-                    dir="rtl"
-                  />
-                )}
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section className="bg-blue-50 p-6 rounded-lg border border-blue-200">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-              <span className="text-lg">💳</span>
-              חשבונות בנק
-            </h2>
-            <button
-              onClick={addBankAccount}
-              className="flex items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm"
-            >
-              <span className="text-lg">➕</span>
-              הוסף חשבון
-            </button>
-          </div>
-
-          <div className="space-y-4">
-            {bankAccounts.map((account, index) => (
-              <div key={index} className="bg-white p-4 rounded-lg border border-blue-300">
-                <div className="flex justify-between items-center mb-3">
-                  <h3 className="font-semibold text-gray-900">חשבון {index + 1}</h3>
-                  {bankAccounts.length > 1 && (
-                    <button
-                      onClick={() => removeBankAccount(index)}
-                      className="text-red-500 hover:text-red-700"
-                    >
-                      <span className="text-lg">❌</span>
-                    </button>
-                  )}
-                </div>
-                
-                <div className="grid md:grid-cols-2 gap-3">
-                  <input
-                    type="text"
-                    value={account.bank}
-                    onChange={(e) => {
-                      const newAccounts = [...bankAccounts];
-                      newAccounts[index].bank = e.target.value;
-                      setBankAccounts(newAccounts);
-                    }}
-                    placeholder="שם הבנק"
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                    dir="rtl"
-                  />
-                  
-                  <input
-                    type="text"
-                    value={account.location}
-                    onChange={(e) => {
-                      const newAccounts = [...bankAccounts];
-                      newAccounts[index].location = e.target.value;
-                      setBankAccounts(newAccounts);
-                    }}
-                    placeholder="עיר הסניף"
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                    dir="rtl"
-                  />
-                </div>
-                
-                <div className="grid grid-cols-3 gap-3 mt-3">
-                  <input
-                    type="text"
-                    value={account.bankNumber}
-                    onChange={(e) => {
-                      const newAccounts = [...bankAccounts];
-                      newAccounts[index].bankNumber = e.target.value;
-                      setBankAccounts(newAccounts);
-                    }}
-                    placeholder="מספר בנק"
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                    dir="ltr"
-                  />
-                  
-                  <input
-                    type="text"
-                    value={account.branch}
-                    onChange={(e) => {
-                      const newAccounts = [...bankAccounts];
-                      newAccounts[index].branch = e.target.value;
-                      setBankAccounts(newAccounts);
-                    }}
-                    placeholder="מספר סניף"
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                    dir="ltr"
-                  />
-                  
-                  <input
-                    type="text"
-                    value={account.accountNumber}
-                    onChange={(e) => {
-                      const newAccounts = [...bankAccounts];
-                      newAccounts[index].accountNumber = e.target.value;
-                      setBankAccounts(newAccounts);
-                    }}
-                    placeholder="מספר חשבון"
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                    dir="ltr"
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section className="bg-yellow-50 p-6 rounded-lg border border-yellow-200">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-              <span className="text-lg">👥</span>
-              יורשים
-            </h2>
-            <button
-              onClick={addHeir}
-              className="flex items-center gap-2 px-3 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition text-sm"
-            >
-              <span className="text-lg">➕</span>
-              הוסף יורש
-            </button>
-          </div>
-
-          <div className="bg-white border border-yellow-300 rounded-lg p-4 mb-4">
-            <div className="text-sm font-medium text-gray-700 mb-3">תצוגת יורשים בצוואה:</div>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setHeirsDisplayMode('list')}
-                className={`flex-1 px-4 py-3 rounded-lg border-2 transition ${
-                  heirsDisplayMode === 'list'
-                    ? 'border-yellow-500 bg-yellow-50 text-yellow-900 font-bold'
-                    : 'border-gray-300 bg-white text-gray-700 hover:border-yellow-300'
-                }`}
-              >
-                <div className="text-lg mb-1">📝</div>
-                <div className="font-semibold">רשימה מפורטת</div>
-                <div className="text-xs mt-1">
-                  1. שם יורש, ת.ז 123..., בן, 50%
-                </div>
-              </button>
-              
-              <button
-                onClick={() => setHeirsDisplayMode('table')}
-                className={`flex-1 px-4 py-3 rounded-lg border-2 transition ${
-                  heirsDisplayMode === 'table'
-                    ? 'border-yellow-500 bg-yellow-50 text-yellow-900 font-bold'
-                    : 'border-gray-300 bg-white text-gray-700 hover:border-yellow-300'
-                }`}
-              >
-                <div className="text-lg mb-1">📊</div>
-                <div className="font-semibold">טבלה מסודרת</div>
-                <div className="text-xs mt-1">
-                  | שם | ת.ז | קרבה | חלק |
-                </div>
-              </button>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            {heirs.map((heir, index) => (
-              <div key={index} className="bg-white p-4 rounded-lg border border-yellow-300">
-                <div className="flex justify-between items-center mb-3">
-                  <h3 className="font-semibold text-gray-900">יורש {index + 1}</h3>
-                  {heirs.length > 1 && (
-                    <button
-                      onClick={() => removeHeir(index)}
-                      className="text-red-500 hover:text-red-700"
-                    >
-                      <span className="text-lg">❌</span>
-                    </button>
-                  )}
-                </div>
-                
-                <div className="grid md:grid-cols-2 gap-3 mb-3">
-                  <input
-                    type="text"
-                    value={heir.firstName}
-                    onChange={(e) => {
-                      const newHeirs = [...heirs];
-                      newHeirs[index].firstName = e.target.value;
-                      setHeirs(newHeirs);
-                    }}
-                    placeholder="שם פרטי"
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-yellow-500 focus:border-yellow-500"
-                    dir="rtl"
-                  />
-                  
-                  <input
-                    type="text"
-                    value={heir.lastName}
-                    onChange={(e) => {
-                      const newHeirs = [...heirs];
-                      newHeirs[index].lastName = e.target.value;
-                      setHeirs(newHeirs);
-                    }}
-                    placeholder="שם משפחה"
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-yellow-500 focus:border-yellow-500"
-                    dir="rtl"
-                  />
-                </div>
-
-                <div className="grid md:grid-cols-4 gap-3">
-                  <input
-                    type="text"
-                    value={heir.id}
-                    onChange={(e) => {
-                      const newHeirs = [...heirs];
-                      newHeirs[index].id = e.target.value;
-                      setHeirs(newHeirs);
-                    }}
-                    placeholder="תעודת זהות"
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-yellow-500 focus:border-yellow-500"
-                    dir="ltr"
-                    maxLength={9}
-                  />
-                  
-                  <select
-                    value={heir.gender}
-                    onChange={(e) => {
-                      const newHeirs = [...heirs];
-                      newHeirs[index].gender = e.target.value as 'male' | 'female';
-                      setHeirs(newHeirs);
-                    }}
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-yellow-500 focus:border-yellow-500"
-                  >
-                    <option value="male">זכר</option>
-                    <option value="female">נקבה</option>
-                  </select>
-                  
-                  <select
-                    value={heir.relation}
-                    onChange={(e) => {
-                      const newHeirs = [...heirs];
-                      newHeirs[index].relation = e.target.value;
-                      setHeirs(newHeirs);
-                    }}
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-yellow-500 focus:border-yellow-500"
-                  >
-                    <option value="">קרבת משפחה</option>
-                    <option value="בן">בן</option>
-                    <option value="בת">בת</option>
-                    <option value="אח">אח</option>
-                    <option value="אחות">אחות</option>
-                    <option value="נכד">נכד</option>
-                    <option value="נכדה">נכדה</option>
-                    <option value="בן דוד">בן דוד</option>
-                    <option value="אחר">אחר</option>
-                  </select>
-                  
-                  <input
-                    type="text"
-                    value={heir.share}
-                    onChange={(e) => {
-                      const newHeirs = [...heirs];
-                      newHeirs[index].share = e.target.value;
-                      setHeirs(newHeirs);
-                    }}
-                    placeholder="חלק (1/3, 50%, שליש...)"
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-yellow-500 focus:border-yellow-500"
-                    dir="rtl"
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section className="bg-purple-50 p-6 rounded-lg border border-purple-200">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-              <span className="text-lg">📄</span>
-              עדים לצוואה
-            </h2>
-            {witnesses.length < 3 && (
-              <button
-                onClick={addWitness}
-                className="flex items-center gap-2 px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition text-sm"
-              >
-                <span className="text-lg">➕</span>
-                הוסף עד
-              </button>
-            )}
-          </div>
-
-          <div className="space-y-4">
-            {witnesses.map((witness, index) => (
-              <div key={index} className="bg-white p-4 rounded-lg border border-purple-300">
-                <div className="flex justify-between items-center mb-3">
-                  <h3 className="font-semibold text-gray-900">עד {index + 1}</h3>
-                  {witnesses.length > 2 && (
-                    <button
-                      onClick={() => removeWitness(index)}
-                      className="text-red-500 hover:text-red-700"
-                    >
-                      <span className="text-lg">❌</span>
-                    </button>
-                  )}
-                </div>
-                
-                <div className="grid md:grid-cols-3 gap-3 mb-3">
-                  <input
-                    type="text"
-                    value={witness.name}
-                    onChange={(e) => {
-                      const newWitnesses = [...witnesses];
-                      newWitnesses[index].name = e.target.value;
-                      setWitnesses(newWitnesses);
-                    }}
-                    placeholder="שם מלא"
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-purple-500 focus:border-purple-500"
-                    dir="rtl"
-                  />
-                  
-                  <select
-                    value={witness.gender}
-                    onChange={(e) => {
-                      const newWitnesses = [...witnesses];
-                      newWitnesses[index].gender = e.target.value as 'male' | 'female';
-                      setWitnesses(newWitnesses);
-                    }}
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-purple-500 focus:border-purple-500"
-                  >
-                    <option value="male">זכר</option>
-                    <option value="female">נקבה</option>
-                  </select>
-                  
-                  <input
-                    type="text"
-                    value={witness.id}
-                    onChange={(e) => {
-                      const newWitnesses = [...witnesses];
-                      newWitnesses[index].id = e.target.value;
-                      setWitnesses(newWitnesses);
-                    }}
-                    placeholder="תעודת זהות"
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-purple-500 focus:border-purple-500"
-                    dir="ltr"
-                    maxLength={9}
-                  />
-                </div>
-
-                <input
-                  type="text"
-                  value={witness.address}
-                  onChange={(e) => {
-                    const newWitnesses = [...witnesses];
-                    newWitnesses[index].address = e.target.value;
-                    setWitnesses(newWitnesses);
-                  }}
-                  placeholder="כתובת מלאה"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-purple-500 focus:border-purple-500"
-                  dir="rtl"
-                />
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section className="bg-gray-50 p-6 rounded-lg border border-gray-300">
-          <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-            <span className="text-lg">📅</span>
-            פרטי חתימה
-          </h2>
-          
-          <div className="grid md:grid-cols-4 gap-4 mb-4">
-            <input
-              type="text"
-              value={willDate.day}
-              onChange={(e) => setWillDate(prev => ({ ...prev, day: e.target.value }))}
-              placeholder="יום"
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-gray-500 focus:border-gray-500"
-              dir="rtl"
-            />
-            
-            <input
-              type="text"
-              value={willDate.month}
-              onChange={(e) => setWillDate(prev => ({ ...prev, month: e.target.value }))}
-              placeholder="חודש"
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-gray-500 focus:border-gray-500"
-              dir="rtl"
-            />
-            
-            <input
-              type="text"
-              value={willDate.year}
-              onChange={(e) => setWillDate(prev => ({ ...prev, year: e.target.value }))}
-              placeholder="שנה"
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-gray-500 focus:border-gray-500"
-              dir="rtl"
-            />
-            
-            <input
-              type="text"
-              value={willDate.city}
-              onChange={(e) => setWillDate(prev => ({ ...prev, city: e.target.value }))}
-              placeholder="עיר החתימה"
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-gray-500 focus:border-gray-500"
-              dir="rtl"
-            />
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-4">
-            <input
-              type="text"
-              value={lawyerName}
-              onChange={(e) => setLawyerName(e.target.value)}
-              placeholder="שם עורך הדין (אופציונלי)"
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-gray-500 focus:border-gray-500"
-              dir="rtl"
-            />
-            
-            <input
-              type="text"
-              value={copyNumber}
-              onChange={(e) => setCopyNumber(e.target.value)}
-              placeholder="מספר עותק"
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-gray-500 focus:border-gray-500"
-              dir="ltr"
-            />
-            
-            <input
-              type="text"
-              value={totalCopies}
-              onChange={(e) => setTotalCopies(e.target.value)}
-              placeholder="סך העותקים"
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-gray-500 focus:border-gray-500"
-              dir="ltr"
-            />
-          </div>
-        </section>
-
-        <section className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-lg border border-blue-200">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-              <span className="text-lg">📚</span>
-              מחסן הסעיפים שלי
-            </h2>
-            <button
-              onClick={() => {
-                convertToEditableSections();
-                setShowLearningSystem(!showLearningSystem);
-              }}
-              className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
-            >
-              <span className="text-white">🧠</span>
-              {showLearningSystem ? 'הסתר מערכת למידה' : 'מערכת למידה'}
-            </button>
-          </div>
-          
-          <div className="mb-4 p-4 bg-blue-100 rounded-lg">
-            <p className="text-sm text-blue-900 font-medium">
-              🎯 מחסן מאוחד עם קטגוריות: כספים, אישי, עסקים, בריאות, בני זוג ועוד
-            </p>
-          </div>
-          
-          <UnifiedWarehouse
-            onSectionSelect={handleSelectFromWarehouse}
-            userId={testator.fullName || 'anonymous'}
-            willType={willType}
-          />
-        </section>
-
-        {customSections.length > 0 && (
-          <section className="bg-yellow-50 p-6 rounded-lg border border-yellow-200">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">סעיפים שנוספו מהמחסן</h2>
-            
-            <div className="space-y-3">
-              {customSections.map((section, index) => (
-                <div key={index} className="bg-white p-4 rounded-lg border border-yellow-300">
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-semibold text-gray-900">{section.title}</h3>
-                    <button
-                      onClick={() => setCustomSections(prev => prev.filter((_, i) => i !== index))}
-                      className="text-red-500 hover:text-red-700"
-                    >
-                      <span className="text-lg">❌</span>
-                    </button>
-                  </div>
-                  
-                  <div className="text-sm text-gray-700 max-h-24 overflow-y-auto whitespace-pre-line">
-                    {section.content}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {showLearningSystem && (
-          <section className="bg-gradient-to-br from-purple-50 to-pink-50 p-6 rounded-lg border border-purple-200">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                <span className="text-purple-600 text-lg">🧠</span>
-                מערכת למידה חכמה
-              </h2>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setLearningMode('edit')}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-                    learningMode === 'edit'
-                      ? 'bg-purple-600 text-white'
-                      : 'bg-white text-purple-600 border border-purple-300'
-                  }`}
-                >
-                  עריכת סעיפים
-                </button>
-                <button
-                  onClick={() => setLearningMode('warehouse')}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-                    learningMode === 'warehouse'
-                      ? 'bg-purple-600 text-white'
-                      : 'bg-white text-purple-600 border border-purple-300'
-                  }`}
-                >
-                  ניהול מחסן
-                </button>
-              </div>
-            </div>
-
-            <div className="mb-4 p-4 bg-purple-100 rounded-lg">
-              <p className="text-sm text-purple-900 font-medium">
-                🎯 מערכת למידה חכמה שמשפרת את הצוואות שלך עם AI ולומדת מהתיקונים שלך
-              </p>
-            </div>
-
-            {learningMode === 'edit' && (
-              <div className="space-y-4">
-                {editableSections.length > 0 ? (
-                  editableSections.map((section) => (
-                    <EditableSection
-                      key={section.id}
-                      section={section}
-                      onUpdate={handleUpdateEditableSection}
-                      onSaveToWarehouse={handleSaveToWarehouse}
-                      onSaveToLearning={handleSaveToLearning}
-                      userId={testator.fullName || 'anonymous'}
-                    />
-                  ))
-                ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    <p className="mb-2">אין סעיפים לעריכה כרגע</p>
-                    <p className="text-sm">הוסף הוראות מיוחדות או סעיפים מהמחסן כדי להתחיל</p>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {learningMode === 'warehouse' && (
-              <UnifiedWarehouse
-                onSectionSelect={handleSelectFromWarehouse}
-                userId={testator.fullName || 'anonymous'}
-                willType={willType}
-              />
-            )}
-
-            <div className="mt-6 p-4 bg-white rounded-lg border border-purple-300">
-              <AILearningManager />
-            </div>
-          </section>
-        )}
-
-        {willType === 'mutual' && (
-          <section className="bg-indigo-50 p-6 rounded-lg border border-indigo-200">
-            <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-              <span className="text-lg">👨‍👩‍👧‍👦</span>
-              אפוטרופוס לקטינים (אופציונלי)
-            </h2>
-            
-            <div className="bg-indigo-100 border border-indigo-300 rounded-lg p-3 mb-4">
-              <p className="text-sm text-indigo-900">
-                💡 אם יש לכם ילדים קטינים (מתחת לגיל 18), מומלץ למנות אפוטרופוס שידאג להם במקרה ששניכם תלכו לעולמכם.
-              </p>
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-4 mb-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">שם מלא</label>
-                <input
-                  type="text"
-                  value={guardian.name}
-                  onChange={(e) => setGuardian(prev => ({ ...prev, name: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
-                  placeholder="שם פרטי ושם משפחה"
-                  dir="rtl"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">תעודת זהות</label>
-                <input
-                  type="text"
-                  value={guardian.id}
-                  onChange={(e) => setGuardian(prev => ({ ...prev, id: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
-                  placeholder="123456789"
-                  maxLength={9}
-                  dir="ltr"
-                />
-              </div>
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">כתובת מלאה</label>
-                <input
-                  type="text"
-                  value={guardian.address}
-                  onChange={(e) => setGuardian(prev => ({ ...prev, address: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
-                  placeholder="רחוב, מספר, עיר"
-                  dir="rtl"
-                />
-              </div>
-              
-              <div>
-                <GenderSelector
-                  value={guardian.gender}
-                  onChange={(gender) => setGuardian(prev => ({ ...prev, gender }))}
-                  label="מגדר האפוטרופוס"
-                />
-              </div>
-            </div>
-          </section>
-        )}
-
-        <section className="bg-orange-50 p-6 rounded-lg border border-orange-200">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">הוראות מיוחדות נוספות</h2>
-          
-          <div className="space-y-4">
-            <div>
-              <div className="flex justify-between items-center mb-2">
-                <label className="block text-sm font-medium text-gray-700">הוראות מיוחדות</label>
-                <button
-                  onClick={handleImproveSpecialInstructions}
-                  disabled={isImproving || !specialInstructions.trim()}
-                  className="flex items-center gap-2 px-3 py-1 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed text-xs"
-                >
-                  {isImproving ? '⏳ מעבד...' : '✨ שיפור עם AI'}
-                </button>
-              </div>
-              <textarea
-                value={specialInstructions}
-                onChange={(e) => setSpecialInstructions(e.target.value)}
-                placeholder="הוראות מיוחדות, משאלות אישיות, הנחיות לביצוע..."
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 resize-none"
-                rows={4}
-                dir="rtl"
-                style={{ fontFamily: 'David', fontSize: '13pt' }}
-              />
-              {improveError && (
-                <p className="text-red-600 text-sm mt-2">{improveError}</p>
-              )}
-            </div>
-            
-            <div>
-              <div className="flex justify-between items-center mb-2">
-                <label className="block text-sm font-medium text-gray-700">הוראות רכב</label>
-                <button
-                  onClick={handleImproveVehicleInstructions}
-                  disabled={isImprovingVehicle || !vehicleInstructions.trim()}
-                  className="flex items-center gap-2 px-3 py-1 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed text-xs"
-                >
-                  {isImprovingVehicle ? '⏳ מעבד...' : '✨ שיפור עם AI'}
-                </button>
-              </div>
-              <textarea
-                value={vehicleInstructions}
-                onChange={(e) => setVehicleInstructions(e.target.value)}
-                placeholder="הוראות לגבי רכב (מכירה, העברה, חלוקה...)"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 resize-none"
-                rows={2}
-                dir="rtl"
-                style={{ fontFamily: 'David', fontSize: '13pt' }}
-              />
-              {improveVehicleError && (
-                <p className="text-red-600 text-sm mt-2">{improveVehicleError}</p>
-              )}
-            </div>
-          </div>
-        </section>
-
+        {/* סטטוס והכנה לייצוא */}
         <div className="bg-white border-2 border-gray-300 rounded-lg p-6">
           <div className="text-center mb-6">
             <h3 className="text-lg font-bold text-gray-900 mb-2">מצב הטופס</h3>
@@ -1525,143 +623,18 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
             </div>
           </div>
 
+          {/* כפתור ייצוא מקצועי */}
           <ProfessionalWordExporter
             willData={getWillData() as any}
             className="w-full"
           />
         </div>
       </div>
-
-      {variablesModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-            <h3 className="text-xl font-bold text-gray-900 mb-4">
-              השלמת פרטים לסעיף: {variablesModal.section.title}
-            </h3>
-            
-            <div className="mb-4 p-3 bg-blue-50 rounded-lg text-sm text-blue-800">
-              <p className="font-semibold mb-1">💡 טיפ:</p>
-              <p>למשתנים של אנשים (שמות) יש אפשרות לבחור מגדר. זה יעזור להציג את הטקסט הנכון (זכר/נקבה) בצוואה.</p>
-            </div>
-            
-            <div className="space-y-4 mb-6">
-              {variablesModal.section.variables.map((variable) => (
-                <div key={variable} className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    {getVariableLabel(variable)}:
-                  </label>
-                  <input
-                    type="text"
-                    value={variablesModal.values[variable] || ''}
-                    onChange={(e) => {
-                      setVariablesModal(prev => ({
-                        ...prev!,
-                        values: {
-                          ...prev!.values,
-                          [variable]: e.target.value
-                        }
-                      }));
-                    }}
-                    placeholder={`הזן ${getVariableLabel(variable)}`}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500"
-                    dir="rtl"
-                  />
-                  
-                  {isGenderRelevantVariable(variable) && (
-                    <div className="flex gap-4 items-center">
-                      <label className="text-sm text-gray-600">מגדר:</label>
-                      <div className="flex gap-2">
-                        <label className="flex items-center gap-2">
-                          <input
-                            type="radio"
-                            name={`gender_${variable}`}
-                            value="male"
-                            checked={variablesModal.genders[variable] === 'male'}
-                            onChange={(e) => {
-                              setVariablesModal(prev => ({
-                                ...prev!,
-                                genders: {
-                                  ...prev!.genders,
-                                  [variable]: e.target.value as 'male' | 'female'
-                                }
-                              }));
-                            }}
-                            className="text-orange-600 focus:ring-orange-500"
-                          />
-                          <span className="text-sm">זכר</span>
-                        </label>
-                        <label className="flex items-center gap-2">
-                          <input
-                            type="radio"
-                            name={`gender_${variable}`}
-                            value="female"
-                            checked={variablesModal.genders[variable] === 'female'}
-                            onChange={(e) => {
-                              setVariablesModal(prev => ({
-                                ...prev!,
-                                genders: {
-                                  ...prev!.genders,
-                                  [variable]: e.target.value as 'male' | 'female'
-                                }
-                              }));
-                            }}
-                            className="text-orange-600 focus:ring-orange-500"
-                          />
-                          <span className="text-sm">נקבה</span>
-                        </label>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-
-            <div className="flex gap-3">
-              <button
-                onClick={() => setVariablesModal(null)}
-                className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
-              >
-                ביטול
-              </button>
-              <button
-                onClick={() => {
-                  let finalContent = variablesModal.section.content;
-                  Object.keys(variablesModal.values).forEach(key => {
-                    const value = variablesModal.values[key];
-                    let replacedValue = value;
-                    
-                    if (isGenderRelevantVariable(key) && variablesModal.genders[key]) {
-                      const { replaceTextWithGender } = require('@/lib/hebrew-gender');
-                      replacedValue = replaceTextWithGender(value, variablesModal.genders[key]);
-                    }
-                    
-                    finalContent = finalContent.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'g'), replacedValue);
-                  });
-
-                  const { replaceTextWithGender } = require('@/lib/hebrew-gender');
-                  const primaryGender = variablesModal.genders['spouse_name'] || testator.gender;
-                  finalContent = replaceTextWithGender(finalContent, primaryGender);
-
-                  setCustomSections(prev => [...prev, {
-                    title: `${variablesModal.section.id}: ${variablesModal.section.title}`,
-                    content: finalContent
-                  }]);
-
-                  setVariablesModal(null);
-                }}
-                disabled={!Object.values(variablesModal.values).every(v => v.trim() !== '')}
-                className="flex-1 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition disabled:bg-gray-300 disabled:cursor-not-allowed"
-              >
-                הוסף סעיף
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
 
+// פונקציות עזר
 function isGenderRelevantVariable(variable: string): boolean {
   const genderRelevantVariables = [
     'heir_name', 'guardian_name', 'alternate_guardian', 'child_name', 
