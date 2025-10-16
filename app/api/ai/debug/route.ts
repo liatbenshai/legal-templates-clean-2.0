@@ -7,8 +7,3 @@ export async function GET() {
     apiKeyStart: process.env.ANTHROPIC_API_KEY?.substring(0, 10),
   });
 }
-```
-
-אחרי deploy, גש ל:
-```
-https://legal-templates-final-1r2k.vercel.app/api/ai/debug
