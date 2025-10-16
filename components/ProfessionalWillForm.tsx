@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-// Icons replaced with emojis for compatibility
 import GenderSelector from './GenderSelector';
 import ProfessionalWordExporter from './ProfessionalWordExporter';
 import type { Gender } from '@/lib/hebrew-gender';
@@ -12,6 +11,7 @@ import EditableSection from './LearningSystem/EditableSection';
 import WarehouseManager from './LearningSystem/WarehouseManager';
 import AILearningManager from './AILearningManager';
 import UnifiedWarehouse from './UnifiedWarehouse';
+import { willAIService } from '@/lib/services/will-ai-service';
 
 interface Property {
   name: string;
@@ -37,14 +37,14 @@ interface Heir {
   id: string;
   relation: string;
   share: string;
-  gender: 'male' | 'female'; // מגדר היורש/ת
+  gender: 'male' | 'female';
 }
 
 interface Witness {
   name: string;
   id: string;
   address: string;
-  gender: 'male' | 'female'; // מגדר העד/העדה
+  gender: 'male' | 'female';
 }
 
 interface ProfessionalWillFormProps {
@@ -54,7 +54,6 @@ interface ProfessionalWillFormProps {
 export default function ProfessionalWillForm({ defaultWillType = 'individual' }: ProfessionalWillFormProps = {}) {
   const [willType, setWillType] = useState<'individual' | 'mutual'>(defaultWillType);
   
-  // פרטי מצווה ראשי
   const [testator, setTestator] = useState({
     fullName: '',
     shortName: '',
@@ -63,7 +62,6 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
     gender: 'male' as Gender
   });
 
-  // בן/בת זוג (לצוואה הדדית)
   const [spouse, setSpouse] = useState({
     fullName: '',
     shortName: '',
@@ -72,7 +70,6 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
     gender: 'female' as Gender
   });
 
-  // נכסים
   const [properties, setProperties] = useState<Property[]>([
     {
       name: 'דירת המגורים',
@@ -85,7 +82,6 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
     }
   ]);
 
-  // חשבונות בנק
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([
     {
       bank: '',
@@ -96,7 +92,6 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
     }
   ]);
 
-  // יורשים
   const [heirs, setHeirs] = useState<Heir[]>([
     {
       firstName: '',
@@ -104,30 +99,27 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
       id: '',
       relation: '',
       share: '100%',
-      gender: 'male' // ברירת מחדל
+      gender: 'male'
     }
   ]);
 
-  // יורשים חלופיים (לצוואה הדדית)
   const [alternativeHeirs, setAlternativeHeirs] = useState<Heir[]>([]);
 
-  // עדים
   const [witnesses, setWitnesses] = useState<Witness[]>([
     {
       name: '',
       id: '',
       address: '',
-      gender: 'male' // ברירת מחדל
+      gender: 'male'
     },
     {
       name: '',
       id: '',
       address: '',
-      gender: 'male' // ברירת מחדל
+      gender: 'male'
     }
   ]);
 
-  // פרטי חתימה
   const [willDate, setWillDate] = useState({
     day: new Date().getDate().toString(),
     month: new Date().toLocaleDateString('he-IL', { month: 'long' }),
@@ -143,7 +135,6 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
   const [customSections, setCustomSections] = useState<Array<{title: string, content: string}>>([]);
   const [heirsDisplayMode, setHeirsDisplayMode] = useState<'table' | 'list'>('list');
   
-  // אפוטרופוס לקטינים (רלוונטי לצוואה הדדית)
   const [guardian, setGuardian] = useState({
     name: '',
     id: '',
@@ -151,7 +142,6 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
     gender: 'male' as Gender
   });
   
-  // תבניות JSON
   const [jsonTemplate, setJsonTemplate] = useState<any>(null);
   const [sectionsWarehouse, setSectionsWarehouse] = useState<any>(null);
   const [showWarehouse, setShowWarehouse] = useState(false);
@@ -162,25 +152,27 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
     genders: Record<string, 'male' | 'female'>;
   } | null>(null);
 
-  // מערכת למידה
   const [showLearningSystem, setShowLearningSystem] = useState(false);
   const [editableSections, setEditableSections] = useState<EditableSectionType[]>([]);
   const [learningMode, setLearningMode] = useState<'edit' | 'warehouse'>('edit');
   
-  // פונקציה לחילוץ משתנים מתוכן
+  // AI State
+  const [isImproving, setIsImproving] = useState(false);
+  const [improveError, setImproveError] = useState('');
+  const [isImprovingVehicle, setIsImprovingVehicle] = useState(false);
+  const [improveVehicleError, setImproveVehicleError] = useState('');
+
   const extractVariablesFromContent = (content: string): string[] => {
     const matches = content.match(/\{\{([^}]+)\}\}/g);
     return matches ? [...new Set(matches.map(match => match.replace(/\{\{|\}\}/g, '')))] : [];
   };
 
-  // טעינת תבניות JSON
   useEffect(() => {
     loadTemplates();
   }, [testator.gender, willType]);
   
   const loadTemplates = async () => {
     try {
-      // בחירת תבנית לפי סוג וגדר
       let templateFile = '';
       if (willType === 'mutual') {
         templateFile = 'will-mutual';
@@ -196,7 +188,6 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
       setJsonTemplate(template);
       setSectionsWarehouse(warehouse);
       
-      // טען עדים ברירת מחדל מהתבנית
       if (template.defaultWitnesses && witnesses.length === 2 && !witnesses[0].name) {
         setWitnesses(template.defaultWitnesses.map((w: any) => ({
           name: w.full_name,
@@ -206,6 +197,46 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
       }
     } catch (error) {
       console.error('Error loading templates:', error);
+    }
+  };
+
+  const handleImproveSpecialInstructions = async () => {
+    if (!specialInstructions.trim()) {
+      setImproveError('אנא כתוב הוראות מיוחדות לפני שיפור');
+      return;
+    }
+
+    setIsImproving(true);
+    setImproveError('');
+
+    try {
+      const improved = await willAIService.improveLegalLanguage(specialInstructions);
+      setSpecialInstructions(improved);
+    } catch (error) {
+      setImproveError('שגיאה בשיפור הטקסט. אנא נסה שוב.');
+      console.error('Error improving text:', error);
+    } finally {
+      setIsImproving(false);
+    }
+  };
+
+  const handleImproveVehicleInstructions = async () => {
+    if (!vehicleInstructions.trim()) {
+      setImproveVehicleError('אנא כתוב הוראות רכב לפני שיפור');
+      return;
+    }
+
+    setIsImprovingVehicle(true);
+    setImproveVehicleError('');
+
+    try {
+      const improved = await willAIService.improveLegalLanguage(vehicleInstructions);
+      setVehicleInstructions(improved);
+    } catch (error) {
+      setImproveVehicleError('שגיאה בשיפור הטקסט. אנא נסה שוב.');
+      console.error('Error improving text:', error);
+    } finally {
+      setIsImprovingVehicle(false);
     }
   };
 
@@ -246,7 +277,7 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
       id: '',
       relation: '',
       share: '',
-      gender: 'male' // ברירת מחדל
+      gender: 'male'
     }]);
   };
 
@@ -259,7 +290,7 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
       name: '',
       id: '',
       address: '',
-      gender: 'male' // ברירת מחדל
+      gender: 'male'
     }]);
   };
 
@@ -296,16 +327,14 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
     specialInstructions,
     vehicleInstructions,
     digitalAssets: true,
-    customSections, // הוספת הסעיפים מהמחסן!
-    guardian: guardian.name ? guardian : undefined, // אפוטרופוס אם מולא
-    guardianGender: guardian.gender // מגדר האפוטרופוס
+    customSections,
+    guardian: guardian.name ? guardian : undefined,
+    guardianGender: guardian.gender
   });
 
-  // פונקציות מערכת הלמידה
   const convertToEditableSections = () => {
     const sections: EditableSectionType[] = [];
     
-    // הוספת סעיפים מ-customSections
     customSections.forEach((section, index) => {
       sections.push({
         id: `custom-${index}`,
@@ -320,7 +349,6 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
       });
     });
     
-    // הוספת הוראות מיוחדות
     if (specialInstructions) {
       sections.push({
         id: 'special-instructions',
@@ -335,7 +363,6 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
       });
     }
     
-    // הוספת הוראות רכב
     if (vehicleInstructions) {
       sections.push({
         id: 'vehicle-instructions',
@@ -362,7 +389,6 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
       )
     );
     
-    // עדכון גם ב-customSections או הוראות מיוחדות
     if (updatedSection.id.startsWith('custom-')) {
       const index = parseInt(updatedSection.id.split('-')[1]);
       setCustomSections(prev => 
@@ -425,17 +451,14 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
   };
 
   const handleSelectFromWarehouse = (warehouseSection: any) => {
-    // החלף מגדור בטקסט לפי מגדר המצווה
     const { replaceTextWithGender } = require('@/lib/hebrew-gender');
     const genderedContent = replaceTextWithGender(
       warehouseSection.content,
       willType === 'mutual' ? 'plural' : testator.gender
     );
     
-    // חלץ משתנים מהתוכן
     const variables = extractVariablesFromContent(genderedContent);
     
-    // אם יש משתנים, פתח חלון למילוי
     if (variables.length > 0) {
       setVariablesModal({
         section: {
@@ -448,7 +471,6 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
         genders: variables.reduce((acc, v) => ({ ...acc, [v]: 'male' as 'male' | 'female' }), {})
       });
     } else {
-      // אם אין משתנים, הוסף ישירות
       const newSection = {
         title: warehouseSection.title,
         content: genderedContent
@@ -493,7 +515,6 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
           </div>
         )}
         
-        {/* בחירת סוג צוואה */}
         <div className="grid md:grid-cols-2 gap-4 mb-8">
           <button
             onClick={() => setWillType('individual')}
@@ -522,7 +543,6 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
           </button>
         </div>
 
-        {/* פרטי המצווה */}
         <section className="bg-gray-50 p-6 rounded-lg border">
           <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
             <span className="text-lg">👤</span>
@@ -591,7 +611,6 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
           </div>
         </section>
 
-        {/* פרטי בן/בת זוג */}
         {willType === 'mutual' && (
           <section className="bg-pink-50 p-6 rounded-lg border border-pink-200">
             <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
@@ -650,7 +669,6 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
           </section>
         )}
 
-        {/* נכסי מקרקעין */}
         <section className="bg-green-50 p-6 rounded-lg border border-green-200">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
@@ -784,7 +802,6 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
           </div>
         </section>
 
-        {/* חשבונות בנק */}
         <section className="bg-blue-50 p-6 rounded-lg border border-blue-200">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
@@ -888,7 +905,6 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
           </div>
         </section>
 
-        {/* יורשים */}
         <section className="bg-yellow-50 p-6 rounded-lg border border-yellow-200">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
@@ -904,7 +920,6 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
             </button>
           </div>
 
-          {/* בחירת תצוגה */}
           <div className="bg-white border border-yellow-300 rounded-lg p-4 mb-4">
             <div className="text-sm font-medium text-gray-700 mb-3">תצוגת יורשים בצוואה:</div>
             <div className="flex gap-3">
@@ -998,7 +1013,6 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
                     maxLength={9}
                   />
                   
-                  {/* בחירת מגדר */}
                   <select
                     value={heir.gender}
                     onChange={(e) => {
@@ -1050,7 +1064,6 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
           </div>
         </section>
 
-        {/* עדים */}
         <section className="bg-purple-50 p-6 rounded-lg border border-purple-200">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
@@ -1097,7 +1110,6 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
                     dir="rtl"
                   />
                   
-                  {/* בחירת מגדר */}
                   <select
                     value={witness.gender}
                     onChange={(e) => {
@@ -1143,7 +1155,6 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
           </div>
         </section>
 
-        {/* פרטי חתימה */}
         <section className="bg-gray-50 p-6 rounded-lg border border-gray-300">
           <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
             <span className="text-lg">📅</span>
@@ -1218,7 +1229,6 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
           </div>
         </section>
 
-        {/* מחסן סעיפים מאוחד */}
         <section className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-lg border border-blue-200">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
@@ -1250,7 +1260,6 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
           />
         </section>
 
-        {/* סעיפים שנוספו */}
         {customSections.length > 0 && (
           <section className="bg-yellow-50 p-6 rounded-lg border border-yellow-200">
             <h2 className="text-xl font-bold text-gray-900 mb-4">סעיפים שנוספו מהמחסן</h2>
@@ -1277,8 +1286,6 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
           </section>
         )}
 
-
-        {/* מערכת למידה */}
         {showLearningSystem && (
           <section className="bg-gradient-to-br from-purple-50 to-pink-50 p-6 rounded-lg border border-purple-200">
             <div className="flex justify-between items-center mb-6">
@@ -1316,7 +1323,6 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
               </p>
             </div>
 
-            {/* עריכת סעיפים */}
             {learningMode === 'edit' && (
               <div className="space-y-4">
                 {editableSections.length > 0 ? (
@@ -1339,7 +1345,6 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
               </div>
             )}
 
-            {/* ניהול מחסן מאוחד */}
             {learningMode === 'warehouse' && (
               <UnifiedWarehouse
                 onSectionSelect={handleSelectFromWarehouse}
@@ -1348,14 +1353,12 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
               />
             )}
 
-            {/* ניהול למידה */}
             <div className="mt-6 p-4 bg-white rounded-lg border border-purple-300">
               <AILearningManager />
             </div>
           </section>
         )}
 
-        {/* אפוטרופוס לקטינים - רק בצוואה הדדית */}
         {willType === 'mutual' && (
           <section className="bg-indigo-50 p-6 rounded-lg border border-indigo-200">
             <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
@@ -1420,34 +1423,62 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
           </section>
         )}
 
-        {/* הוראות מיוחדות */}
         <section className="bg-orange-50 p-6 rounded-lg border border-orange-200">
           <h2 className="text-xl font-bold text-gray-900 mb-4">הוראות מיוחדות נוספות</h2>
           
           <div className="space-y-4">
-            <textarea
-              value={specialInstructions}
-              onChange={(e) => setSpecialInstructions(e.target.value)}
-              placeholder="הוראות מיוחדות, משאלות אישיות, הנחיות לביצוע..."
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 resize-none"
-              rows={4}
-              dir="rtl"
-              style={{ fontFamily: 'David', fontSize: '13pt' }}
-            />
+            <div>
+              <div className="flex justify-between items-center mb-2">
+                <label className="block text-sm font-medium text-gray-700">הוראות מיוחדות</label>
+                <button
+                  onClick={handleImproveSpecialInstructions}
+                  disabled={isImproving || !specialInstructions.trim()}
+                  className="flex items-center gap-2 px-3 py-1 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed text-xs"
+                >
+                  {isImproving ? '⏳ מעבד...' : '✨ שיפור עם AI'}
+                </button>
+              </div>
+              <textarea
+                value={specialInstructions}
+                onChange={(e) => setSpecialInstructions(e.target.value)}
+                placeholder="הוראות מיוחדות, משאלות אישיות, הנחיות לביצוע..."
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 resize-none"
+                rows={4}
+                dir="rtl"
+                style={{ fontFamily: 'David', fontSize: '13pt' }}
+              />
+              {improveError && (
+                <p className="text-red-600 text-sm mt-2">{improveError}</p>
+              )}
+            </div>
             
-            <textarea
-              value={vehicleInstructions}
-              onChange={(e) => setVehicleInstructions(e.target.value)}
-              placeholder="הוראות לגבי רכב (מכירה, העברה, חלוקה...)"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 resize-none"
-              rows={2}
-              dir="rtl"
-              style={{ fontFamily: 'David', fontSize: '13pt' }}
-            />
+            <div>
+              <div className="flex justify-between items-center mb-2">
+                <label className="block text-sm font-medium text-gray-700">הוראות רכב</label>
+                <button
+                  onClick={handleImproveVehicleInstructions}
+                  disabled={isImprovingVehicle || !vehicleInstructions.trim()}
+                  className="flex items-center gap-2 px-3 py-1 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed text-xs"
+                >
+                  {isImprovingVehicle ? '⏳ מעבד...' : '✨ שיפור עם AI'}
+                </button>
+              </div>
+              <textarea
+                value={vehicleInstructions}
+                onChange={(e) => setVehicleInstructions(e.target.value)}
+                placeholder="הוראות לגבי רכב (מכירה, העברה, חלוקה...)"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 resize-none"
+                rows={2}
+                dir="rtl"
+                style={{ fontFamily: 'David', fontSize: '13pt' }}
+              />
+              {improveVehicleError && (
+                <p className="text-red-600 text-sm mt-2">{improveVehicleError}</p>
+              )}
+            </div>
           </div>
         </section>
 
-        {/* סטטוס והכנה לייצוא */}
         <div className="bg-white border-2 border-gray-300 rounded-lg p-6">
           <div className="text-center mb-6">
             <h3 className="text-lg font-bold text-gray-900 mb-2">מצב הטופס</h3>
@@ -1462,7 +1493,6 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
             </div>
           </div>
 
-          {/* כפתור ייצוא מקצועי */}
           <ProfessionalWordExporter
             willData={getWillData() as any}
             className="w-full"
@@ -1470,7 +1500,6 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
         </div>
       </div>
 
-      {/* חלון מילוי משתנים */}
       {variablesModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
@@ -1506,7 +1535,6 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
                     dir="rtl"
                   />
                   
-                  {/* בחירת מגדר למשתנים רלוונטיים */}
                   {isGenderRelevantVariable(variable) && (
                     <div className="flex gap-4 items-center">
                       <label className="text-sm text-gray-600">מגדר:</label>
@@ -1565,13 +1593,11 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
               </button>
               <button
                 onClick={() => {
-                  // החלפת משתנים בתוכן עם התחשבות במגדר
                   let finalContent = variablesModal.section.content;
                   Object.keys(variablesModal.values).forEach(key => {
                     const value = variablesModal.values[key];
                     let replacedValue = value;
                     
-                    // אם זה משתנה שדורש מגדר, החלף את הטקסט בהתאם
                     if (isGenderRelevantVariable(key) && variablesModal.genders[key]) {
                       const { replaceTextWithGender } = require('@/lib/hebrew-gender');
                       replacedValue = replaceTextWithGender(value, variablesModal.genders[key]);
@@ -1580,12 +1606,10 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
                     finalContent = finalContent.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'g'), replacedValue);
                   });
 
-                  // החלת gender inflection על הטקסט הסופי לפי מגדר המצווה
                   const { replaceTextWithGender } = require('@/lib/hebrew-gender');
                   const primaryGender = variablesModal.genders['spouse_name'] || testator.gender;
                   finalContent = replaceTextWithGender(finalContent, primaryGender);
 
-                  // הוספה לסעיפים מותאמים
                   setCustomSections(prev => [...prev, {
                     title: `${variablesModal.section.id}: ${variablesModal.section.title}`,
                     content: finalContent
@@ -1606,7 +1630,6 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
   );
 }
 
-// פונקציה לקביעת אם משתנה דורש בחירת מגדר
 function isGenderRelevantVariable(variable: string): boolean {
   const genderRelevantVariables = [
     'heir_name', 'guardian_name', 'alternate_guardian', 'child_name', 
@@ -1615,7 +1638,6 @@ function isGenderRelevantVariable(variable: string): boolean {
   return genderRelevantVariables.includes(variable);
 }
 
-// פונקציה לקבלת תווית ידידותית למשתנה
 function getVariableLabel(variable: string): string {
   const labels: Record<string, string> = {
     'heir_name': 'שם היורש/ת',
