@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { Sparkles, RefreshCw, Check, X, History } from 'lucide-react';
-import { aiLegalWriter } from '@/lib/ai-legal-writer';
 
 /**
  * רכיב לשיפור טקסט משפטי באמצעות AI
