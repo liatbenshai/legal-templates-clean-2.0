@@ -18,12 +18,6 @@ export default function GenderSelector({
   className = '',
   name
 }: GenderSelectorProps) {
-  const uniqueId = useId();
-  const radioName = name || `gender-${uniqueId}`;
-  
-  // Debug log
-  console.log('GenderSelector render:', { name, radioName, value });
-  
   return (
     <div className={className}>
       {label && (
@@ -31,30 +25,14 @@ export default function GenderSelector({
           {label}
         </label>
       )}
-      <div className="flex gap-4">
-        <label className="flex items-center cursor-pointer">
-          <input
-            type="radio"
-            name={radioName}
-            value="male"
-            checked={value === 'male'}
-            onChange={(e) => onChange(e.target.value as Gender)}
-            className="ml-2 w-4 h-4 text-blue-600 focus:ring-blue-500"
-          />
-          <span className="text-sm text-gray-700">זכר</span>
-        </label>
-        <label className="flex items-center cursor-pointer">
-          <input
-            type="radio"
-            name={radioName}
-            value="female"
-            checked={value === 'female'}
-            onChange={(e) => onChange(e.target.value as Gender)}
-            className="ml-2 w-4 h-4 text-pink-600 focus:ring-pink-500"
-          />
-          <span className="text-sm text-gray-700">נקבה</span>
-        </label>
-      </div>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value as Gender)}
+        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+      >
+        <option value="male">זכר</option>
+        <option value="female">נקבה</option>
+      </select>
     </div>
   );
 }
