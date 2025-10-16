@@ -58,13 +58,23 @@ export default function AIImprover({
     setIsImproving(true);
     
     try {
-      const response = await aiLegalWriter.fixHebrewLegalLanguage(originalText);
-      setImprovedText(response.text);
+  // קרא ל-API route במקום
+  const response = await fetch('/api/will/improve-language', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text: originalText })
+  });
+
+  if (!response.ok) throw new Error('Failed to improve');
+  
+  const data = await response.json();
+  const improvedText = data.content?.[0]?.text;
+  
+  setImprovedText(improvedText);
+  setChanges(['✨ הטקסט שופר בעברית משפטית תקינה']);
+  
+} catch (error) {
       
-      const suggestions = await aiLegalWriter.getSuggestions(originalText);
-      setChanges(suggestions.map(s => `💡 ${s}`));
-      
-    } catch (error) {
       console.error('שגיאה בשיפור:', error);
       
       let errorMessage = 'שגיאה בשיפור הטקסט.';
