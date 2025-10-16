@@ -14,12 +14,17 @@ export function useAI() {
         body: JSON.stringify({ text, context }),
       });
 
-      if (!response.ok) throw new Error("Failed to improve text");
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to improve text");
+      }
+      
       const data = await response.json();
       return data.improved;
     } catch (err) {
       const message = err instanceof Error ? err.message : "Unknown error";
       setError(message);
+      console.error("Improve error:", message);
       return text;
     } finally {
       setLoading(false);
@@ -36,12 +41,17 @@ export function useAI() {
         body: JSON.stringify({ text }),
       });
 
-      if (!response.ok) throw new Error("Failed to get suggestions");
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to get suggestions");
+      }
+      
       const data = await response.json();
       return data.suggestions;
     } catch (err) {
       const message = err instanceof Error ? err.message : "Unknown error";
       setError(message);
+      console.error("Suggestions error:", message);
       return [];
     } finally {
       setLoading(false);
