@@ -3,11 +3,6 @@
 import { useState } from 'react';
 import { Sparkles, RefreshCw, Check, X, History } from 'lucide-react';
 
-/**
- * רכיב לשיפור טקסט משפטי באמצעות AI
- * הופך עברית מתורגמת לעברית משפטית אמיתית
- */
-
 interface AIImproverProps {
   originalText: string;
   onAccept: (improvedText: string) => void;
@@ -58,23 +53,27 @@ export default function AIImprover({
     setIsImproving(true);
     
     try {
-  // קרא ל-API route במקום
-  const response = await fetch('/api/will/improve-language', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ text: originalText })
-  });
+      const response = await fetch('/api/will/improve-language', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: originalText })
+      });
 
-  if (!response.ok) throw new Error('Failed to improve');
-  
-  const data = await response.json();
-  const improvedText = data.content?.[0]?.text;
-  
-  setImprovedText(improvedText);
-  setChanges(['✨ הטקסט שופר בעברית משפטית תקינה']);
-  
-} catch (error) {
+      if (!response.ok) {
+        throw new Error('Failed to improve');
+      }
+
+      const data = await response.json();
+      const improvedTextContent = data.content?.[0]?.text;
+
+      if (!improvedTextContent) {
+        throw new Error('No content returned');
+      }
+
+      setImprovedText(improvedTextContent);
+      setChanges(['✨ הטקסט שופר בעברית משפטית תקינה']);
       
+    } catch (error) {
       console.error('שגיאה בשיפור:', error);
       
       let errorMessage = 'שגיאה בשיפור הטקסט.';
@@ -106,7 +105,6 @@ export default function AIImprover({
   };
 
   if (improvedText) {
-    // מצב השוואה
     return (
       <div className="space-y-4">
         <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-300 rounded-lg p-6">
@@ -115,9 +113,7 @@ export default function AIImprover({
             <h3 className="text-xl font-bold text-green-900">טקסט משופר בעברית משפטית</h3>
           </div>
 
-          {/* השוואה לפני/אחרי */}
           <div className="grid md:grid-cols-2 gap-4 mb-4">
-            {/* לפני */}
             <div>
               <div className="text-sm font-bold text-gray-700 mb-2">טקסט מקורי:</div>
               <div
@@ -129,7 +125,6 @@ export default function AIImprover({
               </div>
             </div>
 
-            {/* אחרי */}
             <div>
               <div className="text-sm font-bold text-green-700 mb-2">טקסט משופר:</div>
               <div
@@ -142,7 +137,6 @@ export default function AIImprover({
             </div>
           </div>
 
-          {/* רשימת שינויים */}
           {changes.length > 0 && (
             <div className="bg-white border border-green-300 rounded-lg p-4">
               <div className="font-bold text-gray-900 mb-2 flex items-center gap-2">
@@ -157,7 +151,6 @@ export default function AIImprover({
             </div>
           )}
 
-          {/* כפתורי פעולה */}
           <div className="flex gap-3 mt-4">
             <button
               onClick={handleAcceptImprovement}
@@ -179,7 +172,6 @@ export default function AIImprover({
     );
   }
 
-  // מצב שיפור
   return (
     <div className="bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-300 rounded-lg p-6">
       <div className="flex items-center gap-3 mb-4">
@@ -191,9 +183,7 @@ export default function AIImprover({
         המערכת תשפר את הטקסט מ"עברית מתורגמת" לעברית משפטית תקנית ומקצועית
       </p>
 
-      {/* הגדרות שיפור */}
       <div className="space-y-4 mb-4">
-        {/* סגנון */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             סגנון שיפור
@@ -217,7 +207,6 @@ export default function AIImprover({
           </div>
         </div>
 
-        {/* הקשר */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             סוג מסמך
@@ -242,7 +231,6 @@ export default function AIImprover({
         </div>
       </div>
 
-      {/* כפתור שיפור */}
       <button
         onClick={handleImprove}
         disabled={isImproving || !originalText.trim()}
@@ -261,7 +249,6 @@ export default function AIImprover({
         )}
       </button>
 
-      {/* מידע */}
       <div className="mt-4 text-xs text-purple-800">
         <p className="font-medium mb-1">✨ מה המערכת תעשה:</p>
         <ul className="space-y-1 mr-4">
