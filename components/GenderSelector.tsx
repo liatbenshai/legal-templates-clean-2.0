@@ -1,5 +1,6 @@
 'use client';
 
+import { useId } from 'react';
 import { Gender } from '@/lib/hebrew-gender';
 
 interface GenderSelectorProps {
@@ -17,6 +18,9 @@ export default function GenderSelector({
   className = '',
   name
 }: GenderSelectorProps) {
+  const uniqueId = useId();
+  const radioName = name || `gender-${uniqueId}`;
+  
   return (
     <div className={className}>
       {label && (
@@ -28,7 +32,7 @@ export default function GenderSelector({
         <label className="flex items-center cursor-pointer">
           <input
             type="radio"
-            name={name || `gender-${Math.random().toString(36).substr(2, 9)}`}
+            name={radioName}
             value="male"
             checked={value === 'male'}
             onChange={(e) => onChange(e.target.value as Gender)}
@@ -39,7 +43,7 @@ export default function GenderSelector({
         <label className="flex items-center cursor-pointer">
           <input
             type="radio"
-            name={name || `gender-${Math.random().toString(36).substr(2, 9)}`}
+            name={radioName}
             value="female"
             checked={value === 'female'}
             onChange={(e) => onChange(e.target.value as Gender)}
