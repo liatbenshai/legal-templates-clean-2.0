@@ -1,17 +1,53 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAI } from '@/lib/useAI';
-import { Sparkles, Copy, Download, Loader, BookOpen, TrendingUp, Save } from 'lucide-react';
+import { Sparkles, Copy, Download, Loader, BookOpen, TrendingUp, Save, Trash2 } from 'lucide-react';
+import { supabase } from '@/lib/supabase-client';
+
+interface SavedSection {
+  id: string;
+  title: string;
+  content: string;
+  created_at: string;
+}
 
 export default function AILearningPage() {
   const { improveText, getSuggestions, loading, error } = useAI();
   const [text, setText] = useState('');
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState<'editor' | 'suggestions'>('editor');
-  const [savedSections, setSavedSections] = useState<Array<{ id: string; title: string; content: string; timestamp: string }>>([]);
+  const [savedSections, setSavedSections] = useState<SavedSection[]>([]);
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [sectionTitle, setSectionTitle] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const [isLoadingSections, setIsLoadingSections] = useState(true);
+
+  // טעינת סעיפים שמורים בעת טעינת הדף
+  useEffect(() => {
+    loadSavedSections();
+  }, []);
+
+  const loadSavedSections = async () => {
+    try {
+      setIsLoadingSections(true);
+      const { data, error } = await supabase
+        .from('saved_sections')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error loading sections:', error);
+        return;
+      }
+
+      setSavedSections(data || []);
+    } catch (err) {
+      console.error('Error:', err);
+    } finally {
+      setIsLoadingSections(false);
+    }
+  };
 
   const handleImprove = async () => {
     const improved = await improveText(text);
@@ -35,8 +71,8 @@ export default function AILearningPage() {
     setActiveTab('editor');
   };
 
-  // שמירה למחסן סעיפים
-  const handleSaveSection = () => {
+  // שמירה ל-Supabase
+  const handleSaveSection = async () => {
     if (!text || !text.trim()) {
       alert('אנא הזן טקסט לפני השמירה');
       return;
@@ -47,30 +83,66 @@ export default function AILearningPage() {
       return;
     }
 
-    const newSection = {
-      id: `section-${Date.now()}`,
-      title: sectionTitle,
-      content: text,
-      timestamp: new Date().toLocaleString('he-IL')
-    };
+    setIsSaving(true);
+    try {
+      const { data, error } = await supabase
+        .from('saved_sections')
+        .insert([
+          {
+            title: sectionTitle,
+            content: text,
+            created_at: new Date().toISOString(),
+          },
+        ])
+        .select();
 
-    // שמור ב-localStorage
-    const existingSections = JSON.parse(localStorage.getItem('savedSections') || '[]');
-    existingSections.push(newSection);
-    localStorage.setItem('savedSections', JSON.stringify(existingSections));
+      if (error) {
+        console.error('Error saving section:', error);
+        alert('שגיאה בשמירת הסעיף: ' + error.message);
+        return;
+      }
 
-    // עדכן ה-state
-    setSavedSections(existingSections);
-
-    alert(`סעיף "${sectionTitle}" נשמר בהצלחה!`);
-    setSectionTitle('');
-    setShowSaveModal(false);
+      alert(`סעיף "${sectionTitle}" נשמר בהצלחה!`);
+      setSectionTitle('');
+      setShowSaveModal(false);
+      
+      // טען מחדש את הסעיפים
+      await loadSavedSections();
+    } catch (err) {
+      console.error('Error:', err);
+      alert('שגיאה בשמירת הסעיף');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  // טעינת סעיפים שמורים
-  const loadSavedSections = () => {
-    const saved = JSON.parse(localStorage.getItem('savedSections') || '[]');
-    setSavedSections(saved);
+  // מחיקת סעיף
+  const handleDeleteSection = async (id: string) => {
+    if (!confirm('למחוק את הסעיף?')) return;
+
+    try {
+      const { error } = await supabase
+        .from('saved_sections')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        console.error('Error deleting section:', error);
+        alert('שגיאה במחיקת הסעיף');
+        return;
+      }
+
+      // טען מחדש את הסעיפים
+      await loadSavedSections();
+    } catch (err) {
+      console.error('Error:', err);
+    }
+  };
+
+  // טעינת סעיף לעורך
+  const handleLoadSection = (section: SavedSection) => {
+    setText(section.content);
+    setActiveTab('editor');
   };
 
   return (
@@ -277,9 +349,10 @@ export default function AILearningPage() {
                 <div className="flex gap-3">
                   <button
                     onClick={handleSaveSection}
-                    className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition font-semibold"
+                    disabled={isSaving}
+                    className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition font-semibold disabled:opacity-50"
                   >
-                    שמור
+                    {isSaving ? 'שומר...' : 'שמור'}
                   </button>
                   <button
                     onClick={() => {
@@ -297,31 +370,51 @@ export default function AILearningPage() {
         )}
 
         {/* סעיפים שמורים */}
-        {savedSections.length > 0 && (
-          <div className="mt-12">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">סעיפים שמורים ({savedSections.length})</h2>
+        <div className="mt-12">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">
+            סעיפים שמורים ({isLoadingSections ? 'טוען...' : savedSections.length})
+          </h2>
+          
+          {isLoadingSections ? (
+            <div className="flex justify-center py-8">
+              <Loader className="w-8 h-8 animate-spin text-indigo-600" />
+            </div>
+          ) : savedSections.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {savedSections.map((section) => (
                 <div key={section.id} className="bg-white rounded-xl shadow-lg p-4 border-l-4 border-indigo-600">
                   <h3 className="font-bold text-gray-900 mb-2">{section.title}</h3>
                   <p className="text-sm text-gray-600 mb-3 line-clamp-3">{section.content}</p>
                   <div className="flex justify-between items-center">
-                    <span className="text-xs text-gray-500">{section.timestamp}</span>
-                    <button
-                      onClick={() => {
-                        setText(section.content);
-                        setActiveTab('editor');
-                      }}
-                      className="text-xs px-3 py-1 bg-indigo-100 text-indigo-700 rounded hover:bg-indigo-200 transition"
-                    >
-                      טען
-                    </button>
+                    <span className="text-xs text-gray-500">
+                      {new Date(section.created_at).toLocaleDateString('he-IL')}
+                    </span>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleLoadSection(section)}
+                        className="text-xs px-3 py-1 bg-indigo-100 text-indigo-700 rounded hover:bg-indigo-200 transition"
+                      >
+                        טען
+                      </button>
+                      <button
+                        onClick={() => handleDeleteSection(section.id)}
+                        className="text-xs px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 transition flex items-center gap-1"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                        מחק
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
-          </div>
-        )}
+          ) : (
+            <div className="text-center py-12 bg-gray-50 rounded-xl">
+              <p className="text-gray-500">אין סעיפים שמורים עדיין</p>
+              <p className="text-sm text-gray-400 mt-2">כתוב משהו ולחץ "שמור סעיף"</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
