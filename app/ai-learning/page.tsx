@@ -5,6 +5,7 @@ import { useAIImprove } from '@/lib/hooks/useAIImprove';
 import { Sparkles, Copy, Download, Loader, BookOpen, TrendingUp, Save, Trash2, FileText, Handshake, Heart } from 'lucide-react';
 import { supabase } from '@/lib/supabase-client';
 import { useRouter } from 'next/navigation';
+import { getAvailableWords, hebrewDictionary } from '@/lib/hebrew-gender';
 
 interface SavedSection {
   id: string;
@@ -34,100 +35,7 @@ export default function AILearningPage() {
     type: 'text' | 'number' | 'date';
     defaultValue?: string;
     usageCount: number;
-  }>>([
-    // משתני מגדר מוכנים
-    {
-      id: 'var_gender_1',
-      name: 'מיופה_כוח',
-      description: 'מיופה כוח / מיופת כוח / מיופי כוח',
-      type: 'text',
-      usageCount: 0
-    },
-    {
-      id: 'var_gender_2',
-      name: 'רשאי',
-      description: 'רשאי / רשאית / רשאים',
-      type: 'text',
-      usageCount: 0
-    },
-    {
-      id: 'var_gender_3',
-      name: 'אחראי',
-      description: 'אחראי / אחראית / אחראים',
-      type: 'text',
-      usageCount: 0
-    },
-    {
-      id: 'var_gender_4',
-      name: 'מחויב',
-      description: 'מחויב / מחויבת / מחויבים',
-      type: 'text',
-      usageCount: 0
-    },
-    {
-      id: 'var_gender_5',
-      name: 'יכול',
-      description: 'יכול / יכולה / יכולים',
-      type: 'text',
-      usageCount: 0
-    },
-    {
-      id: 'var_gender_6',
-      name: 'צריך',
-      description: 'צריך / צריכה / צריכים',
-      type: 'text',
-      usageCount: 0
-    },
-    {
-      id: 'var_gender_7',
-      name: 'חייב',
-      description: 'חייב / חייבת / חייבים',
-      type: 'text',
-      usageCount: 0
-    },
-    {
-      id: 'var_gender_8',
-      name: 'זכאי',
-      description: 'זכאי / זכאית / זכאים',
-      type: 'text',
-      usageCount: 0
-    },
-    {
-      id: 'var_gender_9',
-      name: 'מתחייב',
-      description: 'מתחייב / מתחייבת / מתחייבים',
-      type: 'text',
-      usageCount: 0
-    },
-    {
-      id: 'var_gender_10',
-      name: 'מסכים',
-      description: 'מסכים / מסכימה / מסכימים',
-      type: 'text',
-      usageCount: 0
-    },
-    {
-      id: 'var_gender_11',
-      name: 'מבקש',
-      description: 'מבקש / מבקשת / מבקשים',
-      type: 'text',
-      usageCount: 0
-    },
-    {
-      id: 'var_gender_12',
-      name: 'מצהיר',
-      description: 'מצהיר / מצהירה / מצהירים',
-      type: 'text',
-      usageCount: 0
-    },
-    {
-      id: 'var_gender_13',
-      name: 'מאשר',
-      description: 'מאשר / מאשרת / מאשרים',
-      type: 'text',
-      usageCount: 0
-    }
-  ]);
+  }>>([]);
   
   // מודל הוספת משתנה חדש
   const [addVariableModal, setAddVariableModal] = useState<{
@@ -138,6 +46,23 @@ export default function AILearningPage() {
     defaultValue: string;
   }>({
     isOpen: false,
+    name: '',
+    description: '',
+    type: 'text',
+    defaultValue: ''
+  });
+
+  // מודל הוספת משתנה לסעיף ספציפי
+  const [addVariableToSectionModal, setAddVariableToSectionModal] = useState<{
+    isOpen: boolean;
+    sectionId: string;
+    name: string;
+    description: string;
+    type: 'text' | 'number' | 'date';
+    defaultValue: string;
+  }>({
+    isOpen: false,
+    sectionId: '',
     name: '',
     description: '',
     type: 'text',
@@ -156,6 +81,21 @@ export default function AILearningPage() {
     };
     setVariables(prev => [...prev, newVariable]);
     return newVariable;
+  };
+
+  // קבלת משתני מגדר זמינים מהמערכת הגלובלית
+  const getGenderVariables = () => {
+    const availableWords = getAvailableWords();
+    return availableWords.map(word => {
+      const genderedWord = hebrewDictionary[word];
+      return {
+        id: `gender_${word}`,
+        name: word,
+        description: `${genderedWord.male} / ${genderedWord.female} / ${genderedWord.plural}`,
+        type: 'text' as const,
+        usageCount: 0
+      };
+    });
   };
   
   const openAddVariableModal = () => {
@@ -354,12 +294,43 @@ export default function AILearningPage() {
           </p>
         </div>
         
+        {/* משתני מגדר זמינים */}
+        <div className="mb-8 p-4 bg-green-50 border border-green-200 rounded-xl">
+          <h3 className="text-lg font-semibold text-green-800 mb-3 flex items-center gap-2">
+            <span className="text-xl">🎭</span>
+            משתני מגדר זמינים ({getGenderVariables().length})
+          </h3>
+          <p className="text-sm text-green-700 mb-4">
+            משתנים אלה מוחלפים אוטומטית לפי המגדר הנבחר (זכר/נקבה/רבים)
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-60 overflow-y-auto">
+            {getGenderVariables().slice(0, 20).map((variable) => (
+              <div key={variable.id} className="bg-white p-3 rounded-lg border border-green-200">
+                <div className="flex items-center justify-between mb-2">
+                  <code className="bg-green-100 px-2 py-1 rounded text-sm font-mono">
+                    {`{{${variable.name}}}`}
+                  </code>
+                  <span className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded">
+                    מגדר
+                  </span>
+                </div>
+                <p className="text-sm text-gray-700">{variable.description}</p>
+              </div>
+            ))}
+          </div>
+          {getGenderVariables().length > 20 && (
+            <p className="text-xs text-green-600 mt-2">
+              ועוד {getGenderVariables().length - 20} משתני מגדר נוספים...
+            </p>
+          )}
+        </div>
+        
         {/* תצוגת משתנים קיימים */}
         {variables.length > 0 && (
           <div className="mb-8 p-4 bg-blue-50 border border-blue-200 rounded-xl">
             <h3 className="text-lg font-semibold text-blue-800 mb-3 flex items-center gap-2">
               <span className="text-xl">📋</span>
-              משתנים קיימים ({variables.length})
+              משתנים מותאמים אישית ({variables.length})
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
               {variables.map((variable) => (
