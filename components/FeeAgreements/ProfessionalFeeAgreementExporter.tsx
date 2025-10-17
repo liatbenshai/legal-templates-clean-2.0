@@ -83,6 +83,11 @@ export default function ProfessionalFeeAgreementExporter({
 
   // פונקציה לקבלת הטקסט הנכון לפי מגדר
   const getGenderText = (maleText: string, femaleText: string, pluralText: string) => {
+    // אם יש יותר מלקוח אחד - תמיד רבים
+    if (agreementData.clients.length > 1) {
+      return pluralText;
+    }
+    
     const gender = getClientsGender();
     switch (gender) {
       case 'male': return maleText;
@@ -121,7 +126,7 @@ export default function ProfessionalFeeAgreementExporter({
         beforeHeading: 360,
         afterHeading: 240,
         betweenParagraphs: 240,
-        line: 276
+        line: 414  // 1.5 spacing (276 * 1.5)
       };
 
       // 🔢 הגדרת מספור מקצועי
@@ -562,15 +567,18 @@ export default function ProfessionalFeeAgreementExporter({
               children: [new TextRun("")]
             }),
             
-            // טבלת חתימות
+            // טבלת חתימות דינמית
             new Table({
-              columnWidths: [3744, 1872, 3744],
+              columnWidths: agreementData.clients.length === 1 
+                ? [3744, 1872, 3744] 
+                : [2500, 1250, ...Array(agreementData.clients.length).fill(2500)],
               width: { size: 100, type: WidthType.PERCENTAGE },
               rows: [
                 new TableRow({
                   children: [
+                    // עמודת עורך הדין
                     new TableCell({
-                      width: { size: 3744, type: WidthType.DXA },
+                      width: { size: 2500, type: WidthType.DXA },
                       borders: {
                         top: { style: BorderStyle.SINGLE, size: 1, color: COLORS.black },
                         bottom: { style: BorderStyle.NONE },
@@ -585,8 +593,9 @@ export default function ProfessionalFeeAgreementExporter({
                         })
                       ]
                     }),
+                    // עמודת רווח
                     new TableCell({
-                      width: { size: 1872, type: WidthType.DXA },
+                      width: { size: 1250, type: WidthType.DXA },
                       borders: {
                         top: { style: BorderStyle.NONE },
                         bottom: { style: BorderStyle.NONE },
@@ -599,22 +608,25 @@ export default function ProfessionalFeeAgreementExporter({
                         })
                       ]
                     }),
-                    new TableCell({
-                      width: { size: 3744, type: WidthType.DXA },
-                      borders: {
-                        top: { style: BorderStyle.SINGLE, size: 1, color: COLORS.black },
-                        bottom: { style: BorderStyle.NONE },
-                        left: { style: BorderStyle.NONE },
-                        right: { style: BorderStyle.NONE }
-                      },
-                      children: [
-                        new Paragraph({
-                          alignment: AlignmentType.CENTER,
-                          bidirectional: true,
-                          children: [new TextRun(agreementData.clients.map(c => c.name).join(' ו'))]
-                        })
-                      ]
-                    })
+                    // עמודות הלקוחות
+                    ...agreementData.clients.map((client, index) => 
+                      new TableCell({
+                        width: { size: 2500, type: WidthType.DXA },
+                        borders: {
+                          top: { style: BorderStyle.SINGLE, size: 1, color: COLORS.black },
+                          bottom: { style: BorderStyle.NONE },
+                          left: { style: BorderStyle.NONE },
+                          right: { style: BorderStyle.NONE }
+                        },
+                        children: [
+                          new Paragraph({
+                            alignment: AlignmentType.CENTER,
+                            bidirectional: true,
+                            children: [new TextRun(client.name)]
+                          })
+                        ]
+                      })
+                    )
                   ]
                 })
               ]
