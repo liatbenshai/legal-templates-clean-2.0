@@ -1419,6 +1419,69 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
               </div>
             </div>
 
+            {/* סעיפים מותאמים אישית - כאן! */}
+            {customSections.length > 0 && (
+              <div className="bg-green-50 p-4 rounded-lg border border-green-300">
+                <h3 className="font-semibold text-green-800 mb-3">סעיפים מותאמים אישית</h3>
+                <div className="space-y-3">
+                  {customSections.map((section, index) => (
+                    <div key={index} className="bg-white p-3 rounded-lg border border-green-400">
+                      <div className="flex justify-between items-center mb-2">
+                        <h4 className="font-medium text-green-800">
+                          {section.title || `סעיף מותאם ${index + 1}`}
+                        </h4>
+                        <div className="flex items-center gap-2">
+                          <div className="flex flex-col gap-1">
+                            <button
+                              onClick={() => {
+                                if (index > 0) {
+                                  setCustomSections(prev => {
+                                    const newSections = [...prev];
+                                    [newSections[index - 1], newSections[index]] = [newSections[index], newSections[index - 1]];
+                                    return newSections;
+                                  });
+                                }
+                              }}
+                              disabled={index === 0}
+                              className={`p-1 rounded text-xs ${index === 0 ? 'text-gray-300 cursor-not-allowed' : 'text-green-600 hover:text-green-800 hover:bg-green-50'}`}
+                              title="הזז למעלה"
+                            >
+                              ↑
+                            </button>
+                            <button
+                              onClick={() => {
+                                if (index < customSections.length - 1) {
+                                  setCustomSections(prev => {
+                                    const newSections = [...prev];
+                                    [newSections[index], newSections[index + 1]] = [newSections[index + 1], newSections[index]];
+                                    return newSections;
+                                  });
+                                }
+                              }}
+                              disabled={index === customSections.length - 1}
+                              className={`p-1 rounded text-xs ${index === customSections.length - 1 ? 'text-gray-300 cursor-not-allowed' : 'text-green-600 hover:text-green-800 hover:bg-green-50'}`}
+                              title="הזז למטה"
+                            >
+                              ↓
+                            </button>
+                          </div>
+                          <button
+                            onClick={() => setCustomSections(prev => prev.filter((_, i) => i !== index))}
+                            className="text-red-500 hover:text-red-700 text-xs"
+                          >
+                            🗑️
+                          </button>
+                        </div>
+                      </div>
+                      <div className="text-sm text-gray-700 whitespace-pre-line">
+                        {section.content}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* סעיף 1 - ביטול צוואות קודמות */}
             <div className="bg-white p-4 rounded-lg border border-blue-300">
               <div className="flex justify-between items-center mb-2">
@@ -1452,21 +1515,11 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
               </div>
             </div>
 
-            {/* סעיף 4 - סעיף התנגדות */}
-            <div className="bg-white p-4 rounded-lg border border-blue-300">
-              <div className="flex justify-between items-center mb-2">
-                <h3 className="font-semibold text-blue-800">סעיף 4 - סעיף התנגדות</h3>
-                <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">קבוע</span>
-              </div>
-              <div className="text-sm text-gray-700 whitespace-pre-line">
-                כל אדם שיהיה זכאי על פי צוואה זו, ויתנגד לה או יערער עליה בכל דרך שהיא, או יטען כנגד תוקפה או כנגד תנאי מתנאיה, או ינהל הליכים משפטיים במטרה לבטלה או לשנותה, יאבד את כלל זכויותיו לירושה על פי צוואה זו, ויקבל במקום זאת סכום סימלי של שקל אחד (₪1) בלבד.
-              </div>
-            </div>
 
-            {/* סעיף 5 - סעיף שיתוף פעולה */}
+            {/* סעיף 4 - סעיף שיתוף פעולה */}
             <div className="bg-white p-4 rounded-lg border border-blue-300">
               <div className="flex justify-between items-center mb-2">
-                <h3 className="font-semibold text-blue-800">סעיף 5 - סעיף שיתוף פעולה</h3>
+                <h3 className="font-semibold text-blue-800">סעיף 4 - סעיף שיתוף פעולה</h3>
                 <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">קבוע</span>
               </div>
               <div className="text-sm text-gray-700 whitespace-pre-line">
@@ -1474,10 +1527,10 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
               </div>
             </div>
 
-            {/* סעיף 6 - הצהרה חתימה סופית */}
+            {/* סעיף 5 - הצהרה חתימה סופית */}
             <div className="bg-white p-4 rounded-lg border border-blue-300">
               <div className="flex justify-between items-center mb-2">
-                <h3 className="font-semibold text-blue-800">סעיף 6 - הצהרה חתימה סופית</h3>
+                <h3 className="font-semibold text-blue-800">סעיף 5 - הצהרה חתימה סופית</h3>
                 <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">קבוע</span>
               </div>
               <div className="text-sm text-gray-700 whitespace-pre-line">
@@ -1485,10 +1538,10 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
               </div>
             </div>
 
-            {/* סעיף 7 - חתימות */}
+            {/* סעיף 6 - חתימות */}
             <div className="bg-white p-4 rounded-lg border border-blue-300">
               <div className="flex justify-between items-center mb-2">
-                <h3 className="font-semibold text-blue-800">סעיף 7 - חתימות</h3>
+                <h3 className="font-semibold text-blue-800">סעיף 6 - חתימות</h3>
                 <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">קבוע</span>
               </div>
               <div className="text-sm text-gray-700 whitespace-pre-line">
@@ -1498,100 +1551,24 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
           </div>
         </section>
 
-        {/* סעיפים נוספים */}
-        <section className="bg-gray-50 p-6 rounded-lg border">
+        {/* כפתור הוספת סעיף מותאם אישית */}
+        <section className="bg-green-50 p-6 rounded-lg border border-green-200 mb-6">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+            <h2 className="text-xl font-bold text-green-900 flex items-center gap-2">
               <span className="text-lg">📝</span>
-              סעיפים מותאמים אישית
+              הוספת סעיפים מותאמים אישית
             </h2>
             <button
               onClick={() => setCustomSections(prev => [...prev, { title: '', content: '' }])}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
             >
               + הוסף סעיף
             </button>
           </div>
           
-          {customSections.map((section, index) => (
-            <div key={index} className="bg-white p-4 rounded-lg border mb-4">
-              <div className="flex justify-between items-center mb-4">
-                <div className="flex items-center gap-2">
-                  <h3 className="font-semibold text-gray-800">סעיף {index + 1}</h3>
-                  <div className="flex flex-col gap-1">
-                    <button
-                      onClick={() => {
-                        if (index > 0) {
-                          setCustomSections(prev => {
-                            const newSections = [...prev];
-                            [newSections[index - 1], newSections[index]] = [newSections[index], newSections[index - 1]];
-                            return newSections;
-                          });
-                        }
-                      }}
-                      disabled={index === 0}
-                      className={`p-1 rounded ${index === 0 ? 'text-gray-300 cursor-not-allowed' : 'text-blue-600 hover:text-blue-800 hover:bg-blue-50'}`}
-                      title="הזז למעלה"
-                    >
-                      ↑
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (index < customSections.length - 1) {
-                          setCustomSections(prev => {
-                            const newSections = [...prev];
-                            [newSections[index], newSections[index + 1]] = [newSections[index + 1], newSections[index]];
-                            return newSections;
-                          });
-                        }
-                      }}
-                      disabled={index === customSections.length - 1}
-                      className={`p-1 rounded ${index === customSections.length - 1 ? 'text-gray-300 cursor-not-allowed' : 'text-blue-600 hover:text-blue-800 hover:bg-blue-50'}`}
-                      title="הזז למטה"
-                    >
-                      ↓
-                    </button>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setCustomSections(prev => prev.filter((_, i) => i !== index))}
-                  className="text-red-600 hover:text-red-800"
-                >
-                  🗑️ מחק
-                </button>
-              </div>
-              
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">כותרת הסעיף</label>
-                  <input
-                    type="text"
-                    value={section.title}
-                    onChange={(e) => setCustomSections(prev => prev.map((s, i) => 
-                      i === index ? { ...s, title: e.target.value } : s
-                    ))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="הוראות מיוחדות לגבי..."
-                    dir="rtl"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">תוכן הסעיף</label>
-                  <textarea
-                    value={section.content}
-                    onChange={(e) => setCustomSections(prev => prev.map((s, i) => 
-                      i === index ? { ...s, content: e.target.value } : s
-                    ))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 resize-none"
-                    rows={4}
-                    placeholder="אני מצווה כי..."
-                    dir="rtl"
-                  />
-                </div>
-              </div>
-            </div>
-          ))}
+          <div className="text-sm text-green-800 bg-green-100 p-3 rounded-lg">
+            💡 <strong>טיפ:</strong> הסעיפים המותאמים אישית יופיעו אוטומטית במקום הנכון בצוואה - בין הצהרות לסעיפים הקבועים.
+          </div>
         </section>
 
         {/* מערכת הלמידה והמחסן */}
