@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { supabase } from './supabase-client';
 import { User, LoginCredentials, RegisterData } from './auth-types';
 
 /**

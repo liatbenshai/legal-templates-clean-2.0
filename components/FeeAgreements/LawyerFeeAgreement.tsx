@@ -1147,7 +1147,10 @@ ________________________           ${agreementData.clients.map((_, i) => '______
                   </button>
                 </div>
                 <div className="p-4 overflow-y-auto max-h-[calc(90vh-80px)]">
-                  <p className="text-gray-600">מחסן סעיפים בפיתוח...</p>
+                  <WarehouseManager
+                    userId={currentUser?.id || 'anonymous'}
+                    onSectionSelect={handleSelectFromWarehouse}
+                  />
                 </div>
               </div>
             </div>

@@ -87,31 +87,6 @@ export default function EditableSection({
 
   const handleSaveToWarehouse = () => {
     onSaveToWarehouse(section);
-    
-    if (mounted) {
-      const action: SectionEditAction = {
-        type: 'save_to_warehouse',
-        sectionId: section.id,
-        newContent: section.content,
-        reason: 'שמירה למחסן האישי',
-        userId,
-        timestamp: new Date().toISOString()
-      };
-
-      learningEngine.saveToWarehouse(action, {
-        id: section.id,
-        title: section.title,
-        content: section.content,
-        category: section.category,
-        tags: [section.category, section.serviceType || 'general'],
-        usageCount: 1,
-        averageRating: 5,
-        isPublic: false,
-        createdBy: userId,
-        createdAt: new Date().toISOString(),
-        lastUsed: new Date().toISOString()
-      });
-    }
   };
 
   const handleSaveToLearning = () => {
