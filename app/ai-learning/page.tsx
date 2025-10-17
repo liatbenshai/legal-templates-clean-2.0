@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAIImprove } from '@/lib/hooks/useAIImprove';
-import { Sparkles, Copy, Download, Loader, BookOpen, TrendingUp, Save, Trash2, FileText, Handshake, Heart } from 'lucide-react';
+import { Sparkles, Copy, Download, Loader, BookOpen, TrendingUp, Save, Trash2, FileText, Handshake, Heart, Plus } from 'lucide-react';
 import { supabase } from '@/lib/supabase-client';
 import { useRouter } from 'next/navigation';
 
@@ -96,6 +96,10 @@ export default function AILearningPage() {
       addVariableModal.type,
       addVariableModal.defaultValue.trim() || undefined
     );
+    
+    // הוספת המשתנה לטקסט הנוכחי
+    const variableText = `{{${newVariable.name}}}`;
+    setText(prev => prev + (prev ? ' ' : '') + variableText);
     
     closeAddVariableModal();
     return newVariable;
@@ -370,12 +374,30 @@ export default function AILearningPage() {
               {/* תוכן */}
               <div className="p-6">
                 {activeTab === 'editor' ? (
-                  <textarea
-                    value={text}
-                    onChange={(e) => setText(e.target.value)}
-                    placeholder="כתוב או הדבק טקסט משפטי כאן..."
-                    className="w-full h-96 p-4 border-2 border-gray-200 rounded-lg focus:border-orange-600 focus:outline-none resize-none"
-                  />
+                  <div className="space-y-4">
+                    {/* סרגל כלים */}
+                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border">
+                      <span className="text-sm font-medium text-gray-700">כלים:</span>
+                      <button
+                        onClick={openAddVariableModal}
+                        className="flex items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm"
+                      >
+                        <Plus className="w-4 h-4" />
+                        הוסף משתנה
+                      </button>
+                      <div className="text-xs text-gray-500">
+                        לחץ להוספת משתנה כמו {`{{שם_המשתנה}}`}
+                      </div>
+                    </div>
+                    
+                    {/* עורך טקסט */}
+                    <textarea
+                      value={text}
+                      onChange={(e) => setText(e.target.value)}
+                      placeholder="כתוב או הדבק טקסט משפטי כאן... השתמש במשתנים כמו {{שם_המשתנה}}"
+                      className="w-full h-96 p-4 border-2 border-gray-200 rounded-lg focus:border-orange-600 focus:outline-none resize-none"
+                    />
+                  </div>
                 ) : (
                   <div className="space-y-3">
                     {suggestions.length > 0 ? (
@@ -670,21 +692,13 @@ export default function AILearningPage() {
               >
                 ביטול
               </button>
-              <button
-                onClick={() => {
-                  const newVariable = createNewVariable();
-                  if (newVariable) {
-                    // הוסף את המשתנה לטקסט הנוכחי
-                    const variableText = `{{${newVariable.name}}}`;
-                    // כאן נוכל להוסיף את המשתנה לטקסט הנוכחי בעריכה
-                    alert(`✅ משתנה "${newVariable.name}" נוצר בהצלחה!\nניתן להשתמש בו כ: ${variableText}`);
-                  }
-                }}
-                disabled={!addVariableModal.name.trim()}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:bg-gray-300 disabled:cursor-not-allowed"
-              >
-                צור משתנה
-              </button>
+                 <button
+                   onClick={createNewVariable}
+                   disabled={!addVariableModal.name.trim()}
+                   className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:bg-gray-300 disabled:cursor-not-allowed"
+                 >
+                   צור משתנה ולהוסיף לטקסט
+                 </button>
             </div>
           </div>
         </div>

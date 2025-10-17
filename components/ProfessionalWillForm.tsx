@@ -281,6 +281,10 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
       addVariableModal.defaultValue.trim() || undefined
     );
     
+    // הצגת המשתנה שנוצר
+    const variableText = `{{${newVariable.name}}}`;
+    alert(`✅ משתנה "${newVariable.name}" נוצר בהצלחה!\nניתן להשתמש בו כ: ${variableText}\n\nהעתק את המשתנה והדבק אותו בסעיף הרצוי.`);
+    
     closeAddVariableModal();
     return newVariable;
   };
