@@ -1406,16 +1406,36 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
               </div>
             </div>
 
-            {/* הצהרת העדים */}
+            {/* סעיף 1 - ביטול צוואות קודמות */}
             <div className="bg-white p-4 rounded-lg border border-blue-300">
               <div className="flex justify-between items-center mb-2">
-                <h3 className="font-semibold text-blue-800">הצהרת העדים</h3>
+                <h3 className="font-semibold text-blue-800">סעיף 1 - ביטול צוואות קודמות</h3>
                 <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">קבוע</span>
               </div>
               <div className="text-sm text-gray-700 whitespace-pre-line">
-                אנו העדים החתומים מטה, {witnesses[0]?.name || '[שם עד ראשון]'}, ת.ז. {witnesses[0]?.id || '[מספר ת.ז.]'}, 
-                ו-{witnesses[1]?.name || '[שם עד שני]'}, ת.ז. {witnesses[1]?.id || '[מספר ת.ז.]'}, 
-                מעידים בזאת כי המצווה/ה חתם/ה על צוואה זו בפנינו, וכי הוא/היא עשה/עשתה זאת מרצונו/ה החופשי ובהכרה מלאה של תוכן הצוואה.
+                למען הסר ספק, אני מבטל בזה ביטול גמור, מוחלט ושלם, כל צוואה ו/או הוראה שנתתי בעבר לפני תאריך חתימה על צוואה זו, בין בכתב ובין בעל פה בקשור לרכושי ולנכסיי, כל מסמך, או כתב, כל שיחה שבעל פה, שיש בה מעין גילוי דעת על מה שיש ברצוני שייעשה בעיזבוני לאחר מותי.
+              </div>
+            </div>
+
+            {/* סעיף 2 - תשלום חובות העיזבון */}
+            <div className="bg-white p-4 rounded-lg border border-blue-300">
+              <div className="flex justify-between items-center mb-2">
+                <h3 className="font-semibold text-blue-800">סעיף 2 - תשלום חובות העיזבון</h3>
+                <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">קבוע</span>
+              </div>
+              <div className="text-sm text-gray-700 whitespace-pre-line">
+                אני מורה ליורשיי אשר יבצעו את צוואתי לשלם מתוך עיזבוני האמור את כל חובותיי שיעמדו לפירעון בעת פטירתי, הוצאות הבאתי לארץ אם פטירתי תהא בחו"ל והוצאות קבורתי, כולל הקמת מצבה מתאימה על קברי וכן כל ההוצאות הכרוכות במתן צו לקיום צוואתי.
+              </div>
+            </div>
+
+            {/* סעיף 3 - היקף העיזבון */}
+            <div className="bg-white p-4 rounded-lg border border-blue-300">
+              <div className="flex justify-between items-center mb-2">
+                <h3 className="font-semibold text-blue-800">סעיף 3 - היקף העיזבון</h3>
+                <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">קבוע</span>
+              </div>
+              <div className="text-sm text-gray-700 whitespace-pre-line">
+                צוואתי זו תחול על כלל רכושי מכל מין וסוג שהוא, בין בארץ ובין בחו"ל, ללא יוצא מן הכלל, בין אם הוא בבעלותי הבלעדית ובין אם בבעלותי המשותפת עם אחרים. מבלי לגרוע מכלליות האמור לעיל, צוואתי זו תחול גם על כספים, תוכניות חיסכון, קרנות נאמנות, ניירות ערך, תביעות, פנסיות, תגמולים, ביטוחי חיים, קצבאות, בין אם מופקדים בבנק ובין אם בידי כל גורם אחר, וכן על זכויות אחרות מכל סוג שהוא, וכל רכוש אחר בין במיטלטלין ובין במקרקעין (רשומים ושאינם רשומים), אשר בבעלותי כיום ו/או יגיעו לידי בעתיד (להלן: "העיזבון"), לרבות:
               </div>
             </div>
 
@@ -1482,32 +1502,10 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
               </div>
             )}
 
-            {/* סעיף 1 - ביטול צוואות קודמות */}
+            {/* סעיף 4 - מקרה פטירת יורש */}
             <div className="bg-white p-4 rounded-lg border border-blue-300">
               <div className="flex justify-between items-center mb-2">
-                <h3 className="font-semibold text-blue-800">סעיף 1 - ביטול צוואות קודמות</h3>
-                <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">קבוע</span>
-              </div>
-              <div className="text-sm text-gray-700 whitespace-pre-line">
-                למען הסר ספק, אני מבטל בזה ביטול גמור, מוחלט ושלם, כל צוואה ו/או הוראה שנתתי בעבר לפני תאריך חתימה על צוואה זו, בין בכתב ובין בעל פה בקשור לרכושי ולנכסיי, כל מסמך, או כתב, כל שיחה שבעל פה, שיש בה מעין גילוי דעת על מה שיש ברצוני שייעשה בעיזבוני לאחר מותי.
-              </div>
-            </div>
-
-            {/* סעיף 2 - תשלום חובות העיזבון */}
-            <div className="bg-white p-4 rounded-lg border border-blue-300">
-              <div className="flex justify-between items-center mb-2">
-                <h3 className="font-semibold text-blue-800">סעיף 2 - תשלום חובות העיזבון</h3>
-                <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">קבוע</span>
-              </div>
-              <div className="text-sm text-gray-700 whitespace-pre-line">
-                אני מורה ליורשיי אשר יבצעו את צוואתי לשלם מתוך עיזבוני האמור את כל חובותיי שיעמדו לפירעון בעת פטירתי, הוצאות הבאתי לארץ אם פטירתי תהא בחו"ל והוצאות קבורתי, כולל הקמת מצבה מתאימה על קברי וכן כל ההוצאות הכרוכות במתן צו לקיום צוואתי.
-              </div>
-            </div>
-
-            {/* סעיף 3 - מקרה פטירת יורש */}
-            <div className="bg-white p-4 rounded-lg border border-blue-300">
-              <div className="flex justify-between items-center mb-2">
-                <h3 className="font-semibold text-blue-800">סעיף 3 - מקרה פטירת יורש</h3>
+                <h3 className="font-semibold text-blue-800">סעיף 4 - מקרה פטירת יורש</h3>
                 <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">קבוע</span>
               </div>
               <div className="text-sm text-gray-700 whitespace-pre-line">
@@ -1515,11 +1513,10 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
               </div>
             </div>
 
-
-            {/* סעיף 4 - סעיף שיתוף פעולה */}
+            {/* סעיף 5 - סעיף שיתוף פעולה */}
             <div className="bg-white p-4 rounded-lg border border-blue-300">
               <div className="flex justify-between items-center mb-2">
-                <h3 className="font-semibold text-blue-800">סעיף 4 - סעיף שיתוף פעולה</h3>
+                <h3 className="font-semibold text-blue-800">סעיף 5 - סעיף שיתוף פעולה</h3>
                 <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">קבוע</span>
               </div>
               <div className="text-sm text-gray-700 whitespace-pre-line">
@@ -1527,10 +1524,10 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
               </div>
             </div>
 
-            {/* סעיף 5 - הצהרה חתימה סופית */}
+            {/* סעיף 6 - הצהרה חתימה סופית */}
             <div className="bg-white p-4 rounded-lg border border-blue-300">
               <div className="flex justify-between items-center mb-2">
-                <h3 className="font-semibold text-blue-800">סעיף 5 - הצהרה חתימה סופית</h3>
+                <h3 className="font-semibold text-blue-800">סעיף 6 - הצהרה חתימה סופית</h3>
                 <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">קבוע</span>
               </div>
               <div className="text-sm text-gray-700 whitespace-pre-line">
@@ -1538,10 +1535,23 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
               </div>
             </div>
 
-            {/* סעיף 6 - חתימות */}
+            {/* הצהרת העדים */}
             <div className="bg-white p-4 rounded-lg border border-blue-300">
               <div className="flex justify-between items-center mb-2">
-                <h3 className="font-semibold text-blue-800">סעיף 6 - חתימות</h3>
+                <h3 className="font-semibold text-blue-800">הצהרת העדים</h3>
+                <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">קבוע</span>
+              </div>
+              <div className="text-sm text-gray-700 whitespace-pre-line">
+                אנו העדים החתומים מטה, {witnesses[0]?.name || '[שם עד ראשון]'}, ת.ז. {witnesses[0]?.id || '[מספר ת.ז.]'}, 
+                ו-{witnesses[1]?.name || '[שם עד שני]'}, ת.ז. {witnesses[1]?.id || '[מספר ת.ז.]'}, 
+                מעידים בזאת כי המצווה/ה חתם/ה על צוואה זו בפנינו, וכי הוא/היא עשה/עשתה זאת מרצונו/ה החופשי ובהכרה מלאה של תוכן הצוואה.
+              </div>
+            </div>
+
+            {/* חתימות */}
+            <div className="bg-white p-4 rounded-lg border border-blue-300">
+              <div className="flex justify-between items-center mb-2">
+                <h3 className="font-semibold text-blue-800">חתימות</h3>
                 <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">קבוע</span>
               </div>
               <div className="text-sm text-gray-700 whitespace-pre-line">
