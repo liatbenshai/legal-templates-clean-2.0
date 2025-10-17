@@ -25,7 +25,80 @@ export default function AILearningPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isLoadingSections, setIsLoadingSections] = useState(true);
   const [showSaveToDocumentModal, setShowSaveToDocumentModal] = useState(false);
+  
+  // מערכת משתנים
+  const [variables, setVariables] = useState<Array<{
+    id: string;
+    name: string;
+    description: string;
+    type: 'text' | 'number' | 'date';
+    defaultValue?: string;
+    usageCount: number;
+  }>>([]);
+  
+  // מודל הוספת משתנה חדש
+  const [addVariableModal, setAddVariableModal] = useState<{
+    isOpen: boolean;
+    name: string;
+    description: string;
+    type: 'text' | 'number' | 'date';
+    defaultValue: string;
+  }>({
+    isOpen: false,
+    name: '',
+    description: '',
+    type: 'text',
+    defaultValue: ''
+  });
 
+  // פונקציות לניהול משתנים
+  const addVariable = (name: string, description: string, type: 'text' | 'number' | 'date', defaultValue?: string) => {
+    const newVariable = {
+      id: `var_${Date.now()}`,
+      name,
+      description,
+      type,
+      defaultValue,
+      usageCount: 0
+    };
+    setVariables(prev => [...prev, newVariable]);
+    return newVariable;
+  };
+  
+  const openAddVariableModal = () => {
+    setAddVariableModal({
+      isOpen: true,
+      name: '',
+      description: '',
+      type: 'text',
+      defaultValue: ''
+    });
+  };
+  
+  const closeAddVariableModal = () => {
+    setAddVariableModal({
+      isOpen: false,
+      name: '',
+      description: '',
+      type: 'text',
+      defaultValue: ''
+    });
+  };
+  
+  const createNewVariable = () => {
+    if (!addVariableModal.name.trim()) return;
+    
+    const newVariable = addVariable(
+      addVariableModal.name.trim(),
+      addVariableModal.description.trim(),
+      addVariableModal.type,
+      addVariableModal.defaultValue.trim() || undefined
+    );
+    
+    closeAddVariableModal();
+    return newVariable;
+  };
+  
   // טעינת סעיפים שמורים בעת טעינת הדף
   useEffect(() => {
     loadSavedSections();
@@ -187,6 +260,43 @@ export default function AILearningPage() {
             שפר את היכולות המשפטיות שלך עם עוזר AI חכם שלומד מהניסוח שלך
           </p>
         </div>
+        
+        {/* תצוגת משתנים קיימים */}
+        {variables.length > 0 && (
+          <div className="mb-8 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+            <h3 className="text-lg font-semibold text-blue-800 mb-3 flex items-center gap-2">
+              <span className="text-xl">📋</span>
+              משתנים קיימים ({variables.length})
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {variables.map((variable) => (
+                <div key={variable.id} className="bg-white p-3 rounded-lg border border-blue-200">
+                  <div className="flex items-center justify-between mb-2">
+                    <code className="bg-blue-100 px-2 py-1 rounded text-sm font-mono text-blue-800">
+                      {`{{${variable.name}}}`}
+                    </code>
+                    <span className="text-xs text-gray-500">({variable.usageCount} שימושים)</span>
+                  </div>
+                  <p className="text-sm text-gray-700">{variable.description}</p>
+                  <div className="flex items-center gap-2 mt-2">
+                    <span className={`text-xs px-2 py-1 rounded ${
+                      variable.type === 'text' ? 'bg-green-100 text-green-700' :
+                      variable.type === 'number' ? 'bg-yellow-100 text-yellow-700' :
+                      'bg-purple-100 text-purple-700'
+                    }`}>
+                      {variable.type === 'text' ? 'טקסט' : variable.type === 'number' ? 'מספר' : 'תאריך'}
+                    </span>
+                    {variable.defaultValue && (
+                      <span className="text-xs text-gray-500">
+                        ברירת מחדל: {variable.defaultValue}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* תכונות */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
@@ -328,6 +438,14 @@ export default function AILearningPage() {
               >
                 <Copy className="w-5 h-5" />
                 העתק
+              </button>
+
+              <button
+                onClick={openAddVariableModal}
+                className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold flex items-center justify-center gap-2"
+              >
+                <span className="text-lg">📝</span>
+                הוסף משתנה
               </button>
 
               <button
@@ -475,6 +593,100 @@ export default function AILearningPage() {
           )}
         </div>
       </div>
+      
+      {/* מודל הוספת משתנה חדש */}
+      {addVariableModal.isOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-xl font-bold text-gray-900 mb-4">
+              ➕ הוסף משתנה חדש
+            </h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  שם המשתנה
+                </label>
+                <input
+                  type="text"
+                  value={addVariableModal.name}
+                  onChange={(e) => setAddVariableModal(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="לדוגמה: סכום_התשלום"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                  dir="rtl"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  תיאור המשתנה
+                </label>
+                <input
+                  type="text"
+                  value={addVariableModal.description}
+                  onChange={(e) => setAddVariableModal(prev => ({ ...prev, description: e.target.value }))}
+                  placeholder="לדוגמה: סכום התשלום בעד השירות"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                  dir="rtl"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  סוג המשתנה
+                </label>
+                <select
+                  value={addVariableModal.type}
+                  onChange={(e) => setAddVariableModal(prev => ({ ...prev, type: e.target.value as 'text' | 'number' | 'date' }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="text">טקסט</option>
+                  <option value="number">מספר</option>
+                  <option value="date">תאריך</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  ערך ברירת מחדל (אופציונלי)
+                </label>
+                <input
+                  type={addVariableModal.type === 'date' ? 'date' : addVariableModal.type === 'number' ? 'number' : 'text'}
+                  value={addVariableModal.defaultValue}
+                  onChange={(e) => setAddVariableModal(prev => ({ ...prev, defaultValue: e.target.value }))}
+                  placeholder="ערך ברירת מחדל"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                  dir="rtl"
+                />
+              </div>
+            </div>
+            
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={closeAddVariableModal}
+                className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
+              >
+                ביטול
+              </button>
+              <button
+                onClick={() => {
+                  const newVariable = createNewVariable();
+                  if (newVariable) {
+                    // הוסף את המשתנה לטקסט הנוכחי
+                    const variableText = `{{${newVariable.name}}}`;
+                    // כאן נוכל להוסיף את המשתנה לטקסט הנוכחי בעריכה
+                    alert(`✅ משתנה "${newVariable.name}" נוצר בהצלחה!\nניתן להשתמש בו כ: ${variableText}`);
+                  }
+                }}
+                disabled={!addVariableModal.name.trim()}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:bg-gray-300 disabled:cursor-not-allowed"
+              >
+                צור משתנה
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
