@@ -11,7 +11,8 @@ import EditableSection from './LearningSystem/EditableSection';
 import WarehouseManager from './LearningSystem/WarehouseManager';
 import AILearningManager from './AILearningManager';
 import UnifiedWarehouse from './UnifiedWarehouse';
-import { useDocuments } from '@/lib/useDocuments'; // ← הוסף את זה
+import { useDocuments } from '@/lib/useDocuments';
+import { useWarehouse } from '@/lib/hooks/useWarehouse';
 
 interface Property {
   name: string;
@@ -87,6 +88,9 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
     address: '',
     gender: 'male' as Gender
   });
+
+  // Warehouse hook
+  const { addSection, updateSection, sections: warehouseSections } = useWarehouse(testator.fullName || 'anonymous');
 
   // בן/בת זוג (לצוואה הדדית)
   const [spouse, setSpouse] = useState({
@@ -452,31 +456,25 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
     }
   };
 
-  const handleSaveToWarehouse = (section: EditableSectionType) => {
-    const action = {
-      type: 'save_to_warehouse' as const,
-      sectionId: section.id,
-      newContent: section.content,
-      userId: testator.fullName || 'anonymous',
-      timestamp: new Date().toISOString()
-    };
-    
-    const warehouseSection = {
-      id: section.id,
-      title: section.title,
-      content: section.content,
-      category: section.category,
-      tags: ['צוואה', 'סעיף מותאם אישית'],
-      usageCount: 0,
-      averageRating: 0,
-      isPublic: false,
-      createdBy: testator.fullName || 'anonymous',
-      createdAt: new Date().toISOString(),
-      lastUsed: new Date().toISOString()
-    };
-    
-    learningEngine.saveToWarehouse(action, warehouseSection);
-    alert('סעיף נשמר למחסן האישי!');
+  const handleSaveToWarehouse = async (section: EditableSectionType) => {
+    try {
+      await addSection({
+        user_id: testator.fullName || 'anonymous',
+        title: section.title,
+        content: section.content,
+        category: section.category || 'custom',
+        tags: ['צוואה', 'סעיף מותאם אישית'],
+        usage_count: 0,
+        average_rating: 5,
+        is_public: false,
+        is_hidden: false,
+        created_by: testator.fullName || 'anonymous'
+      });
+      alert('✅ סעיף נשמר למחסן האישי!');
+    } catch (error) {
+      console.error('Error saving to warehouse:', error);
+      alert('❌ שגיאה בשמירה למחסן');
+    }
   };
 
   const handleSaveToLearning = (section: EditableSectionType, userCorrection?: string) => {
@@ -499,7 +497,7 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
     }
   };
 
-  const handleSelectFromWarehouse = (warehouseSection: any) => {
+  const handleSelectFromWarehouse = async (warehouseSection: any) => {
     const { replaceTextWithGender } = require('@/lib/hebrew-gender');
     const genderedContent = replaceTextWithGender(
       warehouseSection.content,
@@ -525,7 +523,18 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
         content: genderedContent
       };
       setCustomSections(prev => [...prev, newSection]);
-      alert('סעיף נוסף מהמחסן!');
+      
+      // עדכון מונה השימוש במחסן
+      try {
+        await updateSection(warehouseSection.id, {
+          usage_count: (warehouseSection.usage_count || 0) + 1,
+          last_used: new Date().toISOString()
+        });
+      } catch (error) {
+        console.error('Error updating usage count:', error);
+      }
+      
+      alert('✅ סעיף נוסף מהמחסן!');
     }
   };
 
@@ -1441,6 +1450,29 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
                 className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
               >
                 {showWarehouse ? 'הסתר' : 'הצג'} מחסן סעיפים
+              </button>
+              <button
+                onClick={() => {
+                  const title = prompt('כותרת הסעיף:');
+                  const content = prompt('תוכן הסעיף:');
+                  if (title && content) {
+                    handleSaveToWarehouse({
+                      id: Date.now().toString(),
+                      title,
+                      content,
+                      category: 'custom',
+                      serviceType: 'will',
+                      isEditable: true,
+                      isCustom: true,
+                      version: 1,
+                      lastModified: new Date().toISOString(),
+                      modifiedBy: testator.fullName || 'anonymous'
+                    });
+                  }
+                }}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+              >
+                ➕ הוסף סעיף למחסן
               </button>
             </div>
           </div>
