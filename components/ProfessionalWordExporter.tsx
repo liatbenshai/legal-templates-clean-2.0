@@ -261,52 +261,168 @@ export default function ProfessionalWordExporter({
           })
         );
       } else {
-        sections.push(
-          new Paragraph({
-            alignment: AlignmentType.RIGHT,
-            bidirectional: true,
-            children: [
-              new TextRun({ 
-                text: 'הואיל כי אין אדם יודע את יום פקודתו;', 
-                font: 'David', 
-                rightToLeft: true, 
-                size: SIZES.normal 
-              })
-            ],
-            spacing: { after: SPACING.betweenParagraphs }
-          })
-        );
-        sections.push(new Paragraph({ text: '' }));
-        sections.push(
-          new Paragraph({
-            alignment: AlignmentType.RIGHT,
-            bidirectional: true,
-            children: [
-              new TextRun({ 
-                text: `והואיל כי ברצוני לערוך את צוואתי, ולפרט את רצוני האחרון והוראותיי בכל הקשור לאשר ייעשה ברכושי לאחר פטירתי, לאחר אריכות ימים ושנים;`, 
-                font: 'David', 
-                rightToLeft: true, 
-                size: SIZES.normal 
-              })
-            ],
-            spacing: { after: SPACING.betweenParagraphs }
-          })
-        );
-        sections.push(new Paragraph({ text: '' }));
+        // הואילים בטבלה
         const gender = willData.testator?.gender === 'female';
         sections.push(
-          new Paragraph({
+          new Table({
+            columnWidths: [7800, 1560],
+            width: { size: 100, type: WidthType.PERCENTAGE },
             alignment: AlignmentType.RIGHT,
-            bidirectional: true,
-            children: [
-              new TextRun({ 
-                text: `והואיל כי הנני למעלה מגיל שמונה עשרה שנים, ${gender ? 'אזרחית ישראלית ותושבת' : 'אזרח ישראלי ותושב'} מדינת ישראל;`, 
-                font: 'David', 
-                rightToLeft: true, 
-                size: SIZES.normal 
+            rows: [
+              new TableRow({
+                children: [
+                  new TableCell({
+                    width: { size: 7800, type: WidthType.DXA },
+                    borders: {
+                      top: { style: BorderStyle.NONE },
+                      bottom: { style: BorderStyle.NONE },
+                      left: { style: BorderStyle.NONE },
+                      right: { style: BorderStyle.NONE }
+                    },
+                    children: [
+                      new Paragraph({
+                        alignment: AlignmentType.RIGHT,
+                        bidirectional: true,
+                        children: [
+                          new TextRun({ 
+                            text: 'הואיל כי אין אדם יודע את יום פקודתו;', 
+                            font: 'David', 
+                            rightToLeft: true, 
+                            size: SIZES.normal 
+                          })
+                        ]
+                      })
+                    ]
+                  }),
+                  new TableCell({
+                    width: { size: 1560, type: WidthType.DXA },
+                    borders: {
+                      top: { style: BorderStyle.NONE },
+                      bottom: { style: BorderStyle.NONE },
+                      left: { style: BorderStyle.NONE },
+                      right: { style: BorderStyle.NONE }
+                    },
+                    children: [
+                      new Paragraph({
+                        alignment: AlignmentType.RIGHT,
+                        bidirectional: true,
+                        children: [
+                          new TextRun({
+                            text: "הואיל",
+                            bold: true,
+                            font: 'David',
+                            rightToLeft: true,
+                            size: SIZES.normal
+                          })
+                        ]
+                      })
+                    ]
+                  })
+                ]
+              }),
+              new TableRow({
+                children: [
+                  new TableCell({
+                    width: { size: 7800, type: WidthType.DXA },
+                    borders: {
+                      top: { style: BorderStyle.NONE },
+                      bottom: { style: BorderStyle.NONE },
+                      left: { style: BorderStyle.NONE },
+                      right: { style: BorderStyle.NONE }
+                    },
+                    children: [
+                      new Paragraph({
+                        alignment: AlignmentType.RIGHT,
+                        bidirectional: true,
+                        children: [
+                          new TextRun({ 
+                            text: `והואיל כי ברצוני לערוך את צוואתי, ולפרט את רצוני האחרון והוראותיי בכל הקשור לאשר ייעשה ברכושי לאחר פטירתי, לאחר אריכות ימים ושנים;`, 
+                            font: 'David', 
+                            rightToLeft: true, 
+                            size: SIZES.normal 
+                          })
+                        ]
+                      })
+                    ]
+                  }),
+                  new TableCell({
+                    width: { size: 1560, type: WidthType.DXA },
+                    borders: {
+                      top: { style: BorderStyle.NONE },
+                      bottom: { style: BorderStyle.NONE },
+                      left: { style: BorderStyle.NONE },
+                      right: { style: BorderStyle.NONE }
+                    },
+                    children: [
+                      new Paragraph({
+                        alignment: AlignmentType.RIGHT,
+                        bidirectional: true,
+                        children: [
+                          new TextRun({
+                            text: "והואיל",
+                            bold: true,
+                            font: 'David',
+                            rightToLeft: true,
+                            size: SIZES.normal
+                          })
+                        ]
+                      })
+                    ]
+                  })
+                ]
+              }),
+              new TableRow({
+                children: [
+                  new TableCell({
+                    width: { size: 7800, type: WidthType.DXA },
+                    borders: {
+                      top: { style: BorderStyle.NONE },
+                      bottom: { style: BorderStyle.NONE },
+                      left: { style: BorderStyle.NONE },
+                      right: { style: BorderStyle.NONE }
+                    },
+                    children: [
+                      new Paragraph({
+                        alignment: AlignmentType.RIGHT,
+                        bidirectional: true,
+                        children: [
+                          new TextRun({ 
+                            text: `והואיל כי הנני למעלה מגיל שמונה עשרה שנים, ${gender ? 'אזרחית ישראלית ותושבת' : 'אזרח ישראלי ותושב'} מדינת ישראל;`, 
+                            font: 'David', 
+                            rightToLeft: true, 
+                            size: SIZES.normal 
+                          })
+                        ]
+                      })
+                    ]
+                  }),
+                  new TableCell({
+                    width: { size: 1560, type: WidthType.DXA },
+                    borders: {
+                      top: { style: BorderStyle.NONE },
+                      bottom: { style: BorderStyle.NONE },
+                      left: { style: BorderStyle.NONE },
+                      right: { style: BorderStyle.NONE }
+                    },
+                    children: [
+                      new Paragraph({
+                        alignment: AlignmentType.RIGHT,
+                        bidirectional: true,
+                        children: [
+                          new TextRun({
+                            text: "והואיל",
+                            bold: true,
+                            font: 'David',
+                            rightToLeft: true,
+                            size: SIZES.normal
+                          })
+                        ]
+                      })
+                    ]
+                  })
+                ]
               })
-            ],
-            spacing: { after: SPACING.betweenParagraphs * 1.5 }
+            ]
           })
         );
       }

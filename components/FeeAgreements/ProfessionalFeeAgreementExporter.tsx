@@ -174,7 +174,7 @@ export default function ProfessionalFeeAgreementExporter({
           default: {
             document: {
               run: { 
-                font: "Arial", 
+                font: "David", 
                 size: SIZES.normal,
                 rightToLeft: true
               },
@@ -204,7 +204,7 @@ export default function ProfessionalFeeAgreementExporter({
                   text: "הסכם שכר טרחה",
                   bold: true,
                   size: SIZES.title,
-                  font: "Arial"
+                  font: "David"
                 })
               ]
             }),
@@ -218,7 +218,7 @@ export default function ProfessionalFeeAgreementExporter({
                 new TextRun({
                   text: `נערך ביום ${agreementDate.day} לחודש ${agreementDate.month} שנת ${agreementDate.year}`,
                   size: SIZES.subtitle,
-                  font: "Arial"
+                  font: "David"
                 })
               ]
             }),
