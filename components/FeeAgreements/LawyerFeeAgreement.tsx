@@ -174,7 +174,100 @@ export default function LawyerFeeAgreement() {
     type: 'text' | 'number' | 'date';
     defaultValue?: string;
     usageCount: number;
-  }>>([]);
+  }>>([
+    // משתני מגדר מוכנים
+    {
+      id: 'var_gender_1',
+      name: 'מיופה_כוח',
+      description: 'מיופה כוח / מיופת כוח / מיופי כוח',
+      type: 'text',
+      usageCount: 0
+    },
+    {
+      id: 'var_gender_2',
+      name: 'רשאי',
+      description: 'רשאי / רשאית / רשאים',
+      type: 'text',
+      usageCount: 0
+    },
+    {
+      id: 'var_gender_3',
+      name: 'אחראי',
+      description: 'אחראי / אחראית / אחראים',
+      type: 'text',
+      usageCount: 0
+    },
+    {
+      id: 'var_gender_4',
+      name: 'מחויב',
+      description: 'מחויב / מחויבת / מחויבים',
+      type: 'text',
+      usageCount: 0
+    },
+    {
+      id: 'var_gender_5',
+      name: 'יכול',
+      description: 'יכול / יכולה / יכולים',
+      type: 'text',
+      usageCount: 0
+    },
+    {
+      id: 'var_gender_6',
+      name: 'צריך',
+      description: 'צריך / צריכה / צריכים',
+      type: 'text',
+      usageCount: 0
+    },
+    {
+      id: 'var_gender_7',
+      name: 'חייב',
+      description: 'חייב / חייבת / חייבים',
+      type: 'text',
+      usageCount: 0
+    },
+    {
+      id: 'var_gender_8',
+      name: 'זכאי',
+      description: 'זכאי / זכאית / זכאים',
+      type: 'text',
+      usageCount: 0
+    },
+    {
+      id: 'var_gender_9',
+      name: 'מתחייב',
+      description: 'מתחייב / מתחייבת / מתחייבים',
+      type: 'text',
+      usageCount: 0
+    },
+    {
+      id: 'var_gender_10',
+      name: 'מסכים',
+      description: 'מסכים / מסכימה / מסכימים',
+      type: 'text',
+      usageCount: 0
+    },
+    {
+      id: 'var_gender_11',
+      name: 'מבקש',
+      description: 'מבקש / מבקשת / מבקשים',
+      type: 'text',
+      usageCount: 0
+    },
+    {
+      id: 'var_gender_12',
+      name: 'מצהיר',
+      description: 'מצהיר / מצהירה / מצהירים',
+      type: 'text',
+      usageCount: 0
+    },
+    {
+      id: 'var_gender_13',
+      name: 'מאשר',
+      description: 'מאשר / מאשרת / מאשרים',
+      type: 'text',
+      usageCount: 0
+    }
+  ]);
   
   // פונקציות לניהול משתנים
   const addVariable = (name: string, description: string, type: 'text' | 'number' | 'date', defaultValue?: string) => {
