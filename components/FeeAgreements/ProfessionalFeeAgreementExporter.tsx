@@ -330,29 +330,29 @@ export default function ProfessionalFeeAgreementExporter({
                   ]
                 }),
                 
-                // שורה שנייה - הלקוחות
-                new TableRow({
-                  children: [
-                    new TableCell({
-                      width: { size: 7800, type: WidthType.DXA },
-                      borders: {
-                        top: { style: BorderStyle.NONE },
-                        bottom: { style: BorderStyle.NONE },
-                        left: { style: BorderStyle.NONE },
-                        right: { style: BorderStyle.NONE }
-                      },
-                      children: [
-                        new Paragraph({
-                          alignment: AlignmentType.RIGHT,
-                          bidirectional: true,
-                          children: [
-                            new TextRun({
-                              text: agreementData.clients.map(c => c.name).join(' ו'),
-                              bold: true
-                            })
-                          ]
-                        }),
-                        ...agreementData.clients.flatMap(client => [
+                // שורות הלקוחות - כל לקוח בנפרד וממוספר
+                ...agreementData.clients.map((client, index) => 
+                  new TableRow({
+                    children: [
+                      new TableCell({
+                        width: { size: 7800, type: WidthType.DXA },
+                        borders: {
+                          top: { style: BorderStyle.NONE },
+                          bottom: { style: BorderStyle.NONE },
+                          left: { style: BorderStyle.NONE },
+                          right: { style: BorderStyle.NONE }
+                        },
+                        children: [
+                          new Paragraph({
+                            alignment: AlignmentType.RIGHT,
+                            bidirectional: true,
+                            children: [
+                              new TextRun({
+                                text: `${index + 1}. ${client.name}`,
+                                bold: true
+                              })
+                            ]
+                          }),
                           new Paragraph({
                             alignment: AlignmentType.RIGHT,
                             bidirectional: true,
@@ -367,37 +367,37 @@ export default function ProfessionalFeeAgreementExporter({
                             alignment: AlignmentType.RIGHT,
                             bidirectional: true,
                             children: [new TextRun(client.email)]
+                          }),
+                          new Paragraph({
+                            alignment: AlignmentType.RIGHT,
+                            bidirectional: true,
+                            children: [new TextRun(`(להלן: "${getGenderText('הלקוח', 'הלקוחה', 'הלקוחות')}")`)]
                           })
-                        ]),
-                        new Paragraph({
-                          alignment: AlignmentType.RIGHT,
-                          bidirectional: true,
-                          children: [new TextRun(`(להלן: "הלקוח")`)]
-                        })
-                      ]
-                    }),
-                    new TableCell({
-                      width: { size: 1560, type: WidthType.DXA },
-                      borders: {
-                        top: { style: BorderStyle.NONE },
-                        bottom: { style: BorderStyle.NONE },
-                        left: { style: BorderStyle.NONE },
-                        right: { style: BorderStyle.NONE }
-                      },
-                      children: [
-                        new Paragraph({
-                          alignment: AlignmentType.CENTER,
-                          children: [
-                            new TextRun({
-                              text: "לבין",
-                              bold: true
-                            })
-                          ]
-                        })
-                      ]
-                    })
-                  ]
-                })
+                        ]
+                      }),
+                      new TableCell({
+                        width: { size: 1560, type: WidthType.DXA },
+                        borders: {
+                          top: { style: BorderStyle.NONE },
+                          bottom: { style: BorderStyle.NONE },
+                          left: { style: BorderStyle.NONE },
+                          right: { style: BorderStyle.NONE }
+                        },
+                        children: [
+                          new Paragraph({
+                            alignment: AlignmentType.CENTER,
+                            children: [
+                              new TextRun({
+                                text: index === 0 ? "לבין" : "",
+                                bold: true
+                              })
+                            ]
+                          })
+                        ]
+                      })
+                    ]
+                  })
+                )
               ]
             }),
             
