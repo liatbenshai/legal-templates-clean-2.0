@@ -223,6 +223,19 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
     defaultValue: ''
   });
   
+  // מודל הוספת סעיף למחסן
+  const [addSectionModal, setAddSectionModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    content: string;
+    category: string;
+  }>({
+    isOpen: false,
+    title: '',
+    content: '',
+    category: 'custom'
+  });
+  
   // פונקציות לניהול משתנים
   const addVariable = (name: string, description: string, type: 'text' | 'number' | 'date', defaultValue?: string) => {
     const newVariable = {
@@ -269,6 +282,37 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
     
     closeAddVariableModal();
     return newVariable;
+  };
+  
+  // פונקציות לניהול מודל הוספת סעיף
+  const openAddSectionModal = () => {
+    setAddSectionModal({
+      isOpen: true,
+      title: '',
+      content: '',
+      category: 'custom'
+    });
+  };
+  
+  const closeAddSectionModal = () => {
+    setAddSectionModal({
+      isOpen: false,
+      title: '',
+      content: '',
+      category: 'custom'
+    });
+  };
+  
+  const createNewSection = async () => {
+    if (!addSectionModal.title.trim() || !addSectionModal.content.trim()) return;
+    
+    await handleAddSectionToWarehouse(
+      addSectionModal.title.trim(),
+      addSectionModal.content.trim(),
+      addSectionModal.category
+    );
+    
+    closeAddSectionModal();
   };
   
   // פונקציות לניהול היררכיית סעיפים
@@ -665,6 +709,27 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
       order: getNextOrder()
     };
     setCustomSections(prev => [...prev, newSection]);
+  };
+  
+  const handleAddSectionToWarehouse = async (title: string, content: string, category: string = 'custom') => {
+    try {
+      await addSection({
+        user_id: testator.fullName || 'anonymous',
+        title,
+        content,
+        category,
+        tags: ['צוואה', 'סעיף מותאם אישית'],
+        usage_count: 0,
+        average_rating: 5,
+        is_public: false,
+        is_hidden: false,
+        created_by: testator.fullName || 'anonymous'
+      });
+      alert('✅ סעיף נשמר למחסן האישי!');
+    } catch (error) {
+      console.error('Error saving to warehouse:', error);
+      alert('❌ שגיאה בשמירה למחסן');
+    }
   };
 
   const handleSaveToLearning = (section: EditableSectionType, userCorrection?: string) => {
@@ -1856,24 +1921,7 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
                 {showWarehouse ? 'הסתר' : 'הצג'} מחסן סעיפים
               </button>
               <button
-                onClick={() => {
-                  const title = prompt('כותרת הסעיף:');
-                  const content = prompt('תוכן הסעיף:');
-                  if (title && content) {
-                    handleSaveToWarehouse({
-                      id: Date.now().toString(),
-                      title,
-                      content,
-                      category: 'custom',
-                      serviceType: 'will',
-                      isEditable: true,
-                      isCustom: true,
-                      version: 1,
-                      lastModified: new Date().toISOString(),
-                      modifiedBy: testator.fullName || 'anonymous'
-                    });
-                  }
-                }}
+                onClick={openAddSectionModal}
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
               >
                 ➕ הוסף סעיף למחסן
@@ -2098,6 +2146,80 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
                 className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:bg-gray-300 disabled:cursor-not-allowed"
               >
                 צור משתנה
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* מודל הוספת סעיף למחסן */}
+      {addSectionModal.isOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-lg w-full mx-4">
+            <h3 className="text-xl font-bold text-gray-900 mb-4">
+              ➕ הוסף סעיף למחסן
+            </h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  כותרת הסעיף
+                </label>
+                <input
+                  type="text"
+                  value={addSectionModal.title}
+                  onChange={(e) => setAddSectionModal(prev => ({ ...prev, title: e.target.value }))}
+                  placeholder="לדוגמה: הוראות לגבי חיות מחמד"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                  dir="rtl"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  תוכן הסעיף
+                </label>
+                <textarea
+                  value={addSectionModal.content}
+                  onChange={(e) => setAddSectionModal(prev => ({ ...prev, content: e.target.value }))}
+                  placeholder="לדוגמה: אני מצווה כי הכלב שלי יעבור לטיפול של בתי הבכורה."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 h-32 resize-none"
+                  dir="rtl"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  קטגוריה
+                </label>
+                <select
+                  value={addSectionModal.category}
+                  onChange={(e) => setAddSectionModal(prev => ({ ...prev, category: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="custom">מותאם אישית</option>
+                  <option value="financial">כספי</option>
+                  <option value="property">נכסים</option>
+                  <option value="family">משפחה</option>
+                  <option value="legal">משפטי</option>
+                  <option value="special">מיוחד</option>
+                </select>
+              </div>
+            </div>
+            
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={closeAddSectionModal}
+                className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
+              >
+                ביטול
+              </button>
+              <button
+                onClick={createNewSection}
+                disabled={!addSectionModal.title.trim() || !addSectionModal.content.trim()}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:bg-gray-300 disabled:cursor-not-allowed"
+              >
+                שמור למחסן
               </button>
             </div>
           </div>
