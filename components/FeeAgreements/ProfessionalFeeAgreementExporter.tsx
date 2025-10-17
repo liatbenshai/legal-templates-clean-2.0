@@ -1,0 +1,669 @@
+'use client';
+
+import { useState } from 'react';
+
+interface ProfessionalFeeAgreementExporterProps {
+  agreementData: {
+    lawyer: {
+      name: string;
+      license: string;
+      address: string;
+      phone: string;
+      email: string;
+      gender: 'male' | 'female';
+    };
+    clients: Array<{
+      id: string;
+      name: string;
+      idNumber: string;
+      address: string;
+      phone: string;
+      email: string;
+      gender: 'male' | 'female';
+    }>;
+    case: {
+      subject: string;
+    };
+    fees: {
+      type: 'סכום_כולל' | 'מקדמה_והצלחה' | 'סכום_ואחוזים';
+      totalAmount?: string;
+      paymentStructure?: string;
+      advancePayment?: string;
+      successPercentage?: string;
+      fixedAmount?: string;
+      stages?: string;
+    };
+    terms: {
+      paymentTerms: string;
+      expensesCoverage: string;
+      terminationClause: string;
+      specialConditions: string;
+    };
+    customSections?: Array<{
+      title: string;
+      content: string;
+    }>;
+  };
+  agreementDate: {
+    day: string;
+    month: string;
+    year: string;
+  };
+  className?: string;
+}
+
+export default function ProfessionalFeeAgreementExporter({
+  agreementData,
+  agreementDate,
+  className = ''
+}: ProfessionalFeeAgreementExporterProps) {
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportStatus, setExportStatus] = useState<string | null>(null);
+
+  const exportToWord = async () => {
+    setIsExporting(true);
+    setExportStatus(null);
+    
+    try {
+      const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell,
+              AlignmentType, WidthType, BorderStyle, LevelFormat } = await import('docx');
+
+      // 🎯 הגדרת צבעים ומידות
+      const COLORS = {
+        black: '000000',
+        gray: '666666',
+        lightGray: 'F2F2F2',
+        blue: '1F4E78'
+      };
+
+      const SIZES = {
+        title: 32,      // 16pt
+        subtitle: 26,   // 13pt
+        normal: 24,     // 12pt
+        small: 20       // 10pt
+      };
+
+      const SPACING = {
+        beforeTitle: 480,
+        afterTitle: 360,
+        beforeHeading: 360,
+        afterHeading: 240,
+        betweenParagraphs: 240,
+        line: 276
+      };
+
+      // 🔢 הגדרת מספור מקצועי
+      const numberingConfig = [
+        {
+          reference: "main-numbering",
+          levels: [
+            {
+              level: 0,
+              format: LevelFormat.DECIMAL,
+              text: "%1.",
+              alignment: AlignmentType.RIGHT,
+              style: {
+                paragraph: {
+                  indent: { left: 720, hanging: 360 },
+                  rightToLeft: true
+                },
+                run: { bold: true }
+              }
+            },
+            {
+              level: 1,
+              format: LevelFormat.DECIMAL,
+              text: "%1.%2.",
+              alignment: AlignmentType.RIGHT,
+              style: {
+                paragraph: {
+                  indent: { left: 1440, hanging: 360 },
+                  rightToLeft: true
+                }
+              }
+            }
+          ]
+        }
+      ];
+
+      // 📋 יצירת רשימת הואילים
+      const whereas = [
+        `${agreementData.lawyer.name} הינו עורך דין בעל רישיון לעריכת דין בישראל;`,
+        `${agreementData.clients.map(c => c.name).join(' ו')} פנו אל עורך הדין בבקשה לקבל ייצוג משפטי;`,
+        `עורך הדין הסכים לייצג את ${agreementData.clients.map(c => c.name).join(' ו')} בתנאים המפורטים להלן;`
+      ];
+
+      // 🏗️ בניית המסמך
+      const doc = new Document({
+        styles: {
+          default: {
+            document: {
+              run: { 
+                font: "Arial", 
+                size: SIZES.normal,
+                rightToLeft: true
+              },
+              paragraph: {
+                spacing: { line: SPACING.line, lineRule: "auto" }
+              }
+            }
+          }
+        },
+        numbering: {
+          config: numberingConfig
+        },
+        sections: [{
+          properties: {
+            page: {
+              margin: { top: 1440, right: 1440, bottom: 1440, left: 1440 }
+            }
+          },
+          children: [
+            // כותרת ראשית
+            new Paragraph({
+              alignment: AlignmentType.CENTER,
+              spacing: { after: 0 },
+              bidirectional: true,
+              children: [
+                new TextRun({
+                  text: "הסכם שכר טרחה",
+                  bold: true,
+                  size: SIZES.title,
+                  font: "Arial"
+                })
+              ]
+            }),
+            
+            // כותרת משנה
+            new Paragraph({
+              alignment: AlignmentType.CENTER,
+              spacing: { after: SPACING.afterTitle },
+              bidirectional: true,
+              children: [
+                new TextRun({
+                  text: `נערך ביום ${agreementDate.day} לחודש ${agreementDate.month} שנת ${agreementDate.year}`,
+                  size: SIZES.subtitle,
+                  font: "Arial"
+                })
+              ]
+            }),
+            
+            // טבלת הצדדים
+            new Table({
+              columnWidths: [7800, 2560],
+              width: { size: 70, type: WidthType.PERCENTAGE },
+              alignment: AlignmentType.CENTER,
+              rows: [
+                // שורה ראשונה - עורך הדין
+                new TableRow({
+                  children: [
+                    new TableCell({
+                      width: { size: 7800, type: WidthType.DXA },
+                      borders: {
+                        top: { style: BorderStyle.NONE },
+                        bottom: { style: BorderStyle.NONE },
+                        left: { style: BorderStyle.NONE },
+                        right: { style: BorderStyle.NONE }
+                      },
+                      children: [
+                        new Paragraph({
+                          alignment: AlignmentType.RIGHT,
+                          bidirectional: true,
+                          children: [
+                            new TextRun({
+                              text: agreementData.lawyer.name,
+                              bold: true
+                            })
+                          ]
+                        }),
+                        new Paragraph({
+                          alignment: AlignmentType.RIGHT,
+                          bidirectional: true,
+                          children: [new TextRun(agreementData.lawyer.address)]
+                        }),
+                        new Paragraph({
+                          alignment: AlignmentType.RIGHT,
+                          bidirectional: true,
+                          children: [new TextRun(agreementData.lawyer.phone)]
+                        }),
+                        new Paragraph({
+                          alignment: AlignmentType.RIGHT,
+                          bidirectional: true,
+                          children: [new TextRun(agreementData.lawyer.email)]
+                        }),
+                        new Paragraph({
+                          alignment: AlignmentType.RIGHT,
+                          bidirectional: true,
+                          children: [new TextRun(`(להלן: "עורך הדין")`)]
+                        })
+                      ]
+                    }),
+                    new TableCell({
+                      width: { size: 1560, type: WidthType.DXA },
+                      borders: {
+                        top: { style: BorderStyle.NONE },
+                        bottom: { style: BorderStyle.NONE },
+                        left: { style: BorderStyle.NONE },
+                        right: { style: BorderStyle.NONE }
+                      },
+                      children: [
+                        new Paragraph({
+                          alignment: AlignmentType.CENTER,
+                          children: [
+                            new TextRun({
+                              text: "בין",
+                              bold: true
+                            })
+                          ]
+                        })
+                      ]
+                    })
+                  ]
+                }),
+                
+                // שורת רווח
+                new TableRow({
+                  children: [
+                    new TableCell({
+                      width: { size: 7800, type: WidthType.DXA },
+                      borders: {
+                        top: { style: BorderStyle.NONE },
+                        bottom: { style: BorderStyle.NONE },
+                        left: { style: BorderStyle.NONE },
+                        right: { style: BorderStyle.NONE }
+                      },
+                      children: [
+                        new Paragraph({
+                          children: [new TextRun("")]
+                        })
+                      ]
+                    }),
+                    new TableCell({
+                      width: { size: 1560, type: WidthType.DXA },
+                      borders: {
+                        top: { style: BorderStyle.NONE },
+                        bottom: { style: BorderStyle.NONE },
+                        left: { style: BorderStyle.NONE },
+                        right: { style: BorderStyle.NONE }
+                      },
+                      children: [
+                        new Paragraph({
+                          children: [new TextRun("")]
+                        })
+                      ]
+                    })
+                  ]
+                }),
+                
+                // שורה שנייה - הלקוחות
+                new TableRow({
+                  children: [
+                    new TableCell({
+                      width: { size: 7800, type: WidthType.DXA },
+                      borders: {
+                        top: { style: BorderStyle.NONE },
+                        bottom: { style: BorderStyle.NONE },
+                        left: { style: BorderStyle.NONE },
+                        right: { style: BorderStyle.NONE }
+                      },
+                      children: [
+                        new Paragraph({
+                          alignment: AlignmentType.RIGHT,
+                          bidirectional: true,
+                          children: [
+                            new TextRun({
+                              text: agreementData.clients.map(c => c.name).join(' ו'),
+                              bold: true
+                            })
+                          ]
+                        }),
+                        ...agreementData.clients.flatMap(client => [
+                          new Paragraph({
+                            alignment: AlignmentType.RIGHT,
+                            bidirectional: true,
+                            children: [new TextRun(client.address)]
+                          }),
+                          new Paragraph({
+                            alignment: AlignmentType.RIGHT,
+                            bidirectional: true,
+                            children: [new TextRun(client.phone)]
+                          }),
+                          new Paragraph({
+                            alignment: AlignmentType.RIGHT,
+                            bidirectional: true,
+                            children: [new TextRun(client.email)]
+                          })
+                        ]),
+                        new Paragraph({
+                          alignment: AlignmentType.RIGHT,
+                          bidirectional: true,
+                          children: [new TextRun(`(להלן: "הלקוח")`)]
+                        })
+                      ]
+                    }),
+                    new TableCell({
+                      width: { size: 1560, type: WidthType.DXA },
+                      borders: {
+                        top: { style: BorderStyle.NONE },
+                        bottom: { style: BorderStyle.NONE },
+                        left: { style: BorderStyle.NONE },
+                        right: { style: BorderStyle.NONE }
+                      },
+                      children: [
+                        new Paragraph({
+                          alignment: AlignmentType.CENTER,
+                          children: [
+                            new TextRun({
+                              text: "לבין",
+                              bold: true
+                            })
+                          ]
+                        })
+                      ]
+                    })
+                  ]
+                })
+              ]
+            }),
+            
+            // רווח לפני טבלת ההואילים
+            new Paragraph({
+              spacing: { before: SPACING.beforeHeading, after: SPACING.afterHeading },
+              children: [new TextRun("")]
+            }),
+            
+            // טבלת הואילים
+            new Table({
+              columnWidths: [7800, 1560],
+              width: { size: 100, type: WidthType.PERCENTAGE },
+              alignment: AlignmentType.RIGHT,
+              rows: whereas.map((whereasText, index) => {
+                return new TableRow({
+                  children: [
+                    new TableCell({
+                      width: { size: 7800, type: WidthType.DXA },
+                      borders: {
+                        top: { style: BorderStyle.NONE },
+                        bottom: { style: BorderStyle.NONE },
+                        left: { style: BorderStyle.NONE },
+                        right: { style: BorderStyle.NONE }
+                      },
+                      children: [
+                        new Paragraph({
+                          alignment: AlignmentType.RIGHT,
+                          bidirectional: true,
+                          children: [new TextRun(whereasText)]
+                        })
+                      ]
+                    }),
+                    new TableCell({
+                      width: { size: 1560, type: WidthType.DXA },
+                      borders: {
+                        top: { style: BorderStyle.NONE },
+                        bottom: { style: BorderStyle.NONE },
+                        left: { style: BorderStyle.NONE },
+                        right: { style: BorderStyle.NONE }
+                      },
+                      children: [
+                        new Paragraph({
+                          alignment: AlignmentType.RIGHT,
+                          bidirectional: true,
+                          children: [
+                            new TextRun({
+                              text: "הואיל",
+                              bold: true
+                            })
+                          ]
+                        })
+                      ]
+                    })
+                  ]
+                });
+              })
+            }),
+            
+            // רווח לפני תוכן המסמך
+            new Paragraph({
+              spacing: { before: SPACING.beforeHeading, after: SPACING.afterHeading },
+              children: [new TextRun("")]
+            }),
+            
+            // פסקה מבוא
+            new Paragraph({
+              alignment: AlignmentType.CENTER,
+              bidirectional: true,
+              children: [
+                new TextRun({
+                  text: "לפיכך הוסכם, הותנה והוצהר בין הצדדים כדלקמן:",
+                  bold: true
+                })
+              ]
+            }),
+            
+            new Paragraph({
+              spacing: { before: SPACING.beforeHeading },
+              children: [new TextRun("")]
+            }),
+            
+            // תוכן המסמך - סעיפים ממוספרים
+            new Paragraph({
+              numbering: { reference: "main-numbering", level: 0 },
+              alignment: AlignmentType.RIGHT,
+              bidirectional: true,
+              children: [
+                new TextRun(`עורך הדין מתחייב לייצג את הלקוח בהליכים המשפטיים הבאים: ${agreementData.case.subject}.`)
+              ]
+            }),
+            
+            new Paragraph({
+              numbering: { reference: "main-numbering", level: 1 },
+              alignment: AlignmentType.RIGHT,
+              bidirectional: true,
+              children: [
+                new TextRun("עורך הדין יפעל בשקידה וביעילות למען האינטרסים של הלקוח.")
+              ]
+            }),
+            
+            new Paragraph({
+              numbering: { reference: "main-numbering", level: 0 },
+              alignment: AlignmentType.RIGHT,
+              bidirectional: true,
+              children: [
+                new TextRun("עורך הדין יעדכן את הלקוח בכל התפתחות מהותית בתיק.")
+              ]
+            }),
+            
+            new Paragraph({
+              numbering: { reference: "main-numbering", level: 0 },
+              alignment: AlignmentType.RIGHT,
+              bidirectional: true,
+              children: [
+                new TextRun("שכר הטרחה עבור השירותים המשפטיים יהיה כדלקמן:")
+              ]
+            }),
+            
+            new Paragraph({
+              numbering: { reference: "main-numbering", level: 1 },
+              alignment: AlignmentType.RIGHT,
+              bidirectional: true,
+              children: [
+                new TextRun(`סכום של ${agreementData.fees.totalAmount || '_____'} ₪ בתוספת מע"מ כחוק.`)
+              ]
+            }),
+            
+            new Paragraph({
+              numbering: { reference: "main-numbering", level: 1 },
+              alignment: AlignmentType.RIGHT,
+              bidirectional: true,
+              children: [
+                new TextRun(`התשלום יבוצע כדלקמן: ${agreementData.fees.paymentStructure || '[פירוט אופן התשלום]'}.`)
+              ]
+            }),
+            
+            new Paragraph({
+              numbering: { reference: "main-numbering", level: 0 },
+              alignment: AlignmentType.RIGHT,
+              bidirectional: true,
+              children: [
+                new TextRun("הסכם זה יכנס לתוקף ביום חתימתו ויעמוד בתוקפו עד לסיום ההליכים המשפטיים.")
+              ]
+            }),
+            
+            // סעיפים נוספים
+            ...(agreementData.customSections || []).map(section => 
+              new Paragraph({
+                numbering: { reference: "main-numbering", level: 0 },
+                alignment: AlignmentType.RIGHT,
+                bidirectional: true,
+                children: [
+                  new TextRun(`${section.title}: ${section.content}`)
+                ]
+              })
+            ),
+            
+            // רווח לפני טבלת החתימות
+            new Paragraph({
+              spacing: { before: SPACING.beforeTitle, after: SPACING.afterHeading },
+              children: [new TextRun("")]
+            }),
+            
+            // טבלת חתימות
+            new Table({
+              columnWidths: [3744, 1872, 3744],
+              width: { size: 100, type: WidthType.PERCENTAGE },
+              rows: [
+                new TableRow({
+                  children: [
+                    new TableCell({
+                      width: { size: 3744, type: WidthType.DXA },
+                      borders: {
+                        top: { style: BorderStyle.SINGLE, size: 1, color: COLORS.black },
+                        bottom: { style: BorderStyle.NONE },
+                        left: { style: BorderStyle.NONE },
+                        right: { style: BorderStyle.NONE }
+                      },
+                      children: [
+                        new Paragraph({
+                          alignment: AlignmentType.CENTER,
+                          bidirectional: true,
+                          children: [new TextRun(agreementData.lawyer.name)]
+                        })
+                      ]
+                    }),
+                    new TableCell({
+                      width: { size: 1872, type: WidthType.DXA },
+                      borders: {
+                        top: { style: BorderStyle.NONE },
+                        bottom: { style: BorderStyle.NONE },
+                        left: { style: BorderStyle.NONE },
+                        right: { style: BorderStyle.NONE }
+                      },
+                      children: [
+                        new Paragraph({
+                          children: [new TextRun("")]
+                        })
+                      ]
+                    }),
+                    new TableCell({
+                      width: { size: 3744, type: WidthType.DXA },
+                      borders: {
+                        top: { style: BorderStyle.SINGLE, size: 1, color: COLORS.black },
+                        bottom: { style: BorderStyle.NONE },
+                        left: { style: BorderStyle.NONE },
+                        right: { style: BorderStyle.NONE }
+                      },
+                      children: [
+                        new Paragraph({
+                          alignment: AlignmentType.CENTER,
+                          bidirectional: true,
+                          children: [new TextRun(agreementData.clients.map(c => c.name).join(' ו'))]
+                        })
+                      ]
+                    })
+                  ]
+                })
+              ]
+            })
+          ]
+        }]
+      });
+
+      // 💾 שמירה והורדה
+      const buffer = await Packer.toBlob(doc);
+      const url = URL.createObjectURL(buffer);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `הסכם_שכר_טרחה_${agreementData.lawyer.name.replace(/\s+/g, '_')}_${new Date().getTime()}.docx`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      setExportStatus(`✅ קובץ Word מקצועי נשמר: ${a.download}`);
+      
+    } catch (error) {
+      console.error('שגיאה ביצוא Word מקצועי:', error);
+      setExportStatus(`❌ שגיאה ביצוא Word מקצועי: ${error}`);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const isFormValid = () => {
+    return agreementData.lawyer.name && 
+           agreementData.lawyer.license &&
+           agreementData.clients.length > 0 &&
+           agreementData.clients.every(c => c.name && c.idNumber) &&
+           agreementData.case.subject;
+  };
+
+  return (
+    <div className={`${className}`}>
+      <div className="text-center mb-6">
+        <h3 className="text-lg font-bold text-gray-900 mb-2">מצב ההסכם</h3>
+        <div className={`text-sm px-4 py-2 rounded-lg ${
+          isFormValid() 
+            ? 'bg-green-100 text-green-800 border border-green-200' 
+            : 'bg-red-100 text-red-800 border border-red-200'
+        }`}>
+          {isFormValid() 
+            ? '✅ כל הפרטים מולאו - מוכן לייצוא מקצועי!' 
+            : '⚠️ יש למלא את כל השדות הנדרשים'}
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        <button
+          onClick={exportToWord}
+          disabled={!isFormValid() || isExporting}
+          className={`w-full py-3 px-6 rounded-lg font-semibold text-white transition-colors ${
+            isFormValid() && !isExporting
+              ? 'bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:ring-blue-200'
+              : 'bg-gray-400 cursor-not-allowed'
+          }`}
+        >
+          {isExporting ? (
+            <div className="flex items-center justify-center gap-2">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+              מייצא ל-Word...
+            </div>
+          ) : (
+            <div className="flex items-center justify-center gap-2">
+              📄 ייצוא מקצועי ל-Word
+            </div>
+          )}
+        </button>
+
+        {exportStatus && (
+          <div className={`p-3 rounded-lg text-sm ${
+            exportStatus.includes('✅') 
+              ? 'bg-green-50 text-green-800 border border-green-200' 
+              : 'bg-red-50 text-red-800 border border-red-200'
+          }`}>
+            {exportStatus}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

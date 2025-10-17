@@ -5,6 +5,7 @@ import { FileText, DollarSign, Calendar, User, Scale, BookOpen, X, Download, Bra
 import EditableSection from '../LearningSystem/EditableSection';
 import WarehouseManager from '../LearningSystem/WarehouseManager';
 import { exportFeeAgreementToWord } from './FeeAgreementExporter';
+import ProfessionalFeeAgreementExporter from './ProfessionalFeeAgreementExporter';
 import { AuthService } from '@/lib/auth';
 import { EditableSection as EditableSectionType } from '@/lib/learning-system/types';
 import { learningEngine } from '@/lib/learning-system/learning-engine';
@@ -1025,34 +1026,16 @@ ________________________           ${agreementData.clients.map((_, i) => '______
           />
         </section>
 
-        {/* ייצוא */}
-        <div className="bg-white border-2 border-gray-300 rounded-lg p-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">ייצוא המסמך</h2>
-          
-          <div className="grid md:grid-cols-2 gap-4">
-            <button
-              onClick={async () => {
-                const success = await exportFeeAgreementToWord(
-                  generateFeeAgreement(),
-                  `הסכם-שכר-טרחה-${agreementData.clients[0]?.name || 'לקוח'}.docx`
-                );
-                if (success) {
-                  alert('הקובץ הורד בהצלחה!');
-                } else {
-                  alert('שגיאה בייצוא. נסה שוב.');
-                }
-              }}
-              className="flex items-center justify-center gap-2 px-6 py-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-bold shadow-lg"
-            >
-              <Download className="w-5 h-5" />
-              <span>ייצא ל-Word (RTL תקין)</span>
-            </button>
-          </div>
-          
-          <p className="text-sm text-gray-600 mt-3">
-            💡 <strong>מומלץ:</strong> השתמשי בייצוא ל-Word (RTL תקין) לקבלת מסמך מקצועי בעברית נכונה
-          </p>
-        </div>
+        {/* ייצוא מקצועי */}
+        <ProfessionalFeeAgreementExporter
+          agreementData={agreementData}
+          agreementDate={{
+            day: new Date(agreementDate).getDate().toString(),
+            month: (new Date(agreementDate).getMonth() + 1).toString(),
+            year: new Date(agreementDate).getFullYear().toString()
+          }}
+          className="w-full"
+        />
 
         {/* מחסן סעיפים */}
         {showSectionsWarehouse && (
