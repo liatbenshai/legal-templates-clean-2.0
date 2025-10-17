@@ -13,6 +13,7 @@ import { EditableSection as EditableSectionType } from '@/lib/learning-system/ty
 import { learningEngine } from '@/lib/learning-system/learning-engine';
 import EditableSection from './LearningSystem/EditableSection';
 import AILearningManager from './AILearningManager';
+import WarehouseManager from './LearningSystem/WarehouseManager';
 import { useWarehouse } from '@/lib/hooks/useWarehouse';
 
 // סוג מגדר מצומצם (ללא organization)
@@ -1029,6 +1030,17 @@ ${applyAdvanceDirectivesGender(
 
                   {/* מנהל למידת AI */}
                   <AILearningManager />
+                  
+                  {/* מחסן סעיפים */}
+                  <div className="mt-6">
+                    <h3 className="text-lg font-semibold text-blue-800 mb-4">
+                      📚 מחסן סעיפים אישי
+                    </h3>
+                    <WarehouseManager
+                      userId={principalInfo.fullName || 'anonymous'}
+                      onSectionSelect={handleSelectFromWarehouse}
+                    />
+                  </div>
                 </div>
               )}
 
