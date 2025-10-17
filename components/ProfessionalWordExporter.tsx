@@ -41,11 +41,11 @@ export default function ProfessionalWordExporter({
       };
 
       const SPACING = {
-        beforeTitle: 480,
-        afterTitle: 360,
-        beforeHeading: 360,
-        afterHeading: 240,
-        betweenParagraphs: 240,
+        beforeTitle: 240,
+        afterTitle: 180,
+        beforeHeading: 180,
+        afterHeading: 120,
+        betweenParagraphs: 120,
         line: 360
       };
 
@@ -261,168 +261,52 @@ export default function ProfessionalWordExporter({
           })
         );
       } else {
-        // הואילים בטבלה
+        sections.push(
+          new Paragraph({
+            alignment: AlignmentType.RIGHT,
+            bidirectional: true,
+            children: [
+              new TextRun({ 
+                text: 'הואיל כי אין אדם יודע את יום פקודתו;', 
+                font: 'David', 
+                rightToLeft: true, 
+                size: SIZES.normal 
+              })
+            ],
+            spacing: { after: SPACING.betweenParagraphs }
+          })
+        );
+        sections.push(new Paragraph({ text: '' }));
+        sections.push(
+          new Paragraph({
+            alignment: AlignmentType.RIGHT,
+            bidirectional: true,
+            children: [
+              new TextRun({ 
+                text: `והואיל כי ברצוני לערוך את צוואתי, ולפרט את רצוני האחרון והוראותיי בכל הקשור לאשר ייעשה ברכושי לאחר פטירתי, לאחר אריכות ימים ושנים;`, 
+                font: 'David', 
+                rightToLeft: true, 
+                size: SIZES.normal 
+              })
+            ],
+            spacing: { after: SPACING.betweenParagraphs }
+          })
+        );
+        sections.push(new Paragraph({ text: '' }));
         const gender = willData.testator?.gender === 'female';
         sections.push(
-          new Table({
-            columnWidths: [7800, 1560],
-            width: { size: 100, type: WidthType.PERCENTAGE },
+          new Paragraph({
             alignment: AlignmentType.RIGHT,
-            rows: [
-              new TableRow({
-                children: [
-                  new TableCell({
-                    width: { size: 7800, type: WidthType.DXA },
-                    borders: {
-                      top: { style: BorderStyle.NONE },
-                      bottom: { style: BorderStyle.NONE },
-                      left: { style: BorderStyle.NONE },
-                      right: { style: BorderStyle.NONE }
-                    },
-                    children: [
-                      new Paragraph({
-                        alignment: AlignmentType.RIGHT,
-                        bidirectional: true,
-                        children: [
-                          new TextRun({ 
-                            text: 'הואיל כי אין אדם יודע את יום פקודתו;', 
-                            font: 'David', 
-                            rightToLeft: true, 
-                            size: SIZES.normal 
-                          })
-                        ]
-                      })
-                    ]
-                  }),
-                  new TableCell({
-                    width: { size: 1560, type: WidthType.DXA },
-                    borders: {
-                      top: { style: BorderStyle.NONE },
-                      bottom: { style: BorderStyle.NONE },
-                      left: { style: BorderStyle.NONE },
-                      right: { style: BorderStyle.NONE }
-                    },
-                    children: [
-                      new Paragraph({
-                        alignment: AlignmentType.RIGHT,
-                        bidirectional: true,
-                        children: [
-                          new TextRun({
-                            text: "הואיל",
-                            bold: true,
-                            font: 'David',
-                            rightToLeft: true,
-                            size: SIZES.normal
-                          })
-                        ]
-                      })
-                    ]
-                  })
-                ]
-              }),
-              new TableRow({
-                children: [
-                  new TableCell({
-                    width: { size: 7800, type: WidthType.DXA },
-                    borders: {
-                      top: { style: BorderStyle.NONE },
-                      bottom: { style: BorderStyle.NONE },
-                      left: { style: BorderStyle.NONE },
-                      right: { style: BorderStyle.NONE }
-                    },
-                    children: [
-                      new Paragraph({
-                        alignment: AlignmentType.RIGHT,
-                        bidirectional: true,
-                        children: [
-                          new TextRun({ 
-                            text: `והואיל כי ברצוני לערוך את צוואתי, ולפרט את רצוני האחרון והוראותיי בכל הקשור לאשר ייעשה ברכושי לאחר פטירתי, לאחר אריכות ימים ושנים;`, 
-                            font: 'David', 
-                            rightToLeft: true, 
-                            size: SIZES.normal 
-                          })
-                        ]
-                      })
-                    ]
-                  }),
-                  new TableCell({
-                    width: { size: 1560, type: WidthType.DXA },
-                    borders: {
-                      top: { style: BorderStyle.NONE },
-                      bottom: { style: BorderStyle.NONE },
-                      left: { style: BorderStyle.NONE },
-                      right: { style: BorderStyle.NONE }
-                    },
-                    children: [
-                      new Paragraph({
-                        alignment: AlignmentType.RIGHT,
-                        bidirectional: true,
-                        children: [
-                          new TextRun({
-                            text: "והואיל",
-                            bold: true,
-                            font: 'David',
-                            rightToLeft: true,
-                            size: SIZES.normal
-                          })
-                        ]
-                      })
-                    ]
-                  })
-                ]
-              }),
-              new TableRow({
-                children: [
-                  new TableCell({
-                    width: { size: 7800, type: WidthType.DXA },
-                    borders: {
-                      top: { style: BorderStyle.NONE },
-                      bottom: { style: BorderStyle.NONE },
-                      left: { style: BorderStyle.NONE },
-                      right: { style: BorderStyle.NONE }
-                    },
-                    children: [
-                      new Paragraph({
-                        alignment: AlignmentType.RIGHT,
-                        bidirectional: true,
-                        children: [
-                          new TextRun({ 
-                            text: `והואיל כי הנני למעלה מגיל שמונה עשרה שנים, ${gender ? 'אזרחית ישראלית ותושבת' : 'אזרח ישראלי ותושב'} מדינת ישראל;`, 
-                            font: 'David', 
-                            rightToLeft: true, 
-                            size: SIZES.normal 
-                          })
-                        ]
-                      })
-                    ]
-                  }),
-                  new TableCell({
-                    width: { size: 1560, type: WidthType.DXA },
-                    borders: {
-                      top: { style: BorderStyle.NONE },
-                      bottom: { style: BorderStyle.NONE },
-                      left: { style: BorderStyle.NONE },
-                      right: { style: BorderStyle.NONE }
-                    },
-                    children: [
-                      new Paragraph({
-                        alignment: AlignmentType.RIGHT,
-                        bidirectional: true,
-                        children: [
-                          new TextRun({
-                            text: "והואיל",
-                            bold: true,
-                            font: 'David',
-                            rightToLeft: true,
-                            size: SIZES.normal
-                          })
-                        ]
-                      })
-                    ]
-                  })
-                ]
+            bidirectional: true,
+            children: [
+              new TextRun({ 
+                text: `והואיל כי הנני למעלה מגיל שמונה עשרה שנים, ${gender ? 'אזרחית ישראלית ותושבת' : 'אזרח ישראלי ותושב'} מדינת ישראל;`, 
+                font: 'David', 
+                rightToLeft: true, 
+                size: SIZES.normal 
               })
-            ]
+            ],
+            spacing: { after: SPACING.betweenParagraphs * 1.5 }
           })
         );
       }
@@ -1026,67 +910,140 @@ export default function ProfessionalWordExporter({
         })
       );
 
-      // חתימת המצווה
+      // חתימת המצווה/ים בטבלה מקצועית
       sections.push(new Paragraph({ text: '' }));
-      sections.push(new Paragraph({ text: '' }));
+      
       if (willData.type === 'mutual') {
+        // צוואה הדדית - טבלה עם שני מצווים
         sections.push(
-          new Paragraph({
-            alignment: AlignmentType.CENTER,
-            bidirectional: true,
-            children: [
-              new TextRun({
-                text: `${willData.testator?.fullName || '[שם 1]'}                    ${willData.spouse?.fullName || '[שם 2]'}`,
-                font: 'David',
-                rightToLeft: true,
-                size: SIZES.normal
+          new Table({
+            columnWidths: [3744, 1872, 3744],
+            width: { size: 100, type: WidthType.PERCENTAGE },
+            rows: [
+              new TableRow({
+                children: [
+                  new TableCell({
+                    width: { size: 3744, type: WidthType.DXA },
+                    borders: {
+                      top: { style: BorderStyle.SINGLE, size: 1, color: "000000" },
+                      bottom: { style: BorderStyle.NONE },
+                      left: { style: BorderStyle.NONE },
+                      right: { style: BorderStyle.NONE }
+                    },
+                    children: [
+                      new Paragraph({
+                        alignment: AlignmentType.CENTER,
+                        bidirectional: true,
+                        children: [new TextRun({
+                          text: willData.testator?.fullName || '[שם 1]',
+                          font: 'David',
+                          rightToLeft: true,
+                          size: SIZES.normal
+                        })]
+                      })
+                    ]
+                  }),
+                  new TableCell({
+                    width: { size: 1872, type: WidthType.DXA },
+                    borders: {
+                      top: { style: BorderStyle.NONE },
+                      bottom: { style: BorderStyle.NONE },
+                      left: { style: BorderStyle.NONE },
+                      right: { style: BorderStyle.NONE }
+                    },
+                    children: [
+                      new Paragraph({
+                        children: [new TextRun("")]
+                      })
+                    ]
+                  }),
+                  new TableCell({
+                    width: { size: 3744, type: WidthType.DXA },
+                    borders: {
+                      top: { style: BorderStyle.SINGLE, size: 1, color: "000000" },
+                      bottom: { style: BorderStyle.NONE },
+                      left: { style: BorderStyle.NONE },
+                      right: { style: BorderStyle.NONE }
+                    },
+                    children: [
+                      new Paragraph({
+                        alignment: AlignmentType.CENTER,
+                        bidirectional: true,
+                        children: [new TextRun({
+                          text: willData.spouse?.fullName || '[שם 2]',
+                          font: 'David',
+                          rightToLeft: true,
+                          size: SIZES.normal
+                        })]
+                      })
+                    ]
+                  })
+                ]
               })
             ]
-          })
-        );
-        sections.push(
-          new Paragraph({
-            alignment: AlignmentType.CENTER,
-            bidirectional: true,
-            children: [
-              new TextRun({
-                text: '________________                    ________________',
-                font: 'David',
-                rightToLeft: true,
-                size: SIZES.normal
-              })
-            ],
-            spacing: { after: SPACING.betweenParagraphs * 2 }
           })
         );
       } else {
+        // צוואה יחידה - טבלה עם מצווה אחד
         sections.push(
-          new Paragraph({
-            alignment: AlignmentType.CENTER,
-            bidirectional: true,
-            children: [
-              new TextRun({
-                text: willData.testator?.fullName || '[שם מלא המצווה]',
-                font: 'David',
-                rightToLeft: true,
-                size: SIZES.normal
+          new Table({
+            columnWidths: [3744, 1872, 3744],
+            width: { size: 100, type: WidthType.PERCENTAGE },
+            rows: [
+              new TableRow({
+                children: [
+                  new TableCell({
+                    width: { size: 3744, type: WidthType.DXA },
+                    borders: {
+                      top: { style: BorderStyle.SINGLE, size: 1, color: "000000" },
+                      bottom: { style: BorderStyle.NONE },
+                      left: { style: BorderStyle.NONE },
+                      right: { style: BorderStyle.NONE }
+                    },
+                    children: [
+                      new Paragraph({
+                        alignment: AlignmentType.CENTER,
+                        bidirectional: true,
+                        children: [new TextRun({
+                          text: willData.testator?.fullName || '[שם מלא המצווה]',
+                          font: 'David',
+                          rightToLeft: true,
+                          size: SIZES.normal
+                        })]
+                      })
+                    ]
+                  }),
+                  new TableCell({
+                    width: { size: 1872, type: WidthType.DXA },
+                    borders: {
+                      top: { style: BorderStyle.NONE },
+                      bottom: { style: BorderStyle.NONE },
+                      left: { style: BorderStyle.NONE },
+                      right: { style: BorderStyle.NONE }
+                    },
+                    children: [
+                      new Paragraph({
+                        children: [new TextRun("")]
+                      })
+                    ]
+                  }),
+                  new TableCell({
+                    width: { size: 3744, type: WidthType.DXA },
+                    borders: {
+                      top: { style: BorderStyle.NONE },
+                      bottom: { style: BorderStyle.NONE },
+                      left: { style: BorderStyle.NONE },
+                      right: { style: BorderStyle.NONE }
+                    },
+                    children: [
+                      new Paragraph({
+                        children: [new TextRun("")]
+                      })
+                    ]
+                  })
+                ]
               })
             ]
-          })
-        );
-        sections.push(
-          new Paragraph({
-            alignment: AlignmentType.CENTER,
-            bidirectional: true,
-            children: [
-              new TextRun({
-                text: '________________',
-                font: 'David',
-                rightToLeft: true,
-                size: SIZES.normal
-              })
-            ],
-            spacing: { after: SPACING.betweenParagraphs * 2 }
           })
         );
       }
@@ -1142,18 +1099,24 @@ export default function ProfessionalWordExporter({
       const testatorGender = willData.testator?.gender || 'male';
       const isMutual = willData.type === 'mutual';
       
-      // בניית טקסט ההצהרה בהתאם למגדר המצווה
+      // בניית טקסט ההצהרה בהתאם למגדר המצווה והעדים
       let witnessDeclaration = '';
+      
+      // קביעת מגדר העדים (משתנים כבר הוגדרו למעלה)
+      const mixedGender = !bothMale && !bothFemale;
+      
+      // קביעת הטקסט לפי מגדר העדים
+      const witnessText = bothFemale ? 'עדות' : 'עדים';
       
       if (isMutual) {
         // צוואה הדדית - רבים
-        witnessDeclaration = `אנו מעידים בזאת שהמצווים הנ"ל ${willData.testator?.fullName || '[שם 1]'} ו-${willData.spouse?.fullName || '[שם 2]'}, הנושאים תעודות זהות ${willData.testator?.id || '[ת.ז 1]'} ו-${willData.spouse?.id || '[ת.ז 2]'} חתמו בנוכחותנו על צוואתם הנ"ל לאחר שהצהירו בפנינו שזאת צוואתם האחרונה שאותה עשו מרצונם הטוב והחופשי בהיותם בדעה צלולה ובלי כל אונס או כפיה, וביקשו מאיתנו להיות עדים לחתימתם ולאשר בחתימת ידנו שכך הצהירו וחתמו בפנינו. ועוד אנו מצהירים כי אנו לא קטינים ולא פסולי דין וכי אין בינינו ובין המצווים יחס של קרבה כלשהיא, אין לנו כל טובת הנאה בעיזבון המצווים הנ"ל, והננו חותמים ומאשרים בזה כי המצווים הנ"ל חתמו בפנינו על שטר צוואה זה לאחר שהצהירו בפנינו כי זו צוואתם ובזה אנו חותמים בתור עדים לצוואה בנוכחות של המצווים הנ"ל ובנוכחות כל אחד מאיתנו.`;
+        witnessDeclaration = `אנו מעידים בזאת שהמצווים הנ"ל ${willData.testator?.fullName || '[שם 1]'} ו-${willData.spouse?.fullName || '[שם 2]'}, הנושאים תעודות זהות ${willData.testator?.id || '[ת.ז 1]'} ו-${willData.spouse?.id || '[ת.ז 2]'} חתמו בנוכחותנו על צוואתם הנ"ל לאחר שהצהירו בפנינו שזאת צוואתם האחרונה שאותה עשו מרצונם הטוב והחופשי בהיותם בדעה צלולה ובלי כל אונס או כפיה, וביקשו מאיתנו להיות ${witnessText} לחתימתם ולאשר בחתימת ידנו שכך הצהירו וחתמו בפנינו. ועוד אנו מצהירים כי אנו לא קטינים ולא פסולי דין וכי אין בינינו ובין המצווים יחס של קרבה כלשהיא, אין לנו כל טובת הנאה בעיזבון המצווים הנ"ל, והננו חותמים ומאשרים בזה כי המצווים הנ"ל חתמו בפנינו על שטר צוואה זה לאחר שהצהירו בפנינו כי זו צוואתם ובזה אנו חותמים בתור ${witnessText} לצוואה בנוכחות של המצווים הנ"ל ובנוכחות כל אחד מאיתנו.`;
       } else if (testatorGender === 'female') {
         // מצווה נקבה
-        witnessDeclaration = `אנו מעידים בזאת שהמצווה הנ"ל ${willData.testator?.fullName || '[שם מלא]'}, הנושאת תעודת זהות ${willData.testator?.id || '[ת.ז]'} חתמה בנוכחותנו על צוואתה הנ"ל לאחר שהצהירה בפנינו שזאת צוואתה האחרונה שאותה עשתה מרצונה הטוב והחופשי בהיותה בדעה צלולה ובלי כל אונס או כפיה, וביקשה מאיתנו להיות עדים לחתימתה ולאשר בחתימת ידנו שכך הצהירה וחתמה בפנינו. ועוד אנו מצהירים כי אנו לא קטינים ולא פסולי דין וכי אין בינינו ובין המצווה יחס של קרבה כלשהיא, אין לנו כל טובת הנאה בעיזבון המצווה הנ"ל, והננו חותמים ומאשרים בזה כי המצווה הנ"ל חתמה בפנינו על שטר צוואה זה לאחר שהצהירה בפנינו כי זו צוואתה ובזה אנו חותמים בתור עדים לצוואה בנוכחות של המצווה הנ"ל ובנוכחות כל אחד מאיתנו.`;
+        witnessDeclaration = `אנו מעידים בזאת שהמצווה הנ"ל ${willData.testator?.fullName || '[שם מלא]'}, הנושאת תעודת זהות ${willData.testator?.id || '[ת.ז]'} חתמה בנוכחותנו על צוואתה הנ"ל לאחר שהצהירה בפנינו שזאת צוואתה האחרונה שאותה עשתה מרצונה הטוב והחופשי בהיותה בדעה צלולה ובלי כל אונס או כפיה, וביקשה מאיתנו להיות ${witnessText} לחתימתה ולאשר בחתימת ידנו שכך הצהירה וחתמה בפנינו. ועוד אנו מצהירים כי אנו לא קטינים ולא פסולי דין וכי אין בינינו ובין המצווה יחס של קרבה כלשהיא, אין לנו כל טובת הנאה בעיזבון המצווה הנ"ל, והננו חותמים ומאשרים בזה כי המצווה הנ"ל חתמה בפנינו על שטר צוואה זה לאחר שהצהירה בפנינו כי זו צוואתה ובזה אנו חותמים בתור ${witnessText} לצוואה בנוכחות של המצווה הנ"ל ובנוכחות כל אחד מאיתנו.`;
       } else {
         // מצווה זכר
-        witnessDeclaration = `אנו מעידים בזאת שהמצווה הנ"ל ${willData.testator?.fullName || '[שם מלא]'}, הנושא תעודת זהות ${willData.testator?.id || '[ת.ז]'} חתם בנוכחותנו על צוואתו הנ"ל לאחר שהצהיר בפנינו שזאת צוואתו האחרונה שאותה עשה מרצונו הטוב והחופשי בהיותו בדעה צלולה ובלי כל אונס או כפיה, וביקש מאיתנו להיות עדים לחתימתו ולאשר בחתימת ידנו שכך הצהיר וחתם בפנינו. ועוד אנו מצהירים כי אנו לא קטינים ולא פסולי דין וכי אין בינינו ובין המצווה יחס של קרבה כלשהיא, אין לנו כל טובת הנאה בעיזבון המצווה הנ"ל, והננו חותמים ומאשרים בזה כי המצווה הנ"ל חתם בפנינו על שטר צוואה זה לאחר שהצהיר בפנינו כי זו צוואתו ובזה אנו חותמים בתור עדים לצוואה בנוכחות של המצווה הנ"ל ובנוכחות כל אחד מאיתנו.`;
+        witnessDeclaration = `אנו מעידים בזאת שהמצווה הנ"ל ${willData.testator?.fullName || '[שם מלא]'}, הנושא תעודת זהות ${willData.testator?.id || '[ת.ז]'} חתם בנוכחותנו על צוואתו הנ"ל לאחר שהצהיר בפנינו שזאת צוואתו האחרונה שאותה עשה מרצונו הטוב והחופשי בהיותו בדעה צלולה ובלי כל אונס או כפיה, וביקש מאיתנו להיות ${witnessText} לחתימתו ולאשר בחתימת ידנו שכך הצהיר וחתם בפנינו. ועוד אנו מצהירים כי אנו לא קטינים ולא פסולי דין וכי אין בינינו ובין המצווה יחס של קרבה כלשהיא, אין לנו כל טובת הנאה בעיזבון המצווה הנ"ל, והננו חותמים ומאשרים בזה כי המצווה הנ"ל חתם בפנינו על שטר צוואה זה לאחר שהצהיר בפנינו כי זו צוואתו ובזה אנו חותמים בתור ${witnessText} לצוואה בנוכחות של המצווה הנ"ל ובנוכחות כל אחד מאיתנו.`;
       }
       
       sections.push(
@@ -1172,47 +1135,75 @@ export default function ProfessionalWordExporter({
         })
       );
 
-      // חתימות העדים
+      // חתימות בטבלה מקצועית
       if (willData.witnesses && willData.witnesses.length >= 2) {
         sections.push(new Paragraph({ text: '' }));
+        
+        // טבלת חתימות העדים
         sections.push(
-          new Paragraph({
-            alignment: AlignmentType.CENTER,
-            bidirectional: true,
-            children: [
-              new TextRun({
-                text: `${willData.witnesses[0].name || '[שם עד 1]'}               ${willData.witnesses[1].name || '[שם עד 2]'}`,
-                font: 'David',
-                rightToLeft: true,
-                size: SIZES.normal
-              })
-            ]
-          })
-        );
-        sections.push(
-          new Paragraph({
-            alignment: AlignmentType.CENTER,
-            bidirectional: true,
-            children: [
-              new TextRun({
-                text: '________________               ________________',
-                font: 'David',
-                rightToLeft: true,
-                size: SIZES.normal
-              })
-            ]
-          })
-        );
-        sections.push(
-          new Paragraph({
-            alignment: AlignmentType.CENTER,
-            bidirectional: true,
-            children: [
-              new TextRun({
-                text: '   עד ראשון                        עד שני',
-                font: 'David',
-                rightToLeft: true,
-                size: SIZES.normal
+          new Table({
+            columnWidths: [3744, 1872, 3744],
+            width: { size: 100, type: WidthType.PERCENTAGE },
+            rows: [
+              new TableRow({
+                children: [
+                  new TableCell({
+                    width: { size: 3744, type: WidthType.DXA },
+                    borders: {
+                      top: { style: BorderStyle.SINGLE, size: 1, color: "000000" },
+                      bottom: { style: BorderStyle.NONE },
+                      left: { style: BorderStyle.NONE },
+                      right: { style: BorderStyle.NONE }
+                    },
+                    children: [
+                      new Paragraph({
+                        alignment: AlignmentType.CENTER,
+                        bidirectional: true,
+                        children: [new TextRun({
+                          text: willData.witnesses[0].name || '[שם עד 1]',
+                          font: 'David',
+                          rightToLeft: true,
+                          size: SIZES.normal
+                        })]
+                      })
+                    ]
+                  }),
+                  new TableCell({
+                    width: { size: 1872, type: WidthType.DXA },
+                    borders: {
+                      top: { style: BorderStyle.NONE },
+                      bottom: { style: BorderStyle.NONE },
+                      left: { style: BorderStyle.NONE },
+                      right: { style: BorderStyle.NONE }
+                    },
+                    children: [
+                      new Paragraph({
+                        children: [new TextRun("")]
+                      })
+                    ]
+                  }),
+                  new TableCell({
+                    width: { size: 3744, type: WidthType.DXA },
+                    borders: {
+                      top: { style: BorderStyle.SINGLE, size: 1, color: "000000" },
+                      bottom: { style: BorderStyle.NONE },
+                      left: { style: BorderStyle.NONE },
+                      right: { style: BorderStyle.NONE }
+                    },
+                    children: [
+                      new Paragraph({
+                        alignment: AlignmentType.CENTER,
+                        bidirectional: true,
+                        children: [new TextRun({
+                          text: willData.witnesses[1].name || '[שם עד 2]',
+                          font: 'David',
+                          rightToLeft: true,
+                          size: SIZES.normal
+                        })]
+                      })
+                    ]
+                  })
+                ]
               })
             ]
           })
