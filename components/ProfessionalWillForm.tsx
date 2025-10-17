@@ -169,7 +169,10 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
   const [vehicleInstructions, setVehicleInstructions] = useState('');
   const [copyNumber, setCopyNumber] = useState('1');
   const [totalCopies, setTotalCopies] = useState('3');
-  const [customSections, setCustomSections] = useState<Array<{title: string, content: string}>>([]);
+  const [customSections, setCustomSections] = useState<Array<{title: string, content: string}>>([
+    { title: 'הוראות מיוחדות לגבי הרכוש', content: 'אני מצווה כי כל הרכוש שלי יחולק באופן שווה בין ילדיי.' },
+    { title: 'הוראות לגבי חיות מחמד', content: 'אני מצווה כי הכלב שלי יעבור לטיפול של בתי הבכורה.' }
+  ]);
   const [heirsDisplayMode, setHeirsDisplayMode] = useState<'table' | 'list'>('list');
   const [showFullWill, setShowFullWill] = useState(false);
   
