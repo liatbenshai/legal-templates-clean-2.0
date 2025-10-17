@@ -156,6 +156,75 @@ export default function LawyerFeeAgreement() {
   const [customSections, setCustomSections] = useState<Array<{title: string, content: string}>>([]);
   const [selectedServiceType, setSelectedServiceType] = useState<string>('');
   
+  // מערכת משתנים
+  const [variables, setVariables] = useState<Array<{
+    id: string;
+    name: string;
+    description: string;
+    type: 'text' | 'number' | 'date';
+    defaultValue?: string;
+    usageCount: number;
+  }>>([]);
+  
+  // פונקציות לניהול משתנים
+  const addVariable = (name: string, description: string, type: 'text' | 'number' | 'date', defaultValue?: string) => {
+    const newVariable = {
+      id: `var_${Date.now()}`,
+      name,
+      description,
+      type,
+      defaultValue,
+      usageCount: 0
+    };
+    setVariables(prev => [...prev, newVariable]);
+    return newVariable;
+  };
+  
+  const getVariableByName = (name: string) => {
+    return variables.find(v => v.name === name);
+  };
+  
+  const incrementVariableUsage = (name: string) => {
+    setVariables(prev => prev.map(v => 
+      v.name === name ? { ...v, usageCount: v.usageCount + 1 } : v
+    ));
+  };
+  
+  // פונקציות לניהול מודל הוספת משתנה
+  const openAddVariableModal = () => {
+    setAddVariableModal({
+      isOpen: true,
+      name: '',
+      description: '',
+      type: 'text',
+      defaultValue: ''
+    });
+  };
+  
+  const closeAddVariableModal = () => {
+    setAddVariableModal({
+      isOpen: false,
+      name: '',
+      description: '',
+      type: 'text',
+      defaultValue: ''
+    });
+  };
+  
+  const createNewVariable = () => {
+    if (!addVariableModal.name.trim()) return;
+    
+    const newVariable = addVariable(
+      addVariableModal.name.trim(),
+      addVariableModal.description.trim(),
+      addVariableModal.type,
+      addVariableModal.defaultValue.trim() || undefined
+    );
+    
+    closeAddVariableModal();
+    return newVariable;
+  };
+  
   // מערכת למידה
   const [showLearningSystem, setShowLearningSystem] = useState(false);
   const [editableSections, setEditableSections] = useState<EditableSectionType[]>([]);
@@ -167,6 +236,21 @@ export default function LawyerFeeAgreement() {
     values: Record<string, string>;
     genders: Record<string, 'male' | 'female' | 'plural'>;
   } | null>(null);
+  
+  // מודל הוספת משתנה חדש
+  const [addVariableModal, setAddVariableModal] = useState<{
+    isOpen: boolean;
+    name: string;
+    description: string;
+    type: 'text' | 'number' | 'date';
+    defaultValue: string;
+  }>({
+    isOpen: false,
+    name: '',
+    description: '',
+    type: 'text',
+    defaultValue: ''
+  });
 
   // עדכון פרטי עורך הדין אם המשתמש משתנה
   useEffect(() => {
@@ -1048,6 +1132,31 @@ ________________________           ${agreementData.clients.map((_, i) => '______
                 הוסף סעיף לטופס
               </button>
               <button
+                onClick={openAddVariableModal}
+                className="flex items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm"
+              >
+                <Plus className="w-4 h-4" />
+                הוסף משתנה
+              </button>
+              {variables.length > 0 && (
+                <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <h4 className="text-sm font-semibold text-blue-800 mb-2">
+                    📋 משתנים קיימים ({variables.length})
+                  </h4>
+                  <div className="space-y-1">
+                    {variables.map((variable) => (
+                      <div key={variable.id} className="flex items-center justify-between text-xs">
+                        <span className="text-blue-700">
+                          <code className="bg-blue-100 px-1 rounded">{`{{${variable.name}}}`}</code>
+                          <span className="text-gray-600 ml-2">- {variable.description}</span>
+                        </span>
+                        <span className="text-gray-500">({variable.usageCount} שימושים)</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <button
                 onClick={() => {
                   const title = prompt('כותרת הסעיף:');
                   const content = prompt('תוכן הסעיף:');
@@ -1382,6 +1491,100 @@ ________________________           ${agreementData.clients.map((_, i) => '______
                   className="flex-1 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition disabled:bg-gray-300 disabled:cursor-not-allowed"
                 >
                   הוסף סעיף
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* מודל הוספת משתנה חדש */}
+        {addVariableModal.isOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+              <h3 className="text-xl font-bold text-gray-900 mb-4">
+                ➕ הוסף משתנה חדש
+              </h3>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    שם המשתנה
+                  </label>
+                  <input
+                    type="text"
+                    value={addVariableModal.name}
+                    onChange={(e) => setAddVariableModal(prev => ({ ...prev, name: e.target.value }))}
+                    placeholder="לדוגמה: סכום_התשלום"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                    dir="rtl"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    תיאור המשתנה
+                  </label>
+                  <input
+                    type="text"
+                    value={addVariableModal.description}
+                    onChange={(e) => setAddVariableModal(prev => ({ ...prev, description: e.target.value }))}
+                    placeholder="לדוגמה: סכום התשלום בעד השירות"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                    dir="rtl"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    סוג המשתנה
+                  </label>
+                  <select
+                    value={addVariableModal.type}
+                    onChange={(e) => setAddVariableModal(prev => ({ ...prev, type: e.target.value as 'text' | 'number' | 'date' }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="text">טקסט</option>
+                    <option value="number">מספר</option>
+                    <option value="date">תאריך</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    ערך ברירת מחדל (אופציונלי)
+                  </label>
+                  <input
+                    type={addVariableModal.type === 'date' ? 'date' : addVariableModal.type === 'number' ? 'number' : 'text'}
+                    value={addVariableModal.defaultValue}
+                    onChange={(e) => setAddVariableModal(prev => ({ ...prev, defaultValue: e.target.value }))}
+                    placeholder="ערך ברירת מחדל"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                    dir="rtl"
+                  />
+                </div>
+              </div>
+              
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={closeAddVariableModal}
+                  className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
+                >
+                  ביטול
+                </button>
+                <button
+                  onClick={() => {
+                    const newVariable = createNewVariable();
+                    if (newVariable) {
+                      // הוסף את המשתנה לטקסט הנוכחי
+                      const variableText = `{{${newVariable.name}}}`;
+                      // כאן נוכל להוסיף את המשתנה לטקסט הנוכחי בעריכה
+                      alert(`✅ משתנה "${newVariable.name}" נוצר בהצלחה!\nניתן להשתמש בו כ: ${variableText}`);
+                    }
+                  }}
+                  disabled={!addVariableModal.name.trim()}
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:bg-gray-300 disabled:cursor-not-allowed"
+                >
+                  צור משתנה
                 </button>
               </div>
             </div>
