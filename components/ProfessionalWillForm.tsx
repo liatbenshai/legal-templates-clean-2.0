@@ -1375,12 +1375,69 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
           ))}
         </section>
 
+        {/* סעיפים סטנדרטיים */}
+        <section className="bg-blue-50 p-6 rounded-lg border border-blue-200 mb-6">
+          <h2 className="text-xl font-bold text-blue-900 flex items-center gap-2 mb-4">
+            📋 סעיפים סטנדרטיים
+          </h2>
+          
+          <div className="space-y-4">
+            {/* הואיל - פתיחה משפטית */}
+            <div className="bg-white p-4 rounded-lg border border-blue-300">
+              <div className="flex justify-between items-center mb-2">
+                <h3 className="font-semibold text-blue-800">הואיל - פתיחה משפטית</h3>
+                <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">קבוע</span>
+              </div>
+              <div className="text-sm text-gray-700 whitespace-pre-line">
+                {generateProfessionalWillContent(willType, getWillData(), []).split('\n\n')[0]}
+              </div>
+            </div>
+
+            {/* הצהרת המצווה */}
+            <div className="bg-white p-4 rounded-lg border border-blue-300">
+              <div className="flex justify-between items-center mb-2">
+                <h3 className="font-semibold text-blue-800">הצהרת המצווה</h3>
+                <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">קבוע</span>
+              </div>
+              <div className="text-sm text-gray-700 whitespace-pre-line">
+                אני המצווה/ה {testator.fullName || '[שם המצווה]'}, ת.ז. {testator.id || '[מספר ת.ז.]'}, 
+                {willType === 'mutual' && spouse.fullName ? ` נשוי/ה ל-${spouse.fullName}, ת.ז. ${spouse.id || '[מספר ת.ז.]'},` : ''} 
+                מצהיר/ה בזאת כי אני בריא/ה בדעתי ובגופי וכי אני עורך/ת צוואה זו מרצוני החופשי וללא כל לחץ או השפעה חיצונית.
+              </div>
+            </div>
+
+            {/* הצהרת העדים */}
+            <div className="bg-white p-4 rounded-lg border border-blue-300">
+              <div className="flex justify-between items-center mb-2">
+                <h3 className="font-semibold text-blue-800">הצהרת העדים</h3>
+                <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">קבוע</span>
+              </div>
+              <div className="text-sm text-gray-700 whitespace-pre-line">
+                אנו העדים החתומים מטה, {witnesses[0]?.name || '[שם עד ראשון]'}, ת.ז. {witnesses[0]?.id || '[מספר ת.ז.]'}, 
+                ו-{witnesses[1]?.name || '[שם עד שני]'}, ת.ז. {witnesses[1]?.id || '[מספר ת.ז.]'}, 
+                מעידים בזאת כי המצווה/ה חתם/ה על צוואה זו בפנינו, וכי הוא/היא עשה/עשתה זאת מרצונו/ה החופשי ובהכרה מלאה של תוכן הצוואה.
+              </div>
+            </div>
+
+            {/* חתימות */}
+            <div className="bg-white p-4 rounded-lg border border-blue-300">
+              <div className="flex justify-between items-center mb-2">
+                <h3 className="font-semibold text-blue-800">חתימות</h3>
+                <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">קבוע</span>
+              </div>
+              <div className="text-sm text-gray-700 whitespace-pre-line">
+                {generateProfessionalWillContent(willType, getWillData(), []).split('\n\n').slice(-2).join('\n\n')}
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* סעיפים נוספים */}
         <section className="bg-gray-50 p-6 rounded-lg border">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
               <span className="text-lg">📝</span>
-              סעיפים נוספים
+              סעיפים מותאמים אישית
             </h2>
             <button
               onClick={() => setCustomSections(prev => [...prev, { title: '', content: '' }])}
