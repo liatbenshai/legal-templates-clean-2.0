@@ -67,8 +67,11 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
         if (data.content && confirm('📥 נמצא טקסט משופר מעמוד למידת AI. לטעון אותו?')) {
           // הוסף את הטקסט למערך הסעיפים הנוספים
           setCustomSections(prev => [...prev, {
+            id: generateSectionId(),
             title: 'סעיף משופר מ-AI',
-            content: data.content
+            content: data.content,
+            level: 'main' as const,
+            order: getNextOrder()
           }]);
           // נקה את הזיכרון
           localStorage.removeItem('ai-improved-section-will');
@@ -169,12 +172,184 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
   const [vehicleInstructions, setVehicleInstructions] = useState('');
   const [copyNumber, setCopyNumber] = useState('1');
   const [totalCopies, setTotalCopies] = useState('3');
-  const [customSections, setCustomSections] = useState<Array<{title: string, content: string}>>([
-    { title: 'הוראות מיוחדות לגבי הרכוש', content: 'אני מצווה כי כל הרכוש שלי יחולק באופן שווה בין ילדיי.' },
-    { title: 'הוראות לגבי חיות מחמד', content: 'אני מצווה כי הכלב שלי יעבור לטיפול של בתי הבכורה.' }
+  const [customSections, setCustomSections] = useState<Array<{
+    id: string;
+    title: string;
+    content: string;
+    level: 'main' | 'sub' | 'sub-sub';
+    parentId?: string;
+    order: number;
+  }>>([
+    { 
+      id: 'section_1', 
+      title: 'הוראות מיוחדות לגבי הרכוש', 
+      content: 'אני מצווה כי כל הרכוש שלי יחולק באופן שווה בין ילדיי.',
+      level: 'main',
+      order: 1
+    },
+    { 
+      id: 'section_2', 
+      title: 'הוראות לגבי חיות מחמד', 
+      content: 'אני מצווה כי הכלב שלי יעבור לטיפול של בתי הבכורה.',
+      level: 'main',
+      order: 2
+    }
   ]);
   const [heirsDisplayMode, setHeirsDisplayMode] = useState<'table' | 'list'>('list');
   const [showFullWill, setShowFullWill] = useState(false);
+  
+  // מערכת משתנים
+  const [variables, setVariables] = useState<Array<{
+    id: string;
+    name: string;
+    description: string;
+    type: 'text' | 'number' | 'date';
+    defaultValue?: string;
+    usageCount: number;
+  }>>([]);
+  
+  // מודל הוספת משתנה חדש
+  const [addVariableModal, setAddVariableModal] = useState<{
+    isOpen: boolean;
+    name: string;
+    description: string;
+    type: 'text' | 'number' | 'date';
+    defaultValue: string;
+  }>({
+    isOpen: false,
+    name: '',
+    description: '',
+    type: 'text',
+    defaultValue: ''
+  });
+  
+  // פונקציות לניהול משתנים
+  const addVariable = (name: string, description: string, type: 'text' | 'number' | 'date', defaultValue?: string) => {
+    const newVariable = {
+      id: `var_${Date.now()}`,
+      name,
+      description,
+      type,
+      defaultValue,
+      usageCount: 0
+    };
+    setVariables(prev => [...prev, newVariable]);
+    return newVariable;
+  };
+  
+  const openAddVariableModal = () => {
+    setAddVariableModal({
+      isOpen: true,
+      name: '',
+      description: '',
+      type: 'text',
+      defaultValue: ''
+    });
+  };
+  
+  const closeAddVariableModal = () => {
+    setAddVariableModal({
+      isOpen: false,
+      name: '',
+      description: '',
+      type: 'text',
+      defaultValue: ''
+    });
+  };
+  
+  const createNewVariable = () => {
+    if (!addVariableModal.name.trim()) return;
+    
+    const newVariable = addVariable(
+      addVariableModal.name.trim(),
+      addVariableModal.description.trim(),
+      addVariableModal.type,
+      addVariableModal.defaultValue.trim() || undefined
+    );
+    
+    closeAddVariableModal();
+    return newVariable;
+  };
+  
+  // פונקציות לניהול היררכיית סעיפים
+  const generateSectionId = () => `section_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  
+  const getNextOrder = () => {
+    return customSections.length > 0 ? Math.max(...customSections.map(s => s.order)) + 1 : 1;
+  };
+  
+  const changeSectionLevel = (sectionId: string, newLevel: 'main' | 'sub' | 'sub-sub') => {
+    setCustomSections(prev => prev.map(section => {
+      if (section.id === sectionId) {
+        return {
+          ...section,
+          level: newLevel,
+          parentId: newLevel === 'main' ? undefined : section.parentId
+        };
+      }
+      return section;
+    }));
+  };
+  
+  const moveSectionUp = (sectionId: string) => {
+    setCustomSections(prev => {
+      const sortedSections = [...prev].sort((a, b) => a.order - b.order);
+      const currentIndex = sortedSections.findIndex(s => s.id === sectionId);
+      
+      if (currentIndex > 0) {
+        const newSections = [...sortedSections];
+        [newSections[currentIndex - 1], newSections[currentIndex]] = [newSections[currentIndex], newSections[currentIndex - 1]];
+        
+        // עדכון סדר
+        return newSections.map((section, index) => ({
+          ...section,
+          order: index + 1
+        }));
+      }
+      return prev;
+    });
+  };
+  
+  const moveSectionDown = (sectionId: string) => {
+    setCustomSections(prev => {
+      const sortedSections = [...prev].sort((a, b) => a.order - b.order);
+      const currentIndex = sortedSections.findIndex(s => s.id === sectionId);
+      
+      if (currentIndex < sortedSections.length - 1) {
+        const newSections = [...sortedSections];
+        [newSections[currentIndex], newSections[currentIndex + 1]] = [newSections[currentIndex + 1], newSections[currentIndex]];
+        
+        // עדכון סדר
+        return newSections.map((section, index) => ({
+          ...section,
+          order: index + 1
+        }));
+      }
+      return prev;
+    });
+  };
+  
+  const getSectionNumber = (section: any) => {
+    const sortedSections = [...customSections].sort((a, b) => a.order - b.order);
+    const mainSections = sortedSections.filter(s => s.level === 'main');
+    const subSections = sortedSections.filter(s => s.level === 'sub' && s.parentId === section.parentId);
+    const subSubSections = sortedSections.filter(s => s.level === 'sub-sub' && s.parentId === section.parentId);
+    
+    if (section.level === 'main') {
+      const mainIndex = mainSections.findIndex(s => s.id === section.id);
+      return (mainIndex + 1).toString();
+    } else if (section.level === 'sub') {
+      const mainIndex = mainSections.findIndex(s => s.id === section.parentId);
+      const subIndex = subSections.findIndex(s => s.id === section.id);
+      return `${mainIndex + 1}.${subIndex + 1}`;
+    } else if (section.level === 'sub-sub') {
+      const mainIndex = mainSections.findIndex(s => s.id === section.parentId);
+      const subSubIndex = subSubSections.findIndex(s => s.id === section.id);
+      return `${mainIndex + 1}.${subSubIndex + 1}`;
+    }
+    
+    return '';
+  };
   
   // אפוטרופוס לקטינים
   const [guardian, setGuardian] = useState({
@@ -480,6 +655,17 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
       alert('❌ שגיאה בשמירה למחסן');
     }
   };
+  
+  const handleAddSection = (title: string, content: string) => {
+    const newSection = {
+      id: generateSectionId(),
+      title,
+      content,
+      level: 'main' as const,
+      order: getNextOrder()
+    };
+    setCustomSections(prev => [...prev, newSection]);
+  };
 
   const handleSaveToLearning = (section: EditableSectionType, userCorrection?: string) => {
     if (userCorrection) {
@@ -523,8 +709,11 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
       });
     } else {
       const newSection = {
+        id: generateSectionId(),
         title: warehouseSection.title,
-        content: genderedContent
+        content: genderedContent,
+        level: 'main' as const,
+        order: getNextOrder()
       };
       setCustomSections(prev => [...prev, newSection]);
       
@@ -1444,49 +1633,81 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
               <div className="bg-green-50 p-4 rounded-lg border border-green-300">
                 <h3 className="font-semibold text-green-800 mb-3">סעיפים מותאמים אישית</h3>
                 <div className="space-y-3">
-                  {customSections.map((section, index) => (
-                    <div key={index} className="bg-white p-3 rounded-lg border border-green-400">
+                  {customSections
+                    .sort((a, b) => a.order - b.order)
+                    .map((section) => (
+                    <div key={section.id} className={`bg-white p-3 rounded-lg border ${
+                      section.level === 'main' ? 'border-green-400' : 
+                      section.level === 'sub' ? 'border-blue-400' : 'border-purple-400'
+                    } ${section.level === 'sub' ? 'ml-4' : section.level === 'sub-sub' ? 'ml-8' : ''}`}>
                       <div className="flex justify-between items-center mb-2">
-                        <h4 className="font-medium text-green-800">
-                          {section.title || `סעיף מותאם ${index + 1}`}
-                        </h4>
                         <div className="flex items-center gap-2">
+                          <span className="text-xs bg-gray-100 px-2 py-1 rounded text-gray-600">
+                            {getSectionNumber(section)}
+                          </span>
+                          <h4 className="font-medium text-green-800">
+                            {section.title || `סעיף מותאם`}
+                          </h4>
+                          <span className={`text-xs px-2 py-1 rounded ${
+                            section.level === 'main' ? 'bg-green-100 text-green-700' : 
+                            section.level === 'sub' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'
+                          }`}>
+                            {section.level === 'main' ? 'ראשי' : section.level === 'sub' ? 'תת-סעיף' : 'תת-תת-סעיף'}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {/* כפתורי רמה */}
+                          <div className="flex gap-1">
+                            <button
+                              onClick={() => changeSectionLevel(section.id, 'main')}
+                              className={`px-2 py-1 text-xs rounded ${
+                                section.level === 'main' ? 'bg-green-200 text-green-800' : 'bg-gray-100 text-gray-600 hover:bg-green-100'
+                              }`}
+                              title="הפוך לראשי"
+                            >
+                              ראשי
+                            </button>
+                            <button
+                              onClick={() => changeSectionLevel(section.id, 'sub')}
+                              className={`px-2 py-1 text-xs rounded ${
+                                section.level === 'sub' ? 'bg-blue-200 text-blue-800' : 'bg-gray-100 text-gray-600 hover:bg-blue-100'
+                              }`}
+                              title="הפוך לתת-סעיף"
+                            >
+                              תת
+                            </button>
+                            <button
+                              onClick={() => changeSectionLevel(section.id, 'sub-sub')}
+                              className={`px-2 py-1 text-xs rounded ${
+                                section.level === 'sub-sub' ? 'bg-purple-200 text-purple-800' : 'bg-gray-100 text-gray-600 hover:bg-purple-100'
+                              }`}
+                              title="הפוך לתת-תת-סעיף"
+                            >
+                              תת-תת
+                            </button>
+                          </div>
+                          
+                          {/* כפתורי הזזה */}
                           <div className="flex flex-col gap-1">
                             <button
-                              onClick={() => {
-                                if (index > 0) {
-                                  setCustomSections(prev => {
-                                    const newSections = [...prev];
-                                    [newSections[index - 1], newSections[index]] = [newSections[index], newSections[index - 1]];
-                                    return newSections;
-                                  });
-                                }
-                              }}
-                              disabled={index === 0}
-                              className={`p-1 rounded text-xs ${index === 0 ? 'text-gray-300 cursor-not-allowed' : 'text-green-600 hover:text-green-800 hover:bg-green-50'}`}
+                              onClick={() => moveSectionUp(section.id)}
+                              className="p-1 rounded text-green-600 hover:text-green-800 hover:bg-green-50"
                               title="הזז למעלה"
                             >
                               ↑
                             </button>
                             <button
-                              onClick={() => {
-                                if (index < customSections.length - 1) {
-                                  setCustomSections(prev => {
-                                    const newSections = [...prev];
-                                    [newSections[index], newSections[index + 1]] = [newSections[index + 1], newSections[index]];
-                                    return newSections;
-                                  });
-                                }
-                              }}
-                              disabled={index === customSections.length - 1}
-                              className={`p-1 rounded text-xs ${index === customSections.length - 1 ? 'text-gray-300 cursor-not-allowed' : 'text-green-600 hover:text-green-800 hover:bg-green-50'}`}
+                              onClick={() => moveSectionDown(section.id)}
+                              className="p-1 rounded text-green-600 hover:text-green-800 hover:bg-green-50"
                               title="הזז למטה"
                             >
                               ↓
                             </button>
                           </div>
+                          
+                          {/* כפתור מחיקה */}
                           <button
-                            onClick={() => setCustomSections(prev => prev.filter((_, i) => i !== index))}
+                            onClick={() => setCustomSections(prev => prev.filter(s => s.id !== section.id))}
                             className="text-red-500 hover:text-red-700 text-xs"
                           >
                             🗑️
@@ -1568,13 +1789,46 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
               <span className="text-lg">📝</span>
               הוספת סעיפים מותאמים אישית
             </h2>
-            <button
-              onClick={() => setCustomSections(prev => [...prev, { title: '', content: '' }])}
-              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
-            >
-              + הוסף סעיף
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  const title = prompt('כותרת הסעיף:');
+                  const content = prompt('תוכן הסעיף:');
+                  if (title && content) {
+                    handleAddSection(title, content);
+                  }
+                }}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+              >
+                + הוסף סעיף
+              </button>
+              <button
+                onClick={openAddVariableModal}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+              >
+                + הוסף משתנה
+              </button>
+            </div>
           </div>
+          
+          {variables.length > 0 && (
+            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <h4 className="text-sm font-semibold text-blue-800 mb-2">
+                📋 משתנים קיימים ({variables.length})
+              </h4>
+              <div className="space-y-1">
+                {variables.map((variable) => (
+                  <div key={variable.id} className="flex items-center justify-between text-xs">
+                    <span className="text-blue-700">
+                      <code className="bg-blue-100 px-1 rounded">{`{{${variable.name}}}`}</code>
+                      <span className="text-gray-600 ml-2">- {variable.description}</span>
+                    </span>
+                    <span className="text-gray-500">({variable.usageCount} שימושים)</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           
           <div className="text-sm text-green-800 bg-green-100 p-3 rounded-lg">
             💡 <strong>טיפ:</strong> הסעיפים המותאמים אישית יופיעו אוטומטית במקום הנכון בצוואה - בין הצהרות לסעיפים הקבועים.
@@ -1700,33 +1954,15 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
                       </h3>
                       <div className="flex flex-col gap-1">
                         <button
-                          onClick={() => {
-                            if (index > 0) {
-                              setCustomSections(prev => {
-                                const newSections = [...prev];
-                                [newSections[index - 1], newSections[index]] = [newSections[index], newSections[index - 1]];
-                                return newSections;
-                              });
-                            }
-                          }}
-                          disabled={index === 0}
-                          className={`p-1 rounded text-xs ${index === 0 ? 'text-gray-300 cursor-not-allowed' : 'text-green-600 hover:text-green-800 hover:bg-green-50'}`}
+                          onClick={() => moveSectionUp(section.id)}
+                          className="p-1 rounded text-xs text-green-600 hover:text-green-800 hover:bg-green-50"
                           title="הזז למעלה"
                         >
                           ↑
                         </button>
                         <button
-                          onClick={() => {
-                            if (index < customSections.length - 1) {
-                              setCustomSections(prev => {
-                                const newSections = [...prev];
-                                [newSections[index], newSections[index + 1]] = [newSections[index + 1], newSections[index]];
-                                return newSections;
-                              });
-                            }
-                          }}
-                          disabled={index === customSections.length - 1}
-                          className={`p-1 rounded text-xs ${index === customSections.length - 1 ? 'text-gray-300 cursor-not-allowed' : 'text-green-600 hover:text-green-800 hover:bg-green-50'}`}
+                          onClick={() => moveSectionDown(section.id)}
+                          className="p-1 rounded text-xs text-green-600 hover:text-green-800 hover:bg-green-50"
                           title="הזז למטה"
                         >
                           ↓
@@ -1773,6 +2009,100 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
           />
         </div>
       </div>
+      
+      {/* מודל הוספת משתנה חדש */}
+      {addVariableModal.isOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-xl font-bold text-gray-900 mb-4">
+              ➕ הוסף משתנה חדש
+            </h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  שם המשתנה
+                </label>
+                <input
+                  type="text"
+                  value={addVariableModal.name}
+                  onChange={(e) => setAddVariableModal(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="לדוגמה: סכום_התשלום"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                  dir="rtl"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  תיאור המשתנה
+                </label>
+                <input
+                  type="text"
+                  value={addVariableModal.description}
+                  onChange={(e) => setAddVariableModal(prev => ({ ...prev, description: e.target.value }))}
+                  placeholder="לדוגמה: סכום התשלום בעד השירות"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                  dir="rtl"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  סוג המשתנה
+                </label>
+                <select
+                  value={addVariableModal.type}
+                  onChange={(e) => setAddVariableModal(prev => ({ ...prev, type: e.target.value as 'text' | 'number' | 'date' }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="text">טקסט</option>
+                  <option value="number">מספר</option>
+                  <option value="date">תאריך</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  ערך ברירת מחדל (אופציונלי)
+                </label>
+                <input
+                  type={addVariableModal.type === 'date' ? 'date' : addVariableModal.type === 'number' ? 'number' : 'text'}
+                  value={addVariableModal.defaultValue}
+                  onChange={(e) => setAddVariableModal(prev => ({ ...prev, defaultValue: e.target.value }))}
+                  placeholder="ערך ברירת מחדל"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                  dir="rtl"
+                />
+              </div>
+            </div>
+            
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={closeAddVariableModal}
+                className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
+              >
+                ביטול
+              </button>
+              <button
+                onClick={() => {
+                  const newVariable = createNewVariable();
+                  if (newVariable) {
+                    // הוסף את המשתנה לטקסט הנוכחי
+                    const variableText = `{{${newVariable.name}}}`;
+                    // כאן נוכל להוסיף את המשתנה לטקסט הנוכחי בעריכה
+                    alert(`✅ משתנה "${newVariable.name}" נוצר בהצלחה!\nניתן להשתמש בו כ: ${variableText}`);
+                  }
+                }}
+                disabled={!addVariableModal.name.trim()}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:bg-gray-300 disabled:cursor-not-allowed"
+              >
+                צור משתנה
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
