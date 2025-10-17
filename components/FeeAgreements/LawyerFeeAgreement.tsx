@@ -370,7 +370,9 @@ export default function LawyerFeeAgreement() {
   };
 
   const handleAddSection = (content: string, title: string) => {
-    setCustomSections(prev => [...prev, { title, content }]);
+    // החלפת משתנים בטקסט
+    const contentWithVariables = replaceVariablesInText(content);
+    setCustomSections(prev => [...prev, { title, content: contentWithVariables }]);
     setShowSectionsWarehouse(false);
   };
 
@@ -481,14 +483,17 @@ export default function LawyerFeeAgreement() {
       clientGender
     );
     
-    const variables = extractVariablesFromContent(genderedContent);
+    // החלפת משתנים בטקסט
+    const contentWithVariables = replaceVariablesInText(genderedContent);
+    
+    const variables = extractVariablesFromContent(contentWithVariables);
     
     if (variables.length > 0) {
       setVariablesModal({
         section: {
           id: warehouseSection.id || 'custom',
           title: warehouseSection.title,
-          content: genderedContent,
+          content: contentWithVariables,
           variables: variables
         },
         values: variables.reduce((acc, v) => ({ ...acc, [v]: '' }), {}),
@@ -497,7 +502,7 @@ export default function LawyerFeeAgreement() {
     } else {
       const newSection = {
         title: warehouseSection.title,
-        content: genderedContent
+        content: contentWithVariables
       };
       setCustomSections(prev => [...prev, newSection]);
       
@@ -995,6 +1000,19 @@ ________________________           ${agreementData.clients.map((_, i) => '______
               >
                 <BookOpen className="w-4 h-4" />
                 מחסן סעיפים
+              </button>
+              <button
+                onClick={() => {
+                  const title = prompt('כותרת הסעיף:');
+                  const content = prompt('תוכן הסעיף:');
+                  if (title && content) {
+                    handleAddSection(content, title);
+                  }
+                }}
+                className="flex items-center gap-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm"
+              >
+                <Plus className="w-4 h-4" />
+                הוסף סעיף לטופס
               </button>
               <button
                 onClick={() => {
