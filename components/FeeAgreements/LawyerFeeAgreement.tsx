@@ -165,7 +165,7 @@ export default function LawyerFeeAgreement() {
   const [variablesModal, setVariablesModal] = useState<{
     section: { id: string; title: string; content: string; variables: string[] };
     values: Record<string, string>;
-    genders: Record<string, 'male' | 'female'>;
+    genders: Record<string, 'male' | 'female' | 'plural'>;
   } | null>(null);
 
   // עדכון פרטי עורך הדין אם המשתמש משתנה
@@ -370,9 +370,26 @@ export default function LawyerFeeAgreement() {
   };
 
   const handleAddSection = (content: string, title: string) => {
-    // החלפת משתנים בטקסט
-    const contentWithVariables = replaceVariablesInText(content);
-    setCustomSections(prev => [...prev, { title, content: contentWithVariables }]);
+    // זיהוי משתנים דינמיים
+    const variables = extractVariablesFromContent(content);
+    
+    if (variables.length > 0) {
+      // יש משתנים - פתח חלון מילוי
+      setVariablesModal({
+        section: {
+          id: 'custom',
+          title,
+          content,
+          variables: variables
+        },
+        values: variables.reduce((acc, v) => ({ ...acc, [v]: '' }), {}),
+        genders: variables.reduce((acc, v) => ({ ...acc, [v]: 'male' as 'male' | 'female' | 'plural' }), {})
+      });
+    } else {
+      // אין משתנים - הוסף ישירות
+      const contentWithVariables = replaceVariablesInText(content);
+      setCustomSections(prev => [...prev, { title, content: contentWithVariables }]);
+    }
     setShowSectionsWarehouse(false);
   };
 
@@ -474,6 +491,9 @@ export default function LawyerFeeAgreement() {
   const handleSelectFromWarehouse = async (warehouseSection: any) => {
     const { replaceTextWithGender } = require('@/lib/hebrew-gender');
     
+    // זיהוי משתנים לפני החלפת מגדר
+    const variables = extractVariablesFromContent(warehouseSection.content);
+    
     // קביעת מגדר הלקוח/לקוחה
     const clientGender = agreementData.clients.length === 1 ? 
       agreementData.clients[0].gender : 'plural';
@@ -486,8 +506,6 @@ export default function LawyerFeeAgreement() {
     // החלפת משתנים בטקסט
     const contentWithVariables = replaceVariablesInText(genderedContent);
     
-    const variables = extractVariablesFromContent(contentWithVariables);
-    
     if (variables.length > 0) {
       setVariablesModal({
         section: {
@@ -497,7 +515,7 @@ export default function LawyerFeeAgreement() {
           variables: variables
         },
         values: variables.reduce((acc, v) => ({ ...acc, [v]: '' }), {}),
-        genders: variables.reduce((acc, v) => ({ ...acc, [v]: 'male' as 'male' | 'female' }), {})
+        genders: variables.reduce((acc, v) => ({ ...acc, [v]: 'male' as 'male' | 'female' | 'plural' }), {})
       });
     } else {
       const newSection = {
@@ -523,7 +541,9 @@ export default function LawyerFeeAgreement() {
   const isGenderRelevantVariable = (variable: string): boolean => {
     const genderRelevantVariables = [
       'lawyer_name', 'client_name', 'attorney_name', 'witness_name',
-      'court_name', 'judge_name', 'expert_name'
+      'court_name', 'judge_name', 'expert_name',
+      'מיופה_כוח', 'רשאי', 'אחראי', 'מחויב', 'יכול', 'צריך', 'חייב',
+      'זכאי', 'מתחייב', 'מסכים', 'מבקש', 'מצהיר', 'מאשר'
     ];
     return genderRelevantVariables.includes(variable);
   };
@@ -543,7 +563,20 @@ export default function LawyerFeeAgreement() {
       'date': 'תאריך',
       'address': 'כתובת',
       'phone': 'טלפון',
-      'email': 'אימייל'
+      'email': 'אימייל',
+      'מיופה_כוח': 'מיופה הכוח',
+      'רשאי': 'רשאי/רשאית/רשאים',
+      'אחראי': 'אחראי/אחראית/אחראים',
+      'מחויב': 'מחויב/מחויבת/מחויבים',
+      'יכול': 'יכול/יכולה/יכולים',
+      'צריך': 'צריך/צריכה/צריכים',
+      'חייב': 'חייב/חייבת/חייבים',
+      'זכאי': 'זכאי/זכאית/זכאים',
+      'מתחייב': 'מתחייב/מתחייבת/מתחייבים',
+      'מסכים': 'מסכים/מסכימה/מסכימים',
+      'מבקש': 'מבקש/מבקשת/מבקשים',
+      'מצהיר': 'מצהיר/מצהירה/מצהירים',
+      'מאשר': 'מאשר/מאשרת/מאשרים'
     };
     return labels[variable] || variable;
   };
@@ -1185,7 +1218,8 @@ ________________________           ${agreementData.clients.map((_, i) => '______
               
               <div className="mb-4 p-3 bg-blue-50 rounded-lg text-sm text-blue-800">
                 <p className="font-semibold mb-1">💡 טיפ:</p>
-                <p>למשתנים של אנשים (שמות) יש אפשרות לבחור מגדר. זה יעזור להציג את הטקסט הנכון (זכר/נקבה) במסמך.</p>
+                <p>למשתנים של אנשים (שמות) ופעלים יש אפשרות לבחור מגדר. זה יעזור להציג את הטקסט הנכון (זכר/נקבה/רבים) במסמך.</p>
+                <p className="mt-1">דוגמה: "רשאי" יכול להיות "רשאי" (זכר), "רשאית" (נקבה), או "רשאים" (רבים).</p>
               </div>
               
               <div className="space-y-4 mb-6">
@@ -1245,13 +1279,32 @@ ________________________           ${agreementData.clients.map((_, i) => '______
                                   ...prev!,
                                   genders: {
                                     ...prev!.genders,
-                                    [variable]: e.target.value as 'male' | 'female'
+                                    [variable]: e.target.value as 'male' | 'female' | 'plural'
                                   }
                                 }));
                               }}
                               className="text-orange-600 focus:ring-orange-500"
                             />
                             <span className="text-sm">נקבה</span>
+                          </label>
+                          <label className="flex items-center gap-2">
+                            <input
+                              type="radio"
+                              name={`gender_${variable}`}
+                              value="plural"
+                              checked={variablesModal.genders[variable] === 'plural'}
+                              onChange={(e) => {
+                                setVariablesModal(prev => ({
+                                  ...prev!,
+                                  genders: {
+                                    ...prev!.genders,
+                                    [variable]: e.target.value as 'male' | 'female' | 'plural'
+                                  }
+                                }));
+                              }}
+                              className="text-orange-600 focus:ring-orange-500"
+                            />
+                            <span className="text-sm">רבים</span>
                           </label>
                         </div>
                       </div>
