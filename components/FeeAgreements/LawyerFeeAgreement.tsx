@@ -101,8 +101,11 @@ export default function LawyerFeeAgreement() {
         if (data.content && confirm('📥 נמצא טקסט משופר מעמוד למידת AI. לטעון אותו?')) {
           // הוסף את הטקסט למערך הסעיפים
           setCustomSections(prev => [...prev, {
+            id: generateSectionId(),
             title: 'סעיף משופר מ-AI',
-            content: data.content
+            content: data.content,
+            level: 'main' as const,
+            order: getNextOrder()
           }]);
           localStorage.removeItem('ai-improved-section-fee-agreement');
           alert('✅ הטקסט נטען בהצלחה!');
@@ -153,7 +156,14 @@ export default function LawyerFeeAgreement() {
 
   const [agreementDate, setAgreementDate] = useState(new Date().toISOString().split('T')[0]);
   const [showSectionsWarehouse, setShowSectionsWarehouse] = useState(false);
-  const [customSections, setCustomSections] = useState<Array<{title: string, content: string}>>([]);
+  const [customSections, setCustomSections] = useState<Array<{
+    id: string;
+    title: string;
+    content: string;
+    level: 'main' | 'sub' | 'sub-sub';
+    parentId?: string;
+    order: number;
+  }>>([]);
   const [selectedServiceType, setSelectedServiceType] = useState<string>('');
   
   // מערכת משתנים
@@ -223,6 +233,86 @@ export default function LawyerFeeAgreement() {
     
     closeAddVariableModal();
     return newVariable;
+  };
+  
+  // פונקציות לניהול היררכיית סעיפים
+  const generateSectionId = () => `section_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  
+  const getNextOrder = () => {
+    return customSections.length > 0 ? Math.max(...customSections.map(s => s.order)) + 1 : 1;
+  };
+  
+  const changeSectionLevel = (sectionId: string, newLevel: 'main' | 'sub' | 'sub-sub') => {
+    setCustomSections(prev => prev.map(section => {
+      if (section.id === sectionId) {
+        return {
+          ...section,
+          level: newLevel,
+          parentId: newLevel === 'main' ? undefined : section.parentId
+        };
+      }
+      return section;
+    }));
+  };
+  
+  const moveSectionUp = (sectionId: string) => {
+    setCustomSections(prev => {
+      const sortedSections = [...prev].sort((a, b) => a.order - b.order);
+      const currentIndex = sortedSections.findIndex(s => s.id === sectionId);
+      
+      if (currentIndex > 0) {
+        const newSections = [...sortedSections];
+        [newSections[currentIndex - 1], newSections[currentIndex]] = [newSections[currentIndex], newSections[currentIndex - 1]];
+        
+        // עדכון סדר
+        return newSections.map((section, index) => ({
+          ...section,
+          order: index + 1
+        }));
+      }
+      return prev;
+    });
+  };
+  
+  const moveSectionDown = (sectionId: string) => {
+    setCustomSections(prev => {
+      const sortedSections = [...prev].sort((a, b) => a.order - b.order);
+      const currentIndex = sortedSections.findIndex(s => s.id === sectionId);
+      
+      if (currentIndex < sortedSections.length - 1) {
+        const newSections = [...sortedSections];
+        [newSections[currentIndex], newSections[currentIndex + 1]] = [newSections[currentIndex + 1], newSections[currentIndex]];
+        
+        // עדכון סדר
+        return newSections.map((section, index) => ({
+          ...section,
+          order: index + 1
+        }));
+      }
+      return prev;
+    });
+  };
+  
+  const getSectionNumber = (section: any) => {
+    const sortedSections = [...customSections].sort((a, b) => a.order - b.order);
+    const mainSections = sortedSections.filter(s => s.level === 'main');
+    const subSections = sortedSections.filter(s => s.level === 'sub' && s.parentId === section.parentId);
+    const subSubSections = sortedSections.filter(s => s.level === 'sub-sub' && s.parentId === section.parentId);
+    
+    if (section.level === 'main') {
+      const mainIndex = mainSections.findIndex(s => s.id === section.id);
+      return (mainIndex + 1).toString();
+    } else if (section.level === 'sub') {
+      const mainIndex = mainSections.findIndex(s => s.id === section.parentId);
+      const subIndex = subSections.findIndex(s => s.id === section.id);
+      return `${mainIndex + 1}.${subIndex + 1}`;
+    } else if (section.level === 'sub-sub') {
+      const mainIndex = mainSections.findIndex(s => s.id === section.parentId);
+      const subSubIndex = subSubSections.findIndex(s => s.id === section.id);
+      return `${mainIndex + 1}.${subSubIndex + 1}`;
+    }
+    
+    return '';
   };
   
   // מערכת למידה
@@ -340,11 +430,14 @@ export default function LawyerFeeAgreement() {
   useEffect(() => {
     if (selectedServiceType && feeAgreementTemplates.serviceCategories[selectedServiceType as keyof typeof feeAgreementTemplates.serviceCategories]) {
       const service = feeAgreementTemplates.serviceCategories[selectedServiceType as keyof typeof feeAgreementTemplates.serviceCategories];
-      const autoSections = service.clauses.map(clause => ({
-        title: clause.title,
-        content: replaceVariablesInText(clause.text)
-      }));
-      setCustomSections(autoSections);
+        const autoSections = service.clauses.map((clause, index) => ({
+          id: generateSectionId(),
+          title: clause.title,
+          content: replaceVariablesInText(clause.text),
+          level: 'main' as const,
+          order: index + 1
+        }));
+        setCustomSections(autoSections);
       
       // עדכון פרטי התיק
       setAgreementData(prev => ({
@@ -416,9 +509,12 @@ export default function LawyerFeeAgreement() {
     if (selectedServiceType && customSections.length > 0) {
       const service = feeAgreementTemplates.serviceCategories[selectedServiceType as keyof typeof feeAgreementTemplates.serviceCategories];
       if (service) {
-        const updatedSections = service.clauses.map(clause => ({
+        const updatedSections = service.clauses.map((clause, index) => ({
+          id: generateSectionId(),
           title: clause.title,
-          content: replaceVariablesInText(clause.text)
+          content: replaceVariablesInText(clause.text),
+          level: 'main' as const,
+          order: index + 1
         }));
         setCustomSections(updatedSections);
       }
@@ -472,7 +568,14 @@ export default function LawyerFeeAgreement() {
     } else {
       // אין משתנים - הוסף ישירות
       const contentWithVariables = replaceVariablesInText(content);
-      setCustomSections(prev => [...prev, { title, content: contentWithVariables }]);
+      const newSection = {
+        id: generateSectionId(),
+        title,
+        content: contentWithVariables,
+        level: 'main' as const,
+        order: getNextOrder()
+      };
+      setCustomSections(prev => [...prev, newSection]);
     }
     setShowSectionsWarehouse(false);
   };
@@ -481,8 +584,8 @@ export default function LawyerFeeAgreement() {
   const convertToEditableSections = () => {
     if (typeof window === 'undefined') return;
     
-    const editable = customSections.map((section, index) => ({
-      id: `section_${index}`,
+    const editable = customSections.map((section) => ({
+      id: section.id,
       title: section.title,
       content: section.content,
       category: 'fee_agreement' as const,
@@ -504,9 +607,9 @@ export default function LawyerFeeAgreement() {
     );
     
     setCustomSections(prev => 
-      prev.map((section, index) => 
-        `section_${index}` === updatedSection.id ? 
-          { title: updatedSection.title, content: updatedSection.content } : 
+      prev.map((section) => 
+        section.id === updatedSection.id ? 
+          { ...section, title: updatedSection.title, content: updatedSection.content } : 
           section
       )
     );
@@ -603,8 +706,11 @@ export default function LawyerFeeAgreement() {
       });
     } else {
       const newSection = {
+        id: generateSectionId(),
         title: warehouseSection.title,
-        content: contentWithVariables
+        content: contentWithVariables,
+        level: 'main' as const,
+        order: getNextOrder()
       };
       setCustomSections(prev => [...prev, newSection]);
       
@@ -1162,7 +1268,7 @@ ________________________           ${agreementData.clients.map((_, i) => '______
                   const content = prompt('תוכן הסעיף:');
                   if (title && content) {
                     handleSaveToWarehouse({
-                      id: Date.now().toString(),
+                      id: generateSectionId(),
                       title,
                       content,
                       category: 'custom',
@@ -1246,52 +1352,84 @@ ________________________           ${agreementData.clients.map((_, i) => '______
             </h2>
             
             <div className="space-y-4">
-              {customSections.map((section, index) => (
-                <div key={index} className="bg-white p-4 rounded-lg border border-purple-300">
+              {customSections
+                .sort((a, b) => a.order - b.order)
+                .map((section) => (
+                <div key={section.id} className={`bg-white p-4 rounded-lg border ${
+                  section.level === 'main' ? 'border-purple-300' : 
+                  section.level === 'sub' ? 'border-blue-300' : 'border-green-300'
+                } ${section.level === 'sub' ? 'ml-4' : section.level === 'sub-sub' ? 'ml-8' : ''}`}>
                   <div className="flex justify-between items-start mb-2">
                     <div className="flex items-center gap-2">
+                      <span className="text-xs bg-gray-100 px-2 py-1 rounded text-gray-600">
+                        {getSectionNumber(section)}
+                      </span>
                       <h3 className="font-semibold text-purple-900">{section.title}</h3>
+                      <span className={`text-xs px-2 py-1 rounded ${
+                        section.level === 'main' ? 'bg-purple-100 text-purple-700' : 
+                        section.level === 'sub' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'
+                      }`}>
+                        {section.level === 'main' ? 'ראשי' : section.level === 'sub' ? 'תת-סעיף' : 'תת-תת-סעיף'}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {/* כפתורי רמה */}
+                      <div className="flex gap-1">
+                        <button
+                          onClick={() => changeSectionLevel(section.id, 'main')}
+                          className={`px-2 py-1 text-xs rounded ${
+                            section.level === 'main' ? 'bg-purple-200 text-purple-800' : 'bg-gray-100 text-gray-600 hover:bg-purple-100'
+                          }`}
+                          title="הפוך לראשי"
+                        >
+                          ראשי
+                        </button>
+                        <button
+                          onClick={() => changeSectionLevel(section.id, 'sub')}
+                          className={`px-2 py-1 text-xs rounded ${
+                            section.level === 'sub' ? 'bg-blue-200 text-blue-800' : 'bg-gray-100 text-gray-600 hover:bg-blue-100'
+                          }`}
+                          title="הפוך לתת-סעיף"
+                        >
+                          תת
+                        </button>
+                        <button
+                          onClick={() => changeSectionLevel(section.id, 'sub-sub')}
+                          className={`px-2 py-1 text-xs rounded ${
+                            section.level === 'sub-sub' ? 'bg-green-200 text-green-800' : 'bg-gray-100 text-gray-600 hover:bg-green-100'
+                          }`}
+                          title="הפוך לתת-תת-סעיף"
+                        >
+                          תת-תת
+                        </button>
+                      </div>
+                      
+                      {/* כפתורי הזזה */}
                       <div className="flex flex-col gap-1">
                         <button
-                          onClick={() => {
-                            if (index > 0) {
-                              setCustomSections(prev => {
-                                const newSections = [...prev];
-                                [newSections[index - 1], newSections[index]] = [newSections[index], newSections[index - 1]];
-                                return newSections;
-                              });
-                            }
-                          }}
-                          disabled={index === 0}
-                          className={`p-1 rounded ${index === 0 ? 'text-gray-300 cursor-not-allowed' : 'text-purple-600 hover:text-purple-800 hover:bg-purple-50'}`}
+                          onClick={() => moveSectionUp(section.id)}
+                          className="p-1 rounded text-purple-600 hover:text-purple-800 hover:bg-purple-50"
                           title="הזז למעלה"
                         >
                           ↑
                         </button>
                         <button
-                          onClick={() => {
-                            if (index < customSections.length - 1) {
-                              setCustomSections(prev => {
-                                const newSections = [...prev];
-                                [newSections[index], newSections[index + 1]] = [newSections[index + 1], newSections[index]];
-                                return newSections;
-                              });
-                            }
-                          }}
-                          disabled={index === customSections.length - 1}
-                          className={`p-1 rounded ${index === customSections.length - 1 ? 'text-gray-300 cursor-not-allowed' : 'text-purple-600 hover:text-purple-800 hover:bg-purple-50'}`}
+                          onClick={() => moveSectionDown(section.id)}
+                          className="p-1 rounded text-purple-600 hover:text-purple-800 hover:bg-purple-50"
                           title="הזז למטה"
                         >
                           ↓
                         </button>
                       </div>
+                      
+                      {/* כפתור מחיקה */}
+                      <button
+                        onClick={() => setCustomSections(prev => prev.filter(s => s.id !== section.id))}
+                        className="text-red-500 hover:text-red-700"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
                     </div>
-                    <button
-                      onClick={() => setCustomSections(prev => prev.filter((_, i) => i !== index))}
-                      className="text-red-500 hover:text-red-700"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
                   </div>
                   <div className="text-sm text-gray-700 bg-gray-50 p-3 rounded border max-h-32 overflow-y-auto">
                     {section.content}
@@ -1481,8 +1619,11 @@ ________________________           ${agreementData.clients.map((_, i) => '______
                     });
 
                     setCustomSections(prev => [...prev, {
+                      id: generateSectionId(),
                       title: variablesModal.section.title,
-                      content: finalContent
+                      content: finalContent,
+                      level: 'main' as const,
+                      order: getNextOrder()
                     }]);
 
                     setVariablesModal(null);
