@@ -373,11 +373,14 @@ export default function ProfessionalFeeAgreementExporter({
                             bidirectional: true,
                             children: [new TextRun(client.email)]
                           }),
-                          new Paragraph({
-                            alignment: AlignmentType.RIGHT,
-                            bidirectional: true,
-                            children: [new TextRun(`(להלן: "${getGenderText('הלקוח', 'הלקוחה', 'הלקוחות')}")`)]
-                          })
+                          // הוספת "להלן" רק אחרי הלקוח האחרון
+                          ...(index === agreementData.clients.length - 1 ? [
+                            new Paragraph({
+                              alignment: AlignmentType.RIGHT,
+                              bidirectional: true,
+                              children: [new TextRun(`(להלן: "${getGenderText('הלקוח', 'הלקוחה', 'הלקוחות')}")`)]
+                            })
+                          ] : [])
                         ]
                       }),
                       new TableCell({
