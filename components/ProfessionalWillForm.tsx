@@ -1480,6 +1480,28 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
           {showLearningSystem && (
             <div className="mb-6">
               <AILearningManager />
+              
+              {/* סעיפים ניתנים לעריכה */}
+              {editableSections.length > 0 && (
+                <div className="mt-6 space-y-4">
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <p className="text-sm text-green-800">
+                      ✅ <strong>מצב עריכה פעיל!</strong> ערוך כל סעיף והשתמש ב-AI לשיפור הטקסט
+                    </p>
+                  </div>
+
+                  {editableSections.map((section) => (
+                    <EditableSection
+                      key={section.id}
+                      section={section}
+                      userId={testator.fullName || 'anonymous'}
+                      onUpdate={handleUpdateEditableSection}
+                      onSaveToWarehouse={handleSaveToWarehouse}
+                      onSaveToLearning={handleSaveToLearning}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           )}
           
