@@ -311,6 +311,31 @@ export default function AdvanceDirectivesForm() {
     }
   };
 
+  const handleSelectFromWarehouse = async (warehouseSection: any) => {
+    const { replaceTextWithGender } = require('@/lib/hebrew-gender');
+    
+    // קביעת מגדר הממנה
+    const genderedContent = replaceTextWithGender(
+      warehouseSection.content,
+      principalInfo.gender
+    );
+    
+    // הוספה לסעיפים הנבחרים (רק ה-ID)
+    setSelectedSections(prev => [...prev, warehouseSection.id]);
+    
+    // עדכון מונה השימוש במחסן
+    try {
+      await updateSection(warehouseSection.id, {
+        usage_count: (warehouseSection.usage_count || 0) + 1,
+        last_used: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error updating usage count:', error);
+    }
+    
+    alert('✅ סעיף נוסף מהמחסן!');
+  };
+
   const generateDocument = () => {
     const attorneyGender = getAttorneyGender();
     

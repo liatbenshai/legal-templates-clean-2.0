@@ -469,6 +469,52 @@ export default function LawyerFeeAgreement() {
     return matches ? [...new Set(matches.map(match => match.replace(/\{\{|\}\}/g, '')))] : [];
   };
 
+  const handleSelectFromWarehouse = async (warehouseSection: any) => {
+    const { replaceTextWithGender } = require('@/lib/hebrew-gender');
+    
+    // קביעת מגדר הלקוח/לקוחה
+    const clientGender = agreementData.clients.length === 1 ? 
+      agreementData.clients[0].gender : 'plural';
+    
+    const genderedContent = replaceTextWithGender(
+      warehouseSection.content,
+      clientGender
+    );
+    
+    const variables = extractVariablesFromContent(genderedContent);
+    
+    if (variables.length > 0) {
+      setVariablesModal({
+        section: {
+          id: warehouseSection.id || 'custom',
+          title: warehouseSection.title,
+          content: genderedContent,
+          variables: variables
+        },
+        values: variables.reduce((acc, v) => ({ ...acc, [v]: '' }), {}),
+        genders: variables.reduce((acc, v) => ({ ...acc, [v]: 'male' as 'male' | 'female' }), {})
+      });
+    } else {
+      const newSection = {
+        title: warehouseSection.title,
+        content: genderedContent
+      };
+      setCustomSections(prev => [...prev, newSection]);
+      
+      // עדכון מונה השימוש במחסן
+      try {
+        await updateSection(warehouseSection.id, {
+          usage_count: (warehouseSection.usage_count || 0) + 1,
+          last_used: new Date().toISOString()
+        });
+      } catch (error) {
+        console.error('Error updating usage count:', error);
+      }
+      
+      alert('✅ סעיף נוסף מהמחסן!');
+    }
+  };
+
   const isGenderRelevantVariable = (variable: string): boolean => {
     const genderRelevantVariables = [
       'lawyer_name', 'client_name', 'attorney_name', 'witness_name',
@@ -497,32 +543,6 @@ export default function LawyerFeeAgreement() {
     return labels[variable] || variable;
   };
 
-  const handleSelectFromWarehouse = (warehouseSection: any) => {
-    const { replaceTextWithGender } = require('@/lib/hebrew-gender');
-    const genderedContent = replaceTextWithGender(warehouseSection.content, 'male');
-    
-    const variables = extractVariablesFromContent(genderedContent);
-    
-    if (variables.length > 0) {
-      setVariablesModal({
-        section: {
-          id: warehouseSection.id || 'custom',
-          title: warehouseSection.title,
-          content: genderedContent,
-          variables: variables
-        },
-        values: variables.reduce((acc, v) => ({ ...acc, [v]: '' }), {}),
-        genders: variables.reduce((acc, v) => ({ ...acc, [v]: 'male' as 'male' | 'female' }), {})
-      });
-    } else {
-      const newSection = {
-        title: warehouseSection.title,
-        content: genderedContent
-      };
-      setCustomSections(prev => [...prev, newSection]);
-      alert('סעיף נוסף מהמחסן!');
-    }
-  };
 
   const generateFeeAgreement = (): string => {
     const clientsSection = agreementData.clients.map((client, index) => {
