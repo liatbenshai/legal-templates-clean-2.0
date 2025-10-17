@@ -171,6 +171,7 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
   const [totalCopies, setTotalCopies] = useState('3');
   const [customSections, setCustomSections] = useState<Array<{title: string, content: string}>>([]);
   const [heirsDisplayMode, setHeirsDisplayMode] = useState<'table' | 'list'>('list');
+  const [showFullWill, setShowFullWill] = useState(false);
   
   // אפוטרופוס לקטינים
   const [guardian, setGuardian] = useState({
@@ -1389,7 +1390,43 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
           {customSections.map((section, index) => (
             <div key={index} className="bg-white p-4 rounded-lg border mb-4">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="font-semibold text-gray-800">סעיף {index + 1}</h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-semibold text-gray-800">סעיף {index + 1}</h3>
+                  <div className="flex flex-col gap-1">
+                    <button
+                      onClick={() => {
+                        if (index > 0) {
+                          setCustomSections(prev => {
+                            const newSections = [...prev];
+                            [newSections[index - 1], newSections[index]] = [newSections[index], newSections[index - 1]];
+                            return newSections;
+                          });
+                        }
+                      }}
+                      disabled={index === 0}
+                      className={`p-1 rounded ${index === 0 ? 'text-gray-300 cursor-not-allowed' : 'text-blue-600 hover:text-blue-800 hover:bg-blue-50'}`}
+                      title="הזז למעלה"
+                    >
+                      ↑
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (index < customSections.length - 1) {
+                          setCustomSections(prev => {
+                            const newSections = [...prev];
+                            [newSections[index], newSections[index + 1]] = [newSections[index + 1], newSections[index]];
+                            return newSections;
+                          });
+                        }
+                      }}
+                      disabled={index === customSections.length - 1}
+                      className={`p-1 rounded ${index === customSections.length - 1 ? 'text-gray-300 cursor-not-allowed' : 'text-blue-600 hover:text-blue-800 hover:bg-blue-50'}`}
+                      title="הזז למטה"
+                    >
+                      ↓
+                    </button>
+                  </div>
+                </div>
                 <button
                   onClick={() => setCustomSections(prev => prev.filter((_, i) => i !== index))}
                   className="text-red-600 hover:text-red-800"
@@ -1512,6 +1549,91 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
                 userId={testator.fullName || 'anonymous'}
                 willType={willType}
               />
+            </div>
+          )}
+        </section>
+
+        {/* תצוגת כל הסעיפים */}
+        <section className="bg-blue-50 p-6 rounded-lg border border-blue-200 mb-6">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold text-blue-900 flex items-center gap-2">
+              📄 תצוגת הצוואה המלאה
+            </h2>
+            <button
+              onClick={() => setShowFullWill(!showFullWill)}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+            >
+              {showFullWill ? 'הסתר' : 'הצג'} צוואה מלאה
+            </button>
+          </div>
+          
+          {showFullWill && (
+            <div className="bg-white border border-blue-300 rounded-lg p-6 max-h-96 overflow-y-auto">
+              <div className="space-y-4">
+                {/* סעיפים קבועים - התחלה */}
+                <div className="border-l-4 border-blue-500 pl-4">
+                  <h3 className="font-semibold text-blue-800 mb-2">פתיחה משפטית</h3>
+                  <div className="text-sm text-gray-700 whitespace-pre-line">
+                    {generateProfessionalWillContent(willType, getWillData(), []).split('\n\n')[0]}
+                  </div>
+                </div>
+
+                {/* סעיפים מותאמים אישית */}
+                {customSections.map((section, index) => (
+                  <div key={index} className="border-l-4 border-green-500 pl-4">
+                    <div className="flex justify-between items-center mb-2">
+                      <h3 className="font-semibold text-green-800">
+                        {section.title || `סעיף ${index + 1}`}
+                      </h3>
+                      <div className="flex flex-col gap-1">
+                        <button
+                          onClick={() => {
+                            if (index > 0) {
+                              setCustomSections(prev => {
+                                const newSections = [...prev];
+                                [newSections[index - 1], newSections[index]] = [newSections[index], newSections[index - 1]];
+                                return newSections;
+                              });
+                            }
+                          }}
+                          disabled={index === 0}
+                          className={`p-1 rounded text-xs ${index === 0 ? 'text-gray-300 cursor-not-allowed' : 'text-green-600 hover:text-green-800 hover:bg-green-50'}`}
+                          title="הזז למעלה"
+                        >
+                          ↑
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (index < customSections.length - 1) {
+                              setCustomSections(prev => {
+                                const newSections = [...prev];
+                                [newSections[index], newSections[index + 1]] = [newSections[index + 1], newSections[index]];
+                                return newSections;
+                              });
+                            }
+                          }}
+                          disabled={index === customSections.length - 1}
+                          className={`p-1 rounded text-xs ${index === customSections.length - 1 ? 'text-gray-300 cursor-not-allowed' : 'text-green-600 hover:text-green-800 hover:bg-green-50'}`}
+                          title="הזז למטה"
+                        >
+                          ↓
+                        </button>
+                      </div>
+                    </div>
+                    <div className="text-sm text-gray-700 whitespace-pre-line">
+                      {section.content}
+                    </div>
+                  </div>
+                ))}
+
+                {/* סעיפים קבועים - סוף */}
+                <div className="border-l-4 border-purple-500 pl-4">
+                  <h3 className="font-semibold text-purple-800 mb-2">הצהרות וחתימות</h3>
+                  <div className="text-sm text-gray-700 whitespace-pre-line">
+                    {generateProfessionalWillContent(willType, getWillData(), []).split('\n\n').slice(-2).join('\n\n')}
+                  </div>
+                </div>
+              </div>
             </div>
           )}
         </section>
