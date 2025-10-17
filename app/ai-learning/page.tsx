@@ -26,6 +26,17 @@ export default function AILearningPage() {
   const [isLoadingSections, setIsLoadingSections] = useState(true);
   const [showSaveToDocumentModal, setShowSaveToDocumentModal] = useState(false);
   
+  // חלון השלמת משתנים
+  const [variablesCompletionModal, setVariablesCompletionModal] = useState<{
+    isOpen: boolean;
+    variables: string[];
+    values: Record<string, string>;
+  }>({
+    isOpen: false,
+    variables: [],
+    values: {}
+  });
+  
   // מערכת משתנים
   const [variables, setVariables] = useState<Array<{
     id: string;
@@ -103,6 +114,27 @@ export default function AILearningPage() {
     
     closeAddVariableModal();
     return newVariable;
+  };
+
+  // פונקציה לזיהוי משתנים בטקסט
+  const extractVariablesFromText = (text: string): string[] => {
+    const matches = text.match(/\{\{([^}]+)\}\}/g);
+    return matches ? [...new Set(matches.map(match => match.replace(/\{\{|\}\}/g, '')))] : [];
+  };
+
+  // פונקציה לפתיחת חלון השלמת משתנים
+  const openVariablesCompletionModal = () => {
+    const foundVariables = extractVariablesFromText(text);
+    if (foundVariables.length === 0) {
+      alert('לא נמצאו משתנים בטקסט. השתמש בתחביר {{שם_המשתנה}}');
+      return;
+    }
+    
+    setVariablesCompletionModal({
+      isOpen: true,
+      variables: foundVariables,
+      values: {}
+    });
   };
   
   // טעינת סעיפים שמורים בעת טעינת הדף
@@ -268,12 +300,22 @@ export default function AILearningPage() {
         </div>
         
         {/* תצוגת משתנים קיימים */}
-        {variables.length > 0 && (
-          <div className="mb-8 p-4 bg-blue-50 border border-blue-200 rounded-xl">
-            <h3 className="text-lg font-semibold text-blue-800 mb-3 flex items-center gap-2">
+        <div className="mb-8 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+          <div className="flex justify-between items-center mb-3">
+            <h3 className="text-lg font-semibold text-blue-800 flex items-center gap-2">
               <span className="text-xl">📋</span>
               משתנים קיימים ({variables.length})
             </h3>
+            <button
+              onClick={openAddVariableModal}
+              className="flex items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm"
+            >
+              <Plus className="w-4 h-4" />
+              הוסף משתנה
+            </button>
+          </div>
+          
+          {variables.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
               {variables.map((variable) => (
                 <div key={variable.id} className="bg-white p-3 rounded-lg border border-blue-200">
@@ -301,8 +343,13 @@ export default function AILearningPage() {
                 </div>
               ))}
             </div>
-          </div>
-        )}
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              <p className="mb-2">אין משתנים עדיין</p>
+              <p className="text-sm">לחץ על "הוסף משתנה" כדי ליצור משתנים לשימוש בטקסט</p>
+            </div>
+          )}
+        </div>
 
         {/* תכונות */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
@@ -385,8 +432,15 @@ export default function AILearningPage() {
                         <Plus className="w-4 h-4" />
                         הוסף משתנה
                       </button>
+                      <button
+                        onClick={openVariablesCompletionModal}
+                        className="flex items-center gap-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm"
+                      >
+                        <FileText className="w-4 h-4" />
+                        השלם משתנים
+                      </button>
                       <div className="text-xs text-gray-500">
-                        לחץ להוספת משתנה כמו {`{{שם_המשתנה}}`}
+                        השתמש במשתנים כמו {`{{שם_המשתנה}}`} ולחץ "השלם משתנים"
                       </div>
                     </div>
                     
@@ -699,6 +753,70 @@ export default function AILearningPage() {
                  >
                    צור משתנה ולהוסיף לטקסט
                  </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* מודל השלמת משתנים */}
+      {variablesCompletionModal.isOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+            <h3 className="text-xl font-bold text-gray-900 mb-4">
+              🔧 השלם משתנים
+            </h3>
+            
+            <div className="space-y-4">
+              {variablesCompletionModal.variables.map((variableName) => (
+                <div key={variableName} className="border border-gray-200 rounded-lg p-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    {`{{${variableName}}}`}
+                  </label>
+                  <input
+                    type="text"
+                    value={variablesCompletionModal.values[variableName] || ''}
+                    onChange={(e) => setVariablesCompletionModal(prev => ({
+                      ...prev,
+                      values: {
+                        ...prev.values,
+                        [variableName]: e.target.value
+                      }
+                    }))}
+                    placeholder={`הזן ערך עבור ${variableName}`}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                    dir="rtl"
+                  />
+                </div>
+              ))}
+            </div>
+            
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setVariablesCompletionModal({ isOpen: false, variables: [], values: {} })}
+                className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
+              >
+                ביטול
+              </button>
+              <button
+                onClick={() => {
+                  // החלפת המשתנים בטקסט
+                  let updatedText = text;
+                  variablesCompletionModal.variables.forEach(variableName => {
+                    const value = variablesCompletionModal.values[variableName];
+                    if (value) {
+                      const regex = new RegExp(`\\{\\{${variableName}\\}\\}`, 'g');
+                      updatedText = updatedText.replace(regex, value);
+                    }
+                  });
+                  
+                  setText(updatedText);
+                  setVariablesCompletionModal({ isOpen: false, variables: [], values: {} });
+                  alert('✅ המשתנים הוחלפו בהצלחה!');
+                }}
+                className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+              >
+                החלף משתנים
+              </button>
             </div>
           </div>
         </div>
