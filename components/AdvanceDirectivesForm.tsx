@@ -13,6 +13,7 @@ import { EditableSection as EditableSectionType } from '@/lib/learning-system/ty
 import { learningEngine } from '@/lib/learning-system/learning-engine';
 import EditableSection from './LearningSystem/EditableSection';
 import AILearningManager from './AILearningManager';
+import { useWarehouse } from '@/lib/hooks/useWarehouse';
 
 // סוג מגדר מצומצם (ללא organization)
 type PersonGender = 'male' | 'female';
@@ -38,6 +39,9 @@ export default function AdvanceDirectivesForm() {
     gender: 'male' as PersonGender
   });
 
+  // Warehouse hook
+  const { addSection, updateSection, sections: warehouseSections } = useWarehouse(principalInfo.fullName || 'anonymous');
+
   // מיופי כוח (אפשר כמה)
   const [attorneys, setAttorneys] = useState<Attorney[]>([
     {
@@ -62,7 +66,7 @@ export default function AdvanceDirectivesForm() {
   });
 
   const [currentStep, setCurrentStep] = useState(1);
-  const [useWarehouse, setUseWarehouse] = useState(true); // האם להשתמש במחסן או טקסט חופשי
+  const [useWarehouseSections, setUseWarehouseSections] = useState(true); // האם להשתמש במחסן או טקסט חופשי
   
   // מערכת למידה
   const [editableSections, setEditableSections] = useState<EditableSectionType[]>([]);
@@ -265,31 +269,25 @@ export default function AdvanceDirectivesForm() {
   };
 
   // שמירה למחסן אישי
-  const handleSaveToWarehouse = (section: EditableSectionType) => {
-    const action = {
-      type: 'save_to_warehouse' as const,
-      sectionId: section.id,
-      newContent: section.content,
-      userId: principalInfo.fullName || 'anonymous',
-      timestamp: new Date().toISOString()
-    };
-    
-    const warehouseSection = {
-      id: section.id,
-      title: section.title,
-      content: section.content,
-      category: section.category,
-      tags: ['הנחיות מקדימות', 'סעיף מותאם אישית'],
-      usageCount: 0,
-      averageRating: 0,
-      isPublic: false,
-      createdBy: principalInfo.fullName || 'anonymous',
-      createdAt: new Date().toISOString(),
-      lastUsed: new Date().toISOString()
-    };
-    
-    learningEngine.saveToWarehouse(action, warehouseSection);
-    alert('סעיף נשמר למחסן האישי!');
+  const handleSaveToWarehouse = async (section: EditableSectionType) => {
+    try {
+      await addSection({
+        user_id: principalInfo.fullName || 'anonymous',
+        title: section.title,
+        content: section.content,
+        category: section.category || 'custom',
+        tags: ['הנחיות מקדימות', 'סעיף מותאם אישית'],
+        usage_count: 0,
+        average_rating: 5,
+        is_public: false,
+        is_hidden: false,
+        created_by: principalInfo.fullName || 'anonymous'
+      });
+      alert('✅ סעיף נשמר למחסן האישי!');
+    } catch (error) {
+      console.error('Error saving to warehouse:', error);
+      alert('❌ שגיאה בשמירה למחסן');
+    }
   };
 
   // שמירה למערכת למידה
@@ -717,9 +715,9 @@ ${applyAdvanceDirectivesGender(
               {/* בחירה בין מחסן סעיפים לטקסט חופשי */}
               <div className="flex gap-4 mb-6">
                 <button
-                  onClick={() => setUseWarehouse(true)}
+                  onClick={() => setUseWarehouseSections(true)}
                   className={`flex-1 p-4 rounded-lg border-2 transition ${
-                    useWarehouse
+                    useWarehouseSections
                       ? 'border-blue-600 bg-blue-50 text-blue-900'
                       : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
                   }`}
@@ -732,9 +730,9 @@ ${applyAdvanceDirectivesGender(
                 </button>
 
                 <button
-                  onClick={() => setUseWarehouse(false)}
+                  onClick={() => setUseWarehouseSections(false)}
                   className={`flex-1 p-4 rounded-lg border-2 transition ${
-                    !useWarehouse
+                    !useWarehouseSections
                       ? 'border-blue-600 bg-blue-50 text-blue-900'
                       : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
                   }`}
@@ -748,7 +746,7 @@ ${applyAdvanceDirectivesGender(
               </div>
 
               {/* מחסן סעיפים */}
-              {useWarehouse && (
+              {useWarehouseSections && (
                 <AdvanceDirectivesSectionSelector
                   selectedSections={selectedSections}
                   onSectionToggle={handleSectionToggle}
@@ -759,7 +757,7 @@ ${applyAdvanceDirectivesGender(
               )}
 
               {/* טקסט חופשי */}
-              {!useWarehouse && (
+              {!useWarehouseSections && (
                 <div className="space-y-4">
                   <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                     <p className="text-sm text-green-800">
@@ -931,17 +929,43 @@ ${applyAdvanceDirectivesGender(
                         </>
                       )}
                     </p>
-                    <button
-                      onClick={convertToEditableSections}
-                      disabled={selectedSections.length === 0 && !Object.values(customInstructions).some(v => v)}
-                      className="w-full px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl hover:from-purple-700 hover:to-pink-700 transition font-bold text-lg shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
-                    >
-                      {selectedSections.length === 0 && !Object.values(customInstructions).some(v => v) ? (
-                        <>⚠️ אין תוכן לשיפור - חזור לשלב 3</>
-                      ) : (
-                        <>🚀 פתח מצב עריכה + שיפור עם AI</>
-                      )}
-                    </button>
+                    <div className="flex gap-3">
+                      <button
+                        onClick={convertToEditableSections}
+                        disabled={selectedSections.length === 0 && !Object.values(customInstructions).some(v => v)}
+                        className="flex-1 px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl hover:from-purple-700 hover:to-pink-700 transition font-bold text-lg shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
+                      >
+                        {selectedSections.length === 0 && !Object.values(customInstructions).some(v => v) ? (
+                          <>⚠️ אין תוכן לשיפור - חזור לשלב 3</>
+                        ) : (
+                          <>🚀 פתח מצב עריכה + שיפור עם AI</>
+                        )}
+                      </button>
+                      
+                      <button
+                        onClick={() => {
+                          const title = prompt('כותרת הסעיף:');
+                          const content = prompt('תוכן הסעיף:');
+                          if (title && content) {
+                            handleSaveToWarehouse({
+                              id: Date.now().toString(),
+                              title,
+                              content,
+                              category: 'custom',
+                              serviceType: 'advance-directives',
+                              isEditable: true,
+                              isCustom: true,
+                              version: 1,
+                              lastModified: new Date().toISOString(),
+                              modifiedBy: principalInfo.fullName || 'anonymous'
+                            });
+                          }
+                        }}
+                        className="px-4 py-4 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition font-semibold"
+                      >
+                        ➕ הוסף סעיף למחסן
+                      </button>
+                    </div>
                   </>
                 )}
 

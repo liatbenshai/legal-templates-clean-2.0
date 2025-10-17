@@ -11,6 +11,7 @@ import { EditableSection as EditableSectionType } from '@/lib/learning-system/ty
 import { learningEngine } from '@/lib/learning-system/learning-engine';
 import feeAgreementTemplates from '@/lib/fee-agreement-templates.json';
 import { replaceTextWithGender } from '@/lib/hebrew-gender';
+import { useWarehouse } from '@/lib/hooks/useWarehouse';
 
 // פונקציה לעיצוב מספרים עם פסיקים
 const formatNumber = (value: string): string => {
@@ -80,6 +81,9 @@ export default function LawyerFeeAgreement() {
   // טעינת פרטי המשתמש המחובר
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [mounted, setMounted] = useState(false);
+
+  // Warehouse hook
+  const { addSection, updateSection, sections: warehouseSections } = useWarehouse(currentUser?.id || 'anonymous');
 
   useEffect(() => {
     setMounted(true);
@@ -405,12 +409,59 @@ export default function LawyerFeeAgreement() {
     );
   };
 
-  const handleSaveToWarehouse = (section: EditableSectionType) => {
-    console.log('Saved to warehouse:', section);
+  const handleSaveToWarehouse = async (section: EditableSectionType) => {
+    try {
+      await addSection({
+        user_id: currentUser?.id || 'anonymous',
+        title: section.title,
+        content: section.content,
+        category: section.category || 'custom',
+        tags: ['הסכם שכר טרחה', 'סעיף מותאם אישית'],
+        usage_count: 0,
+        average_rating: 5,
+        is_public: false,
+        is_hidden: false,
+        created_by: currentUser?.id || 'anonymous'
+      });
+      alert('✅ סעיף נשמר למחסן האישי!');
+    } catch (error) {
+      console.error('Error saving to warehouse:', error);
+      alert('❌ שגיאה בשמירה למחסן');
+    }
   };
 
-  const handleSaveToLearning = (section: EditableSectionType) => {
-    console.log('Saved to learning:', section);
+  const handleSaveToLearning = async (section: EditableSectionType) => {
+    try {
+      // שמירה למערכת הלמידה
+      const action = {
+        type: 'save_to_learning' as const,
+        sectionId: section.id,
+        newContent: section.content,
+        reason: 'שמירה למערכת הלמידה',
+        userId: currentUser?.id || 'anonymous',
+        timestamp: new Date().toISOString()
+      };
+
+      learningEngine.saveToLearning(action, {
+        sectionId: section.id,
+        originalText: section.originalContent || section.content,
+        editedText: section.content,
+        editType: 'manual',
+        userFeedback: 'approved',
+        context: {
+          serviceType: 'fee-agreement',
+          category: section.category,
+          userType: 'lawyer'
+        },
+        timestamp: new Date().toISOString(),
+        userId: currentUser?.id || 'anonymous'
+      });
+      
+      alert('✅ שינוי נשמר למערכת הלמידה!');
+    } catch (error) {
+      console.error('Error saving to learning:', error);
+      alert('❌ שגיאה בשמירה למערכת הלמידה');
+    }
   };
 
   const extractVariablesFromContent = (content: string): string[] => {
@@ -924,6 +975,30 @@ ________________________           ${agreementData.clients.map((_, i) => '______
               >
                 <BookOpen className="w-4 h-4" />
                 מחסן סעיפים
+              </button>
+              <button
+                onClick={() => {
+                  const title = prompt('כותרת הסעיף:');
+                  const content = prompt('תוכן הסעיף:');
+                  if (title && content) {
+                    handleSaveToWarehouse({
+                      id: Date.now().toString(),
+                      title,
+                      content,
+                      category: 'custom',
+                      serviceType: 'fee-agreement',
+                      isEditable: true,
+                      isCustom: true,
+                      version: 1,
+                      lastModified: new Date().toISOString(),
+                      modifiedBy: currentUser?.id || 'anonymous'
+                    });
+                  }
+                }}
+                className="flex items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm"
+              >
+                <Plus className="w-4 h-4" />
+                הוסף סעיף למחסן
               </button>
             </div>
           </div>
