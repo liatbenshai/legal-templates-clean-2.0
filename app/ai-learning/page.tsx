@@ -5,7 +5,6 @@ import { useAIImprove } from '@/lib/hooks/useAIImprove';
 import { Sparkles, Copy, Download, Loader, BookOpen, TrendingUp, Save, Trash2, FileText, Handshake, Heart } from 'lucide-react';
 import { supabase } from '@/lib/supabase-client';
 import { useRouter } from 'next/navigation';
-import { getAvailableWords, hebrewDictionary } from '@/lib/hebrew-gender';
 
 interface SavedSection {
   id: string;
@@ -52,22 +51,6 @@ export default function AILearningPage() {
     defaultValue: ''
   });
 
-  // מודל הוספת משתנה לסעיף ספציפי
-  const [addVariableToSectionModal, setAddVariableToSectionModal] = useState<{
-    isOpen: boolean;
-    sectionId: string;
-    name: string;
-    description: string;
-    type: 'text' | 'number' | 'date';
-    defaultValue: string;
-  }>({
-    isOpen: false,
-    sectionId: '',
-    name: '',
-    description: '',
-    type: 'text',
-    defaultValue: ''
-  });
 
   // פונקציות לניהול משתנים
   const addVariable = (name: string, description: string, type: 'text' | 'number' | 'date', defaultValue?: string) => {
@@ -83,20 +66,6 @@ export default function AILearningPage() {
     return newVariable;
   };
 
-  // קבלת משתני מגדר זמינים מהמערכת הגלובלית
-  const getGenderVariables = () => {
-    const availableWords = getAvailableWords();
-    return availableWords.map(word => {
-      const genderedWord = hebrewDictionary[word];
-      return {
-        id: `gender_${word}`,
-        name: word,
-        description: `${genderedWord.male} / ${genderedWord.female} / ${genderedWord.plural}`,
-        type: 'text' as const,
-        usageCount: 0
-      };
-    });
-  };
   
   const openAddVariableModal = () => {
     setAddVariableModal({
@@ -294,43 +263,12 @@ export default function AILearningPage() {
           </p>
         </div>
         
-        {/* משתני מגדר זמינים */}
-        <div className="mb-8 p-4 bg-green-50 border border-green-200 rounded-xl">
-          <h3 className="text-lg font-semibold text-green-800 mb-3 flex items-center gap-2">
-            <span className="text-xl">🎭</span>
-            משתני מגדר זמינים ({getGenderVariables().length})
-          </h3>
-          <p className="text-sm text-green-700 mb-4">
-            משתנים אלה מוחלפים אוטומטית לפי המגדר הנבחר (זכר/נקבה/רבים)
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-60 overflow-y-auto">
-            {getGenderVariables().slice(0, 20).map((variable) => (
-              <div key={variable.id} className="bg-white p-3 rounded-lg border border-green-200">
-                <div className="flex items-center justify-between mb-2">
-                  <code className="bg-green-100 px-2 py-1 rounded text-sm font-mono">
-                    {`{{${variable.name}}}`}
-                  </code>
-                  <span className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded">
-                    מגדר
-                  </span>
-                </div>
-                <p className="text-sm text-gray-700">{variable.description}</p>
-              </div>
-            ))}
-          </div>
-          {getGenderVariables().length > 20 && (
-            <p className="text-xs text-green-600 mt-2">
-              ועוד {getGenderVariables().length - 20} משתני מגדר נוספים...
-            </p>
-          )}
-        </div>
-        
         {/* תצוגת משתנים קיימים */}
         {variables.length > 0 && (
           <div className="mb-8 p-4 bg-blue-50 border border-blue-200 rounded-xl">
             <h3 className="text-lg font-semibold text-blue-800 mb-3 flex items-center gap-2">
               <span className="text-xl">📋</span>
-              משתנים מותאמים אישית ({variables.length})
+              משתנים קיימים ({variables.length})
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
               {variables.map((variable) => (

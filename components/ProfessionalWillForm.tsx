@@ -13,7 +13,6 @@ import AILearningManager from './AILearningManager';
 import UnifiedWarehouse from './UnifiedWarehouse';
 import { useDocuments } from '@/lib/useDocuments';
 import { useWarehouse } from '@/lib/hooks/useWarehouse';
-import { getAvailableWords, hebrewDictionary } from '@/lib/hebrew-gender';
 
 interface Property {
   name: string;
@@ -251,20 +250,6 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
     return newVariable;
   };
 
-  // קבלת משתני מגדר זמינים מהמערכת הגלובלית
-  const getGenderVariables = () => {
-    const availableWords = getAvailableWords();
-    return availableWords.map(word => {
-      const genderedWord = hebrewDictionary[word];
-      return {
-        id: `gender_${word}`,
-        name: word,
-        description: `${genderedWord.male} / ${genderedWord.female} / ${genderedWord.plural}`,
-        type: 'text' as const,
-        usageCount: 0
-      };
-    });
-  };
   
   const openAddVariableModal = () => {
     setAddVariableModal({

@@ -12,7 +12,6 @@ import { learningEngine } from '@/lib/learning-system/learning-engine';
 import feeAgreementTemplates from '@/lib/fee-agreement-templates.json';
 import { replaceTextWithGender } from '@/lib/hebrew-gender';
 import { useWarehouse } from '@/lib/hooks/useWarehouse';
-import { getAvailableWords, hebrewDictionary } from '@/lib/hebrew-gender';
 
 // פונקציה לעיצוב מספרים עם פסיקים
 const formatNumber = (value: string): string => {
@@ -191,20 +190,6 @@ export default function LawyerFeeAgreement() {
     return newVariable;
   };
 
-  // קבלת משתני מגדר זמינים מהמערכת הגלובלית
-  const getGenderVariables = () => {
-    const availableWords = getAvailableWords();
-    return availableWords.map(word => {
-      const genderedWord = hebrewDictionary[word];
-      return {
-        id: `gender_${word}`,
-        name: word,
-        description: `${genderedWord.male} / ${genderedWord.female} / ${genderedWord.plural}`,
-        type: 'text' as const,
-        usageCount: 0
-      };
-    });
-  };
   
   const getVariableByName = (name: string) => {
     return variables.find(v => v.name === name);
