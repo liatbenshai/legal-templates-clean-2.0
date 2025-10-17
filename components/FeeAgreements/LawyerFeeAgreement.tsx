@@ -1140,7 +1140,43 @@ ________________________           ${agreementData.clients.map((_, i) => '______
               {customSections.map((section, index) => (
                 <div key={index} className="bg-white p-4 rounded-lg border border-purple-300">
                   <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-semibold text-purple-900">{section.title}</h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-semibold text-purple-900">{section.title}</h3>
+                      <div className="flex flex-col gap-1">
+                        <button
+                          onClick={() => {
+                            if (index > 0) {
+                              setCustomSections(prev => {
+                                const newSections = [...prev];
+                                [newSections[index - 1], newSections[index]] = [newSections[index], newSections[index - 1]];
+                                return newSections;
+                              });
+                            }
+                          }}
+                          disabled={index === 0}
+                          className={`p-1 rounded ${index === 0 ? 'text-gray-300 cursor-not-allowed' : 'text-purple-600 hover:text-purple-800 hover:bg-purple-50'}`}
+                          title="הזז למעלה"
+                        >
+                          ↑
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (index < customSections.length - 1) {
+                              setCustomSections(prev => {
+                                const newSections = [...prev];
+                                [newSections[index], newSections[index + 1]] = [newSections[index + 1], newSections[index]];
+                                return newSections;
+                              });
+                            }
+                          }}
+                          disabled={index === customSections.length - 1}
+                          className={`p-1 rounded ${index === customSections.length - 1 ? 'text-gray-300 cursor-not-allowed' : 'text-purple-600 hover:text-purple-800 hover:bg-purple-50'}`}
+                          title="הזז למטה"
+                        >
+                          ↓
+                        </button>
+                      </div>
+                    </div>
                     <button
                       onClick={() => setCustomSections(prev => prev.filter((_, i) => i !== index))}
                       className="text-red-500 hover:text-red-700"
