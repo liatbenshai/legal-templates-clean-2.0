@@ -179,20 +179,24 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
     level: 'main' | 'sub' | 'sub-sub';
     parentId?: string;
     order: number;
+    type?: 'text' | 'property' | 'heirs' | 'bank-account';
+    tableData?: any;
   }>>([
     { 
       id: 'section_1', 
       title: 'הוראות מיוחדות לגבי הרכוש', 
       content: 'אני מצווה כי כל הרכוש שלי יחולק באופן שווה בין ילדיי.',
       level: 'main',
-      order: 1
+      order: 1,
+      type: 'text'
     },
     { 
       id: 'section_2', 
       title: 'הוראות לגבי חיות מחמד', 
       content: 'אני מצווה כי הכלב שלי יעבור לטיפול של בתי הבכורה.',
       level: 'main',
-      order: 2
+      order: 2,
+      type: 'text'
     }
   ]);
   const [heirsDisplayMode, setHeirsDisplayMode] = useState<'table' | 'list'>('list');
@@ -234,6 +238,21 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
     title: '',
     content: '',
     category: 'custom'
+  });
+
+  // מודל הוספת סעיף עם טבלה
+  const [addSectionWithTableModal, setAddSectionWithTableModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    content: string;
+    type: 'text' | 'property' | 'heirs' | 'bank-account';
+    tableData: any;
+  }>({
+    isOpen: false,
+    title: '',
+    content: '',
+    type: 'text',
+    tableData: null
   });
   
   // פונקציות לניהול משתנים
@@ -711,7 +730,8 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
       title,
       content,
       level: 'main' as const,
-      order: getNextOrder()
+      order: getNextOrder(),
+      type: 'text' as const
     };
     setCustomSections(prev => [...prev, newSection]);
   };
@@ -735,6 +755,65 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
       console.error('Error saving to warehouse:', error);
       alert('❌ שגיאה בשמירה למחסן');
     }
+  };
+
+  // פונקציות לניהול סעיפים עם טבלאות
+  const openAddSectionWithTableModal = (type: 'text' | 'property' | 'heirs' | 'bank-account') => {
+    setAddSectionWithTableModal({
+      isOpen: true,
+      title: '',
+      content: '',
+      type,
+      tableData: type === 'property' ? [{
+        name: '',
+        address: '',
+        city: '',
+        block: '',
+        plot: '',
+        subPlot: '',
+        ownership: '100%'
+      }] : type === 'heirs' ? [{
+        firstName: '',
+        lastName: '',
+        id: '',
+        relation: '',
+        share: '100%',
+        gender: 'male'
+      }] : type === 'bank-account' ? [{
+        bank: '',
+        bankNumber: '',
+        branch: '',
+        accountNumber: '',
+        location: ''
+      }] : null
+    });
+  };
+
+  const closeAddSectionWithTableModal = () => {
+    setAddSectionWithTableModal({
+      isOpen: false,
+      title: '',
+      content: '',
+      type: 'text',
+      tableData: null
+    });
+  };
+
+  const handleAddSectionWithTable = () => {
+    if (!addSectionWithTableModal.title.trim()) return;
+    
+    const newSection = {
+      id: generateSectionId(),
+      title: addSectionWithTableModal.title.trim(),
+      content: addSectionWithTableModal.content.trim(),
+      level: 'main' as const,
+      order: getNextOrder(),
+      type: addSectionWithTableModal.type,
+      tableData: addSectionWithTableModal.tableData
+    };
+    
+    setCustomSections(prev => [...prev, newSection]);
+    closeAddSectionWithTableModal();
   };
 
   const handleSaveToLearning = (section: EditableSectionType, userCorrection?: string) => {
@@ -1859,7 +1938,7 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
               <span className="text-lg">📝</span>
               הוספת סעיפים מותאמים אישית
             </h2>
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               <button
                 onClick={() => {
                   const title = prompt('כותרת הסעיף:');
@@ -1870,7 +1949,25 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
                 }}
                 className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
               >
-                + הוסף סעיף
+                + הוסף סעיף טקסט
+              </button>
+              <button
+                onClick={() => openAddSectionWithTableModal('property')}
+                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
+              >
+                + הוסף סעיף נכס
+              </button>
+              <button
+                onClick={() => openAddSectionWithTableModal('heirs')}
+                className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition"
+              >
+                + הוסף סעיף יורשים
+              </button>
+              <button
+                onClick={() => openAddSectionWithTableModal('bank-account')}
+                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
+              >
+                + הוסף סעיף חשבון בנק
               </button>
               <button
                 onClick={openAddVariableModal}
@@ -2022,9 +2119,105 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
                         </button>
                       </div>
                     </div>
-                    <div className="text-sm text-gray-700 whitespace-pre-line">
-                      {section.content}
-                    </div>
+                    
+                    {/* תוכן הסעיף */}
+                    {section.content && (
+                      <div className="text-sm text-gray-700 whitespace-pre-line mb-3">
+                        {section.content}
+                      </div>
+                    )}
+                    
+                    {/* טבלה לפי סוג הסעיף */}
+                    {section.type === 'property' && section.tableData && (
+                      <div className="mb-3">
+                        <div className="overflow-x-auto">
+                          <table className="w-full bg-white rounded-lg border text-sm">
+                            <thead className="bg-gray-100">
+                              <tr>
+                                <th className="px-3 py-2 text-right">שם הנכס</th>
+                                <th className="px-3 py-2 text-right">כתובת</th>
+                                <th className="px-3 py-2 text-right">עיר</th>
+                                <th className="px-3 py-2 text-right">גוש</th>
+                                <th className="px-3 py-2 text-right">חלקה</th>
+                                <th className="px-3 py-2 text-right">אחוז בעלות</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {section.tableData.map((property: any, propIndex: number) => (
+                                <tr key={propIndex} className="border-t">
+                                  <td className="px-3 py-2">{property.name}</td>
+                                  <td className="px-3 py-2">{property.address}</td>
+                                  <td className="px-3 py-2">{property.city}</td>
+                                  <td className="px-3 py-2">{property.block}</td>
+                                  <td className="px-3 py-2">{property.plot}</td>
+                                  <td className="px-3 py-2">{property.ownership}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {section.type === 'heirs' && section.tableData && (
+                      <div className="mb-3">
+                        <div className="overflow-x-auto">
+                          <table className="w-full bg-white rounded-lg border text-sm">
+                            <thead className="bg-gray-100">
+                              <tr>
+                                <th className="px-3 py-2 text-right">שם פרטי</th>
+                                <th className="px-3 py-2 text-right">שם משפחה</th>
+                                <th className="px-3 py-2 text-right">ת.ז.</th>
+                                <th className="px-3 py-2 text-right">קרבה</th>
+                                <th className="px-3 py-2 text-right">חלק</th>
+                                <th className="px-3 py-2 text-right">מגדר</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {section.tableData.map((heir: any, heirIndex: number) => (
+                                <tr key={heirIndex} className="border-t">
+                                  <td className="px-3 py-2">{heir.firstName}</td>
+                                  <td className="px-3 py-2">{heir.lastName}</td>
+                                  <td className="px-3 py-2">{heir.id}</td>
+                                  <td className="px-3 py-2">{heir.relation}</td>
+                                  <td className="px-3 py-2">{heir.share}</td>
+                                  <td className="px-3 py-2">{heir.gender === 'male' ? 'זכר' : 'נקבה'}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {section.type === 'bank-account' && section.tableData && (
+                      <div className="mb-3">
+                        <div className="overflow-x-auto">
+                          <table className="w-full bg-white rounded-lg border text-sm">
+                            <thead className="bg-gray-100">
+                              <tr>
+                                <th className="px-3 py-2 text-right">בנק</th>
+                                <th className="px-3 py-2 text-right">מספר בנק</th>
+                                <th className="px-3 py-2 text-right">סניף</th>
+                                <th className="px-3 py-2 text-right">מספר חשבון</th>
+                                <th className="px-3 py-2 text-right">מיקום</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {section.tableData.map((account: any, accIndex: number) => (
+                                <tr key={accIndex} className="border-t">
+                                  <td className="px-3 py-2">{account.bank}</td>
+                                  <td className="px-3 py-2">{account.bankNumber}</td>
+                                  <td className="px-3 py-2">{account.branch}</td>
+                                  <td className="px-3 py-2">{account.accountNumber}</td>
+                                  <td className="px-3 py-2">{account.location}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
 
@@ -2225,6 +2418,403 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
                 className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:bg-gray-300 disabled:cursor-not-allowed"
               >
                 שמור למחסן
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* מודל הוספת סעיף עם טבלה */}
+      {addSectionWithTableModal.isOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">
+                הוסף סעיף עם טבלה
+              </h3>
+              <button
+                onClick={closeAddSectionWithTableModal}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  כותרת הסעיף
+                </label>
+                <input
+                  type="text"
+                  value={addSectionWithTableModal.title}
+                  onChange={(e) => setAddSectionWithTableModal(prev => ({ ...prev, title: e.target.value }))}
+                  placeholder="לדוגמה: דירת מגורים / יורשים / חשבון בנק"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                  dir="rtl"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  תוכן הסעיף (אופציונלי)
+                </label>
+                <textarea
+                  value={addSectionWithTableModal.content}
+                  onChange={(e) => setAddSectionWithTableModal(prev => ({ ...prev, content: e.target.value }))}
+                  placeholder="לדוגמה: אני מצווה כי דירת המגורים שלי תועבר ל..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 h-24 resize-none"
+                  dir="rtl"
+                />
+              </div>
+              
+              {/* טבלה דינמית לפי סוג */}
+              {addSectionWithTableModal.type === 'property' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    פרטי נכסים
+                  </label>
+                  <div className="space-y-2">
+                    {addSectionWithTableModal.tableData?.map((property: any, index: number) => (
+                      <div key={index} className="bg-gray-50 p-3 rounded-lg border">
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                          <input
+                            type="text"
+                            placeholder="שם הנכס"
+                            value={property.name}
+                            onChange={(e) => {
+                              const newData = [...addSectionWithTableModal.tableData];
+                              newData[index].name = e.target.value;
+                              setAddSectionWithTableModal(prev => ({ ...prev, tableData: newData }));
+                            }}
+                            className="px-2 py-1 border border-gray-300 rounded text-sm"
+                            dir="rtl"
+                          />
+                          <input
+                            type="text"
+                            placeholder="כתובת"
+                            value={property.address}
+                            onChange={(e) => {
+                              const newData = [...addSectionWithTableModal.tableData];
+                              newData[index].address = e.target.value;
+                              setAddSectionWithTableModal(prev => ({ ...prev, tableData: newData }));
+                            }}
+                            className="px-2 py-1 border border-gray-300 rounded text-sm"
+                            dir="rtl"
+                          />
+                          <input
+                            type="text"
+                            placeholder="עיר"
+                            value={property.city}
+                            onChange={(e) => {
+                              const newData = [...addSectionWithTableModal.tableData];
+                              newData[index].city = e.target.value;
+                              setAddSectionWithTableModal(prev => ({ ...prev, tableData: newData }));
+                            }}
+                            className="px-2 py-1 border border-gray-300 rounded text-sm"
+                            dir="rtl"
+                          />
+                          <input
+                            type="text"
+                            placeholder="גוש"
+                            value={property.block}
+                            onChange={(e) => {
+                              const newData = [...addSectionWithTableModal.tableData];
+                              newData[index].block = e.target.value;
+                              setAddSectionWithTableModal(prev => ({ ...prev, tableData: newData }));
+                            }}
+                            className="px-2 py-1 border border-gray-300 rounded text-sm"
+                            dir="ltr"
+                          />
+                          <input
+                            type="text"
+                            placeholder="חלקה"
+                            value={property.plot}
+                            onChange={(e) => {
+                              const newData = [...addSectionWithTableModal.tableData];
+                              newData[index].plot = e.target.value;
+                              setAddSectionWithTableModal(prev => ({ ...prev, tableData: newData }));
+                            }}
+                            className="px-2 py-1 border border-gray-300 rounded text-sm"
+                            dir="ltr"
+                          />
+                          <input
+                            type="text"
+                            placeholder="אחוז בעלות"
+                            value={property.ownership}
+                            onChange={(e) => {
+                              const newData = [...addSectionWithTableModal.tableData];
+                              newData[index].ownership = e.target.value;
+                              setAddSectionWithTableModal(prev => ({ ...prev, tableData: newData }));
+                            }}
+                            className="px-2 py-1 border border-gray-300 rounded text-sm"
+                            dir="ltr"
+                          />
+                        </div>
+                        {addSectionWithTableModal.tableData.length > 1 && (
+                          <button
+                            onClick={() => {
+                              const newData = addSectionWithTableModal.tableData.filter((_: any, i: number) => i !== index);
+                              setAddSectionWithTableModal(prev => ({ ...prev, tableData: newData }));
+                            }}
+                            className="mt-2 text-red-600 hover:text-red-800 text-sm"
+                          >
+                            🗑️ מחק נכס
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                    <button
+                      onClick={() => {
+                        const newData = [...addSectionWithTableModal.tableData, {
+                          name: '',
+                          address: '',
+                          city: '',
+                          block: '',
+                          plot: '',
+                          subPlot: '',
+                          ownership: '100%'
+                        }];
+                        setAddSectionWithTableModal(prev => ({ ...prev, tableData: newData }));
+                      }}
+                      className="px-3 py-1 bg-purple-600 text-white rounded text-sm hover:bg-purple-700"
+                    >
+                      + הוסף נכס
+                    </button>
+                  </div>
+                </div>
+              )}
+              
+              {addSectionWithTableModal.type === 'heirs' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    פרטי יורשים
+                  </label>
+                  <div className="space-y-2">
+                    {addSectionWithTableModal.tableData?.map((heir: any, index: number) => (
+                      <div key={index} className="bg-gray-50 p-3 rounded-lg border">
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                          <input
+                            type="text"
+                            placeholder="שם פרטי"
+                            value={heir.firstName}
+                            onChange={(e) => {
+                              const newData = [...addSectionWithTableModal.tableData];
+                              newData[index].firstName = e.target.value;
+                              setAddSectionWithTableModal(prev => ({ ...prev, tableData: newData }));
+                            }}
+                            className="px-2 py-1 border border-gray-300 rounded text-sm"
+                            dir="rtl"
+                          />
+                          <input
+                            type="text"
+                            placeholder="שם משפחה"
+                            value={heir.lastName}
+                            onChange={(e) => {
+                              const newData = [...addSectionWithTableModal.tableData];
+                              newData[index].lastName = e.target.value;
+                              setAddSectionWithTableModal(prev => ({ ...prev, tableData: newData }));
+                            }}
+                            className="px-2 py-1 border border-gray-300 rounded text-sm"
+                            dir="rtl"
+                          />
+                          <input
+                            type="text"
+                            placeholder="ת.ז."
+                            value={heir.id}
+                            onChange={(e) => {
+                              const newData = [...addSectionWithTableModal.tableData];
+                              newData[index].id = e.target.value;
+                              setAddSectionWithTableModal(prev => ({ ...prev, tableData: newData }));
+                            }}
+                            className="px-2 py-1 border border-gray-300 rounded text-sm"
+                            dir="ltr"
+                          />
+                          <input
+                            type="text"
+                            placeholder="קרבה"
+                            value={heir.relation}
+                            onChange={(e) => {
+                              const newData = [...addSectionWithTableModal.tableData];
+                              newData[index].relation = e.target.value;
+                              setAddSectionWithTableModal(prev => ({ ...prev, tableData: newData }));
+                            }}
+                            className="px-2 py-1 border border-gray-300 rounded text-sm"
+                            dir="rtl"
+                          />
+                          <input
+                            type="text"
+                            placeholder="חלק"
+                            value={heir.share}
+                            onChange={(e) => {
+                              const newData = [...addSectionWithTableModal.tableData];
+                              newData[index].share = e.target.value;
+                              setAddSectionWithTableModal(prev => ({ ...prev, tableData: newData }));
+                            }}
+                            className="px-2 py-1 border border-gray-300 rounded text-sm"
+                            dir="ltr"
+                          />
+                          <select
+                            value={heir.gender}
+                            onChange={(e) => {
+                              const newData = [...addSectionWithTableModal.tableData];
+                              newData[index].gender = e.target.value;
+                              setAddSectionWithTableModal(prev => ({ ...prev, tableData: newData }));
+                            }}
+                            className="px-2 py-1 border border-gray-300 rounded text-sm"
+                          >
+                            <option value="male">זכר</option>
+                            <option value="female">נקבה</option>
+                          </select>
+                        </div>
+                        {addSectionWithTableModal.tableData.length > 1 && (
+                          <button
+                            onClick={() => {
+                              const newData = addSectionWithTableModal.tableData.filter((_: any, i: number) => i !== index);
+                              setAddSectionWithTableModal(prev => ({ ...prev, tableData: newData }));
+                            }}
+                            className="mt-2 text-red-600 hover:text-red-800 text-sm"
+                          >
+                            🗑️ מחק יורש
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                    <button
+                      onClick={() => {
+                        const newData = [...addSectionWithTableModal.tableData, {
+                          firstName: '',
+                          lastName: '',
+                          id: '',
+                          relation: '',
+                          share: '100%',
+                          gender: 'male'
+                        }];
+                        setAddSectionWithTableModal(prev => ({ ...prev, tableData: newData }));
+                      }}
+                      className="px-3 py-1 bg-orange-600 text-white rounded text-sm hover:bg-orange-700"
+                    >
+                      + הוסף יורש
+                    </button>
+                  </div>
+                </div>
+              )}
+              
+              {addSectionWithTableModal.type === 'bank-account' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    פרטי חשבונות בנק
+                  </label>
+                  <div className="space-y-2">
+                    {addSectionWithTableModal.tableData?.map((account: any, index: number) => (
+                      <div key={index} className="bg-gray-50 p-3 rounded-lg border">
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                          <input
+                            type="text"
+                            placeholder="בנק"
+                            value={account.bank}
+                            onChange={(e) => {
+                              const newData = [...addSectionWithTableModal.tableData];
+                              newData[index].bank = e.target.value;
+                              setAddSectionWithTableModal(prev => ({ ...prev, tableData: newData }));
+                            }}
+                            className="px-2 py-1 border border-gray-300 rounded text-sm"
+                            dir="rtl"
+                          />
+                          <input
+                            type="text"
+                            placeholder="מספר בנק"
+                            value={account.bankNumber}
+                            onChange={(e) => {
+                              const newData = [...addSectionWithTableModal.tableData];
+                              newData[index].bankNumber = e.target.value;
+                              setAddSectionWithTableModal(prev => ({ ...prev, tableData: newData }));
+                            }}
+                            className="px-2 py-1 border border-gray-300 rounded text-sm"
+                            dir="ltr"
+                          />
+                          <input
+                            type="text"
+                            placeholder="סניף"
+                            value={account.branch}
+                            onChange={(e) => {
+                              const newData = [...addSectionWithTableModal.tableData];
+                              newData[index].branch = e.target.value;
+                              setAddSectionWithTableModal(prev => ({ ...prev, tableData: newData }));
+                            }}
+                            className="px-2 py-1 border border-gray-300 rounded text-sm"
+                            dir="ltr"
+                          />
+                          <input
+                            type="text"
+                            placeholder="מספר חשבון"
+                            value={account.accountNumber}
+                            onChange={(e) => {
+                              const newData = [...addSectionWithTableModal.tableData];
+                              newData[index].accountNumber = e.target.value;
+                              setAddSectionWithTableModal(prev => ({ ...prev, tableData: newData }));
+                            }}
+                            className="px-2 py-1 border border-gray-300 rounded text-sm"
+                            dir="ltr"
+                          />
+                          <input
+                            type="text"
+                            placeholder="מיקום"
+                            value={account.location}
+                            onChange={(e) => {
+                              const newData = [...addSectionWithTableModal.tableData];
+                              newData[index].location = e.target.value;
+                              setAddSectionWithTableModal(prev => ({ ...prev, tableData: newData }));
+                            }}
+                            className="px-2 py-1 border border-gray-300 rounded text-sm"
+                            dir="rtl"
+                          />
+                        </div>
+                        {addSectionWithTableModal.tableData.length > 1 && (
+                          <button
+                            onClick={() => {
+                              const newData = addSectionWithTableModal.tableData.filter((_: any, i: number) => i !== index);
+                              setAddSectionWithTableModal(prev => ({ ...prev, tableData: newData }));
+                            }}
+                            className="mt-2 text-red-600 hover:text-red-800 text-sm"
+                          >
+                            🗑️ מחק חשבון
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                    <button
+                      onClick={() => {
+                        const newData = [...addSectionWithTableModal.tableData, {
+                          bank: '',
+                          bankNumber: '',
+                          branch: '',
+                          accountNumber: '',
+                          location: ''
+                        }];
+                        setAddSectionWithTableModal(prev => ({ ...prev, tableData: newData }));
+                      }}
+                      className="px-3 py-1 bg-indigo-600 text-white rounded text-sm hover:bg-indigo-700"
+                    >
+                      + הוסף חשבון
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            <div className="flex justify-end gap-2 mt-6">
+              <button
+                onClick={closeAddSectionWithTableModal}
+                className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                ביטול
+              </button>
+              <button
+                onClick={handleAddSectionWithTable}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                הוסף סעיף
               </button>
             </div>
           </div>
