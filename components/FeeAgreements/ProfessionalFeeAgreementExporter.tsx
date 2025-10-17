@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { detectGenderFromName, replaceTextWithGender } from '@/lib/hebrew-gender';
 
 interface ProfessionalFeeAgreementExporterProps {
   agreementData: {
@@ -59,6 +60,37 @@ export default function ProfessionalFeeAgreementExporter({
 }: ProfessionalFeeAgreementExporterProps) {
   const [isExporting, setIsExporting] = useState(false);
   const [exportStatus, setExportStatus] = useState<string | null>(null);
+
+  // פונקציה לזיהוי המגדר הכולל של הלקוחות
+  const getClientsGender = () => {
+    if (agreementData.clients.length === 0) return 'male';
+    if (agreementData.clients.length === 1) {
+      return agreementData.clients[0].gender;
+    }
+    
+    // אם יש יותר מלקוח אחד - בדוק אם כולם מאותו מגדר
+    const genders = agreementData.clients.map(c => c.gender);
+    const uniqueGenders = [...new Set(genders)];
+    
+    if (uniqueGenders.length === 1) {
+      // כולם מאותו מגדר - החזר אותו מגדר
+      return uniqueGenders[0];
+    } else {
+      // יש גברים ונשים - החזר 'plural' (רבים)
+      return 'plural';
+    }
+  };
+
+  // פונקציה לקבלת הטקסט הנכון לפי מגדר
+  const getGenderText = (maleText: string, femaleText: string, pluralText: string) => {
+    const gender = getClientsGender();
+    switch (gender) {
+      case 'male': return maleText;
+      case 'female': return femaleText;
+      case 'plural': return pluralText;
+      default: return maleText;
+    }
+  };
 
   const exportToWord = async () => {
     setIsExporting(true);
@@ -126,11 +158,14 @@ export default function ProfessionalFeeAgreementExporter({
         }
       ];
 
-      // 📋 יצירת רשימת הואילים
+      // 📋 יצירת רשימת הואילים עם מגדר נכון
+      const clientsNames = agreementData.clients.map(c => c.name).join(' ו');
+      const clientsGender = getClientsGender();
+      
       const whereas = [
         `${agreementData.lawyer.name} הינו עורך דין בעל רישיון לעריכת דין בישראל;`,
-        `${agreementData.clients.map(c => c.name).join(' ו')} פנו אל עורך הדין בבקשה לקבל ייצוג משפטי;`,
-        `עורך הדין הסכים לייצג את ${agreementData.clients.map(c => c.name).join(' ו')} בתנאים המפורטים להלן;`
+        `${clientsNames} ${getGenderText('פנה', 'פנתה', 'פנו')} אל עורך הדין בבקשה לקבל ייצוג משפטי;`,
+        `עורך הדין הסכים לייצג את ${clientsNames} בתנאים המפורטים להלן;`
       ];
 
       // 🏗️ בניית המסמך
@@ -445,13 +480,13 @@ export default function ProfessionalFeeAgreementExporter({
               children: [new TextRun("")]
             }),
             
-            // תוכן המסמך - סעיפים ממוספרים
+            // תוכן המסמך - סעיפים ממוספרים עם מגדר נכון
             new Paragraph({
               numbering: { reference: "main-numbering", level: 0 },
               alignment: AlignmentType.RIGHT,
               bidirectional: true,
               children: [
-                new TextRun(`עורך הדין מתחייב לייצג את הלקוח בהליכים המשפטיים הבאים: ${agreementData.case.subject}.`)
+                new TextRun(`עורך הדין מתחייב לייצג את ${getGenderText('הלקוח', 'הלקוחה', 'הלקוחות')} בהליכים המשפטיים הבאים: ${agreementData.case.subject}.`)
               ]
             }),
             
@@ -460,7 +495,7 @@ export default function ProfessionalFeeAgreementExporter({
               alignment: AlignmentType.RIGHT,
               bidirectional: true,
               children: [
-                new TextRun("עורך הדין יפעל בשקידה וביעילות למען האינטרסים של הלקוח.")
+                new TextRun(`עורך הדין יפעל בשקידה וביעילות למען האינטרסים של ${getGenderText('הלקוח', 'הלקוחה', 'הלקוחות')}.`)
               ]
             }),
             
@@ -469,7 +504,7 @@ export default function ProfessionalFeeAgreementExporter({
               alignment: AlignmentType.RIGHT,
               bidirectional: true,
               children: [
-                new TextRun("עורך הדין יעדכן את הלקוח בכל התפתחות מהותית בתיק.")
+                new TextRun(`עורך הדין יעדכן את ${getGenderText('הלקוח', 'הלקוחה', 'הלקוחות')} בכל התפתחות מהותית בתיק.`)
               ]
             }),
             
@@ -505,7 +540,7 @@ export default function ProfessionalFeeAgreementExporter({
               alignment: AlignmentType.RIGHT,
               bidirectional: true,
               children: [
-                new TextRun("הסכם זה יכנס לתוקף ביום חתימתו ויעמוד בתוקפו עד לסיום ההליכים המשפטיים.")
+                new TextRun(`הסכם זה יכנס לתוקף ביום חתימתו ויעמוד בתוקפו עד לסיום ההליכים המשפטיים. ${getGenderText('הלקוח', 'הלקוחה', 'הלקוחות')} ${getGenderText('מתחייב', 'מתחייבת', 'מתחייבים')} לשלם את שכר הטרחה בהתאם לתנאים המפורטים לעיל.`)
               ]
             }),
             
