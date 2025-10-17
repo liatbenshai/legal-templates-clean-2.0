@@ -130,6 +130,18 @@ export default function EditableSection({
     setEditContent(improvedText);
     setShowAIEditor(false);
     
+    // עדכון הסעיף עם הטקסט המשופר
+    const updatedSection: EditableSectionType = {
+      ...section,
+      content: improvedText,
+      originalContent: section.originalContent || section.content,
+      version: section.version + 1,
+      lastModified: new Date().toISOString(),
+      modifiedBy: userId
+    };
+    
+    onUpdate(updatedSection);
+    
     // שמירת נתוני למידה
     if (mounted) {
       learningEngine.saveLearningData({
