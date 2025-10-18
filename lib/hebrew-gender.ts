@@ -294,6 +294,11 @@ export function replaceTextWithGender(text: string, gender: Gender): string {
     result = result.replace(/הוא ירצה\/תרצה/g, 'הוא ירצה'); // הוא ירצה/תרצה → הוא ירצה
     result = result.replace(/הוא יוכל\/תוכל/g, 'הוא יוכל'); // הוא יוכל/תוכל → הוא יוכל
     result = result.replace(/הוא יהיה\/תהיה/g, 'הוא יהיה'); // הוא יהיה/תהיה → הוא יהיה
+    result = result.replace(/הוא ילך\/תלך/g, 'הוא ילך'); // הוא ילך/תלך → הוא ילך
+    result = result.replace(/הוא יגיע\/תגיע/g, 'הוא יגיע'); // הוא יגיע/תגיע → הוא יגיע
+    result = result.replace(/הוא יקבל\/תקבל/g, 'הוא יקבל'); // הוא יקבל/תקבל → הוא יקבל
+    result = result.replace(/הוא יבחר\/תבחר/g, 'הוא יבחר'); // הוא יבחר/תבחר → הוא יבחר
+    result = result.replace(/הוא ימנה\/תמנה/g, 'הוא ימנה'); // הוא ימנה/תמנה → הוא ימנה
   } else if (gender === 'female') {
     result = result.replace(/\/ת\b/g, 'ת');  // אני מבטל/ת → אני מבטלת
     result = result.replace(/\/תוכל\b/g, 'תוכל');  // יוכל/תוכל → תוכל
@@ -314,6 +319,11 @@ export function replaceTextWithGender(text: string, gender: Gender): string {
     result = result.replace(/הוא ירצה\/תרצה/g, 'היא תרצה'); // הוא ירצה/תרצה → היא תרצה
     result = result.replace(/הוא יוכל\/תוכל/g, 'היא תוכל'); // הוא יוכל/תוכל → היא תוכל
     result = result.replace(/הוא יהיה\/תהיה/g, 'היא תהיה'); // הוא יהיה/תהיה → היא תהיה
+    result = result.replace(/הוא ילך\/תלך/g, 'היא תלך'); // הוא ילך/תלך → היא תלך
+    result = result.replace(/הוא יגיע\/תגיע/g, 'היא תגיע'); // הוא יגיע/תגיע → היא תגיע
+    result = result.replace(/הוא יקבל\/תקבל/g, 'היא תקבל'); // הוא יקבל/תקבל → היא תקבל
+    result = result.replace(/הוא יבחר\/תבחר/g, 'היא תבחר'); // הוא יבחר/תבחר → היא תבחר
+    result = result.replace(/הוא ימנה\/תמנה/g, 'היא תמנה'); // הוא ימנה/תמנה → היא תמנה
   } else if (gender === 'plural') {
     result = result.replace(/\/ת\b/g, '');   // אנו מבטל/ת → אנו מבטל
     result = result.replace(/\/תוכל\b/g, '');  // יוכל/תוכל → יוכל
@@ -334,6 +344,11 @@ export function replaceTextWithGender(text: string, gender: Gender): string {
     result = result.replace(/הוא ירצה\/תרצה/g, 'הם ירצו'); // הוא ירצה/תרצה → הם ירצו
     result = result.replace(/הוא יוכל\/תוכל/g, 'הם יוכלו'); // הוא יוכל/תוכל → הם יוכלו
     result = result.replace(/הוא יהיה\/תהיה/g, 'הם יהיו'); // הוא יהיה/תהיה → הם יהיו
+    result = result.replace(/הוא ילך\/תלך/g, 'הם ילכו'); // הוא ילך/תלך → הם ילכו
+    result = result.replace(/הוא יגיע\/תגיע/g, 'הם יגיעו'); // הוא יגיע/תגיע → הם יגיעו
+    result = result.replace(/הוא יקבל\/תקבל/g, 'הם יקבלו'); // הוא יקבל/תקבל → הם יקבלו
+    result = result.replace(/הוא יבחר\/תבחר/g, 'הם יבחרו'); // הוא יבחר/תבחר → הם יבחרו
+    result = result.replace(/הוא ימנה\/תמנה/g, 'הם ימנו'); // הוא ימנה/תמנה → הם ימנו
   }
   
   // **שלב 2: עבור על כל המילים במילון - תוקן עם escape ו-word boundaries טובים יותר**

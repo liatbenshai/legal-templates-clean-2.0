@@ -586,7 +586,7 @@ export function applyAdvanceDirectivesGender(
 ): string {
   // בדיקה - האם צריך לייבא את הפונקציה מהמודול העברי
   try {
-    const { replaceTextWithMultipleGenders, replaceTextWithGender } = require('@/lib/hebrew-gender');
+    const { replaceTextWithMultipleGenders, replaceTextWithGender } = await import('@/lib/hebrew-gender');
     
     let result = sectionContent;
     

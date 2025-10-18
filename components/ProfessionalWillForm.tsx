@@ -881,7 +881,6 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
   };
 
   const handleSelectFromWarehouse = async (warehouseSection: any) => {
-    const { replaceTextWithGender } = require('@/lib/hebrew-gender');
     const genderedContent = replaceTextWithGender(
       warehouseSection.content,
       willType === 'mutual' ? 'plural' : testator.gender

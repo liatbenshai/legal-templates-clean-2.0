@@ -362,7 +362,6 @@ export default function AdvanceDirectivesForm() {
   };
 
   const handleSelectFromWarehouse = async (warehouseSection: any) => {
-    const { replaceTextWithGender } = require('@/lib/hebrew-gender');
     
     // קביעת מגדר הממנה
     const genderedContent = replaceTextWithGender(

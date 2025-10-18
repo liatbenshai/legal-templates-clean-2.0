@@ -724,7 +724,6 @@ export default function LawyerFeeAgreement() {
   };
 
   const handleSelectFromWarehouse = async (warehouseSection: any) => {
-    const { replaceTextWithGender } = require('@/lib/hebrew-gender');
     
     // זיהוי משתנים לפני החלפת מגדר
     const variables = extractVariablesFromContent(warehouseSection.content);
@@ -1665,7 +1664,6 @@ ________________________           ${agreementData.clients.map((_, i) => '______
                       let replacedValue = value;
                       
                       if (isGenderRelevantVariable(key) && variablesModal.genders[key]) {
-                        const { replaceTextWithGender } = require('@/lib/hebrew-gender');
                         replacedValue = replaceTextWithGender(value, variablesModal.genders[key]);
                       }
                       
