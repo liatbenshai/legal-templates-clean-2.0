@@ -5,6 +5,7 @@ import { FileText, User, Users, Download, Plus, Trash2 } from 'lucide-react';
 import GenderSelector from './GenderSelector';
 import AdvanceDirectivesSectionSelector from './AdvanceDirectivesSectionSelector';
 import type { Gender } from '@/lib/hebrew-gender';
+import { replaceTextWithGender } from '@/lib/hebrew-gender';
 import { 
   applyAdvanceDirectivesGender,
   getAdvanceDirectivesSectionById 
@@ -312,7 +313,8 @@ export default function AdvanceDirectivesForm() {
     setVariablesCompletionModal({
       isOpen: true,
       variables: extractedVariables,
-      values: {}
+      values: {},
+      genders: {}
     });
   };
 
@@ -330,10 +332,12 @@ export default function AdvanceDirectivesForm() {
     isOpen: boolean;
     variables: string[];
     values: Record<string, string>;
+    genders: Record<string, 'male' | 'female' | 'plural'>;
   }>({
     isOpen: false,
     variables: [],
-    values: {}
+    values: {},
+    genders: {}
   });
 
   // שמירה למערכת למידה
@@ -1169,7 +1173,7 @@ ${applyAdvanceDirectivesGender(
                 🔧 השלם משתנים
               </h3>
               <button
-                onClick={() => setVariablesCompletionModal({ isOpen: false, variables: [], values: {} })}
+                onClick={() => setVariablesCompletionModal({ isOpen: false, variables: [], values: {}, genders: {} })}
                 className="text-gray-400 hover:text-gray-600"
               >
                 ✕
@@ -1178,10 +1182,12 @@ ${applyAdvanceDirectivesGender(
             
             <div className="space-y-4">
               {variablesCompletionModal.variables.map((variable, index) => (
-                <div key={index} className="space-y-2">
+                <div key={index} className="space-y-2 p-3 border border-gray-200 rounded-lg">
                   <label className="block text-sm font-medium text-gray-700">
                     {`{{${variable}}}`}
                   </label>
+                  
+                  {/* שדה ערך */}
                   <input
                     type="text"
                     value={variablesCompletionModal.values[variable] || ''}
@@ -1195,35 +1201,68 @@ ${applyAdvanceDirectivesGender(
                     placeholder={`הזן ערך עבור ${variable}`}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
                   />
+                  
+                  {/* בחירת מגדר */}
+                  {isGenderRelevantVariable(variable) && (
+                    <div className="mt-2">
+                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                        מגדר:
+                      </label>
+                      <select
+                        value={variablesCompletionModal.genders[variable] || 'male'}
+                        onChange={(e) => setVariablesCompletionModal(prev => ({
+                          ...prev,
+                          genders: {
+                            ...prev.genders,
+                            [variable]: e.target.value as 'male' | 'female' | 'plural'
+                          }
+                        }))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm"
+                      >
+                        <option value="male">זכר</option>
+                        <option value="female">נקבה</option>
+                        <option value="plural">רבים</option>
+                      </select>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
             
             <div className="flex justify-end gap-3 mt-6">
               <button
-                onClick={() => setVariablesCompletionModal({ isOpen: false, variables: [], values: {} })}
+                onClick={() => setVariablesCompletionModal({ isOpen: false, variables: [], values: {}, genders: {} })}
                 className="px-4 py-2 text-gray-600 hover:text-gray-800"
               >
                 ביטול
               </button>
               <button
                 onClick={() => {
-                  // החלפת משתנים בטקסט
+                  // החלפת משתנים בטקסט עם התחשבות במגדר
                   const updatedInstructions = { ...customInstructions };
                   
                   variablesCompletionModal.variables.forEach(variable => {
                     const value = variablesCompletionModal.values[variable];
+                    const gender = variablesCompletionModal.genders[variable];
+                    
                     if (value) {
                       const regex = new RegExp(`\\{\\{${variable}\\}\\}`, 'g');
-                      updatedInstructions.property = updatedInstructions.property.replace(regex, value);
-                      updatedInstructions.personal = updatedInstructions.personal.replace(regex, value);
-                      updatedInstructions.medical = updatedInstructions.medical.replace(regex, value);
-                      updatedInstructions.special = updatedInstructions.special.replace(regex, value);
+                      let finalValue = value;
+                      
+                      // אם זה משתנה רגיש למגדר, נשתמש בפונקציית החלפת מגדר
+                      if (isGenderRelevantVariable(variable) && gender) {
+                        finalValue = replaceTextWithGender(value, gender);
+                      }
+                      
+                      updatedInstructions.property = updatedInstructions.property.replace(regex, finalValue);
+                      updatedInstructions.personal = updatedInstructions.personal.replace(regex, finalValue);
+                      updatedInstructions.medical = updatedInstructions.medical.replace(regex, finalValue);
+                      updatedInstructions.special = updatedInstructions.special.replace(regex, finalValue);
                     }
                   });
                   
                   setCustomInstructions(updatedInstructions);
-                  setVariablesCompletionModal({ isOpen: false, variables: [], values: {} });
+                  setVariablesCompletionModal({ isOpen: false, variables: [], values: {}, genders: {} });
                   alert('✅ משתנים הוחלפו בהצלחה!');
                 }}
                 className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
@@ -1236,4 +1275,15 @@ ${applyAdvanceDirectivesGender(
       )}
     </div>
   );
+}
+
+// פונקציות עזר
+function isGenderRelevantVariable(variable: string): boolean {
+  const genderRelevantVariables = [
+    'heir_name', 'guardian_name', 'alternate_guardian', 'child_name', 
+    'manager_name', 'trustee_name', 'spouse_name', 'guardian_id', 'guardian_address',
+    'מיופה_כוח', 'רשאי', 'אחראי', 'מחויב', 'יכול', 'צריך', 'חייב', 'זכאי', 
+    'מתחייב', 'מסכים', 'מבקש', 'מצהיר', 'מאשר', 'הוא', 'היא', 'בן_זוג', 'בעל', 'אישה'
+  ];
+  return genderRelevantVariables.includes(variable);
 }

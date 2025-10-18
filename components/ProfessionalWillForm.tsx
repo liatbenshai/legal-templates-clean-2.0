@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import GenderSelector from './GenderSelector';
 import ProfessionalWordExporter from './ProfessionalWordExporter';
 import type { Gender } from '@/lib/hebrew-gender';
+import { replaceTextWithGender } from '@/lib/hebrew-gender';
 import { generateProfessionalWillContent } from '@/lib/professional-will-texts';
 import { EditableSection as EditableSectionType } from '@/lib/learning-system/types';
 import { learningEngine } from '@/lib/learning-system/learning-engine';
@@ -296,7 +297,8 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
     setVariablesCompletionModal({
       isOpen: true,
       variables: extractedVariables,
-      values: {}
+      values: {},
+      genders: {}
     });
   };
 
@@ -472,10 +474,12 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
     isOpen: boolean;
     variables: string[];
     values: Record<string, string>;
+    genders: Record<string, 'male' | 'female' | 'plural'>;
   }>({
     isOpen: false,
     variables: [],
-    values: {}
+    values: {},
+    genders: {}
   });
 
   // מערכת למידה
@@ -2876,7 +2880,7 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
                 🔧 השלם משתנים
               </h3>
               <button
-                onClick={() => setVariablesCompletionModal({ isOpen: false, variables: [], values: {} })}
+                onClick={() => setVariablesCompletionModal({ isOpen: false, variables: [], values: {}, genders: {} })}
                 className="text-gray-400 hover:text-gray-600"
               >
                 ✕
@@ -2885,10 +2889,12 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
             
             <div className="space-y-4">
               {variablesCompletionModal.variables.map((variable, index) => (
-                <div key={index} className="space-y-2">
+                <div key={index} className="space-y-2 p-3 border border-gray-200 rounded-lg">
                   <label className="block text-sm font-medium text-gray-700">
                     {`{{${variable}}}`}
                   </label>
+                  
+                  {/* שדה ערך */}
                   <input
                     type="text"
                     value={variablesCompletionModal.values[variable] || ''}
@@ -2902,33 +2908,67 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
                     placeholder={`הזן ערך עבור ${variable}`}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
                   />
+                  
+                  {/* בחירת מגדר */}
+                  {isGenderRelevantVariable(variable) && (
+                    <div className="mt-2">
+                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                        מגדר:
+                      </label>
+                      <select
+                        value={variablesCompletionModal.genders[variable] || 'male'}
+                        onChange={(e) => setVariablesCompletionModal(prev => ({
+                          ...prev,
+                          genders: {
+                            ...prev.genders,
+                            [variable]: e.target.value as 'male' | 'female' | 'plural'
+                          }
+                        }))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm"
+                      >
+                        <option value="male">זכר</option>
+                        <option value="female">נקבה</option>
+                        <option value="plural">רבים</option>
+                      </select>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
             
             <div className="flex justify-end gap-3 mt-6">
               <button
-                onClick={() => setVariablesCompletionModal({ isOpen: false, variables: [], values: {} })}
+                onClick={() => setVariablesCompletionModal({ isOpen: false, variables: [], values: {}, genders: {} })}
                 className="px-4 py-2 text-gray-600 hover:text-gray-800"
               >
                 ביטול
               </button>
               <button
                 onClick={() => {
-                  // החלפת משתנים בטקסט
+                  // החלפת משתנים בטקסט עם התחשבות במגדר
                   let updatedText = customSections.map(section => {
                     let content = section.content;
                     variablesCompletionModal.variables.forEach(variable => {
                       const value = variablesCompletionModal.values[variable];
+                      const gender = variablesCompletionModal.genders[variable];
+                      
                       if (value) {
-                        content = content.replace(new RegExp(`\\{\\{${variable}\\}\\}`, 'g'), value);
+                        // אם זה משתנה רגיש למגדר, נשתמש בפונקציית החלפת מגדר
+                        if (isGenderRelevantVariable(variable) && gender) {
+                          // החלף את המשתנה בערך עם התחשבות במגדר
+                          const genderAwareValue = replaceTextWithGender(value, gender);
+                          content = content.replace(new RegExp(`\\{\\{${variable}\\}\\}`, 'g'), genderAwareValue);
+                        } else {
+                          // החלף משתנה רגיל
+                          content = content.replace(new RegExp(`\\{\\{${variable}\\}\\}`, 'g'), value);
+                        }
                       }
                     });
                     return { ...section, content };
                   });
                   
                   setCustomSections(updatedText);
-                  setVariablesCompletionModal({ isOpen: false, variables: [], values: {} });
+                  setVariablesCompletionModal({ isOpen: false, variables: [], values: {}, genders: {} });
                   alert('✅ משתנים הוחלפו בהצלחה!');
                 }}
                 className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
