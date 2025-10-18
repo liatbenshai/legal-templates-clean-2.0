@@ -2961,22 +2961,26 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
                   // החלפת משתנים בטקסט עם התחשבות במגדר
                   let updatedText = customSections.map(section => {
                     let content = section.content;
+                    
+                    // שלב 1: החלף משתנים
                     variablesCompletionModal.variables.forEach(variable => {
                       const value = variablesCompletionModal.values[variable];
                       const gender = variablesCompletionModal.genders[variable];
                       
                       if (value) {
-                        // אם זה משתנה רגיש למגדר, נשתמש בפונקציית החלפת מגדר
-                        if (isGenderRelevantVariable(variable) && gender) {
-                          // החלף את המשתנה בערך עם התחשבות במגדר
-                          const genderAwareValue = replaceTextWithGender(value, gender);
-                          content = content.replace(new RegExp(`\\{\\{${variable}\\}\\}`, 'g'), genderAwareValue);
-                        } else {
-                          // החלף משתנה רגיל
-                          content = content.replace(new RegExp(`\\{\\{${variable}\\}\\}`, 'g'), value);
-                        }
+                        // החלף את המשתנה בערך (ללא התאמת מגדר)
+                        content = content.replace(new RegExp(`\\{\\{${variable}\\}\\}`, 'g'), value);
                       }
                     });
+                    
+                    // שלב 2: החלף את כל התוכן לפי מגדר (לטפל בדפוסים כמו "הוא יליד/ת")
+                    // אם יש משתנים רגישי מגדר, נחליף את כל הטקסט לפי המגדר הראשון שנבחר
+                    const firstGenderVariable = variablesCompletionModal.variables.find(v => isGenderRelevantVariable(v));
+                    if (firstGenderVariable && variablesCompletionModal.genders[firstGenderVariable]) {
+                      const gender = variablesCompletionModal.genders[firstGenderVariable];
+                      content = replaceTextWithGender(content, gender);
+                    }
+                    
                     return { ...section, content };
                   });
                   

@@ -1241,25 +1241,29 @@ ${applyAdvanceDirectivesGender(
                   // החלפת משתנים בטקסט עם התחשבות במגדר
                   const updatedInstructions = { ...customInstructions };
                   
+                  // שלב 1: החלף משתנים
                   variablesCompletionModal.variables.forEach(variable => {
                     const value = variablesCompletionModal.values[variable];
-                    const gender = variablesCompletionModal.genders[variable];
                     
                     if (value) {
                       const regex = new RegExp(`\\{\\{${variable}\\}\\}`, 'g');
-                      let finalValue = value;
                       
-                      // אם זה משתנה רגיש למגדר, נשתמש בפונקציית החלפת מגדר
-                      if (isGenderRelevantVariable(variable) && gender) {
-                        finalValue = replaceTextWithGender(value, gender);
-                      }
-                      
-                      updatedInstructions.property = updatedInstructions.property.replace(regex, finalValue);
-                      updatedInstructions.personal = updatedInstructions.personal.replace(regex, finalValue);
-                      updatedInstructions.medical = updatedInstructions.medical.replace(regex, finalValue);
-                      updatedInstructions.special = updatedInstructions.special.replace(regex, finalValue);
+                      updatedInstructions.property = updatedInstructions.property.replace(regex, value);
+                      updatedInstructions.personal = updatedInstructions.personal.replace(regex, value);
+                      updatedInstructions.medical = updatedInstructions.medical.replace(regex, value);
+                      updatedInstructions.special = updatedInstructions.special.replace(regex, value);
                     }
                   });
+                  
+                  // שלב 2: החלף את כל התוכן לפי מגדר (לטפל בדפוסים כמו "הוא יליד/ת")
+                  const firstGenderVariable = variablesCompletionModal.variables.find(v => isGenderRelevantVariable(v));
+                  if (firstGenderVariable && variablesCompletionModal.genders[firstGenderVariable]) {
+                    const gender = variablesCompletionModal.genders[firstGenderVariable];
+                    updatedInstructions.property = replaceTextWithGender(updatedInstructions.property, gender);
+                    updatedInstructions.personal = replaceTextWithGender(updatedInstructions.personal, gender);
+                    updatedInstructions.medical = replaceTextWithGender(updatedInstructions.medical, gender);
+                    updatedInstructions.special = replaceTextWithGender(updatedInstructions.special, gender);
+                  }
                   
                   setCustomInstructions(updatedInstructions);
                   setVariablesCompletionModal({ isOpen: false, variables: [], values: {}, genders: {} });
