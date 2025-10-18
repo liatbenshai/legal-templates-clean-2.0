@@ -282,6 +282,18 @@ export function replaceTextWithGender(text: string, gender: Gender): string {
     result = result.replace(/\/ים\b/g, ''); // ממנה/ים → ממנה
     result = result.replace(/\/ית\b/g, ''); // חלופי/ת → חלופי
     result = result.replace(/\/ות\b/g, ''); // קטנ/ות → קטנ
+    
+    // טיפול בדפוסים מורכבים
+    result = result.replace(/הוא יליד\/ת/g, 'הוא יליד'); // הוא יליד/ת → הוא יליד
+    result = result.replace(/הוא ת\.ז\./g, 'הוא ת.ז.'); // הוא ת.ז. → הוא ת.ז.
+    result = result.replace(/הוא מרחוב/g, 'הוא מרחוב'); // הוא מרחוב → הוא מרחוב
+    result = result.replace(/הוא מוסמך\/ת/g, 'הוא מוסמך'); // הוא מוסמך/ת → הוא מוסמך
+    result = result.replace(/הוא יחיד\/ה/g, 'הוא יחיד'); // הוא יחיד/ה → הוא יחיד
+    result = result.replace(/הוא חלופי\/ת/g, 'הוא חלופי'); // הוא חלופי/ת → הוא חלופי
+    result = result.replace(/הוא ראשון\/ה/g, 'הוא ראשון'); // הוא ראשון/ה → הוא ראשון
+    result = result.replace(/הוא ירצה\/תרצה/g, 'הוא ירצה'); // הוא ירצה/תרצה → הוא ירצה
+    result = result.replace(/הוא יוכל\/תוכל/g, 'הוא יוכל'); // הוא יוכל/תוכל → הוא יוכל
+    result = result.replace(/הוא יהיה\/תהיה/g, 'הוא יהיה'); // הוא יהיה/תהיה → הוא יהיה
   } else if (gender === 'female') {
     result = result.replace(/\/ת\b/g, 'ת');  // אני מבטל/ת → אני מבטלת
     result = result.replace(/\/תוכל\b/g, 'תוכל');  // יוכל/תוכל → תוכל
@@ -290,6 +302,18 @@ export function replaceTextWithGender(text: string, gender: Gender): string {
     result = result.replace(/\/ים\b/g, ''); // תוקן! ממנה/ים → ממנה (לא ממנהים)
     result = result.replace(/\/ית\b/g, 'ית'); // חלופי/ת → חלופית
     result = result.replace(/\/ות\b/g, ''); // תוקן! קטנ/ות → קטנ (לא קטנות)
+    
+    // טיפול בדפוסים מורכבים
+    result = result.replace(/הוא יליד\/ת/g, 'היא ילידת'); // הוא יליד/ת → היא ילידת
+    result = result.replace(/הוא ת\.ז\./g, 'היא ת.ז.'); // הוא ת.ז. → היא ת.ז.
+    result = result.replace(/הוא מרחוב/g, 'היא מרחוב'); // הוא מרחוב → היא מרחוב
+    result = result.replace(/הוא מוסמך\/ת/g, 'היא מוסמכת'); // הוא מוסמך/ת → היא מוסמכת
+    result = result.replace(/הוא יחיד\/ה/g, 'היא יחידה'); // הוא יחיד/ה → היא יחידה
+    result = result.replace(/הוא חלופי\/ת/g, 'היא חלופית'); // הוא חלופי/ת → היא חלופית
+    result = result.replace(/הוא ראשון\/ה/g, 'היא ראשונה'); // הוא ראשון/ה → היא ראשונה
+    result = result.replace(/הוא ירצה\/תרצה/g, 'היא תרצה'); // הוא ירצה/תרצה → היא תרצה
+    result = result.replace(/הוא יוכל\/תוכל/g, 'היא תוכל'); // הוא יוכל/תוכל → היא תוכל
+    result = result.replace(/הוא יהיה\/תהיה/g, 'היא תהיה'); // הוא יהיה/תהיה → היא תהיה
   } else if (gender === 'plural') {
     result = result.replace(/\/ת\b/g, '');   // אנו מבטל/ת → אנו מבטל
     result = result.replace(/\/תוכל\b/g, '');  // יוכל/תוכל → יוכל
@@ -298,6 +322,18 @@ export function replaceTextWithGender(text: string, gender: Gender): string {
     result = result.replace(/\/ים\b/g, 'ים'); // ממנה/ים → ממנהים
     result = result.replace(/\/ית\b/g, 'ים'); // חלופי/ת → חלופיים
     result = result.replace(/\/ות\b/g, 'ות'); // קטנ/ות → קטנות
+    
+    // טיפול בדפוסים מורכבים
+    result = result.replace(/הוא יליד\/ת/g, 'הם ילידים'); // הוא יליד/ת → הם ילידים
+    result = result.replace(/הוא ת\.ז\./g, 'הם ת.ז.'); // הוא ת.ז. → הם ת.ז.
+    result = result.replace(/הוא מרחוב/g, 'הם מרחוב'); // הוא מרחוב → הם מרחוב
+    result = result.replace(/הוא מוסמך\/ת/g, 'הם מוסמכים'); // הוא מוסמך/ת → הם מוסמכים
+    result = result.replace(/הוא יחיד\/ה/g, 'הם יחידים'); // הוא יחיד/ה → הם יחידים
+    result = result.replace(/הוא חלופי\/ת/g, 'הם חלופיים'); // הוא חלופי/ת → הם חלופיים
+    result = result.replace(/הוא ראשון\/ה/g, 'הם ראשונים'); // הוא ראשון/ה → הם ראשונים
+    result = result.replace(/הוא ירצה\/תרצה/g, 'הם ירצו'); // הוא ירצה/תרצה → הם ירצו
+    result = result.replace(/הוא יוכל\/תוכל/g, 'הם יוכלו'); // הוא יוכל/תוכל → הם יוכלו
+    result = result.replace(/הוא יהיה\/תהיה/g, 'הם יהיו'); // הוא יהיה/תהיה → הם יהיו
   }
   
   // **שלב 2: עבור על כל המילים במילון - תוקן עם escape ו-word boundaries טובים יותר**
