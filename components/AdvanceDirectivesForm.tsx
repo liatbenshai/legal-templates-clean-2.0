@@ -1280,10 +1280,20 @@ ${applyAdvanceDirectivesGender(
 // פונקציות עזר
 function isGenderRelevantVariable(variable: string): boolean {
   const genderRelevantVariables = [
+    // משתנים באנגלית
     'heir_name', 'guardian_name', 'alternate_guardian', 'child_name', 
     'manager_name', 'trustee_name', 'spouse_name', 'guardian_id', 'guardian_address',
+    // משתנים בעברית
+    'בן/בת זוגי', 'שם מלא', 'שם ילד/ה ראשון/ה', 'שם ילד/ה שני/ה', 'שם ילד/ה שלישי/ת',
+    'הוא/היא', 'תאריך', 'תעודת זהות', 'שם מלא האפוטרופוס', 'שם מלא האפוטרופוס החלופי',
     'מיופה_כוח', 'רשאי', 'אחראי', 'מחויב', 'יכול', 'צריך', 'חייב', 'זכאי', 
-    'מתחייב', 'מסכים', 'מבקש', 'מצהיר', 'מאשר', 'הוא', 'היא', 'בן_זוג', 'בעל', 'אישה'
+    'מתחייב', 'מסכים', 'מבקש', 'מצהיר', 'מאשר', 'הוא', 'היא', 'בן_זוג', 'בעל', 'אישה',
+    'ילד', 'ילדה', 'ילדים', 'ילדות', 'אפוטרופוס', 'אפוטרופוסית', 'אפוטרופוסים'
   ];
-  return genderRelevantVariables.includes(variable);
+  
+  // בדיקה אם המשתנה מכיל מילים רגישות למגדר
+  const genderKeywords = ['ילד', 'אפוטרופוס', 'בן', 'בת', 'הוא', 'היא', 'רשאי', 'אחראי', 'מחויב', 'יכול', 'צריך', 'חייב', 'זכאי'];
+  const containsGenderKeyword = genderKeywords.some(keyword => variable.includes(keyword));
+  
+  return genderRelevantVariables.includes(variable) || containsGenderKeyword;
 }
