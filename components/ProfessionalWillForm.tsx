@@ -2025,6 +2025,12 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
               >
                 🔧 השלם משתנים
               </button>
+              <button
+                onClick={openAddSectionModal}
+                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
+              >
+                💾 שמור למחסן
+              </button>
             </div>
           </div>
           
@@ -2166,6 +2172,13 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
                           title="הזז למטה"
                         >
                           ↓
+                        </button>
+                        <button
+                          onClick={() => handleAddSectionToWarehouse(section.title || `סעיף ${index + 1}`, section.content, 'custom')}
+                          className="p-1 rounded text-xs text-blue-600 hover:text-blue-800 hover:bg-blue-50"
+                          title="שמור למחסן"
+                        >
+                          💾
                         </button>
                       </div>
                     </div>
