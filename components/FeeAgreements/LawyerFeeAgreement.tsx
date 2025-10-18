@@ -211,6 +211,36 @@ export default function LawyerFeeAgreement() {
       defaultValue: ''
     });
   };
+
+  // פונקציה לפתיחת מודל השלמת משתנים
+  const openVariablesCompletionModal = () => {
+    // אוסף את כל הטקסט מהסעיפים המותאמים אישית
+    const allText = customSections.map(section => section.content).join('\n\n');
+    
+    // מזהה משתנים בטקסט
+    const extractedVariables = extractVariablesFromText(allText);
+    
+    if (extractedVariables.length === 0) {
+      alert('לא נמצאו משתנים בטקסט. השתמש ב-{{שם משתנה}} כדי ליצור משתנים.');
+      return;
+    }
+    
+    setVariablesCompletionModal({
+      isOpen: true,
+      variables: extractedVariables,
+      values: {}
+    });
+  };
+
+  // פונקציה לחילוץ משתנים מטקסט
+  const extractVariablesFromText = (text: string): string[] => {
+    const variableRegex = /\{\{([^}]+)\}\}/g;
+    const matches = text.match(variableRegex);
+    if (!matches) return [];
+    
+    // מחזיר משתנים ייחודיים
+    return [...new Set(matches.map(match => match.slice(2, -2)))];
+  };
   
   const closeAddVariableModal = () => {
     setAddVariableModal({
@@ -331,6 +361,16 @@ export default function LawyerFeeAgreement() {
     values: Record<string, string>;
     genders: Record<string, 'male' | 'female' | 'plural'>;
   } | null>(null);
+
+  const [variablesCompletionModal, setVariablesCompletionModal] = useState<{
+    isOpen: boolean;
+    variables: string[];
+    values: Record<string, string>;
+  }>({
+    isOpen: false,
+    variables: [],
+    values: {}
+  });
   
   // מודל הוספת משתנה חדש
   const [addVariableModal, setAddVariableModal] = useState<{
@@ -1249,6 +1289,12 @@ ________________________           ${agreementData.clients.map((_, i) => '______
                 <Plus className="w-4 h-4" />
                 הוסף משתנה
               </button>
+              <button
+                onClick={openVariablesCompletionModal}
+                className="flex items-center gap-2 px-3 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition text-sm"
+              >
+                🔧 השלם משתנים
+              </button>
               {variables.length > 0 && (
                 <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                   <h4 className="text-sm font-semibold text-blue-800 mb-2">
@@ -1731,6 +1777,79 @@ ________________________           ${agreementData.clients.map((_, i) => '______
                   className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:bg-gray-300 disabled:cursor-not-allowed"
                 >
                   צור משתנה
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* מודל השלמת משתנים */}
+        {variablesCompletionModal.isOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                  🔧 השלם משתנים
+                </h3>
+                <button
+                  onClick={() => setVariablesCompletionModal({ isOpen: false, variables: [], values: {} })}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  ✕
+                </button>
+              </div>
+              
+              <div className="space-y-4">
+                {variablesCompletionModal.variables.map((variable, index) => (
+                  <div key={index} className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">
+                      {`{{${variable}}}`}
+                    </label>
+                    <input
+                      type="text"
+                      value={variablesCompletionModal.values[variable] || ''}
+                      onChange={(e) => setVariablesCompletionModal(prev => ({
+                        ...prev,
+                        values: {
+                          ...prev.values,
+                          [variable]: e.target.value
+                        }
+                      }))}
+                      placeholder={`הזן ערך עבור ${variable}`}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                ))}
+              </div>
+              
+              <div className="flex justify-end gap-3 mt-6">
+                <button
+                  onClick={() => setVariablesCompletionModal({ isOpen: false, variables: [], values: {} })}
+                  className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                >
+                  ביטול
+                </button>
+                <button
+                  onClick={() => {
+                    // החלפת משתנים בטקסט
+                    let updatedText = customSections.map(section => {
+                      let content = section.content;
+                      variablesCompletionModal.variables.forEach(variable => {
+                        const value = variablesCompletionModal.values[variable];
+                        if (value) {
+                          content = content.replace(new RegExp(`\\{\\{${variable}\\}\\}`, 'g'), value);
+                        }
+                      });
+                      return { ...section, content };
+                    });
+                    
+                    setCustomSections(updatedText);
+                    setVariablesCompletionModal({ isOpen: false, variables: [], values: {} });
+                    alert('✅ משתנים הוחלפו בהצלחה!');
+                  }}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                >
+                  החלף משתנים
                 </button>
               </div>
             </div>

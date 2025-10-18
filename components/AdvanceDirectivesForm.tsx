@@ -291,6 +291,51 @@ export default function AdvanceDirectivesForm() {
     }
   };
 
+  // פונקציה לפתיחת מודל השלמת משתנים
+  const openVariablesCompletionModal = () => {
+    // אוסף את כל הטקסט מההנחיות המותאמות אישית
+    const allText = [
+      customInstructions.property,
+      customInstructions.personal,
+      customInstructions.medical,
+      customInstructions.special
+    ].join('\n\n');
+    
+    // מזהה משתנים בטקסט
+    const extractedVariables = extractVariablesFromText(allText);
+    
+    if (extractedVariables.length === 0) {
+      alert('לא נמצאו משתנים בטקסט. השתמש ב-{{שם משתנה}} כדי ליצור משתנים.');
+      return;
+    }
+    
+    setVariablesCompletionModal({
+      isOpen: true,
+      variables: extractedVariables,
+      values: {}
+    });
+  };
+
+  // פונקציה לחילוץ משתנים מטקסט
+  const extractVariablesFromText = (text: string): string[] => {
+    const variableRegex = /\{\{([^}]+)\}\}/g;
+    const matches = text.match(variableRegex);
+    if (!matches) return [];
+    
+    // מחזיר משתנים ייחודיים
+    return [...new Set(matches.map(match => match.slice(2, -2)))];
+  };
+
+  const [variablesCompletionModal, setVariablesCompletionModal] = useState<{
+    isOpen: boolean;
+    variables: string[];
+    values: Record<string, string>;
+  }>({
+    isOpen: false,
+    variables: [],
+    values: {}
+  });
+
   // שמירה למערכת למידה
   const handleSaveToLearning = (section: EditableSectionType, userCorrection?: string) => {
     if (userCorrection) {
@@ -991,6 +1036,12 @@ ${applyAdvanceDirectivesGender(
                       >
                         ➕ הוסף סעיף למחסן
                       </button>
+                      <button
+                        onClick={openVariablesCompletionModal}
+                        className="px-4 py-4 bg-teal-600 text-white rounded-xl hover:bg-teal-700 transition font-semibold"
+                      >
+                        🔧 השלם משתנים
+                      </button>
                     </div>
                   </>
                 )}
@@ -1108,6 +1159,81 @@ ${applyAdvanceDirectivesGender(
           )}
         </div>
       </div>
+
+      {/* מודל השלמת משתנים */}
+      {variablesCompletionModal.isOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                🔧 השלם משתנים
+              </h3>
+              <button
+                onClick={() => setVariablesCompletionModal({ isOpen: false, variables: [], values: {} })}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              {variablesCompletionModal.variables.map((variable, index) => (
+                <div key={index} className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    {`{{${variable}}}`}
+                  </label>
+                  <input
+                    type="text"
+                    value={variablesCompletionModal.values[variable] || ''}
+                    onChange={(e) => setVariablesCompletionModal(prev => ({
+                      ...prev,
+                      values: {
+                        ...prev.values,
+                        [variable]: e.target.value
+                      }
+                    }))}
+                    placeholder={`הזן ערך עבור ${variable}`}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+              ))}
+            </div>
+            
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                onClick={() => setVariablesCompletionModal({ isOpen: false, variables: [], values: {} })}
+                className="px-4 py-2 text-gray-600 hover:text-gray-800"
+              >
+                ביטול
+              </button>
+              <button
+                onClick={() => {
+                  // החלפת משתנים בטקסט
+                  const updatedInstructions = { ...customInstructions };
+                  
+                  variablesCompletionModal.variables.forEach(variable => {
+                    const value = variablesCompletionModal.values[variable];
+                    if (value) {
+                      const regex = new RegExp(`\\{\\{${variable}\\}\\}`, 'g');
+                      updatedInstructions.property = updatedInstructions.property.replace(regex, value);
+                      updatedInstructions.personal = updatedInstructions.personal.replace(regex, value);
+                      updatedInstructions.medical = updatedInstructions.medical.replace(regex, value);
+                      updatedInstructions.special = updatedInstructions.special.replace(regex, value);
+                    }
+                  });
+                  
+                  setCustomInstructions(updatedInstructions);
+                  setVariablesCompletionModal({ isOpen: false, variables: [], values: {} });
+                  alert('✅ משתנים הוחלפו בהצלחה!');
+                }}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+              >
+                החלף משתנים
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

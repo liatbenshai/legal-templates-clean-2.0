@@ -285,6 +285,48 @@ export default function AILearningPage() {
     router.push(routes[documentType]);
   };
 
+  // שמירה למחסן אישי
+  const handleSaveToWarehouse = async () => {
+    if (!text || !text.trim()) {
+      alert('אנא הזן טקסט לפני השמירה');
+      return;
+    }
+
+    const title = prompt('הזן כותרת לסעיף:');
+    if (!title) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('warehouse_sections')
+        .insert([
+          {
+            user_id: 'anonymous', // ניתן לשפר עם אימות משתמש
+            title: title,
+            content: text,
+            category: 'custom',
+            tags: ['AI Learning', 'סעיף מותאם אישית'],
+            usage_count: 0,
+            average_rating: 5,
+            is_public: false,
+            is_hidden: false,
+            created_by: 'anonymous'
+          },
+        ])
+        .select();
+
+      if (error) {
+        console.error('Error saving to warehouse:', error);
+        alert('שגיאה בשמירה למחסן: ' + error.message);
+        return;
+      }
+
+      alert(`✅ סעיף "${title}" נשמר למחסן האישי!`);
+    } catch (err) {
+      console.error('Error:', err);
+      alert('שגיאה בשמירה למחסן');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-purple-50 py-8">
       <div className="container mx-auto px-4">
@@ -561,6 +603,14 @@ export default function AILearningPage() {
                   >
                     <Heart className="w-4 h-4" />
                     שמור להנחיות מקדימות
+                  </button>
+                  <button
+                    onClick={handleSaveToWarehouse}
+                    disabled={!text}
+                    className="w-full px-3 py-2 bg-purple-100 text-purple-800 rounded-lg hover:bg-purple-200 disabled:opacity-50 disabled:cursor-not-allowed transition text-sm font-semibold flex items-center justify-center gap-2"
+                  >
+                    <BookOpen className="w-4 h-4" />
+                    שמור למחסן אישי
                   </button>
                 </div>
               </div>
