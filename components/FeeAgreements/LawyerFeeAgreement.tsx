@@ -1580,6 +1580,13 @@ ________________________           ${agreementData.clients.map((_, i) => '______
                 <Download className="w-4 h-4" />
                 טען סעיפים היררכיים
               </button>
+              <button
+                onClick={() => setShowSectionsWarehouse(true)}
+                className="flex items-center gap-2 px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition text-sm"
+              >
+                <BookOpen className="w-4 h-4" />
+                מחסן סעיפים
+              </button>
             </div>
           </div>
           <p className="text-indigo-700 mb-3">
