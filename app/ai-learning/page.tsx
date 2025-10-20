@@ -298,6 +298,45 @@ export default function AILearningPage() {
     setActiveTab('editor');
   };
 
+  // טעינת סעיף ישירות למסמך
+  const handleLoadSectionToDocument = (section: SavedSection, documentType: 'will' | 'fee-agreement' | 'advance-directives') => {
+    // בדיקה אם יש משתנים שצריך להשלים
+    const hasVariables = /\{\{[^}]+\}\}/.test(section.content);
+    
+    if (hasVariables) {
+      const shouldComplete = confirm('הסעיף מכיל משתנים (כמו {{שם_משתנה}}). האם תרצה להשלים אותם עכשיו?');
+      
+      if (shouldComplete) {
+        // פתח מודל להשלמת משתנים
+        setVariableCompletionModal({
+          isOpen: true,
+          text: section.content,
+          documentType: documentType
+        });
+        return;
+      }
+    }
+
+    // שמירה ל-localStorage
+    const saveKey = `ai-improved-section-${documentType}`;
+    localStorage.setItem(saveKey, JSON.stringify({
+      content: section.content,
+      timestamp: Date.now(),
+      hasVariables: hasVariables
+    }));
+
+    alert('✅ הסעיף נטען! עכשיו עובר לדף המסמך...');
+    
+    // מעבר לדף המסמך
+    const routes = {
+      'will': '/documents/will',
+      'fee-agreement': '/documents/fee-agreement',
+      'advance-directives': '/documents/advance-directives'
+    };
+    
+    router.push(routes[documentType]);
+  };
+
   // שמירה למסמך ספציפי
   const handleSaveToDocument = (documentType: 'will' | 'fee-agreement' | 'advance-directives') => {
     if (!text || !text.trim()) {
@@ -811,16 +850,37 @@ export default function AILearningPage() {
                     <span className="text-xs text-gray-500">
                       {new Date(section.created_at).toLocaleDateString('he-IL')}
                     </span>
-                    <div className="flex gap-2">
+                    <div className="flex gap-1 flex-wrap">
                       <button
                         onClick={() => handleLoadSection(section)}
-                        className="text-xs px-3 py-1 bg-indigo-100 text-indigo-700 rounded hover:bg-indigo-200 transition"
+                        className="text-xs px-2 py-1 bg-indigo-100 text-indigo-700 rounded hover:bg-indigo-200 transition"
                       >
                         טען
                       </button>
                       <button
+                        onClick={() => handleLoadSectionToDocument(section, 'will')}
+                        className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded hover:bg-green-200 transition"
+                        title="טען לצוואה"
+                      >
+                        צוואה
+                      </button>
+                      <button
+                        onClick={() => handleLoadSectionToDocument(section, 'fee-agreement')}
+                        className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition"
+                        title="טען לשכר טרחה"
+                      >
+                        שכ"ט
+                      </button>
+                      <button
+                        onClick={() => handleLoadSectionToDocument(section, 'advance-directives')}
+                        className="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded hover:bg-purple-200 transition"
+                        title="טען להנחיות מקדימות"
+                      >
+                        הנחיות
+                      </button>
+                      <button
                         onClick={() => handleDeleteSection(section.id)}
-                        className="text-xs px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 transition flex items-center gap-1"
+                        className="text-xs px-2 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 transition flex items-center gap-1"
                       >
                         <Trash2 className="w-3 h-3" />
                         מחק
