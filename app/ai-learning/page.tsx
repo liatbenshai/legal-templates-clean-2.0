@@ -475,6 +475,90 @@ export default function AILearningPage() {
     router.push(routes[documentType]);
   };
 
+  // שמירת תבנית סעיף
+  const handleSaveSectionTemplate = async (section: SavedSection) => {
+    try {
+      const { supabase } = await import('@/lib/supabase-client');
+      
+      // צור תבנית עם הסעיף (ללא תתי סעיפים כי זה סעיף בודד)
+      const template = {
+        title: section.title + ' (תבנית)',
+        main_section: {
+          title: section.title,
+          content: section.content,
+          level: 'main'
+        },
+        child_sections: [] // אין תתי סעיפים בסעיף בודד
+      };
+
+      // שמור ב-Supabase
+      const { error } = await supabase
+        .from('section_templates')
+        .insert([template]);
+
+      if (error) {
+        console.error('Error saving template:', error);
+        alert('שגיאה בשמירת התבנית');
+        return;
+      }
+
+      alert(`✅ התבנית "${section.title}" נשמרה! ניתן לטעון אותה מחדש בכל עת.`);
+    } catch (err) {
+      console.error('Error saving template:', err);
+      alert('שגיאה בשמירת התבנית');
+    }
+  };
+
+  // טעינת תבנית סעיף
+  const handleLoadTemplate = async () => {
+    try {
+      const { supabase } = await import('@/lib/supabase-client');
+      
+      // טען תבניות מ-Supabase
+      const { data: templates, error } = await supabase
+        .from('section_templates')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error loading templates:', error);
+        alert('שגיאה בטעינת התבניות');
+        return;
+      }
+
+      if (!templates || templates.length === 0) {
+        alert('אין תבניות שמורות. שמור תבנית קודם על ידי לחיצה על "תבנית" ליד סעיף.');
+        return;
+      }
+
+      // הצג רשימה של התבניות
+      const templateList = templates.map((template: any, index: number) => 
+        `${index + 1}. ${template.title} (${template.child_sections.length} תתי סעיפים)`
+      ).join('\n');
+
+      const choice = prompt(`בחר תבנית לטעינה:\n\n${templateList}\n\nהזן מספר (1-${templates.length}):`);
+      
+      if (!choice || isNaN(Number(choice))) return;
+      
+      const templateIndex = Number(choice) - 1;
+      if (templateIndex < 0 || templateIndex >= templates.length) {
+        alert('מספר לא תקין');
+        return;
+      }
+
+      const selectedTemplate = templates[templateIndex];
+      
+      // טען את התבנית לעורך
+      setText(selectedTemplate.main_section.content);
+      setActiveTab('editor');
+
+      alert(`✅ התבנית "${selectedTemplate.title}" נטענה לעורך!`);
+    } catch (err) {
+      console.error('Error loading template:', err);
+      alert('שגיאה בטעינת התבנית');
+    }
+  };
+
   // שמירה למחסן אישי
   const handleSaveToWarehouse = async () => {
     if (!text || !text.trim()) {
@@ -782,6 +866,14 @@ export default function AILearningPage() {
                 שמור סעיף
               </button>
 
+              <button
+                onClick={handleLoadTemplate}
+                className="w-full px-4 py-3 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition font-semibold flex items-center justify-center gap-2"
+              >
+                <span className="text-lg">📋</span>
+                טען תבנית
+              </button>
+
               <div className="pt-3 border-t">
                 <div className="text-xs font-bold text-gray-700 mb-2">💾 שמור ישירות למסמך:</div>
                 <div className="space-y-2">
@@ -912,6 +1004,13 @@ export default function AILearningPage() {
                         title="טען למחסן אישי"
                       >
                         מחסן
+                      </button>
+                      <button
+                        onClick={() => handleSaveSectionTemplate(section)}
+                        className="text-xs px-2 py-1 bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200 transition"
+                        title="שמור כתבנית קבועה"
+                      >
+                        תבנית
                       </button>
                       <button
                         onClick={() => handleLoadSectionToDocument(section, 'will')}
