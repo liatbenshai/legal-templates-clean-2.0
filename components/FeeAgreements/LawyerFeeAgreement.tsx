@@ -1568,71 +1568,23 @@ ________________________           ${agreementData.clients.map((_, i) => '______
           </div>
         </section>
 
-        {/* מערכת למידה ומחסן סעיפים */}
+        {/* טעינת סעיפים מ-Supabase */}
         <section className="bg-indigo-50 p-6 rounded-lg border border-indigo-200 mb-6">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold text-indigo-900">📚 מערכת למידה ומחסן סעיפים</h2>
+            <h2 className="text-xl font-bold text-indigo-900">📋 טעינת סעיפים מ-Supabase</h2>
             <div className="flex gap-2">
               <button
-                onClick={() => {
-                  setShowLearningSystem(!showLearningSystem);
-                  if (!showLearningSystem) {
-                    convertToEditableSections();
-                  }
-                }}
-                className="flex items-center gap-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm"
-              >
-                <Brain className="w-4 h-4" />
-                {showLearningSystem ? 'סגור למידה' : 'מערכת למידה'}
-              </button>
-              <button
-                onClick={() => setShowSectionsWarehouse(true)}
-                className="flex items-center gap-2 px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition text-sm"
-              >
-                <BookOpen className="w-4 h-4" />
-                מחסן סעיפים
-              </button>
-              <button
                 onClick={() => handleLoadHierarchicalSections()}
-                className="flex items-center gap-2 px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition text-sm"
+                className="flex items-center gap-2 px-3 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition text-sm"
               >
-                <span className="text-lg">🏗️</span>
+                <Download className="w-4 h-4" />
                 טען סעיפים היררכיים
               </button>
-              <button
-                onClick={openAddVariableModal}
-                className="flex items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm"
-              >
-                <Plus className="w-4 h-4" />
-                הוסף משתנה
-              </button>
-              <button
-                onClick={openVariablesCompletionModal}
-                className="flex items-center gap-2 px-3 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition text-sm"
-              >
-                🔧 השלם משתנים
-              </button>
-              <button
-                onClick={handleLoadTemplate}
-                className="flex items-center gap-2 px-3 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition text-sm"
-              >
-                <span className="text-lg">📋</span>
-                טען תבנית
-              </button>
-              <button
-                onClick={() => setShowUnifiedWarehouse(true)}
-                className="flex items-center gap-2 px-3 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition text-sm"
-              >
-                <span className="text-lg">🏪</span>
-                טען מהמאגר
-              </button>
-              <button
-                onClick={() => setShowWarehouseEditor(true)}
-                className="flex items-center gap-2 px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition text-sm"
-              >
-                <span className="text-lg">✏️</span>
-                ערוך מאגר
-              </button>
+            </div>
+          </div>
+          <p className="text-indigo-700 mb-3">
+            הסעיפים מנוהלים דרך Supabase Dashboard
+          </p>
               {variables.length > 0 && (
                 <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                   <h4 className="text-sm font-semibold text-blue-800 mb-2">

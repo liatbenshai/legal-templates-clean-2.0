@@ -2307,24 +2307,6 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
               >
                 📋 טען תבנית
               </button>
-              <button
-                onClick={() => setShowUnifiedWarehouse(true)}
-                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
-              >
-                🏪 טען מהמאגר
-              </button>
-              <button
-                onClick={openVariablesCompletionModal}
-                className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition"
-              >
-                🔧 השלם משתנים
-              </button>
-              <button
-                onClick={openAddSectionModal}
-                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
-              >
-                💾 שמור למחסן
-              </button>
             </div>
           </div>
           <p className="text-green-700 mb-3">

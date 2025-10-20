@@ -1138,15 +1138,14 @@ ${applyAdvanceDirectivesGender(
                     </p>
                   </div>
                   
-                  {/* מחסן סעיפים */}
-                  <div className="mt-6">
-                    <h3 className="text-lg font-semibold text-blue-800 mb-4">
-                      📚 מחסן סעיפים אישי
+                  {/* הסעיפים מנוהלים דרך Supabase */}
+                  <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <h3 className="text-lg font-semibold text-blue-800 mb-2">
+                      📋 ניהול סעיפים
                     </h3>
-                    <WarehouseManager
-                      userId={principalInfo.fullName || 'anonymous'}
-                      onSectionSelect={handleSelectFromWarehouse}
-                    />
+                    <p className="text-blue-700">
+                      הסעיפים מנוהלים דרך Supabase Dashboard
+                    </p>
                   </div>
                 </div>
               )}
