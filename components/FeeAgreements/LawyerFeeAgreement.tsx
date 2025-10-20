@@ -1585,7 +1585,7 @@ ________________________           ${agreementData.clients.map((_, i) => '______
           <p className="text-indigo-700 mb-3">
             הסעיפים מנוהלים דרך Supabase Dashboard
           </p>
-              {variables.length > 0 && (
+          {variables.length > 0 && (
                 <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                   <h4 className="text-sm font-semibold text-blue-800 mb-2">
                     📋 משתנים קיימים ({variables.length})
@@ -1603,86 +1603,8 @@ ________________________           ${agreementData.clients.map((_, i) => '______
                   </div>
                 </div>
               )}
-              <button
-                onClick={() => {
-                  const title = prompt('כותרת הסעיף:');
-                  const content = prompt('תוכן הסעיף:');
-                  if (title && content) {
-                    handleSaveToWarehouse({
-                      id: generateSectionId(),
-                      title,
-                      content,
-                      category: 'custom',
-                      serviceType: 'fee-agreement',
-                      isEditable: true,
-                      isCustom: true,
-                      version: 1,
-                      lastModified: new Date().toISOString(),
-                      modifiedBy: currentUser?.id || 'anonymous'
-                    });
-                  }
-                }}
-                className="flex items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm"
-              >
-                <Plus className="w-4 h-4" />
-                הוסף סעיף למחסן
-              </button>
-            </div>
-          </div>
-
-          {showLearningSystem && (
-            <div className="mt-6 space-y-4">
-              <div className="flex items-center gap-4 mb-4">
-                <button
-                  onClick={() => setLearningMode('edit')}
-                  className={`px-4 py-2 rounded-lg transition ${
-                    learningMode === 'edit' 
-                      ? 'bg-blue-600 text-white' 
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                  }`}
-                >
-                  עריכת סעיפים
-                </button>
-                <button
-                  onClick={() => setLearningMode('warehouse')}
-                  className={`px-4 py-2 rounded-lg transition ${
-                    learningMode === 'warehouse' 
-                      ? 'bg-blue-600 text-white' 
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                  }`}
-                >
-                  מחסן סעיפים
-                </button>
-              </div>
-
-              {learningMode === 'edit' && editableSections.length > 0 && typeof window !== 'undefined' && (
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-indigo-800">
-                    סעיפים ניתנים לעריכה עם AI
-                  </h3>
-                  {editableSections.map((section) => (
-                    <EditableSection
-                      key={section.id}
-                      section={section}
-                      onUpdate={handleUpdateEditableSection}
-                      onSaveToWarehouse={handleSaveToWarehouse}
-                      onSaveToLearning={handleSaveToLearning}
-                      userId={(mounted && currentUser?.id) || 'anonymous'}
-                      showAIInsights={true}
-                    />
-                  ))}
-                </div>
-              )}
-
-              {learningMode === 'warehouse' && mounted && currentUser && typeof window !== 'undefined' && (
-                <WarehouseManager
-                  userId={currentUser.id}
-                  onSectionSelect={handleSelectFromWarehouse}
-                />
-              )}
-            </div>
-          )}
         </section>
+
 
         {/* סעיפים נוספים */}
         {customSections.length > 0 && (
