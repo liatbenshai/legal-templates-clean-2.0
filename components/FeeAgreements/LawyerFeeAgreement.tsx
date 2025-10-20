@@ -517,7 +517,7 @@ export default function LawyerFeeAgreement() {
         .from('warehouse_sections')
         .insert([
           {
-            user_id: testator.fullName || 'anonymous',
+            user_id: agreementData.clients[0]?.name || 'anonymous',
             title: title,
             content: content,
             category: category,
@@ -2187,7 +2187,7 @@ ________________________           ${agreementData.clients.map((_, i) => '______
               
               <UnifiedWarehouse
                 onSectionSelect={handleLoadFromWarehouse}
-                userId={testator.fullName || 'anonymous'}
+                userId={agreementData.clients[0]?.name || 'anonymous'}
                 willType="individual"
               />
             </div>
