@@ -490,6 +490,7 @@ export default function LawyerFeeAgreement() {
   
   // מאגר מאוחד
   const [showUnifiedWarehouse, setShowUnifiedWarehouse] = useState(false);
+  const [showWarehouseEditor, setShowWarehouseEditor] = useState(false);
   
   // טעינת סעיף מהמאגר המאוחד
   const handleLoadFromWarehouse = (section: any) => {
@@ -505,6 +506,40 @@ export default function LawyerFeeAgreement() {
     setCustomSections(prev => [...prev, newSection]);
     setShowUnifiedWarehouse(false);
     alert(`✅ הסעיף "${section.title}" נטען מהמאגר!`);
+  };
+
+  // הוספת סעיף ישירות למאגר
+  const handleAddToWarehouse = async (title: string, content: string, category: string) => {
+    try {
+      const { supabase } = await import('@/lib/supabase-client');
+      
+      const { error } = await supabase
+        .from('warehouse_sections')
+        .insert([
+          {
+            user_id: testator.fullName || 'anonymous',
+            title: title,
+            content: content,
+            category: category,
+            tags: ['מאגר', 'סעיף מותאם אישית'],
+            usage_count: 0,
+            average_rating: 5,
+            is_public: false,
+            is_hidden: false
+          },
+        ]);
+
+      if (error) {
+        console.error('Error adding to warehouse:', error);
+        alert('שגיאה בהוספה למאגר');
+        return;
+      }
+
+      alert(`✅ הסעיף "${title}" נוסף למאגר!`);
+    } catch (err) {
+      console.error('Error adding to warehouse:', err);
+      alert('שגיאה בהוספה למאגר');
+    }
   };
   
   // חלון מילוי משתנים
@@ -1462,6 +1497,13 @@ ________________________           ${agreementData.clients.map((_, i) => '______
                 <span className="text-lg">🏪</span>
                 טען מהמאגר
               </button>
+              <button
+                onClick={() => setShowWarehouseEditor(true)}
+                className="flex items-center gap-2 px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition text-sm"
+              >
+                <span className="text-lg">✏️</span>
+                ערוך מאגר
+              </button>
               {variables.length > 0 && (
                 <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                   <h4 className="text-sm font-semibold text-blue-800 mb-2">
@@ -2082,6 +2124,46 @@ ________________________           ${agreementData.clients.map((_, i) => '______
                 >
                   החלף משתנים
                 </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* עורך מאגר */}
+        {showWarehouseEditor && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-bold text-gray-900">
+                  ✏️ עורך המאגר
+                </h3>
+                <button
+                  onClick={() => setShowWarehouseEditor(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+              
+              <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+                <p className="text-sm text-red-700 mb-4">
+                  כאן תוכל להוסיף סעיפים ישירות למאגר
+                </p>
+                <div className="space-y-4">
+                  <button
+                    onClick={() => {
+                      const title = prompt('כותרת הסעיף:');
+                      const content = prompt('תוכן הסעיף:');
+                      const category = prompt('קטגוריה (financial/personal/business/health/couple/children/property/digital):');
+                      if (title && content && category) {
+                        handleAddToWarehouse(title, content, category);
+                      }
+                    }}
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+                  >
+                    + הוסף סעיף למאגר
+                  </button>
+                </div>
               </div>
             </div>
           </div>

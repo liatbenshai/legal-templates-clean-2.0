@@ -645,6 +645,60 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
   const [editableSections, setEditableSections] = useState<EditableSectionType[]>([]);
   const [learningMode, setLearningMode] = useState<'edit' | 'warehouse'>('edit');
   
+  // מאגר מאוחד
+  const [showUnifiedWarehouse, setShowUnifiedWarehouse] = useState(false);
+  const [showWarehouseEditor, setShowWarehouseEditor] = useState(false);
+  
+  // טעינת סעיף מהמאגר המאוחד
+  const handleLoadFromWarehouse = (section: any) => {
+    const newSection = {
+      id: generateSectionId(),
+      title: section.title,
+      content: section.content,
+      level: 'main' as const,
+      order: getNextOrder(),
+      type: 'text' as const
+    };
+    
+    setCustomSections(prev => [...prev, newSection]);
+    setShowUnifiedWarehouse(false);
+    alert(`✅ הסעיף "${section.title}" נטען מהמאגר!`);
+  };
+
+  // הוספת סעיף ישירות למאגר
+  const handleAddToWarehouse = async (title: string, content: string, category: string) => {
+    try {
+      const { supabase } = await import('@/lib/supabase-client');
+      
+      const { error } = await supabase
+        .from('warehouse_sections')
+        .insert([
+          {
+            user_id: testator.fullName || 'anonymous',
+            title: title,
+            content: content,
+            category: category,
+            tags: ['מאגר', 'סעיף מותאם אישית'],
+            usage_count: 0,
+            average_rating: 5,
+            is_public: false,
+            is_hidden: false
+          },
+        ]);
+
+      if (error) {
+        console.error('Error adding to warehouse:', error);
+        alert('שגיאה בהוספה למאגר');
+        return;
+      }
+
+      alert(`✅ הסעיף "${title}" נוסף למאגר!`);
+    } catch (err) {
+      console.error('Error adding to warehouse:', err);
+      alert('שגיאה בהוספה למאגר');
+    }
+  };
+  
   // פונקציה לחילוץ משתנים מתוכן
   const extractVariablesFromContent = (content: string): string[] => {
     const matches = content.match(/\{\{([^}]+)\}\}/g);
@@ -2211,6 +2265,18 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
                 📋 טען תבנית
               </button>
               <button
+                onClick={() => setShowUnifiedWarehouse(true)}
+                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
+              >
+                🏪 טען מהמאגר
+              </button>
+              <button
+                onClick={() => setShowWarehouseEditor(true)}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+              >
+                ✏️ ערוך מאגר
+              </button>
+              <button
                 onClick={() => openAddSectionWithTableModal('heirs')}
                 className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition"
               >
@@ -2321,6 +2387,38 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
                   ))}
                 </div>
               )}
+            </div>
+          )}
+          
+          {showWarehouseEditor && (
+            <div className="mb-6">
+              <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+                <h3 className="text-lg font-bold text-red-900 mb-4">✏️ עורך המאגר</h3>
+                <p className="text-sm text-red-700 mb-4">
+                  כאן תוכל לערוך, להוסיף ולמחוק סעיפים ישירות במאגר
+                </p>
+                <div className="space-y-4">
+                  <button
+                    onClick={() => {
+                      const title = prompt('כותרת הסעיף:');
+                      const content = prompt('תוכן הסעיף:');
+                      const category = prompt('קטגוריה (financial/personal/business/health/couple/children/property/digital):');
+                      if (title && content && category) {
+                        handleAddToWarehouse(title, content, category);
+                      }
+                    }}
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+                  >
+                    + הוסף סעיף למאגר
+                  </button>
+                  <button
+                    onClick={() => setShowWarehouseEditor(false)}
+                    className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition"
+                  >
+                    סגור עורך
+                  </button>
+                </div>
+              </div>
             </div>
           )}
           
