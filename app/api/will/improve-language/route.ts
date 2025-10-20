@@ -69,8 +69,19 @@ ${text}
       );
     }
 
-    const data = await response.json();
-    console.log('Anthropic API response data:', JSON.stringify(data, null, 2));
+    let data;
+    try {
+      data = await response.json();
+      console.log('Anthropic API response data:', JSON.stringify(data, null, 2));
+    } catch (parseError) {
+      console.error('JSON parse error:', parseError);
+      const responseText = await response.text();
+      console.error('Raw response:', responseText);
+      return NextResponse.json(
+        { error: 'Invalid JSON response from AI service' },
+        { status: 500 }
+      );
+    }
     
     // חלץ את הטקסט המשופר
     const improvedText = data.content?.[0]?.text || '';
