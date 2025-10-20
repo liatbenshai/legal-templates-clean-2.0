@@ -496,6 +496,102 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
     
     window.location.href = routes[documentType];
   };
+
+  // שמירת תבנית סעיף עם היררכיה
+  const handleSaveSectionTemplate = async (section: any) => {
+    try {
+      // מצא את כל התתי סעיפים של הסעיף הזה
+      const childSections = customSections.filter(s => s.parentId === section.id);
+      
+      // צור תבנית עם הסעיף הראשי וכל התתי סעיפים
+      const template = {
+        id: `template_${Date.now()}`,
+        title: section.title + ' (תבנית)',
+        mainSection: {
+          title: section.title,
+          content: section.content,
+          level: section.level
+        },
+        childSections: childSections.map(child => ({
+          title: child.title,
+          content: child.content,
+          level: child.level
+        })),
+        createdAt: new Date().toISOString()
+      };
+
+      // שמור ב-localStorage
+      const templatesKey = 'section-templates';
+      const existingTemplates = JSON.parse(localStorage.getItem(templatesKey) || '[]');
+      existingTemplates.push(template);
+      localStorage.setItem(templatesKey, JSON.stringify(existingTemplates));
+
+      alert(`✅ התבנית "${section.title}" נשמרה! ניתן לטעון אותה מחדש בכל עת.`);
+    } catch (err) {
+      console.error('Error saving template:', err);
+      alert('שגיאה בשמירת התבנית');
+    }
+  };
+
+  // טעינת תבנית סעיף
+  const handleLoadTemplate = () => {
+    try {
+      const templatesKey = 'section-templates';
+      const templates = JSON.parse(localStorage.getItem(templatesKey) || '[]');
+      
+      if (templates.length === 0) {
+        alert('אין תבניות שמורות. שמור תבנית קודם על ידי לחיצה על "תבנית" ליד סעיף.');
+        return;
+      }
+
+      // הצג רשימה של התבניות
+      const templateList = templates.map((template: any, index: number) => 
+        `${index + 1}. ${template.title} (${template.childSections.length} תתי סעיפים)`
+      ).join('\n');
+
+      const choice = prompt(`בחר תבנית לטעינה:\n\n${templateList}\n\nהזן מספר (1-${templates.length}):`);
+      
+      if (!choice || isNaN(Number(choice))) return;
+      
+      const templateIndex = Number(choice) - 1;
+      if (templateIndex < 0 || templateIndex >= templates.length) {
+        alert('מספר לא תקין');
+        return;
+      }
+
+      const selectedTemplate = templates[templateIndex];
+      
+      // צור את הסעיף הראשי
+      const mainSectionId = generateSectionId();
+      const mainSection = {
+        id: mainSectionId,
+        title: selectedTemplate.mainSection.title,
+        content: selectedTemplate.mainSection.content,
+        level: 'main' as const,
+        order: getNextOrder(),
+        type: 'text' as const
+      };
+
+      // צור את התתי סעיפים
+      const childSections = selectedTemplate.childSections.map((child: any, index: number) => ({
+        id: generateSectionId(),
+        title: child.title,
+        content: child.content,
+        level: 'sub' as const,
+        parentId: mainSectionId,
+        order: getNextOrder() + index + 1,
+        type: 'text' as const
+      }));
+
+      // הוסף את כל הסעיפים
+      setCustomSections(prev => [...prev, mainSection, ...childSections]);
+
+      alert(`✅ התבנית "${selectedTemplate.title}" נטענה בהצלחה!`);
+    } catch (err) {
+      console.error('Error loading template:', err);
+      alert('שגיאה בטעינת התבנית');
+    }
+  };
   
   // אפוטרופוס לקטינים
   const [guardian, setGuardian] = useState({
@@ -1967,6 +2063,13 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
                               מחסן
                             </button>
                             <button
+                              onClick={() => handleSaveSectionTemplate(section)}
+                              className="text-xs px-2 py-1 bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200 transition"
+                              title="שמור כתבנית קבועה"
+                            >
+                              תבנית
+                            </button>
+                            <button
                               onClick={() => handleLoadSectionToDocument(section, 'fee-agreement')}
                               className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition"
                               title="טען לשכר טרחה"
@@ -2084,6 +2187,12 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
                 className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
               >
                 + הוסף סעיף נכס
+              </button>
+              <button
+                onClick={() => handleLoadTemplate()}
+                className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition"
+              >
+                📋 טען תבנית
               </button>
               <button
                 onClick={() => openAddSectionWithTableModal('heirs')}
