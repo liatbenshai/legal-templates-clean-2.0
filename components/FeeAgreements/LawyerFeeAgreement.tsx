@@ -1568,10 +1568,10 @@ ________________________           ${agreementData.clients.map((_, i) => '______
           </div>
         </section>
 
-        {/* עוזר AI */}
+        {/* מערכת למידה ומחסן סעיפים */}
         <section className="bg-indigo-50 p-6 rounded-lg border border-indigo-200 mb-6">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold text-indigo-900">🤖 עוזר AI לשיפור הסכמים</h2>
+            <h2 className="text-xl font-bold text-indigo-900">📚 מערכת למידה ומחסן סעיפים</h2>
             <div className="flex gap-2">
               <button
                 onClick={() => {
@@ -1591,26 +1591,6 @@ ________________________           ${agreementData.clients.map((_, i) => '______
               >
                 <BookOpen className="w-4 h-4" />
                 מחסן סעיפים
-              </button>
-              <button
-                onClick={() => {
-                  const title = prompt('כותרת הסעיף:');
-                  const content = prompt('תוכן הסעיף:');
-                  if (title && content) {
-                    handleAddSection(content, title);
-                  }
-                }}
-                className="flex items-center gap-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm"
-              >
-                <Plus className="w-4 h-4" />
-                הוסף סעיף לטופס
-              </button>
-              <button
-                onClick={() => handleCreateSectionWithSubsections()}
-                className="flex items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm"
-              >
-                <span className="text-lg">📝</span>
-                צור סעיף עם תתי סעיפים
               </button>
               <button
                 onClick={() => handleLoadHierarchicalSections()}

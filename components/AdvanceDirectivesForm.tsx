@@ -1128,41 +1128,15 @@ ${applyAdvanceDirectivesGender(
                     />
                   ))}
 
-                  {/* כפתור הוספת סעיף חדש */}
+                  {/* טעינת סעיפים מ-Supabase */}
                   <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                     <h3 className="text-lg font-semibold text-blue-800 mb-3">
-                      ➕ הוסף סעיף חדש
+                      📋 טעינת סעיפים מ-Supabase
                     </h3>
-                    <button
-                      onClick={() => {
-                        const title = prompt('כותרת הסעיף:');
-                        const content = prompt('תוכן הסעיף:');
-                        if (title && content) {
-                          const newSection = {
-                            id: `custom-${Date.now()}`,
-                            title,
-                            content,
-                            originalContent: content,
-                            category: 'custom' as const,
-                            serviceType: 'advance-directives' as const,
-                            isEditable: true,
-                            isCustom: true,
-                            version: 1,
-                            lastModified: new Date().toISOString(),
-                            modifiedBy: principalInfo.fullName || 'anonymous'
-                          };
-                          setEditableSections(prev => [...prev, newSection]);
-                          alert('✅ סעיף חדש נוסף!');
-                        }
-                      }}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-                    >
-                      ➕ הוסף סעיף מותאם אישית
-                    </button>
+                    <p className="text-blue-700 mb-3">
+                      הסעיפים מנוהלים דרך Supabase Dashboard
+                    </p>
                   </div>
-
-                  {/* מנהל למידת AI */}
-                  <AILearningManager />
                   
                   {/* מחסן סעיפים */}
                   <div className="mt-6">

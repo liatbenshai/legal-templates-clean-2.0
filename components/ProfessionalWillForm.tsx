@@ -2297,34 +2297,10 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
         <section className="bg-green-50 p-6 rounded-lg border border-green-200 mb-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold text-green-900 flex items-center gap-2">
-              <span className="text-lg">📝</span>
-              הוספת סעיפים מותאמים אישית
+              <span className="text-lg">📋</span>
+              טעינת סעיפים מ-Supabase
             </h2>
             <div className="flex gap-2 flex-wrap">
-              <button
-                onClick={() => {
-                  const title = prompt('כותרת הסעיף:');
-                  const content = prompt('תוכן הסעיף:');
-                  if (title && content) {
-                    handleAddSection(title, content);
-                  }
-                }}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
-              >
-                + הוסף סעיף טקסט
-              </button>
-              <button
-                onClick={() => handleCreateSectionWithSubsections()}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-              >
-                📝 צור סעיף עם תתי סעיפים
-              </button>
-              <button
-                onClick={() => openAddSectionWithTableModal('property')}
-                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
-              >
-                + הוסף סעיף נכס
-              </button>
               <button
                 onClick={() => handleLoadTemplate()}
                 className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition"
@@ -2336,30 +2312,6 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
                 className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
               >
                 🏪 טען מהמאגר
-              </button>
-              <button
-                onClick={() => setShowWarehouseEditor(true)}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
-              >
-                ✏️ ערוך מאגר
-              </button>
-              <button
-                onClick={() => openAddSectionWithTableModal('heirs')}
-                className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition"
-              >
-                + הוסף סעיף יורשים
-              </button>
-              <button
-                onClick={() => openAddSectionWithTableModal('bank-account')}
-                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
-              >
-                + הוסף סעיף חשבון בנק
-              </button>
-              <button
-                onClick={openAddVariableModal}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-              >
-                + הוסף משתנה
               </button>
               <button
                 onClick={openVariablesCompletionModal}
@@ -2375,6 +2327,9 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
               </button>
             </div>
           </div>
+          <p className="text-green-700 mb-3">
+            הסעיפים מנוהלים דרך Supabase Dashboard
+          </p>
           
           {variables.length > 0 && (
             <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
