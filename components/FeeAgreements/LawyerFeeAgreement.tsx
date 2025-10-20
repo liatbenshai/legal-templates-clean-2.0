@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { FileText, DollarSign, Calendar, User, Scale, BookOpen, X, Download, Brain, Plus, Trash2 } from 'lucide-react';
 import EditableSection from '../LearningSystem/EditableSection';
 import WarehouseManager from '../LearningSystem/WarehouseManager';
+import UnifiedWarehouse from '../UnifiedWarehouse';
 import { exportFeeAgreementToWord } from './FeeAgreementExporter';
 import ProfessionalFeeAgreementExporter from './ProfessionalFeeAgreementExporter';
 import { AuthService } from '@/lib/auth';
@@ -350,11 +351,161 @@ export default function LawyerFeeAgreement() {
     
     return '';
   };
+
+  // שמירת תבנית סעיף עם היררכיה
+  const handleSaveSectionTemplate = async (section: any) => {
+    try {
+      const { supabase } = await import('@/lib/supabase-client');
+      
+      // מצא את כל התתי סעיפים של הסעיף הזה
+      const childSections = customSections.filter(s => s.parentId === section.id);
+      
+      // צור תבנית עם הסעיף הראשי וכל התתי סעיפים
+      const template = {
+        title: section.title + ' (תבנית שכר טרחה)',
+        main_section: {
+          title: section.title,
+          content: section.content,
+          level: section.level
+        },
+        child_sections: childSections.map(child => ({
+          title: child.title,
+          content: child.content,
+          level: child.level
+        }))
+      };
+
+      // שמור ב-Supabase
+      const { error } = await supabase
+        .from('section_templates')
+        .insert([template]);
+
+      if (error) {
+        console.error('Error saving template:', error);
+        alert('שגיאה בשמירת התבנית');
+        return;
+      }
+
+      alert(`✅ התבנית "${section.title}" נשמרה! ניתן לטעון אותה מחדש בכל עת.`);
+    } catch (err) {
+      console.error('Error saving template:', err);
+      alert('שגיאה בשמירת התבנית');
+    }
+  };
+
+  // טעינת סעיף ישירות למסמך
+  const handleLoadSectionToDocument = (section: any, documentType: 'will' | 'advance-directives') => {
+    const saveKey = `ai-improved-section-${documentType}`;
+    localStorage.setItem(saveKey, JSON.stringify({
+      content: section.content,
+      timestamp: Date.now(),
+      hasVariables: false
+    }));
+
+    alert('✅ הסעיף נטען! עכשיו עובר לדף המסמך...');
+    
+    const routes = {
+      'will': '/documents/will',
+      'advance-directives': '/documents/advance-directives'
+    };
+    
+    window.location.href = routes[documentType];
+  };
+
+  // טעינת תבנית סעיף
+  const handleLoadTemplate = async () => {
+    try {
+      const { supabase } = await import('@/lib/supabase-client');
+      
+      // טען תבניות מ-Supabase
+      const { data: templates, error } = await supabase
+        .from('section_templates')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error loading templates:', error);
+        alert('שגיאה בטעינת התבניות');
+        return;
+      }
+
+      if (!templates || templates.length === 0) {
+        alert('אין תבניות שמורות. שמור תבנית קודם על ידי לחיצה על "תבנית" ליד סעיף.');
+        return;
+      }
+
+      // הצג רשימה של התבניות
+      const templateList = templates.map((template: any, index: number) => 
+        `${index + 1}. ${template.title} (${template.child_sections.length} תתי סעיפים)`
+      ).join('\n');
+
+      const choice = prompt(`בחר תבנית לטעינה:\n\n${templateList}\n\nהזן מספר (1-${templates.length}):`);
+      
+      if (!choice || isNaN(Number(choice))) return;
+      
+      const templateIndex = Number(choice) - 1;
+      if (templateIndex < 0 || templateIndex >= templates.length) {
+        alert('מספר לא תקין');
+        return;
+      }
+
+      const selectedTemplate = templates[templateIndex];
+      
+      // צור את הסעיף הראשי
+      const mainSectionId = generateSectionId();
+      const mainSection = {
+        id: mainSectionId,
+        title: selectedTemplate.main_section.title,
+        content: selectedTemplate.main_section.content,
+        level: 'main' as const,
+        order: getNextOrder(),
+        type: 'text' as const
+      };
+
+      // צור את התתי סעיפים
+      const childSections = selectedTemplate.child_sections.map((child: any, index: number) => ({
+        id: generateSectionId(),
+        title: child.title,
+        content: child.content,
+        level: 'sub' as const,
+        parentId: mainSectionId,
+        order: getNextOrder() + index + 1,
+        type: 'text' as const
+      }));
+
+      // הוסף את כל הסעיפים
+      setCustomSections(prev => [...prev, mainSection, ...childSections]);
+
+      alert(`✅ התבנית "${selectedTemplate.title}" נטענה בהצלחה!`);
+    } catch (err) {
+      console.error('Error loading template:', err);
+      alert('שגיאה בטעינת התבנית');
+    }
+  };
   
   // מערכת למידה
   const [showLearningSystem, setShowLearningSystem] = useState(false);
   const [editableSections, setEditableSections] = useState<EditableSectionType[]>([]);
   const [learningMode, setLearningMode] = useState<'edit' | 'warehouse'>('edit');
+  
+  // מאגר מאוחד
+  const [showUnifiedWarehouse, setShowUnifiedWarehouse] = useState(false);
+  
+  // טעינת סעיף מהמאגר המאוחד
+  const handleLoadFromWarehouse = (section: any) => {
+    const newSection = {
+      id: generateSectionId(),
+      title: section.title,
+      content: section.content,
+      level: 'main' as const,
+      order: getNextOrder(),
+      type: 'text' as const
+    };
+    
+    setCustomSections(prev => [...prev, newSection]);
+    setShowUnifiedWarehouse(false);
+    alert(`✅ הסעיף "${section.title}" נטען מהמאגר!`);
+  };
   
   // חלון מילוי משתנים
   const [variablesModal, setVariablesModal] = useState<{
@@ -1297,6 +1448,20 @@ ________________________           ${agreementData.clients.map((_, i) => '______
               >
                 🔧 השלם משתנים
               </button>
+              <button
+                onClick={handleLoadTemplate}
+                className="flex items-center gap-2 px-3 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition text-sm"
+              >
+                <span className="text-lg">📋</span>
+                טען תבנית
+              </button>
+              <button
+                onClick={() => setShowUnifiedWarehouse(true)}
+                className="flex items-center gap-2 px-3 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition text-sm"
+              >
+                <span className="text-lg">🏪</span>
+                טען מהמאגר
+              </button>
               {variables.length > 0 && (
                 <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                   <h4 className="text-sm font-semibold text-blue-800 mb-2">
@@ -1472,6 +1637,31 @@ ________________________           ${agreementData.clients.map((_, i) => '______
                           title="הזז למטה"
                         >
                           ↓
+                        </button>
+                      </div>
+                      
+                      {/* כפתורי תבניות */}
+                      <div className="flex gap-1">
+                        <button
+                          onClick={() => handleSaveSectionTemplate(section)}
+                          className="text-xs px-2 py-1 bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200 transition"
+                          title="שמור כתבנית קבועה"
+                        >
+                          תבנית
+                        </button>
+                        <button
+                          onClick={() => handleLoadSectionToDocument(section, 'will')}
+                          className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded hover:bg-green-200 transition"
+                          title="טען לצוואה"
+                        >
+                          צוואה
+                        </button>
+                        <button
+                          onClick={() => handleLoadSectionToDocument(section, 'advance-directives')}
+                          className="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded hover:bg-purple-200 transition"
+                          title="טען להנחיות מקדימות"
+                        >
+                          הנחיות
                         </button>
                       </div>
                       
@@ -1893,6 +2083,31 @@ ________________________           ${agreementData.clients.map((_, i) => '______
                   החלף משתנים
                 </button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* מאגר מאוחד */}
+        {showUnifiedWarehouse && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-6xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-bold text-gray-900">
+                  🏪 מאגר סעיפים
+                </h3>
+                <button
+                  onClick={() => setShowUnifiedWarehouse(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+              
+              <UnifiedWarehouse
+                onSectionSelect={handleLoadFromWarehouse}
+                userId={testator.fullName || 'anonymous'}
+                willType="individual"
+              />
             </div>
           </div>
         )}
