@@ -145,19 +145,37 @@ export default function AILearningPage() {
   const loadSavedSections = async () => {
     try {
       setIsLoadingSections(true);
+      
+      // נסה לטעון מ-Supabase
       const { data, error } = await supabase
         .from('saved_sections')
         .select('*')
         .order('created_at', { ascending: false });
 
+      let sections = [];
+      
       if (error) {
-        console.error('Error loading sections:', error);
-        return;
+        console.log('Supabase error, loading from localStorage:', error);
+        // אם יש שגיאה ב-Supabase, טען מ-localStorage
+        const warehouseKey = 'ai-warehouse-sections';
+        const localSections = JSON.parse(localStorage.getItem(warehouseKey) || '[]');
+        sections = localSections;
+      } else {
+        sections = data || [];
+        
+        // הוסף גם את הסעיפים מ-localStorage
+        const warehouseKey = 'ai-warehouse-sections';
+        const localSections = JSON.parse(localStorage.getItem(warehouseKey) || '[]');
+        sections = [...localSections, ...sections];
       }
 
-      setSavedSections(data || []);
+      setSavedSections(sections);
     } catch (err) {
-      console.error('Error:', err);
+      console.error('Error loading sections:', err);
+      // במקרה של שגיאה, טען מ-localStorage
+      const warehouseKey = 'ai-warehouse-sections';
+      const localSections = JSON.parse(localStorage.getItem(warehouseKey) || '[]');
+      setSavedSections(localSections);
     } finally {
       setIsLoadingSections(false);
     }
@@ -296,22 +314,19 @@ export default function AILearningPage() {
     if (!title) return;
 
     try {
-      // שמירה בטבלה saved_sections (אותה לוגיקה כמו handleSaveSection)
-      const { data, error } = await supabase
-        .from('saved_sections')
-        .insert([
-          {
-            title: title,
-            content: text,
-          },
-        ])
-        .select();
-
-      if (error) {
-        console.error('Error saving to warehouse:', error);
-        alert('שגיאה בשמירה למחסן: ' + error.message);
-        return;
-      }
+      // שמירה זמנית ב-localStorage עד שהטבלה תיווצר ב-Supabase
+      const warehouseKey = 'ai-warehouse-sections';
+      const existingSections = JSON.parse(localStorage.getItem(warehouseKey) || '[]');
+      
+      const newSection = {
+        id: Date.now().toString(),
+        title: title,
+        content: text,
+        created_at: new Date().toISOString()
+      };
+      
+      existingSections.unshift(newSection);
+      localStorage.setItem(warehouseKey, JSON.stringify(existingSections));
 
       alert(`✅ סעיף "${title}" נשמר למחסן האישי!`);
       
