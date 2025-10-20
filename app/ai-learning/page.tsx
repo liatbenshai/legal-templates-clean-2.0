@@ -296,20 +296,14 @@ export default function AILearningPage() {
     if (!title) return;
 
     try {
+      // שמירה בטבלה saved_sections במקום warehouse_sections
       const { data, error } = await supabase
-        .from('warehouse_sections')
+        .from('saved_sections')
         .insert([
           {
-            user_id: 'anonymous', // ניתן לשפר עם אימות משתמש
             title: title,
             content: text,
-            category: 'custom',
-            tags: ['AI Learning', 'סעיף מותאם אישית'],
-            usage_count: 0,
-            average_rating: 5,
-            is_public: false,
-            is_hidden: false,
-            created_by: 'anonymous'
+            created_at: new Date().toISOString(),
           },
         ])
         .select();
@@ -321,6 +315,9 @@ export default function AILearningPage() {
       }
 
       alert(`✅ סעיף "${title}" נשמר למחסן האישי!`);
+      
+      // טען מחדש את הסעיפים
+      await loadSavedSections();
     } catch (err) {
       console.error('Error:', err);
       alert('שגיאה בשמירה למחסן');
