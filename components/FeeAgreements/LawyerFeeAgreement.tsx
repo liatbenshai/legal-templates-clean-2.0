@@ -541,6 +541,58 @@ export default function LawyerFeeAgreement() {
       alert('שגיאה בהוספה למאגר');
     }
   };
+
+  // יצירת סעיף עם תתי סעיפים
+  const handleCreateSectionWithSubsections = () => {
+    // קבל את כותרת הסעיף הראשי
+    const mainTitle = prompt('כותרת הסעיף הראשי:');
+    if (!mainTitle) return;
+
+    // קבל את מספר התתי סעיפים
+    const subCount = prompt('כמה תתי סעיפים? (הזן מספר):');
+    if (!subCount || isNaN(Number(subCount))) return;
+
+    const subSectionsCount = Number(subCount);
+    if (subSectionsCount < 1 || subSectionsCount > 10) {
+      alert('מספר התתי סעיפים חייב להיות בין 1 ל-10');
+      return;
+    }
+
+    // צור את הסעיף הראשי
+    const mainSectionId = generateSectionId();
+    const mainSection = {
+      id: mainSectionId,
+      title: mainTitle,
+      content: '', // הסעיף הראשי יכול להיות ריק
+      level: 'main' as const,
+      order: getNextOrder(),
+      type: 'text' as const
+    };
+
+    // צור את התתי סעיפים
+    const subSections = [];
+    for (let i = 0; i < subSectionsCount; i++) {
+      const subTitle = prompt(`כותרת תת-סעיף ${i + 1}:`);
+      const subContent = prompt(`תוכן תת-סעיף ${i + 1}:`);
+      
+      if (subTitle && subContent) {
+        subSections.push({
+          id: generateSectionId(),
+          title: subTitle,
+          content: subContent,
+          level: 'sub' as const,
+          parentId: mainSectionId,
+          order: getNextOrder() + i + 1,
+          type: 'text' as const
+        });
+      }
+    }
+
+    // הוסף את כל הסעיפים
+    setCustomSections(prev => [...prev, mainSection, ...subSections]);
+
+    alert(`✅ נוצר סעיף "${mainTitle}" עם ${subSections.length} תתי סעיפים!`);
+  };
   
   // חלון מילוי משתנים
   const [variablesModal, setVariablesModal] = useState<{
@@ -1469,6 +1521,13 @@ ________________________           ${agreementData.clients.map((_, i) => '______
               >
                 <Plus className="w-4 h-4" />
                 הוסף סעיף לטופס
+              </button>
+              <button
+                onClick={() => handleCreateSectionWithSubsections()}
+                className="flex items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm"
+              >
+                <span className="text-lg">📝</span>
+                צור סעיף עם תתי סעיפים
               </button>
               <button
                 onClick={openAddVariableModal}
