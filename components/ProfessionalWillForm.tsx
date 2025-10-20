@@ -728,7 +728,15 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
     };
 
     // צור את התתי סעיפים
-    const subSections = [];
+    const subSections: Array<{
+      id: string;
+      title: string;
+      content: string;
+      level: 'sub' | 'sub-sub';
+      order: number;
+      type: 'text';
+      parentId: string;
+    }> = [];
     for (let i = 0; i < subSectionsCount; i++) {
       const subTitle = prompt(`כותרת תת-סעיף ${i + 1}:`);
       const subContent = prompt(`תוכן תת-סעיף ${i + 1}:`);
