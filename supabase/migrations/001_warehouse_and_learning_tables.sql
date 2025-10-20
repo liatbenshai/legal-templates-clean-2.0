@@ -97,7 +97,20 @@ CREATE TRIGGER update_user_preferences_updated_at
   EXECUTE FUNCTION update_updated_at_column();
 
 -- ============================================
--- 4. ADVANCE DIRECTIVES HIDDEN SECTIONS
+-- 4. SAVED SECTIONS TABLE (for AI Learning)
+-- ============================================
+CREATE TABLE IF NOT EXISTS saved_sections (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  title TEXT NOT NULL,
+  content TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Index for performance
+CREATE INDEX idx_saved_sections_created_at ON saved_sections(created_at DESC);
+
+-- ============================================
+-- 5. ADVANCE DIRECTIVES HIDDEN SECTIONS
 -- ============================================
 CREATE TABLE IF NOT EXISTS advance_directives_hidden_sections (
   user_id TEXT NOT NULL,
