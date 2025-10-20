@@ -110,7 +110,59 @@ CREATE TABLE IF NOT EXISTS saved_sections (
 CREATE INDEX idx_saved_sections_created_at ON saved_sections(created_at DESC);
 
 -- ============================================
--- 5. ADVANCE DIRECTIVES HIDDEN SECTIONS
+-- 5. WAREHOUSE SECTIONS TABLE (for useWarehouse hook)
+-- ============================================
+CREATE TABLE IF NOT EXISTS warehouse_sections (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id TEXT NOT NULL,
+  title TEXT NOT NULL,
+  content TEXT NOT NULL,
+  category TEXT NOT NULL,
+  tags TEXT[] DEFAULT '{}',
+  usage_count INTEGER DEFAULT 0,
+  average_rating DECIMAL(3,2) DEFAULT 0,
+  is_public BOOLEAN DEFAULT false,
+  is_hidden BOOLEAN DEFAULT false,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  last_used TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  created_by TEXT,
+  
+  -- Constraints
+  CONSTRAINT valid_rating CHECK (average_rating >= 0 AND average_rating <= 5),
+  CONSTRAINT valid_usage_count CHECK (usage_count >= 0)
+);
+
+-- Indexes for performance
+CREATE INDEX idx_warehouse_user_id ON warehouse_sections(user_id);
+CREATE INDEX idx_warehouse_category ON warehouse_sections(category);
+CREATE INDEX idx_warehouse_user_category ON warehouse_sections(user_id, category);
+CREATE INDEX idx_warehouse_public ON warehouse_sections(is_public) WHERE is_public = true;
+CREATE INDEX idx_warehouse_hidden ON warehouse_sections(user_id, is_hidden);
+
+-- Trigger to update updated_at
+CREATE TRIGGER update_warehouse_sections_updated_at
+  BEFORE UPDATE ON warehouse_sections
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+-- ============================================
+-- 5. SECTION TEMPLATES TABLE
+-- ============================================
+CREATE TABLE IF NOT EXISTS section_templates (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  title TEXT NOT NULL,
+  main_section JSONB NOT NULL,
+  child_sections JSONB DEFAULT '[]',
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Index for performance
+CREATE INDEX idx_section_templates_created_at ON section_templates(created_at DESC);
+
+-- ============================================
+-- 6. ADVANCE DIRECTIVES HIDDEN SECTIONS
 -- ============================================
 CREATE TABLE IF NOT EXISTS advance_directives_hidden_sections (
   user_id TEXT NOT NULL,
@@ -151,6 +203,7 @@ CREATE INDEX idx_insights_applied ON ai_insights(is_applied);
 ALTER TABLE warehouse_sections ENABLE ROW LEVEL SECURITY;
 ALTER TABLE learning_data ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_preferences ENABLE ROW LEVEL SECURITY;
+ALTER TABLE section_templates ENABLE ROW LEVEL SECURITY;
 ALTER TABLE advance_directives_hidden_sections ENABLE ROW LEVEL SECURITY;
 ALTER TABLE ai_insights ENABLE ROW LEVEL SECURITY;
 
@@ -213,6 +266,15 @@ CREATE POLICY "Users can update own preferences"
 CREATE POLICY "Users can manage own hidden sections"
   ON advance_directives_hidden_sections FOR ALL
   USING (user_id = current_setting('request.jwt.claims', true)::json->>'sub');
+
+-- ============================================
+-- RLS POLICIES - SECTION TEMPLATES
+-- ============================================
+
+CREATE POLICY "Enable read access for all users" ON section_templates FOR SELECT USING (true);
+CREATE POLICY "Enable insert for all users" ON section_templates FOR INSERT WITH CHECK (true);
+CREATE POLICY "Enable update for all users" ON section_templates FOR UPDATE USING (true);
+CREATE POLICY "Enable delete for all users" ON section_templates FOR DELETE USING (true);
 
 -- ============================================
 -- RLS POLICIES - AI INSIGHTS
