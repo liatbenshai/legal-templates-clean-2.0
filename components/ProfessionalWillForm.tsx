@@ -451,6 +451,52 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
     return '';
   };
   
+  // טעינת סעיף למחסן אישי  
+  const handleLoadSectionToWarehouse = async (section: any) => {
+    try {
+      const { supabase } = await import('@/lib/supabase-client');
+      
+      const { error } = await supabase
+        .from('saved_sections')
+        .insert([
+          {
+            title: section.title + ' (עותק מצוואה)',
+            content: section.content,
+          },
+        ]);
+
+      if (error) {
+        console.error('Error:', error);
+        alert('שגיאה בשמירה למחסן');
+        return;
+      }
+
+      alert(`✅ הסעיף "${section.title}" נטען למחסן האישי!`);
+    } catch (err) {
+      console.error('Error:', err);
+      alert('שגיאה בטעינת הסעיף למחסן');
+    }
+  };
+
+  // טעינת סעיף ישירות למסמך
+  const handleLoadSectionToDocument = (section: any, documentType: 'fee-agreement' | 'advance-directives') => {
+    const saveKey = `ai-improved-section-${documentType}`;
+    localStorage.setItem(saveKey, JSON.stringify({
+      content: section.content,
+      timestamp: Date.now(),
+      hasVariables: false
+    }));
+
+    alert('✅ הסעיף נטען! עכשיו עובר לדף המסמך...');
+    
+    const routes = {
+      'fee-agreement': '/documents/fee-agreement',
+      'advance-directives': '/documents/advance-directives'
+    };
+    
+    window.location.href = routes[documentType];
+  };
+  
   // אפוטרופוס לקטינים
   const [guardian, setGuardian] = useState({
     name: '',
@@ -1908,6 +1954,31 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
                               title="הזז למטה"
                             >
                               ↓
+                            </button>
+                          </div>
+                          
+                          {/* כפתורי טעינה למחסן ומסמכים */}
+                          <div className="flex gap-1">
+                            <button
+                              onClick={() => handleLoadSectionToWarehouse(section)}
+                              className="text-xs px-2 py-1 bg-orange-100 text-orange-700 rounded hover:bg-orange-200 transition"
+                              title="טען למחסן אישי"
+                            >
+                              מחסן
+                            </button>
+                            <button
+                              onClick={() => handleLoadSectionToDocument(section, 'fee-agreement')}
+                              className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition"
+                              title="טען לשכר טרחה"
+                            >
+                              שכ"ט
+                            </button>
+                            <button
+                              onClick={() => handleLoadSectionToDocument(section, 'advance-directives')}
+                              className="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded hover:bg-purple-200 transition"
+                              title="טען להנחיות מקדימות"
+                            >
+                              הנחיות
                             </button>
                           </div>
                           
