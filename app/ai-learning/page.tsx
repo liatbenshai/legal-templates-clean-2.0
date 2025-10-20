@@ -298,6 +298,55 @@ export default function AILearningPage() {
     setActiveTab('editor');
   };
 
+  // טעינת סעיף למחסן אישי
+  const handleLoadSectionToWarehouse = async (section: SavedSection) => {
+    try {
+      console.log('💾 Loading section to warehouse:', section.title);
+      
+      // נסה לשמור ב-Supabase קודם
+      console.log('🔍 Attempting to save to Supabase...');
+      const { data, error } = await supabase
+        .from('saved_sections')
+        .insert([
+          {
+            title: section.title + ' (עותק)',
+            content: section.content,
+          },
+        ])
+        .select();
+
+      if (error) {
+        console.error('❌ Supabase save error:', error);
+        console.log('📱 Saving to localStorage as fallback...');
+        
+        // שמירה זמנית ב-localStorage עד שהטבלה תיווצר ב-Supabase
+        const warehouseKey = 'ai-warehouse-sections';
+        const existingSections = JSON.parse(localStorage.getItem(warehouseKey) || '[]');
+        
+        const newSection = {
+          id: Date.now().toString(),
+          title: section.title + ' (עותק)',
+          content: section.content,
+          created_at: new Date().toISOString()
+        };
+        
+        existingSections.unshift(newSection);
+        localStorage.setItem(warehouseKey, JSON.stringify(existingSections));
+        console.log('📱 Saved to localStorage successfully');
+      } else {
+        console.log('✅ Saved to Supabase successfully:', data);
+      }
+
+      alert(`✅ הסעיף "${section.title}" נטען למחסן האישי!`);
+      
+      // טען מחדש את הסעיפים
+      await loadSavedSections();
+    } catch (err) {
+      console.error('💥 Error loading section to warehouse:', err);
+      alert('שגיאה בטעינת הסעיף למחסן');
+    }
+  };
+
   // טעינת סעיף ישירות למסמך
   const handleLoadSectionToDocument = (section: SavedSection, documentType: 'will' | 'fee-agreement' | 'advance-directives') => {
     // בדיקה אם יש משתנים שצריך להשלים
@@ -856,6 +905,13 @@ export default function AILearningPage() {
                         className="text-xs px-2 py-1 bg-indigo-100 text-indigo-700 rounded hover:bg-indigo-200 transition"
                       >
                         טען
+                      </button>
+                      <button
+                        onClick={() => handleLoadSectionToWarehouse(section)}
+                        className="text-xs px-2 py-1 bg-orange-100 text-orange-700 rounded hover:bg-orange-200 transition"
+                        title="טען למחסן אישי"
+                      >
+                        מחסן
                       </button>
                       <button
                         onClick={() => handleLoadSectionToDocument(section, 'will')}
