@@ -593,6 +593,89 @@ export default function LawyerFeeAgreement() {
 
     alert(`✅ נוצר סעיף "${mainTitle}" עם ${subSections.length} תתי סעיפים!`);
   };
+
+  // טעינת סעיפים היררכיים מ-Supabase
+  const handleLoadHierarchicalSections = async () => {
+    try {
+      const { supabase } = await import('@/lib/supabase-client');
+      
+      // טען סעיפים ראשיים
+      const { data: mainSections, error: mainError } = await supabase
+        .from('hierarchical_sections')
+        .select('*')
+        .eq('level', 'main')
+        .order('order_index');
+
+      if (mainError) {
+        console.error('Error loading main sections:', mainError);
+        alert('שגיאה בטעינת הסעיפים');
+        return;
+      }
+
+      if (!mainSections || mainSections.length === 0) {
+        alert('אין סעיפים היררכיים שמורים. צור סעיפים ב-Supabase Dashboard תחילה.');
+        return;
+      }
+
+      // הצג רשימה לבחירה
+      const sectionList = mainSections.map((section: any, index: number) => 
+        `${index + 1}. ${section.title}`
+      ).join('\n');
+      
+      const choice = prompt(`בחר סעיף לטעינה:\n\n${sectionList}\n\nהזן מספר (1-${mainSections.length}):`);
+      if (!choice || isNaN(Number(choice))) return;
+      
+      const sectionIndex = Number(choice) - 1;
+      if (sectionIndex < 0 || sectionIndex >= mainSections.length) {
+        alert('מספר לא תקין');
+        return;
+      }
+
+      const selectedMainSection = mainSections[sectionIndex];
+
+      // טען תתי סעיפים
+      const { data: subSections, error: subError } = await supabase
+        .from('hierarchical_sections')
+        .select('*')
+        .eq('parent_id', selectedMainSection.id)
+        .order('order_index');
+
+      if (subError) {
+        console.error('Error loading sub sections:', subError);
+        alert('שגיאה בטעינת תתי הסעיפים');
+        return;
+      }
+
+      // צור סעיפים במבנה הנכון
+      const mainSectionId = generateSectionId();
+      const mainSection = {
+        id: mainSectionId,
+        title: selectedMainSection.title,
+        content: selectedMainSection.content || '',
+        level: 'main' as const,
+        order: getNextOrder(),
+        type: 'text' as const
+      };
+
+      const subSectionsFormatted = (subSections || []).map((sub: any, index: number) => ({
+        id: generateSectionId(),
+        title: sub.title,
+        content: sub.content || '',
+        level: 'sub' as const,
+        parentId: mainSectionId,
+        order: getNextOrder() + index + 1,
+        type: 'text' as const
+      }));
+
+      // הוסף את כל הסעיפים
+      setCustomSections(prev => [...prev, mainSection, ...subSectionsFormatted]);
+
+      alert(`✅ נטען סעיף "${selectedMainSection.title}" עם ${subSectionsFormatted.length} תתי סעיפים!`);
+    } catch (err) {
+      console.error('Error loading hierarchical sections:', err);
+      alert('שגיאה בטעינת הסעיפים');
+    }
+  };
   
   // חלון מילוי משתנים
   const [variablesModal, setVariablesModal] = useState<{
@@ -1528,6 +1611,13 @@ ________________________           ${agreementData.clients.map((_, i) => '______
               >
                 <span className="text-lg">📝</span>
                 צור סעיף עם תתי סעיפים
+              </button>
+              <button
+                onClick={() => handleLoadHierarchicalSections()}
+                className="flex items-center gap-2 px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition text-sm"
+              >
+                <span className="text-lg">🏗️</span>
+                טען סעיפים היררכיים
               </button>
               <button
                 onClick={openAddVariableModal}
