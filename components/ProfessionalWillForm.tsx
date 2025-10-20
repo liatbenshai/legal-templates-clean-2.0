@@ -1037,7 +1037,14 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
             <div>
               <GenderSelector
                 value={testator.gender}
-                onChange={(gender) => setTestator(prev => ({ ...prev, gender }))}
+                onChange={(gender) => {
+                  setTestator(prev => ({ ...prev, gender }));
+                  // החלף את כל הטקסט לפי המגדר החדש
+                  setCustomSections(prev => prev.map(section => ({
+                    ...section,
+                    content: replaceTextWithGender(section.content, gender)
+                  })));
+                }}
                 label="מגדר"
                 name="testator-gender"
               />
@@ -1108,7 +1115,14 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
               <div>
                 <GenderSelector
                   value={spouse.gender}
-                  onChange={(gender) => setSpouse(prev => ({ ...prev, gender }))}
+                  onChange={(gender) => {
+                    setSpouse(prev => ({ ...prev, gender }));
+                    // החלף את כל הטקסט לפי המגדר החדש
+                    setCustomSections(prev => prev.map(section => ({
+                      ...section,
+                      content: replaceTextWithGender(section.content, gender)
+                    })));
+                  }}
                   label="מגדר"
                   name="spouse-gender"
                 />

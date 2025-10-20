@@ -18,6 +18,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (!process.env.ANTHROPIC_API_KEY) {
+      return NextResponse.json(
+        { error: 'API key not configured' },
+        { status: 500 }
+      );
+    }
+
+    console.log('Sending request to Anthropic API...');
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -41,19 +49,32 @@ ${text}
       })
     });
 
+    console.log('Anthropic API response status:', response.status);
+
     if (!response.ok) {
-      const error = await response.text();
-      console.error('Anthropic API error:', error);
+      let errorMessage = 'Failed to improve text';
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.error || errorMessage;
+      } catch {
+        const errorText = await response.text();
+        console.error('Anthropic API error (non-JSON):', errorText);
+        errorMessage = `API Error: ${response.status} - ${errorText.substring(0, 100)}`;
+      }
+      
+      console.error('Anthropic API error:', errorMessage);
       return NextResponse.json(
-        { error: 'Failed to improve text' },
+        { error: errorMessage },
         { status: response.status }
       );
     }
 
     const data = await response.json();
+    console.log('Anthropic API response data:', JSON.stringify(data, null, 2));
     
     // חלץ את הטקסט המשופר
     const improvedText = data.content?.[0]?.text || '';
+    console.log('Extracted improved text:', improvedText);
 
     return NextResponse.json({
       improved: improvedText,

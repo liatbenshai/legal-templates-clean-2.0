@@ -385,6 +385,10 @@ export const advanceDirectivesSectionsWarehouse: AdvanceDirectivesSectionTemplat
 - המצב הרפואי מחייב טיפול מוסדי
 - באישור בית משפט`,
     variables: ['principal_gender_suffix'],
+    genderVariables: {
+      principal: true,
+      attorney: false
+    },
     tags: ['מגורים', 'בית', 'סיעוד']
   },
 
@@ -400,6 +404,10 @@ export const advanceDirectivesSectionsWarehouse: AdvanceDirectivesSectionTemplat
 
 הנחיה זו מוחלטת.`,
     variables: ['principal_gender_suffix'],
+    genderVariables: {
+      principal: true,
+      attorney: false
+    },
     tags: ['מגורים', 'בית', 'מוחלט']
   },
 
@@ -415,6 +423,10 @@ export const advanceDirectivesSectionsWarehouse: AdvanceDirectivesSectionTemplat
 
 החלטה בשיקול דעת + התייעצות רפואית.`,
     variables: ['attorney_gender_suffix'],
+    genderVariables: {
+      principal: false,
+      attorney: true
+    },
     tags: ['מגורים', 'גמישות']
   },
 
@@ -436,6 +448,10 @@ export const advanceDirectivesSectionsWarehouse: AdvanceDirectivesSectionTemplat
 **החלטה:**
 בהחלטת מיופה{{attorney_gender_suffix}} הכוח + התייעצות רפואית.`,
     variables: ['attorney_gender_suffix'],
+    genderVariables: {
+      principal: false,
+      attorney: true
+    },
     tags: ['בית אבות', 'תנאים', 'סיעוד']
   },
 
@@ -451,6 +467,10 @@ export const advanceDirectivesSectionsWarehouse: AdvanceDirectivesSectionTemplat
 
 יכולת התקשורת חשובה לטיפול הולם והבנה הדדית.`,
     variables: [],
+    genderVariables: {
+      principal: false,
+      attorney: false
+    },
     tags: ['מטפלת', 'שפה', 'עברית']
   },
 
@@ -462,6 +482,10 @@ export const advanceDirectivesSectionsWarehouse: AdvanceDirectivesSectionTemplat
     titleEn: 'Hebrew or English',
     content: `המטפל/ת תדע עברית או אנגלית ברמה טובה.`,
     variables: [],
+    genderVariables: {
+      principal: false,
+      attorney: false
+    },
     tags: ['מטפלת', 'שפה', 'אנגלית']
   },
 
@@ -475,6 +499,10 @@ export const advanceDirectivesSectionsWarehouse: AdvanceDirectivesSectionTemplat
 
 התקשורת תתאפשר בשפות אחרות או בדרכים חלופיות.`,
     variables: [],
+    genderVariables: {
+      principal: false,
+      attorney: false
+    },
     tags: ['מטפלת', 'גמישות']
   },
 
@@ -499,6 +527,10 @@ export const advanceDirectivesSectionsWarehouse: AdvanceDirectivesSectionTemplat
 - יחס חם ומכבד
 - סבלנות, אמינות, יושר`,
     variables: [],
+    genderVariables: {
+      principal: false,
+      attorney: false
+    },
     tags: ['מטפלת', 'דרישות', 'בדיקות']
   }
 ];
@@ -579,14 +611,14 @@ export const advanceDirectivesSubcategories = {
  * @param attorneyGender - מגדר מיופה הכוח (זכר/נקבה/רבים)
  * @returns טקסט עם נטיות תקינות
  */
-export function applyAdvanceDirectivesGender(
+export async function applyAdvanceDirectivesGender(
   sectionContent: string,
   principalGender: 'male' | 'female',
   attorneyGender: 'male' | 'female' | 'plural'
-): string {
+): Promise<string> {
   // בדיקה - האם צריך לייבא את הפונקציה מהמודול העברי
   try {
-    const { replaceTextWithMultipleGenders, replaceTextWithGender } = await import('@/lib/hebrew-gender');
+    const { replaceTextWithMultipleGenders, replaceTextWithGender } = require('@/lib/hebrew-gender');
     
     let result = sectionContent;
     
@@ -627,13 +659,15 @@ export function applyAdvanceDirectivesGender(
 /**
  * פונקציה להחלפת נטיות בכל הסעיפים שנבחרו
  */
-export function applyGenderToSelectedSections(
+export async function applyGenderToSelectedSections(
   sections: AdvanceDirectivesSectionTemplate[],
   principalGender: 'male' | 'female',
   attorneyGender: 'male' | 'female' | 'plural'
-): AdvanceDirectivesSectionTemplate[] {
-  return sections.map(section => ({
+): Promise<AdvanceDirectivesSectionTemplate[]> {
+  const sectionPromises = sections.map(async section => ({
     ...section,
-    content: applyAdvanceDirectivesGender(section.content, principalGender, attorneyGender)
+    content: await applyAdvanceDirectivesGender(section.content, principalGender, attorneyGender)
   }));
+  
+  return Promise.all(sectionPromises);
 }

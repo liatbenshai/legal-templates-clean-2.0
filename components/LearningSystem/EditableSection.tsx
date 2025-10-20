@@ -178,6 +178,22 @@ export default function EditableSection({
               מותאם אישית
             </span>
           )}
+          {section.isFixed && (
+            <span className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded-full">
+              סעיף קבוע
+            </span>
+          )}
+          {section.isFixed && (
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={section.isEnabled ?? true}
+                onChange={(e) => onUpdate({ ...section, isEnabled: e.target.checked })}
+                className="rounded"
+              />
+              מופעל
+            </label>
+          )}
         </h3>
         
         <div className="flex items-center gap-2">

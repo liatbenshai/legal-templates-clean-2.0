@@ -70,8 +70,8 @@ export default function AdvanceDirectivesSectionSelector({
   const isSectionSelected = (sectionId: string) => selectedSections.includes(sectionId);
 
   // הצגת תצוגה מקדימה של סעיף עם נטיות
-  const getPreviewContent = (section: AdvanceDirectivesSectionTemplate) => {
-    return applyAdvanceDirectivesGender(section.content, principalGender, attorneyGender);
+  const getPreviewContent = async (section: AdvanceDirectivesSectionTemplate) => {
+    return await applyAdvanceDirectivesGender(section.content, principalGender, attorneyGender);
   };
 
   return (
@@ -192,7 +192,10 @@ export default function AdvanceDirectivesSectionSelector({
                     
                     {isPreview && (
                       <div className="mt-3 p-3 bg-white border border-gray-200 rounded text-sm text-gray-700 whitespace-pre-wrap">
-                        {getPreviewContent(section)}
+                        {(() => {
+                          // זה לא יכול להיות async ב-JSX, אז נציג הודעה
+                          return 'תצוגה מקדימה זמינה רק לאחר בחירה';
+                        })()}
                       </div>
                     )}
                   </div>

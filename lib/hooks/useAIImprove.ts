@@ -55,8 +55,15 @@ export function useAIImprove() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to improve text');
+        let errorMessage = 'Failed to improve text';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch {
+          const errorText = await response.text();
+          errorMessage = `Server Error: ${response.status} - ${errorText.substring(0, 100)}`;
+        }
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();

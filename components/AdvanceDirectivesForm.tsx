@@ -138,7 +138,7 @@ export default function AdvanceDirectivesForm() {
   };
 
   // קבלת תוכן הסעיפים שנבחרו עם נטיות
-  const getSelectedSectionsContent = (category: 'property' | 'personal' | 'medical') => {
+  const getSelectedSectionsContent = async (category: 'property' | 'personal' | 'medical'): Promise<string> => {
     const attorneyGender = getAttorneyGender();
     const sections = selectedSections
       .map(id => getAdvanceDirectivesSectionById(id))
@@ -146,106 +146,139 @@ export default function AdvanceDirectivesForm() {
     
     if (sections.length === 0) return '';
     
-    return sections
-      .map((section, index) => {
-        const content = applyAdvanceDirectivesGender(
+    const sectionsWithContent = await Promise.all(
+      sections.map(async (section, index) => {
+        const content = await applyAdvanceDirectivesGender(
           section!.content,
           principalInfo.gender,
           attorneyGender
         );
         return `${index + 1}. ${section!.title}\n\n${content}`;
       })
-      .join('\n\n───────────────────\n\n');
+    );
+    
+    return sectionsWithContent.join('\n\n───────────────────\n\n');
   };
 
   // המרה לסעיפים ניתנים לעריכה עם AI
-  const convertToEditableSections = () => {
+  const convertToEditableSections = async (): Promise<EditableSectionType[]> => {
     const attorneyGender = getAttorneyGender();
     const sections: EditableSectionType[] = [];
     
     // הוספת כל הסעיפים שנבחרו מהמחסן
-    selectedSections.forEach((sectionId, index) => {
+    const sectionPromises = selectedSections.map(async (sectionId, index) => {
       const section = getAdvanceDirectivesSectionById(sectionId);
       if (section) {
-        const content = applyAdvanceDirectivesGender(
+        const content = await applyAdvanceDirectivesGender(
           section.content,
           principalInfo.gender,
           attorneyGender
         );
         
-        sections.push({
+        return {
           id: `section-${sectionId}`,
           title: section.title,
           content: content,
-          category: 'advance_directive',
+          category: 'advance_directive' as const,
           isEditable: true,
           isCustom: false,
           lastModified: new Date().toISOString(),
           modifiedBy: 'user',
           version: 1,
-        });
+        };
       }
+      return null;
     });
     
+    const resolvedSections = await Promise.all(sectionPromises);
+    sections.push(...resolvedSections.filter(section => section !== null) as EditableSectionType[]);
+    
     // הוספת טקסט חופשי אם יש
+    const customSectionsPromises = [];
+    
     if (customInstructions.property) {
-      sections.push({
-        id: 'custom-property',
-        title: 'הנחיות רכושיות מותאמות אישית',
-        content: applyAdvanceDirectivesGender(customInstructions.property, principalInfo.gender, attorneyGender),
-        category: 'advance_directive',
-        isEditable: true,
-        isCustom: true,
-        lastModified: new Date().toISOString(),
-        modifiedBy: 'user',
-        version: 1,
-      });
+      customSectionsPromises.push(
+        (async () => {
+          const content = await applyAdvanceDirectivesGender(customInstructions.property, principalInfo.gender, attorneyGender);
+          return {
+            id: 'custom-property',
+            title: 'הנחיות רכושיות מותאמות אישית',
+            content: content,
+            category: 'advance_directive' as const,
+            isEditable: true,
+            isCustom: true,
+            lastModified: new Date().toISOString(),
+            modifiedBy: 'user',
+            version: 1,
+          };
+        })()
+      );
     }
     
     if (customInstructions.personal) {
-      sections.push({
-        id: 'custom-personal',
-        title: 'הנחיות אישיות מותאמות אישית',
-        content: applyAdvanceDirectivesGender(customInstructions.personal, principalInfo.gender, attorneyGender),
-        category: 'advance_directive',
-        isEditable: true,
-        isCustom: true,
-        lastModified: new Date().toISOString(),
-        modifiedBy: 'user',
-        version: 1,
-      });
+      customSectionsPromises.push(
+        (async () => {
+          const content = await applyAdvanceDirectivesGender(customInstructions.personal, principalInfo.gender, attorneyGender);
+          return {
+            id: 'custom-personal',
+            title: 'הנחיות אישיות מותאמות אישית',
+            content: content,
+            category: 'advance_directive' as const,
+            isEditable: true,
+            isCustom: true,
+            lastModified: new Date().toISOString(),
+            modifiedBy: 'user',
+            version: 1,
+          };
+        })()
+      );
     }
     
     if (customInstructions.medical) {
-      sections.push({
-        id: 'custom-medical',
-        title: 'הנחיות רפואיות מותאמות אישית',
-        content: applyAdvanceDirectivesGender(customInstructions.medical, principalInfo.gender, attorneyGender),
-        category: 'advance_directive',
-        isEditable: true,
-        isCustom: true,
-        lastModified: new Date().toISOString(),
-        modifiedBy: 'user',
-        version: 1,
-      });
+      customSectionsPromises.push(
+        (async () => {
+          const content = await applyAdvanceDirectivesGender(customInstructions.medical, principalInfo.gender, attorneyGender);
+          return {
+            id: 'custom-medical',
+            title: 'הנחיות רפואיות מותאמות אישית',
+            content: content,
+            category: 'advance_directive' as const,
+            isEditable: true,
+            isCustom: true,
+            lastModified: new Date().toISOString(),
+            modifiedBy: 'user',
+            version: 1,
+          };
+        })()
+      );
     }
     
     if (customInstructions.special) {
-      sections.push({
-        id: 'custom-special',
-        title: 'הוראות מיוחדות',
-        content: applyAdvanceDirectivesGender(customInstructions.special, principalInfo.gender, attorneyGender),
-        category: 'advance_directive',
-        isEditable: true,
-        isCustom: true,
-        lastModified: new Date().toISOString(),
-        modifiedBy: 'user',
-        version: 1,
-      });
+      customSectionsPromises.push(
+        (async () => {
+          const content = await applyAdvanceDirectivesGender(customInstructions.special, principalInfo.gender, attorneyGender);
+          return {
+            id: 'custom-special',
+            title: 'הוראות מיוחדות',
+            content: content,
+            category: 'advance_directive' as const,
+            isEditable: true,
+            isCustom: true,
+            lastModified: new Date().toISOString(),
+            modifiedBy: 'user',
+            version: 1,
+          };
+        })()
+      );
     }
     
-    setEditableSections(sections);
-    setShowAILearning(true);
+    // המתן לכל הסעיפים המותאמים אישית
+    if (customSectionsPromises.length > 0) {
+      const customSections = await Promise.all(customSectionsPromises);
+      sections.push(...customSections);
+    }
+    
+    return sections;
   };
 
   // עדכון סעיף לאחר שיפור AI
@@ -385,16 +418,16 @@ export default function AdvanceDirectivesForm() {
     alert('✅ סעיף נוסף מהמחסן!');
   };
 
-  const generateDocument = () => {
+  const generateDocument = async () => {
     const attorneyGender = getAttorneyGender();
     
     // כותרת עם נטיות
     const genderSuffix = principalInfo.gender === 'female' ? 'ה' : '';
     
     // סעיפים לפי קטגוריות
-    const propertySections = getSelectedSectionsContent('property');
-    const personalSections = getSelectedSectionsContent('personal');
-    const medicalSections = getSelectedSectionsContent('medical');
+    const propertySections = await getSelectedSectionsContent('property');
+    const personalSections = await getSelectedSectionsContent('personal');
+    const medicalSections = await getSelectedSectionsContent('medical');
     
     const doc = `
 ייפוי כוח מתמשך והנחיות מקדימות
@@ -469,8 +502,8 @@ ${applyAdvanceDirectivesGender(
     return doc;
   };
 
-  const handleDownload = () => {
-    const doc = generateDocument();
+  const handleDownload = async () => {
+    const doc = await generateDocument();
     const blob = new Blob([doc], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -552,7 +585,16 @@ ${applyAdvanceDirectivesGender(
                 </label>
                 <GenderSelector
                   value={principalInfo.gender}
-                  onChange={(gender) => setPrincipalInfo({ ...principalInfo, gender: gender as PersonGender })}
+                  onChange={(gender) => {
+                    setPrincipalInfo({ ...principalInfo, gender: gender as PersonGender });
+                    // החלף את כל הטקסט לפי המגדר החדש
+                    setCustomInstructions(prev => ({
+                      property: replaceTextWithGender(prev.property, gender),
+                      personal: replaceTextWithGender(prev.personal, gender),
+                      medical: replaceTextWithGender(prev.medical, gender),
+                      special: replaceTextWithGender(prev.special, gender)
+                    }));
+                  }}
                 />
               </div>
               
@@ -1005,7 +1047,11 @@ ${applyAdvanceDirectivesGender(
                     </p>
                     <div className="flex gap-3">
                       <button
-                        onClick={convertToEditableSections}
+                        onClick={async () => {
+                          const sections = await convertToEditableSections();
+                          setEditableSections(sections);
+                          setShowAILearning(true);
+                        }}
                         disabled={selectedSections.length === 0 && !Object.values(customInstructions).some(v => v)}
                         className="flex-1 px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl hover:from-purple-700 hover:to-pink-700 transition font-bold text-lg shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
                       >
@@ -1135,7 +1181,10 @@ ${applyAdvanceDirectivesGender(
               {!showAILearning && (
                 <div className="bg-white border-2 border-gray-300 rounded-lg p-6 max-h-96 overflow-y-auto">
                   <pre className="whitespace-pre-wrap text-sm font-mono text-right" style={{ direction: 'rtl' }}>
-                    {generateDocument()}
+                    {(() => {
+                      // זה לא יכול להיות async ב-JSX, אז נציג הודעה
+                      return 'תצוגה מקדימה זמינה רק לאחר הורדה';
+                    })()}
                   </pre>
                 </div>
               )}

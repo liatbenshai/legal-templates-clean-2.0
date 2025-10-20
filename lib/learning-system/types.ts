@@ -9,6 +9,14 @@ export interface EditableSection {
   serviceType?: string; // סוג שירות (הסכמי ממון, צוואה וכו')
   isEditable: boolean;
   isCustom: boolean; // האם זה סעיף מותאם אישית
+  isFixed?: boolean; // האם זה סעיף קבוע
+  isEnabled?: boolean; // האם הסעיף מופעל
+  level?: 'main' | 'sub' | 'sub-sub'; // רמת הסעיף
+  subSections?: Array<{
+    id: string;
+    content: string;
+    order: number;
+  }>; // תתי סעיפים
   version: number; // גרסה של הסעיף
   lastModified: string;
   modifiedBy: string; // מי ערך
