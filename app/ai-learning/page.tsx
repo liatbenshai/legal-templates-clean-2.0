@@ -36,6 +36,17 @@ export default function AILearningPage() {
     variables: [],
     values: {}
   });
+
+  // מודל השלמת משתנים לשמירה למסמך
+  const [variableCompletionModal, setVariableCompletionModal] = useState<{
+    isOpen: boolean;
+    text: string;
+    documentType: 'will' | 'fee-agreement' | 'advance-directives';
+  }>({
+    isOpen: false,
+    text: '',
+    documentType: 'will'
+  });
   
   // מערכת משתנים
   const [variables, setVariables] = useState<Array<{
@@ -294,14 +305,77 @@ export default function AILearningPage() {
       return;
     }
 
+    // בדיקה אם יש משתנים שצריך להשלים
+    const hasVariables = /\{\{[^}]+\}\}/.test(text);
+    
+    if (hasVariables) {
+      const shouldComplete = confirm('הטקסט מכיל משתנים (כמו {{שם_משתנה}}). האם תרצה להשלים אותם עכשיו?');
+      
+      if (shouldComplete) {
+        // פתח מודל להשלמת משתנים
+        setVariableCompletionModal({
+          isOpen: true,
+          text: text,
+          documentType: documentType
+        });
+        return;
+      }
+    }
+
     // שמירה ל-localStorage כדי שהמסמך יוכל לטעון
     const saveKey = `ai-improved-section-${documentType}`;
     localStorage.setItem(saveKey, JSON.stringify({
       content: text,
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      hasVariables: hasVariables
     }));
 
     alert('✅ הטקסט נשמר! עכשיו עובר לדף המסמך...');
+    
+    // מעבר לדף המסמך
+    const routes = {
+      'will': '/documents/will',
+      'fee-agreement': '/documents/fee-agreement',
+      'advance-directives': '/documents/advance-directives'
+    };
+    
+    router.push(routes[documentType]);
+  };
+
+  // השלמת משתנים ושמירה למסמך
+  const handleCompleteVariablesAndSave = () => {
+    const { text, documentType } = variableCompletionModal;
+    
+    // מצא את כל המשתנים בטקסט
+    const variableMatches = text.match(/\{\{([^}]+)\}\}/g);
+    if (!variableMatches) return;
+    
+    // בנה טקסט חדש עם הערכים
+    let completedText = text;
+    variableMatches.forEach(match => {
+      const variableName = match.replace(/\{\{|\}\}/g, '');
+      const value = prompt(`הזן ערך עבור "${variableName}":`);
+      if (value !== null) {
+        completedText = completedText.replace(match, value);
+      }
+    });
+    
+    // שמירה ל-localStorage
+    const saveKey = `ai-improved-section-${documentType}`;
+    localStorage.setItem(saveKey, JSON.stringify({
+      content: completedText,
+      timestamp: Date.now(),
+      hasVariables: false
+    }));
+    
+    // סגור את המודל
+    setVariableCompletionModal({
+      isOpen: false,
+      text: '',
+      documentType: 'will'
+    });
+    
+    alert('✅ הטקסט עם המשתנים הושלמו! עכשיו עובר לדף המסמך...');
     
     // מעבר לדף המסמך
     const routes = {
@@ -909,6 +983,43 @@ export default function AILearningPage() {
                 className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
               >
                 החלף משתנים
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* מודל השלמת משתנים לשמירה למסמך */}
+      {variableCompletionModal.isOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+            <h3 className="text-xl font-bold text-gray-900 mb-4">
+              🔧 השלם משתנים לפני שמירה
+            </h3>
+            
+            <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+              <p className="text-sm text-gray-600 mb-2">הטקסט מכיל משתנים שצריך להשלים:</p>
+              <div className="text-sm font-mono bg-white p-2 rounded border">
+                {variableCompletionModal.text}
+              </div>
+            </div>
+            
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setVariableCompletionModal({
+                  isOpen: false,
+                  text: '',
+                  documentType: 'will'
+                })}
+                className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
+              >
+                ביטול
+              </button>
+              <button
+                onClick={handleCompleteVariablesAndSave}
+                className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+              >
+                השלם משתנים ושמור
               </button>
             </div>
           </div>
