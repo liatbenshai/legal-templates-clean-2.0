@@ -296,14 +296,13 @@ export default function AILearningPage() {
     if (!title) return;
 
     try {
-      // שמירה בטבלה saved_sections במקום warehouse_sections
+      // שמירה בטבלה saved_sections (אותה לוגיקה כמו handleSaveSection)
       const { data, error } = await supabase
         .from('saved_sections')
         .insert([
           {
             title: title,
             content: text,
-            created_at: new Date().toISOString(),
           },
         ])
         .select();
