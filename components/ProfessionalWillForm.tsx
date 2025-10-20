@@ -500,31 +500,36 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
   // שמירת תבנית סעיף עם היררכיה
   const handleSaveSectionTemplate = async (section: any) => {
     try {
+      const { supabase } = await import('@/lib/supabase-client');
+      
       // מצא את כל התתי סעיפים של הסעיף הזה
       const childSections = customSections.filter(s => s.parentId === section.id);
       
       // צור תבנית עם הסעיף הראשי וכל התתי סעיפים
       const template = {
-        id: `template_${Date.now()}`,
         title: section.title + ' (תבנית)',
-        mainSection: {
+        main_section: {
           title: section.title,
           content: section.content,
           level: section.level
         },
-        childSections: childSections.map(child => ({
+        child_sections: childSections.map(child => ({
           title: child.title,
           content: child.content,
           level: child.level
-        })),
-        createdAt: new Date().toISOString()
+        }))
       };
 
-      // שמור ב-localStorage
-      const templatesKey = 'section-templates';
-      const existingTemplates = JSON.parse(localStorage.getItem(templatesKey) || '[]');
-      existingTemplates.push(template);
-      localStorage.setItem(templatesKey, JSON.stringify(existingTemplates));
+      // שמור ב-Supabase
+      const { error } = await supabase
+        .from('section_templates')
+        .insert([template]);
+
+      if (error) {
+        console.error('Error saving template:', error);
+        alert('שגיאה בשמירת התבנית');
+        return;
+      }
 
       alert(`✅ התבנית "${section.title}" נשמרה! ניתן לטעון אותה מחדש בכל עת.`);
     } catch (err) {
@@ -534,19 +539,30 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
   };
 
   // טעינת תבנית סעיף
-  const handleLoadTemplate = () => {
+  const handleLoadTemplate = async () => {
     try {
-      const templatesKey = 'section-templates';
-      const templates = JSON.parse(localStorage.getItem(templatesKey) || '[]');
+      const { supabase } = await import('@/lib/supabase-client');
       
-      if (templates.length === 0) {
+      // טען תבניות מ-Supabase
+      const { data: templates, error } = await supabase
+        .from('section_templates')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error loading templates:', error);
+        alert('שגיאה בטעינת התבניות');
+        return;
+      }
+
+      if (!templates || templates.length === 0) {
         alert('אין תבניות שמורות. שמור תבנית קודם על ידי לחיצה על "תבנית" ליד סעיף.');
         return;
       }
 
       // הצג רשימה של התבניות
       const templateList = templates.map((template: any, index: number) => 
-        `${index + 1}. ${template.title} (${template.childSections.length} תתי סעיפים)`
+        `${index + 1}. ${template.title} (${template.child_sections.length} תתי סעיפים)`
       ).join('\n');
 
       const choice = prompt(`בחר תבנית לטעינה:\n\n${templateList}\n\nהזן מספר (1-${templates.length}):`);
@@ -565,15 +581,15 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
       const mainSectionId = generateSectionId();
       const mainSection = {
         id: mainSectionId,
-        title: selectedTemplate.mainSection.title,
-        content: selectedTemplate.mainSection.content,
+        title: selectedTemplate.main_section.title,
+        content: selectedTemplate.main_section.content,
         level: 'main' as const,
         order: getNextOrder(),
         type: 'text' as const
       };
 
       // צור את התתי סעיפים
-      const childSections = selectedTemplate.childSections.map((child: any, index: number) => ({
+      const childSections = selectedTemplate.child_sections.map((child: any, index: number) => ({
         id: generateSectionId(),
         title: child.title,
         content: child.content,
