@@ -570,7 +570,7 @@ export default function LawyerFeeAgreement() {
     };
 
     // צור את התתי סעיפים
-    const subSections = [];
+    const subSections: any[] = [];
     for (let i = 0; i < subSectionsCount; i++) {
       const subTitle = prompt(`כותרת תת-סעיף ${i + 1}:`);
       const subContent = prompt(`תוכן תת-סעיף ${i + 1}:`);
