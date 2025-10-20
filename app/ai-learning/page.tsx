@@ -146,32 +146,42 @@ export default function AILearningPage() {
     try {
       setIsLoadingSections(true);
       
+      console.log('🔍 Attempting to load from Supabase...');
+      console.log('Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL);
+      console.log('Supabase Key exists:', !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+      
       // נסה לטעון מ-Supabase
       const { data, error } = await supabase
         .from('saved_sections')
         .select('*')
         .order('created_at', { ascending: false });
 
+      console.log('Supabase response:', { data, error });
+
       let sections = [];
       
       if (error) {
-        console.log('Supabase error, loading from localStorage:', error);
+        console.error('❌ Supabase error:', error);
+        console.log('📱 Loading from localStorage as fallback...');
         // אם יש שגיאה ב-Supabase, טען מ-localStorage
         const warehouseKey = 'ai-warehouse-sections';
         const localSections = JSON.parse(localStorage.getItem(warehouseKey) || '[]');
         sections = localSections;
+        console.log('📱 Loaded from localStorage:', sections.length, 'sections');
       } else {
+        console.log('✅ Supabase success:', data?.length || 0, 'sections');
         sections = data || [];
         
         // הוסף גם את הסעיפים מ-localStorage
         const warehouseKey = 'ai-warehouse-sections';
         const localSections = JSON.parse(localStorage.getItem(warehouseKey) || '[]');
         sections = [...localSections, ...sections];
+        console.log('📱 Combined sections:', sections.length, 'total');
       }
 
       setSavedSections(sections);
     } catch (err) {
-      console.error('Error loading sections:', err);
+      console.error('💥 Error loading sections:', err);
       // במקרה של שגיאה, טען מ-localStorage
       const warehouseKey = 'ai-warehouse-sections';
       const localSections = JSON.parse(localStorage.getItem(warehouseKey) || '[]');
@@ -314,26 +324,48 @@ export default function AILearningPage() {
     if (!title) return;
 
     try {
-      // שמירה זמנית ב-localStorage עד שהטבלה תיווצר ב-Supabase
-      const warehouseKey = 'ai-warehouse-sections';
-      const existingSections = JSON.parse(localStorage.getItem(warehouseKey) || '[]');
+      console.log('💾 Saving section to warehouse:', title);
       
-      const newSection = {
-        id: Date.now().toString(),
-        title: title,
-        content: text,
-        created_at: new Date().toISOString()
-      };
-      
-      existingSections.unshift(newSection);
-      localStorage.setItem(warehouseKey, JSON.stringify(existingSections));
+      // נסה לשמור ב-Supabase קודם
+      console.log('🔍 Attempting to save to Supabase...');
+      const { data, error } = await supabase
+        .from('saved_sections')
+        .insert([
+          {
+            title: title,
+            content: text,
+          },
+        ])
+        .select();
+
+      if (error) {
+        console.error('❌ Supabase save error:', error);
+        console.log('📱 Saving to localStorage as fallback...');
+        
+        // שמירה זמנית ב-localStorage עד שהטבלה תיווצר ב-Supabase
+        const warehouseKey = 'ai-warehouse-sections';
+        const existingSections = JSON.parse(localStorage.getItem(warehouseKey) || '[]');
+        
+        const newSection = {
+          id: Date.now().toString(),
+          title: title,
+          content: text,
+          created_at: new Date().toISOString()
+        };
+        
+        existingSections.unshift(newSection);
+        localStorage.setItem(warehouseKey, JSON.stringify(existingSections));
+        console.log('📱 Saved to localStorage successfully');
+      } else {
+        console.log('✅ Saved to Supabase successfully:', data);
+      }
 
       alert(`✅ סעיף "${title}" נשמר למחסן האישי!`);
       
       // טען מחדש את הסעיפים
       await loadSavedSections();
     } catch (err) {
-      console.error('Error:', err);
+      console.error('💥 Error saving to warehouse:', err);
       alert('שגיאה בשמירה למחסן');
     }
   };
