@@ -494,6 +494,19 @@ export default function ProfessionalFeeAgreementExporter({
               console.log('🔍 Exporting section:', section.title, 'subSections:', section.subSections, 'subSubSections:', section.subSubSections);
               const paragraphs = [];
               
+              // פונקציה להחלפת משתני מגדר
+              const applyGenderToText = (text: string) => {
+                const clientsGender = getClientsGender();
+                return text.replace(/\{\{gender:([^|]+)\|([^|]+)\|([^}]+)\}\}/g, (match, male, female, plural) => {
+                  switch (clientsGender) {
+                    case 'male': return male;
+                    case 'female': return female;
+                    case 'plural': return plural;
+                    default: return male;
+                  }
+                });
+              };
+              
               // סעיף ראשי
               paragraphs.push(
                 new Paragraph({
@@ -502,7 +515,7 @@ export default function ProfessionalFeeAgreementExporter({
                   bidirectional: true,
                   children: [
                     new TextRun({
-                      text: section.content || section.title,
+                      text: applyGenderToText(section.content || section.title),
                       font: 'David',
                       rightToLeft: true,
                       size: SIZES.normal
@@ -521,7 +534,7 @@ export default function ProfessionalFeeAgreementExporter({
                       bidirectional: true,
                       children: [
                         new TextRun({
-                          text: subSection.text || subSection.content || subSection.title,
+                          text: applyGenderToText(subSection.text || subSection.content || subSection.title),
                           font: 'David',
                           rightToLeft: true,
                           size: SIZES.normal
@@ -540,7 +553,7 @@ export default function ProfessionalFeeAgreementExporter({
                           bidirectional: true,
                           children: [
                             new TextRun({
-                              text: subSubSection.text || subSubSection.content || subSubSection.title,
+                              text: applyGenderToText(subSubSection.text || subSubSection.content || subSubSection.title),
                               font: 'David',
                               rightToLeft: true,
                               size: SIZES.normal
