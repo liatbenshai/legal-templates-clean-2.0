@@ -949,21 +949,87 @@ export default function ProfessionalWordExporter({
           sectionContent = sectionContent.replace(/\{\{transfer_days\}\}/g, '30');
           sectionContent = sectionContent.replace(/\{\{guidance_years\}\}/g, '3');
           
-          sections.push(
-            new Paragraph({
-              numbering: { reference: 'main-numbering', level: 0 },
-              alignment: AlignmentType.RIGHT,
-              bidirectional: true,
-              children: [
-                new TextRun({
-                  text: sectionContent,
-                  font: 'David',
-                  rightToLeft: true,
-                  size: SIZES.normal
+          // הוספת הסעיף לפי רמת ההיררכיה
+          if (section.level === 'main') {
+            sectionNum++;
+            sections.push(
+              new Paragraph({
+                numbering: { reference: 'main-numbering', level: 0 },
+                alignment: AlignmentType.RIGHT,
+                bidirectional: true,
+                children: [
+                  new TextRun({
+                    text: sectionContent,
+                    font: 'David',
+                    rightToLeft: true,
+                    size: SIZES.normal
+                  })
+                ]
+              })
+            );
+          } else if (section.level === 'sub') {
+            sections.push(
+              new Paragraph({
+                numbering: { reference: 'main-numbering', level: 1 },
+                alignment: AlignmentType.RIGHT,
+                bidirectional: true,
+                children: [
+                  new TextRun({
+                    text: sectionContent,
+                    font: 'David',
+                    rightToLeft: true,
+                    size: SIZES.normal
+                  })
+                ]
+              })
+            );
+          } else if (section.level === 'sub-sub') {
+            sections.push(
+              new Paragraph({
+                numbering: { reference: 'main-numbering', level: 2 },
+                alignment: AlignmentType.RIGHT,
+                bidirectional: true,
+                children: [
+                  new TextRun({
+                    text: sectionContent,
+                    font: 'David',
+                    rightToLeft: true,
+                    size: SIZES.normal
+                  })
+                ]
+              })
+            );
+          }
+          
+          // הוספת תת-סעיפים אם קיימים
+          if (section.sub_sections && section.sub_sections.length > 0) {
+            section.sub_sections.forEach((subSection: any) => {
+              let subContent = subSection.content || subSection.title;
+              
+              // החלפת משתנים בתת-סעיף
+              if (willData.testator?.gender === 'female') {
+                subContent = subContent.replace(/\{\{gender:([^|]*)\|([^|]*)\|([^}]*)\}\}/g, '$2');
+              } else {
+                subContent = subContent.replace(/\{\{gender:([^|]*)\|([^|]*)\|([^}]*)\}\}/g, '$1');
+              }
+              
+              sections.push(
+                new Paragraph({
+                  numbering: { reference: 'main-numbering', level: 2 },
+                  alignment: AlignmentType.RIGHT,
+                  bidirectional: true,
+                  children: [
+                    new TextRun({
+                      text: subContent,
+                      font: 'David',
+                      rightToLeft: true,
+                      size: SIZES.normal
+                    })
+                  ]
                 })
-              ]
-            })
-          );
+              );
+            });
+          }
         });
       }
 
