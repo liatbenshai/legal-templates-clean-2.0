@@ -5,7 +5,6 @@ import { FileText, DollarSign, Calendar, User, Scale, BookOpen, X, Download, Bra
 import EditableSection from '../LearningSystem/EditableSection';
 import WarehouseManager from '../LearningSystem/WarehouseManager';
 import UnifiedWarehouse from '../UnifiedWarehouse';
-import { exportFeeAgreementToWord } from './FeeAgreementExporter';
 import ProfessionalFeeAgreementExporter from './ProfessionalFeeAgreementExporter';
 import { AuthService } from '@/lib/auth';
 import { EditableSection as EditableSectionType } from '@/lib/learning-system/types';
@@ -811,23 +810,8 @@ export default function LawyerFeeAgreement() {
             subSubSections: clause.subSubSections || []
           };
         });
-        // הוסף סעיפים מה-JSON רק אם אין סעיפים קיימים
-        if (customSections.length === 0) {
-          setCustomSections(autoSections);
-        } else {
-          // אם יש סעיפים קיימים, רק עדכן את הסעיפים הקיימים עם subSections
-          setCustomSections(prev => prev.map(section => {
-            const matchingClause = autoSections.find(clause => clause.title === section.title);
-            if (matchingClause) {
-              return {
-                ...section,
-                subSections: matchingClause.subSections || [],
-                subSubSections: matchingClause.subSubSections || []
-              };
-            }
-            return section;
-          }));
-        }
+        // תמיד טען סעיפים מה-JSON
+        setCustomSections(autoSections);
       
       // עדכון פרטי התיק
       setAgreementData(prev => ({
@@ -1775,7 +1759,10 @@ ________________________           ${agreementData.clients.map((_, i) => '______
 
         {/* ייצוא מקצועי */}
         <ProfessionalFeeAgreementExporter
-          agreementData={agreementData}
+          agreementData={{
+            ...agreementData,
+            customSections: customSections
+          }}
           agreementDate={{
             day: new Date(agreementDate).getDate().toString(),
             month: (new Date(agreementDate).getMonth() + 1).toString(),
