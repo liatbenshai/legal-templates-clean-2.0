@@ -283,6 +283,7 @@ export default function ProfessionalWordExporter({
                       new Paragraph({
                         alignment: AlignmentType.RIGHT,
                         bidirectional: true,
+                        spacing: { line: 317 },
                         children: [
                           new TextRun({ 
                             text: 'הואיל כי אין אדם יודע את יום פקודתו;', 
@@ -306,6 +307,7 @@ export default function ProfessionalWordExporter({
                       new Paragraph({
                         alignment: AlignmentType.RIGHT,
                         bidirectional: true,
+                        spacing: { line: 317 },
                         children: [
                           new TextRun({
                             text: "הואיל",
@@ -334,6 +336,7 @@ export default function ProfessionalWordExporter({
                       new Paragraph({
                         alignment: AlignmentType.RIGHT,
                         bidirectional: true,
+                        spacing: { line: 317 },
                         children: [
                           new TextRun({ 
                             text: `והואיל כי ברצוני לערוך את צוואתי, ולפרט את רצוני האחרון והוראותיי בכל הקשור לאשר ייעשה ברכושי לאחר פטירתי, לאחר אריכות ימים ושנים;`, 
@@ -357,6 +360,7 @@ export default function ProfessionalWordExporter({
                       new Paragraph({
                         alignment: AlignmentType.RIGHT,
                         bidirectional: true,
+                        spacing: { line: 317 },
                         children: [
                           new TextRun({
                             text: "והואיל",
@@ -385,6 +389,7 @@ export default function ProfessionalWordExporter({
                       new Paragraph({
                         alignment: AlignmentType.RIGHT,
                         bidirectional: true,
+                        spacing: { line: 317 },
                         children: [
                           new TextRun({ 
                             text: `והואיל כי הנני למעלה מגיל שמונה עשרה שנים, ${gender ? 'אזרחית ישראלית ותושבת' : 'אזרח ישראלי ותושב'} מדינת ישראל;`, 
@@ -408,6 +413,7 @@ export default function ProfessionalWordExporter({
                       new Paragraph({
                         alignment: AlignmentType.RIGHT,
                         bidirectional: true,
+                        spacing: { line: 317 },
                         children: [
                           new TextRun({
                             text: "והואיל",

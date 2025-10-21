@@ -261,32 +261,60 @@ export default function ProfessionalFeeAgreementExporter({
                         new Paragraph({
                           alignment: AlignmentType.RIGHT,
                           bidirectional: true,
+                          spacing: { line: 276 },
                           children: [
                             new TextRun({
                               text: agreementData.lawyer.name,
-                              bold: true
+                              bold: true,
+                              font: 'David',
+                              rightToLeft: true,
+                              size: SIZES.normal
                             })
                           ]
                         }),
                         new Paragraph({
                           alignment: AlignmentType.RIGHT,
                           bidirectional: true,
-                          children: [new TextRun(agreementData.lawyer.address)]
+                          spacing: { line: 276 },
+                          children: [new TextRun({ 
+                            text: agreementData.lawyer.address,
+                            font: 'David',
+                            rightToLeft: true,
+                            size: SIZES.normal
+                          })]
                         }),
                         new Paragraph({
                           alignment: AlignmentType.RIGHT,
                           bidirectional: true,
-                          children: [new TextRun(agreementData.lawyer.phone)]
+                          spacing: { line: 276 },
+                          children: [new TextRun({
+                            text: agreementData.lawyer.phone,
+                            font: 'David',
+                            rightToLeft: true,
+                            size: SIZES.normal
+                          })]
                         }),
                         new Paragraph({
                           alignment: AlignmentType.RIGHT,
                           bidirectional: true,
-                          children: [new TextRun(agreementData.lawyer.email)]
+                          spacing: { line: 276 },
+                          children: [new TextRun({
+                            text: agreementData.lawyer.email,
+                            font: 'David',
+                            rightToLeft: true,
+                            size: SIZES.normal
+                          })]
                         }),
                         new Paragraph({
                           alignment: AlignmentType.RIGHT,
                           bidirectional: true,
-                          children: [new TextRun(`(להלן: "עורך הדין")`)]
+                          spacing: { line: 276 },
+                          children: [new TextRun({
+                            text: `(להלן: "עורך הדין")`,
+                            font: 'David',
+                            rightToLeft: true,
+                            size: SIZES.normal
+                          })]
                         })
                       ]
                     }),
@@ -363,34 +391,62 @@ export default function ProfessionalFeeAgreementExporter({
                           new Paragraph({
                             alignment: AlignmentType.RIGHT,
                             bidirectional: true,
+                            spacing: { line: 276 },
                             children: [
                               new TextRun({
                                 text: `${index + 1}. ${client.name}`,
-                                bold: true
+                                bold: true,
+                                font: 'David',
+                                rightToLeft: true,
+                                size: SIZES.normal
                               })
                             ]
                           }),
                           new Paragraph({
                             alignment: AlignmentType.RIGHT,
                             bidirectional: true,
-                            children: [new TextRun(client.address)]
+                            spacing: { line: 276 },
+                            children: [new TextRun({
+                              text: client.address,
+                              font: 'David',
+                              rightToLeft: true,
+                              size: SIZES.normal
+                            })]
                           }),
                           new Paragraph({
                             alignment: AlignmentType.RIGHT,
                             bidirectional: true,
-                            children: [new TextRun(client.phone)]
+                            spacing: { line: 276 },
+                            children: [new TextRun({
+                              text: client.phone,
+                              font: 'David',
+                              rightToLeft: true,
+                              size: SIZES.normal
+                            })]
                           }),
                           new Paragraph({
                             alignment: AlignmentType.RIGHT,
                             bidirectional: true,
-                            children: [new TextRun(client.email)]
+                            spacing: { line: 276 },
+                            children: [new TextRun({
+                              text: client.email,
+                              font: 'David',
+                              rightToLeft: true,
+                              size: SIZES.normal
+                            })]
                           }),
                           // הוספת "להלן" רק אחרי הלקוח האחרון
                           ...(index === agreementData.clients.length - 1 ? [
                             new Paragraph({
                               alignment: AlignmentType.RIGHT,
                               bidirectional: true,
-                              children: [new TextRun(`(להלן: "${getGenderText('הלקוח', 'הלקוחה', 'הלקוחות')}")`)]
+                              spacing: { line: 276 },
+                              children: [new TextRun({
+                                text: `(להלן: "${getGenderText('הלקוח', 'הלקוחה', 'הלקוחות')}")`,
+                                font: 'David',
+                                rightToLeft: true,
+                                size: SIZES.normal
+                              })]
                             })
                           ] : [])
                         ]
@@ -447,7 +503,13 @@ export default function ProfessionalFeeAgreementExporter({
                         new Paragraph({
                           alignment: AlignmentType.RIGHT,
                           bidirectional: true,
-                          children: [new TextRun(whereasText)]
+                          spacing: { line: 317 },
+                          children: [new TextRun({
+                            text: whereasText,
+                            font: 'David',
+                            rightToLeft: true,
+                            size: SIZES.normal
+                          })]
                         })
                       ]
                     }),
@@ -463,10 +525,14 @@ export default function ProfessionalFeeAgreementExporter({
                         new Paragraph({
                           alignment: AlignmentType.RIGHT,
                           bidirectional: true,
+                          spacing: { line: 317 },
                           children: [
                             new TextRun({
                               text: "הואיל",
-                              bold: true
+                              bold: true,
+                              font: 'David',
+                              rightToLeft: true,
+                              size: SIZES.normal
                             })
                           ]
                         })
@@ -591,28 +657,35 @@ export default function ProfessionalFeeAgreementExporter({
             new Table({
               columnWidths: agreementData.clients.length === 1 
                 ? [3744, 1872, 3744] 
-                : [2500, 1250, ...Array(agreementData.clients.length).fill(2500)],
+                : [...Array(agreementData.clients.length).fill(2500), 1250, 2500],
               width: { size: 100, type: WidthType.PERCENTAGE },
               rows: [
                 new TableRow({
                   children: [
-                    // עמודת עורך הדין
-                    new TableCell({
-                      width: { size: 2500, type: WidthType.DXA },
-                      borders: {
-                        top: { style: BorderStyle.SINGLE, size: 1, color: COLORS.black },
-                        bottom: { style: BorderStyle.NONE },
-                        left: { style: BorderStyle.NONE },
-                        right: { style: BorderStyle.NONE }
-                      },
-                      children: [
-                        new Paragraph({
-                          alignment: AlignmentType.CENTER,
-                          bidirectional: true,
-                          children: [new TextRun(`${agreementData.lawyer.name} עו"ד`)]
-                        })
-                      ]
-                    }),
+                    // עמודות הלקוחות (מצד שמאל)
+                    ...agreementData.clients.map((client, index) => 
+                      new TableCell({
+                        width: { size: 2500, type: WidthType.DXA },
+                        borders: {
+                          top: { style: BorderStyle.SINGLE, size: 1, color: COLORS.black },
+                          bottom: { style: BorderStyle.NONE },
+                          left: { style: BorderStyle.NONE },
+                          right: { style: BorderStyle.NONE }
+                        },
+                        children: [
+                          new Paragraph({
+                            alignment: AlignmentType.CENTER,
+                            bidirectional: true,
+                            children: [new TextRun({
+                              text: client.name,
+                              font: 'David',
+                              rightToLeft: true,
+                              size: SIZES.normal
+                            })]
+                          })
+                        ]
+                      })
+                    ),
                     // עמודת רווח
                     new TableCell({
                       width: { size: 1250, type: WidthType.DXA },
@@ -628,25 +701,28 @@ export default function ProfessionalFeeAgreementExporter({
                         })
                       ]
                     }),
-                    // עמודות הלקוחות
-                    ...agreementData.clients.map((client, index) => 
-                      new TableCell({
-                        width: { size: 2500, type: WidthType.DXA },
-                        borders: {
-                          top: { style: BorderStyle.SINGLE, size: 1, color: COLORS.black },
-                          bottom: { style: BorderStyle.NONE },
-                          left: { style: BorderStyle.NONE },
-                          right: { style: BorderStyle.NONE }
-                        },
-                        children: [
-                          new Paragraph({
-                            alignment: AlignmentType.CENTER,
-                            bidirectional: true,
-                            children: [new TextRun(client.name)]
-                          })
-                        ]
-                      })
-                    )
+                    // עמודת עורך הדין (מצד ימין)
+                    new TableCell({
+                      width: { size: 2500, type: WidthType.DXA },
+                      borders: {
+                        top: { style: BorderStyle.SINGLE, size: 1, color: COLORS.black },
+                        bottom: { style: BorderStyle.NONE },
+                        left: { style: BorderStyle.NONE },
+                        right: { style: BorderStyle.NONE }
+                      },
+                      children: [
+                        new Paragraph({
+                          alignment: AlignmentType.CENTER,
+                          bidirectional: true,
+                          children: [new TextRun({
+                            text: `${agreementData.lawyer.name}, עו"ד`,
+                            font: 'David',
+                            rightToLeft: true,
+                            size: SIZES.normal
+                          })]
+                        })
+                      ]
+                    })
                   ]
                 })
               ]
