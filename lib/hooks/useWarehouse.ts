@@ -18,6 +18,10 @@ export interface WarehouseSection {
   last_used: string;
   updated_at: string;
   created_by?: string;
+  level?: 'main' | 'sub' | 'sub-sub';
+  order?: number;
+  parent_id?: string;
+  sub_sections?: any[];
 }
 
 export interface UseWarehouseOptions {
@@ -62,6 +66,43 @@ export function useWarehouse(userId: string, options: UseWarehouseOptions = {}) 
 
       if (fetchError) throw fetchError;
 
+      // טעינת תבניות מ-section_templates
+      const { data: templatesData, error: templatesError } = await supabase
+        .from('section_templates')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (templatesError) {
+        console.error('Error loading templates:', templatesError);
+      }
+
+      // המרת תבניות לסעיפים עם היררכיה מלאה
+      const templateSections: WarehouseSection[] = [];
+      if (templatesData) {
+        templatesData.forEach((template: any) => {
+          // הוספת הסעיף הראשי עם כל התבנית
+          templateSections.push({
+            id: `template_${template.id}`,
+            user_id: userId,
+            title: template.main_section?.title || template.title,
+            content: template.main_section?.content || '',
+            category: 'template',
+            tags: ['template', 'hierarchical'],
+            usage_count: 0,
+            average_rating: 0,
+            is_public: true,
+            is_hidden: false,
+            created_at: template.created_at,
+            last_used: template.updated_at,
+            updated_at: template.updated_at,
+            created_by: 'system',
+            level: 'main',
+            order: template.main_section?.order || 1,
+            sub_sections: template.child_sections || []
+          });
+        });
+      }
+
       // אם מבוקש, הוסף גם סעיפים ציבוריים
       if (options.includePublic) {
         const { data: publicData, error: publicError } = await supabase
@@ -73,12 +114,12 @@ export function useWarehouse(userId: string, options: UseWarehouseOptions = {}) 
           .limit(50);
 
         if (!publicError && publicData) {
-          setSections([...(data || []), ...publicData]);
+          setSections([...(data || []), ...publicData, ...templateSections]);
         } else {
-          setSections(data || []);
+          setSections([...(data || []), ...templateSections]);
         }
       } else {
-        setSections(data || []);
+        setSections([...(data || []), ...templateSections]);
       }
     } catch (err) {
       console.error('Error loading sections:', err);
