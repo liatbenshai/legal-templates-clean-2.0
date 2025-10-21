@@ -103,7 +103,7 @@ export default function ProfessionalFeeAgreementExporter({
     
     try {
       const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell,
-              AlignmentType, WidthType, BorderStyle, LevelFormat } = await import('docx');
+              AlignmentType, WidthType, BorderStyle, LevelFormat, TextDirection, VerticalAlign } = await import('docx');
 
       // 🎯 הגדרת צבעים ומידות
       const COLORS = {
@@ -196,6 +196,9 @@ export default function ProfessionalFeeAgreementExporter({
                 rightToLeft: true
               },
               paragraph: {
+                alignment: AlignmentType.RIGHT,
+                rightToLeft: true,
+                bidirectional: true,
                 spacing: { line: SPACING.line, lineRule: "auto" }
               }
             }
