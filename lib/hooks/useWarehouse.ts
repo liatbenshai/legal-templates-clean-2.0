@@ -82,7 +82,7 @@ export function useWarehouse(userId: string, options: UseWarehouseOptions = {}) 
         templatesData.forEach((template: any) => {
           console.log('Loading template:', template.title, 'child_sections:', template.child_sections);
           
-          // הוספת הסעיף הראשי עם כל התבנית
+          // הוספת הסעיף הראשי עם כל התבנית - רק סעיף אחד!
           templateSections.push({
             id: `template_${template.id}`,
             user_id: userId,
