@@ -237,6 +237,11 @@ export default function UnifiedWarehouse({ onSectionSelect, userId, willType = '
       serviceType: 'will' as const,
       isEditable: true,
       isCustom: true,
+      subSections: section.sub_sections?.map((sub: any, index: number) => ({
+        id: `${section.id}_sub_${index}`,
+        content: sub.content || sub.title,
+        order: sub.order || index
+      })) || [],
       version: 1,
       lastModified: section.last_used,
       modifiedBy: userId
