@@ -268,6 +268,15 @@ export default function ProfessionalWordExporter({
             columnWidths: [7800, 1560],
             width: { size: 100, type: WidthType.PERCENTAGE },
             alignment: AlignmentType.RIGHT,
+            bidirectional: true,
+            borders: {
+              top: { style: BorderStyle.NONE },
+              bottom: { style: BorderStyle.NONE },
+              left: { style: BorderStyle.NONE },
+              right: { style: BorderStyle.NONE },
+              insideHorizontal: { style: BorderStyle.NONE },
+              insideVertical: { style: BorderStyle.NONE }
+            },
             rows: [
               new TableRow({
                 children: [
@@ -882,6 +891,7 @@ export default function ProfessionalWordExporter({
             columnWidths: [2000, 2340, 2340, 2680],
             width: { size: 9360, type: WidthType.DXA },
             margins: { top: 100, bottom: 100, left: 100, right: 100 },
+            bidirectional: true,
             rows: tableRows,
           })
         );
@@ -1142,6 +1152,15 @@ export default function ProfessionalWordExporter({
           new Table({
             columnWidths: [3744, 1872, 3744],
             width: { size: 100, type: WidthType.PERCENTAGE },
+            bidirectional: true,
+            borders: {
+              top: { style: BorderStyle.NONE },
+              bottom: { style: BorderStyle.NONE },
+              left: { style: BorderStyle.NONE },
+              right: { style: BorderStyle.NONE },
+              insideHorizontal: { style: BorderStyle.NONE },
+              insideVertical: { style: BorderStyle.NONE }
+            },
             rows: [
               new TableRow({
                 children: [
@@ -1212,6 +1231,15 @@ export default function ProfessionalWordExporter({
           new Table({
             columnWidths: [3744, 1872, 3744],
             width: { size: 100, type: WidthType.PERCENTAGE },
+            bidirectional: true,
+            borders: {
+              top: { style: BorderStyle.NONE },
+              bottom: { style: BorderStyle.NONE },
+              left: { style: BorderStyle.NONE },
+              right: { style: BorderStyle.NONE },
+              insideHorizontal: { style: BorderStyle.NONE },
+              insideVertical: { style: BorderStyle.NONE }
+            },
             rows: [
               new TableRow({
                 children: [
@@ -1384,6 +1412,15 @@ export default function ProfessionalWordExporter({
           new Table({
             columnWidths: [3744, 1872, 3744],
             width: { size: 100, type: WidthType.PERCENTAGE },
+            bidirectional: true,
+            borders: {
+              top: { style: BorderStyle.NONE },
+              bottom: { style: BorderStyle.NONE },
+              left: { style: BorderStyle.NONE },
+              right: { style: BorderStyle.NONE },
+              insideHorizontal: { style: BorderStyle.NONE },
+              insideVertical: { style: BorderStyle.NONE }
+            },
             rows: [
               new TableRow({
                 children: [
