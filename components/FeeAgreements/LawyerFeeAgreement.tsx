@@ -814,6 +814,19 @@ export default function LawyerFeeAgreement() {
         // הוסף סעיפים מה-JSON רק אם אין סעיפים קיימים
         if (customSections.length === 0) {
           setCustomSections(autoSections);
+        } else {
+          // אם יש סעיפים קיימים, רק עדכן את הסעיפים הקיימים עם subSections
+          setCustomSections(prev => prev.map(section => {
+            const matchingClause = autoSections.find(clause => clause.title === section.title);
+            if (matchingClause) {
+              return {
+                ...section,
+                subSections: matchingClause.subSections || [],
+                subSubSections: matchingClause.subSubSections || []
+              };
+            }
+            return section;
+          }));
         }
       
       // עדכון פרטי התיק
