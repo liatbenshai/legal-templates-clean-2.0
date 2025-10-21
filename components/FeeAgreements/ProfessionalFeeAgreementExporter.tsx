@@ -609,7 +609,7 @@ export default function ProfessionalFeeAgreementExporter({
                         new Paragraph({
                           alignment: AlignmentType.CENTER,
                           bidirectional: true,
-                          children: [new TextRun(agreementData.lawyer.name)]
+                          children: [new TextRun(`${agreementData.lawyer.name} עו"ד`)]
                         })
                       ]
                     }),
