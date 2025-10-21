@@ -245,7 +245,6 @@ export default function ProfessionalFeeAgreementExporter({
               columnWidths: [7800, 2560],
               width: { size: 70, type: WidthType.PERCENTAGE },
               alignment: AlignmentType.CENTER,
-              bidirectional: true,
               borders: {
                 top: { style: BorderStyle.NONE },
                 bottom: { style: BorderStyle.NONE },
@@ -497,7 +496,6 @@ export default function ProfessionalFeeAgreementExporter({
               columnWidths: [7800, 1560],
               width: { size: 100, type: WidthType.PERCENTAGE },
               alignment: AlignmentType.RIGHT,
-              bidirectional: true,
               borders: {
                 top: { style: BorderStyle.NONE },
                 bottom: { style: BorderStyle.NONE },
@@ -677,7 +675,6 @@ export default function ProfessionalFeeAgreementExporter({
                 ? [3744, 1872, 3744] 
                 : [...Array(agreementData.clients.length).fill(2500), 1250, 2500],
               width: { size: 100, type: WidthType.PERCENTAGE },
-              bidirectional: true,
               borders: {
                 top: { style: BorderStyle.NONE },
                 bottom: { style: BorderStyle.NONE },
