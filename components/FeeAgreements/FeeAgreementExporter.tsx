@@ -12,7 +12,7 @@ function createHebrewParagraph(text: string, options?: {
 }): Paragraph {
   return new Paragraph({
     text: '',
-    alignment: options?.alignment || AlignmentType.RIGHT,
+    alignment: options?.alignment || AlignmentType.BOTH,
     bidirectional: true,
     heading: options?.heading,
     children: [

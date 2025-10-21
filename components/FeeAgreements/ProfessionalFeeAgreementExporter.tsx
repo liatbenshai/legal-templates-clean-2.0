@@ -523,7 +523,7 @@ export default function ProfessionalFeeAgreementExporter({
               paragraphs.push(
                 new Paragraph({
                   numbering: { reference: "main-numbering", level: 0 },
-                  alignment: AlignmentType.RIGHT,
+                  alignment: AlignmentType.BOTH,
                   bidirectional: true,
                   children: [
                     new TextRun({
@@ -542,7 +542,7 @@ export default function ProfessionalFeeAgreementExporter({
                   paragraphs.push(
                     new Paragraph({
                       numbering: { reference: "main-numbering", level: 1 },
-                      alignment: AlignmentType.RIGHT,
+                      alignment: AlignmentType.BOTH,
                       bidirectional: true,
                       children: [
                         new TextRun({
@@ -561,7 +561,7 @@ export default function ProfessionalFeeAgreementExporter({
                       paragraphs.push(
                         new Paragraph({
                           numbering: { reference: "main-numbering", level: 2 },
-                          alignment: AlignmentType.RIGHT,
+                          alignment: AlignmentType.BOTH,
                           bidirectional: true,
                           children: [
                             new TextRun({

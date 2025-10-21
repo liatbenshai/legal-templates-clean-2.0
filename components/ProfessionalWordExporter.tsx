@@ -192,7 +192,7 @@ export default function ProfessionalWordExporter({
               rightToLeft: true
             },
             paragraph: {
-              alignment: AlignmentType.RIGHT,
+              alignment: AlignmentType.BOTH,
               spacing: {
                 after: SPACING.betweenParagraphs,
                 line: SPACING.line
@@ -231,7 +231,7 @@ export default function ProfessionalWordExporter({
       if (willData.type === 'mutual') {
         sections.push(
           new Paragraph({
-            alignment: AlignmentType.RIGHT,
+            alignment: AlignmentType.BOTH,
             bidirectional: true,
             children: [
               new TextRun({ 
@@ -247,7 +247,7 @@ export default function ProfessionalWordExporter({
         sections.push(new Paragraph({ text: '' }));
         sections.push(
           new Paragraph({
-            alignment: AlignmentType.RIGHT,
+            alignment: AlignmentType.BOTH,
             bidirectional: true,
             children: [
               new TextRun({ 
@@ -434,7 +434,7 @@ export default function ProfessionalWordExporter({
         const gender2 = willData.spouse?.gender === 'female';
         sections.push(
           new Paragraph({
-            alignment: AlignmentType.RIGHT,
+            alignment: AlignmentType.BOTH,
             bidirectional: true,
             children: [
               new TextRun({
@@ -450,7 +450,7 @@ export default function ProfessionalWordExporter({
         );
         sections.push(
           new Paragraph({
-            alignment: AlignmentType.RIGHT,
+            alignment: AlignmentType.BOTH,
             bidirectional: true,
             children: [
               new TextRun({
@@ -468,7 +468,7 @@ export default function ProfessionalWordExporter({
         const gender = willData.testator?.gender === 'female';
         sections.push(
           new Paragraph({
-            alignment: AlignmentType.RIGHT,
+            alignment: AlignmentType.BOTH,
             bidirectional: true,
             children: [
               new TextRun({
@@ -490,7 +490,7 @@ export default function ProfessionalWordExporter({
       sections.push(
         new Paragraph({
           numbering: { reference: 'main-numbering', level: 0 },
-          alignment: AlignmentType.RIGHT,
+          alignment: AlignmentType.BOTH,
           bidirectional: true,
           children: [
             new TextRun({
@@ -510,7 +510,7 @@ export default function ProfessionalWordExporter({
       sections.push(
         new Paragraph({
           numbering: { reference: 'main-numbering', level: 0 },
-          alignment: AlignmentType.RIGHT,
+          alignment: AlignmentType.BOTH,
           bidirectional: true,
           children: [
             new TextRun({
@@ -548,7 +548,7 @@ export default function ProfessionalWordExporter({
       sections.push(
         new Paragraph({
           numbering: { reference: 'main-numbering', level: 0 },
-          alignment: AlignmentType.RIGHT,
+          alignment: AlignmentType.BOTH,
           bidirectional: true,
           children: [
             new TextRun({
@@ -570,7 +570,7 @@ export default function ProfessionalWordExporter({
           sections.push(
             new Paragraph({
               numbering: { reference: 'main-numbering', level: 0 },
-              alignment: AlignmentType.RIGHT,
+              alignment: AlignmentType.BOTH,
               bidirectional: true,
               children: [
                 new TextRun({
@@ -592,7 +592,7 @@ export default function ProfessionalWordExporter({
           sections.push(
             new Paragraph({
               numbering: { reference: 'main-numbering', level: 0 },
-              alignment: AlignmentType.RIGHT,
+              alignment: AlignmentType.BOTH,
               bidirectional: true,
               children: [
                 new TextRun({
@@ -612,7 +612,7 @@ export default function ProfessionalWordExporter({
       sections.push(
         new Paragraph({
           numbering: { reference: 'main-numbering', level: 0 },
-          alignment: AlignmentType.RIGHT,
+          alignment: AlignmentType.BOTH,
           bidirectional: true,
           children: [
             new TextRun({
@@ -646,7 +646,7 @@ export default function ProfessionalWordExporter({
       
       sections.push(
         new Paragraph({
-          alignment: AlignmentType.RIGHT,
+          alignment: AlignmentType.BOTH,
           bidirectional: true,
           children: [
             new TextRun({
@@ -667,7 +667,7 @@ export default function ProfessionalWordExporter({
         sections.push(
           new Paragraph({
             numbering: { reference: 'main-numbering', level: 0 },
-            alignment: AlignmentType.RIGHT,
+            alignment: AlignmentType.BOTH,
             bidirectional: true,
             children: [
               new TextRun({
@@ -958,7 +958,7 @@ export default function ProfessionalWordExporter({
             sections.push(
               new Paragraph({
                 numbering: { reference: 'main-numbering', level: 0 },
-                alignment: AlignmentType.RIGHT,
+                alignment: AlignmentType.BOTH,
                 bidirectional: true,
                 children: [
                   new TextRun({
@@ -974,7 +974,7 @@ export default function ProfessionalWordExporter({
             sections.push(
               new Paragraph({
                 numbering: { reference: 'main-numbering', level: 1 },
-                alignment: AlignmentType.RIGHT,
+                alignment: AlignmentType.BOTH,
                 bidirectional: true,
                 children: [
                   new TextRun({
@@ -990,7 +990,7 @@ export default function ProfessionalWordExporter({
             sections.push(
               new Paragraph({
                 numbering: { reference: 'main-numbering', level: 2 },
-                alignment: AlignmentType.RIGHT,
+                alignment: AlignmentType.BOTH,
                 bidirectional: true,
                 children: [
                   new TextRun({
@@ -1020,7 +1020,7 @@ export default function ProfessionalWordExporter({
               sections.push(
                 new Paragraph({
                   numbering: { reference: 'main-numbering', level: 1 },
-                  alignment: AlignmentType.RIGHT,
+                  alignment: AlignmentType.BOTH,
                   bidirectional: true,
                   children: [
                     new TextRun({
@@ -1049,7 +1049,7 @@ export default function ProfessionalWordExporter({
                   sections.push(
                     new Paragraph({
                       numbering: { reference: 'main-numbering', level: 2 },
-                      alignment: AlignmentType.RIGHT,
+                      alignment: AlignmentType.BOTH,
                       bidirectional: true,
                       children: [
                         new TextRun({
@@ -1091,7 +1091,7 @@ export default function ProfessionalWordExporter({
       sections.push(
         new Paragraph({
           numbering: { reference: 'main-numbering', level: 0 },
-          alignment: AlignmentType.RIGHT,
+          alignment: AlignmentType.BOTH,
           bidirectional: true,
           children: [
             new TextRun({
@@ -1112,7 +1112,7 @@ export default function ProfessionalWordExporter({
       sections.push(
         new Paragraph({
           numbering: { reference: 'main-numbering', level: 0 },
-          alignment: AlignmentType.RIGHT,
+          alignment: AlignmentType.BOTH,
           bidirectional: true,
           children: [
             new TextRun({
@@ -1355,7 +1355,7 @@ export default function ProfessionalWordExporter({
       
       sections.push(
         new Paragraph({
-          alignment: AlignmentType.RIGHT,
+          alignment: AlignmentType.BOTH,
           bidirectional: true,
           children: [
             new TextRun({
