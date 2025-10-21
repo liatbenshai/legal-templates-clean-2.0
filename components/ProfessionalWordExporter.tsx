@@ -891,9 +891,8 @@ export default function ProfessionalWordExporter({
         // מיון הסעיפים לפי סדר
         const sortedSections = [...willData.customSections].sort((a, b) => a.order - b.order);
         
-        // פונקציה רקורסיבית להוספת סעיף עם היררכיה
-        const addSectionWithHierarchy = (section: any, level: number = 0) => {
-          console.log('Exporting section:', section.title, 'level:', level, 'sub_sections:', section.sub_sections);
+        sortedSections.forEach((section: any, index: number) => {
+          console.log('Exporting section:', section.title, 'sub_sections:', section.sub_sections);
           let sectionContent = section.content || section.title;
           
           // החלפת משתנים בסעיף
