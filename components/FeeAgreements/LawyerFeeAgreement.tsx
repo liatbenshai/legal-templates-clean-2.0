@@ -811,7 +811,10 @@ export default function LawyerFeeAgreement() {
             subSubSections: clause.subSubSections || []
           };
         });
-        setCustomSections(autoSections);
+        // הוסף סעיפים מה-JSON רק אם אין סעיפים קיימים
+        if (customSections.length === 0) {
+          setCustomSections(autoSections);
+        }
       
       // עדכון פרטי התיק
       setAgreementData(prev => ({
