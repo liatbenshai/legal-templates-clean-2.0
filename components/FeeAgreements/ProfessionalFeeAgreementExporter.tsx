@@ -488,69 +488,7 @@ export default function ProfessionalFeeAgreementExporter({
               children: [new TextRun("")]
             }),
             
-            // תוכן המסמך - סעיפים ממוספרים עם מגדר נכון
-            new Paragraph({
-              numbering: { reference: "main-numbering", level: 0 },
-              alignment: AlignmentType.RIGHT,
-              bidirectional: true,
-              children: [
-                new TextRun(`עורך הדין מתחייב לייצג את ${getGenderText('הלקוח', 'הלקוחה', 'הלקוחות')} בהליכים המשפטיים הבאים: ${agreementData.case.subject}.`)
-              ]
-            }),
-            
-            new Paragraph({
-              numbering: { reference: "main-numbering", level: 1 },
-              alignment: AlignmentType.RIGHT,
-              bidirectional: true,
-              children: [
-                new TextRun(`עורך הדין יפעל בשקידה וביעילות למען האינטרסים של ${getGenderText('הלקוח', 'הלקוחה', 'הלקוחות')}.`)
-              ]
-            }),
-            
-            new Paragraph({
-              numbering: { reference: "main-numbering", level: 0 },
-              alignment: AlignmentType.RIGHT,
-              bidirectional: true,
-              children: [
-                new TextRun(`עורך הדין יעדכן את ${getGenderText('הלקוח', 'הלקוחה', 'הלקוחות')} בכל התפתחות מהותית בתיק.`)
-              ]
-            }),
-            
-            new Paragraph({
-              numbering: { reference: "main-numbering", level: 0 },
-              alignment: AlignmentType.RIGHT,
-              bidirectional: true,
-              children: [
-                new TextRun("שכר הטרחה עבור השירותים המשפטיים יהיה כדלקמן:")
-              ]
-            }),
-            
-            new Paragraph({
-              numbering: { reference: "main-numbering", level: 1 },
-              alignment: AlignmentType.RIGHT,
-              bidirectional: true,
-              children: [
-                new TextRun(`סכום של ${agreementData.fees.totalAmount || '_____'} ₪ בתוספת מע"מ כחוק.`)
-              ]
-            }),
-            
-            new Paragraph({
-              numbering: { reference: "main-numbering", level: 1 },
-              alignment: AlignmentType.RIGHT,
-              bidirectional: true,
-              children: [
-                new TextRun(`התשלום יבוצע כדלקמן: ${agreementData.fees.paymentStructure || '[פירוט אופן התשלום]'}.`)
-              ]
-            }),
-            
-            new Paragraph({
-              numbering: { reference: "main-numbering", level: 0 },
-              alignment: AlignmentType.RIGHT,
-              bidirectional: true,
-              children: [
-                new TextRun(`הסכם זה יכנס לתוקף ביום חתימתו ויעמוד בתוקפו עד לסיום ההליכים המשפטיים. ${getGenderText('הלקוח', 'הלקוחה', 'הלקוחות')} ${getGenderText('מתחייב', 'מתחייבת', 'מתחייבים')} לשלם את שכר הטרחה בהתאם לתנאים המפורטים לעיל.`)
-              ]
-            }),
+            // תוכן המסמך - סעיפים מה-JSON עם היררכיה מלאה
             
             // סעיפים נוספים עם תמיכה בהיררכיה
             ...(agreementData.customSections || []).flatMap((section: any) => {
