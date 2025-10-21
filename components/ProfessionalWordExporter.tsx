@@ -891,8 +891,9 @@ export default function ProfessionalWordExporter({
         // מיון הסעיפים לפי סדר
         const sortedSections = [...willData.customSections].sort((a, b) => a.order - b.order);
         
-        sortedSections.forEach((section: any, index: number) => {
-          console.log('Exporting section:', section.title, 'sub_sections:', section.sub_sections);
+        // פונקציה רקורסיבית להוספת סעיף עם היררכיה
+        const addSectionWithHierarchy = (section: any, level: number = 0) => {
+          console.log('Exporting section:', section.title, 'level:', level, 'sub_sections:', section.sub_sections);
           let sectionContent = section.content || section.title;
           
           // החלפת משתנים בסעיף
@@ -1006,7 +1007,8 @@ export default function ProfessionalWordExporter({
           
           // הוספת תת-סעיפים אם קיימים
           if (section.sub_sections && section.sub_sections.length > 0) {
-            section.sub_sections.forEach((subSection: any) => {
+            const sortedSubSections = [...section.sub_sections].sort((a: any, b: any) => a.order - b.order);
+            sortedSubSections.forEach((subSection: any) => {
               let subContent = subSection.content || subSection.title;
               
               // החלפת משתנים בתת-סעיף
@@ -1018,7 +1020,7 @@ export default function ProfessionalWordExporter({
               
               sections.push(
                 new Paragraph({
-                  numbering: { reference: 'main-numbering', level: 2 },
+                  numbering: { reference: 'main-numbering', level: 1 },
                   alignment: AlignmentType.RIGHT,
                   bidirectional: true,
                   children: [
@@ -1031,6 +1033,37 @@ export default function ProfessionalWordExporter({
                   ]
                 })
               );
+              
+              // הוספת תת-תת-סעיפים אם קיימים
+              if (subSection.sub_sections && subSection.sub_sections.length > 0) {
+                const sortedSubSubSections = [...subSection.sub_sections].sort((a: any, b: any) => a.order - b.order);
+                sortedSubSubSections.forEach((subSubSection: any) => {
+                  let subSubContent = subSubSection.content || subSubSection.title;
+                  
+                  // החלפת משתנים בתת-תת-סעיף
+                  if (willData.testator?.gender === 'female') {
+                    subSubContent = subSubContent.replace(/\{\{gender:([^|]*)\|([^|]*)\|([^}]*)\}\}/g, '$2');
+                  } else {
+                    subSubContent = subSubContent.replace(/\{\{gender:([^|]*)\|([^|]*)\|([^}]*)\}\}/g, '$1');
+                  }
+                  
+                  sections.push(
+                    new Paragraph({
+                      numbering: { reference: 'main-numbering', level: 2 },
+                      alignment: AlignmentType.RIGHT,
+                      bidirectional: true,
+                      children: [
+                        new TextRun({
+                          text: subSubContent,
+                          font: 'David',
+                          rightToLeft: true,
+                          size: SIZES.normal
+                        })
+                      ]
+                    })
+                  );
+                });
+              }
             });
           }
         });

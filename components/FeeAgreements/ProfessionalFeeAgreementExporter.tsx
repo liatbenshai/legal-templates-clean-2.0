@@ -554,6 +554,7 @@ export default function ProfessionalFeeAgreementExporter({
             
             // סעיפים נוספים עם תמיכה בהיררכיה
             ...(agreementData.customSections || []).flatMap((section: any) => {
+              console.log('🔍 Exporting section:', section.title, 'subSections:', section.subSections, 'subSubSections:', section.subSubSections);
               const paragraphs = [];
               
               // סעיף ראשי
