@@ -552,17 +552,71 @@ export default function ProfessionalFeeAgreementExporter({
               ]
             }),
             
-            // סעיפים נוספים
-            ...(agreementData.customSections || []).map(section => 
-              new Paragraph({
-                numbering: { reference: "main-numbering", level: 0 },
-                alignment: AlignmentType.RIGHT,
-                bidirectional: true,
-                children: [
-                  new TextRun(`${section.title}: ${section.content}`)
-                ]
-              })
-            ),
+            // סעיפים נוספים עם תמיכה בהיררכיה
+            ...(agreementData.customSections || []).flatMap((section: any) => {
+              const paragraphs = [];
+              
+              // סעיף ראשי
+              paragraphs.push(
+                new Paragraph({
+                  numbering: { reference: "main-numbering", level: 0 },
+                  alignment: AlignmentType.RIGHT,
+                  bidirectional: true,
+                  children: [
+                    new TextRun({
+                      text: section.content || section.title,
+                      font: 'David',
+                      rightToLeft: true,
+                      size: SIZES.normal
+                    })
+                  ]
+                })
+              );
+              
+              // תת-סעיפים
+              if (section.subSections && Array.isArray(section.subSections)) {
+                section.subSections.forEach((subSection: any) => {
+                  paragraphs.push(
+                    new Paragraph({
+                      numbering: { reference: "main-numbering", level: 1 },
+                      alignment: AlignmentType.RIGHT,
+                      bidirectional: true,
+                      children: [
+                        new TextRun({
+                          text: subSection.text || subSection.content || subSection.title,
+                          font: 'David',
+                          rightToLeft: true,
+                          size: SIZES.normal
+                        })
+                      ]
+                    })
+                  );
+                  
+                  // תת-תת-סעיפים
+                  if (subSection.subSubSections && Array.isArray(subSection.subSubSections)) {
+                    subSection.subSubSections.forEach((subSubSection: any) => {
+                      paragraphs.push(
+                        new Paragraph({
+                          numbering: { reference: "main-numbering", level: 2 },
+                          alignment: AlignmentType.RIGHT,
+                          bidirectional: true,
+                          children: [
+                            new TextRun({
+                              text: subSubSection.text || subSubSection.content || subSubSection.title,
+                              font: 'David',
+                              rightToLeft: true,
+                              size: SIZES.normal
+                            })
+                          ]
+                        })
+                      );
+                    });
+                  }
+                });
+              }
+              
+              return paragraphs;
+            }),
             
             // רווח לפני טבלת החתימות
             new Paragraph({
