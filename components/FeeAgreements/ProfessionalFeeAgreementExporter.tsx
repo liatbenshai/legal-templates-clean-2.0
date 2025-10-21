@@ -489,8 +489,7 @@ export default function ProfessionalFeeAgreementExporter({
             }),
             
             // תוכן המסמך - סעיפים מה-JSON עם היררכיה מלאה
-            
-            // סעיפים נוספים עם תמיכה בהיררכיה
+            // סעיפים מה-JSON עם תמיכה בהיררכיה
             ...(agreementData.customSections || []).flatMap((section: any) => {
               console.log('🔍 Exporting section:', section.title, 'subSections:', section.subSections, 'subSubSections:', section.subSubSections);
               const paragraphs = [];
