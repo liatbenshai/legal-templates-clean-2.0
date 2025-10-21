@@ -158,6 +158,18 @@ export default function ProfessionalFeeAgreementExporter({
                   rightToLeft: true
                 }
               }
+            },
+            {
+              level: 2,
+              format: LevelFormat.DECIMAL,
+              text: "%1.%2.%3.",
+              alignment: AlignmentType.RIGHT,
+              style: {
+                paragraph: {
+                  indent: { left: 2160, hanging: 360 },
+                  rightToLeft: true
+                }
+              }
             }
           ]
         }
