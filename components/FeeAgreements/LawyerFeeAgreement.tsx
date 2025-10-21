@@ -799,15 +799,18 @@ export default function LawyerFeeAgreement() {
   useEffect(() => {
     if (selectedServiceType && feeAgreementTemplates.serviceCategories[selectedServiceType as keyof typeof feeAgreementTemplates.serviceCategories]) {
       const service = feeAgreementTemplates.serviceCategories[selectedServiceType as keyof typeof feeAgreementTemplates.serviceCategories];
-        const autoSections = service.clauses.map((clause: any, index) => ({
-          id: generateSectionId(),
-          title: clause.title,
-          content: replaceVariablesInText(clause.text),
-          level: 'main' as const,
-          order: index + 1,
-          subSections: clause.subSections || [],
-          subSubSections: clause.subSubSections || []
-        }));
+        const autoSections = service.clauses.map((clause: any, index) => {
+          console.log('📋 Loading clause:', clause.title, 'subSections:', clause.subSections);
+          return {
+            id: generateSectionId(),
+            title: clause.title,
+            content: replaceVariablesInText(clause.text),
+            level: 'main' as const,
+            order: index + 1,
+            subSections: clause.subSections || [],
+            subSubSections: clause.subSubSections || []
+          };
+        });
         setCustomSections(autoSections);
       
       // עדכון פרטי התיק
