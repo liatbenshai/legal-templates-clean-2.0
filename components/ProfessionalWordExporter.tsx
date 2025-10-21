@@ -888,8 +888,8 @@ export default function ProfessionalWordExporter({
         // ייבוא פונקציית המגדור
         const { applyGenderToText } = await import('../lib/hebrew-gender');
         
-        willData.customSections.forEach((section: any, index: number) => {
-          sectionNum++;
+        sortedSections.forEach((section: any, index: number) => {
+          console.log('Exporting section:', section.title, 'sub_sections:', section.sub_sections);
           let sectionContent = section.content || section.title;
           
           // החלפת משתנים בסעיף
