@@ -799,12 +799,14 @@ export default function LawyerFeeAgreement() {
   useEffect(() => {
     if (selectedServiceType && feeAgreementTemplates.serviceCategories[selectedServiceType as keyof typeof feeAgreementTemplates.serviceCategories]) {
       const service = feeAgreementTemplates.serviceCategories[selectedServiceType as keyof typeof feeAgreementTemplates.serviceCategories];
-        const autoSections = service.clauses.map((clause, index) => ({
+        const autoSections = service.clauses.map((clause: any, index) => ({
           id: generateSectionId(),
           title: clause.title,
           content: replaceVariablesInText(clause.text),
           level: 'main' as const,
-          order: index + 1
+          order: index + 1,
+          subSections: clause.subSections || [],
+          subSubSections: clause.subSubSections || []
         }));
         setCustomSections(autoSections);
       
@@ -878,12 +880,14 @@ export default function LawyerFeeAgreement() {
     if (selectedServiceType && customSections.length > 0) {
       const service = feeAgreementTemplates.serviceCategories[selectedServiceType as keyof typeof feeAgreementTemplates.serviceCategories];
       if (service) {
-        const updatedSections = service.clauses.map((clause, index) => ({
+        const updatedSections = service.clauses.map((clause: any, index) => ({
           id: generateSectionId(),
           title: clause.title,
           content: replaceVariablesInText(clause.text),
           level: 'main' as const,
-          order: index + 1
+          order: index + 1,
+          subSections: clause.subSections || [],
+          subSubSections: clause.subSubSections || []
         }));
         setCustomSections(updatedSections);
       }
