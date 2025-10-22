@@ -127,7 +127,7 @@ export default function ProfessionalFeeAgreementExporter({
     }
   };
 
-  // פונקציה להחלפת משתני מגדר
+  // פונקציה להחלפת משתני מגדר - משופרת עם מערכת זיהוי מגדר מתקדמת
   const applyGenderToText = (text: string) => {
     const clientsGender = getClientsGender();
     
@@ -166,6 +166,9 @@ export default function ProfessionalFeeAgreementExporter({
         (clientsGender === 'plural' ? 'צדדים' : 'צד');
       return replacement;
     });
+    
+    // שימוש במערכת זיהוי מגדר מתקדמת
+    result = replaceTextWithGender(result, clientsGender);
     
     return result;
   };
@@ -446,7 +449,7 @@ export default function ProfessionalFeeAgreementExporter({
                           bidirectional: true,
                           children: [
                             new TextRun({
-                              text: `${agreementData.lawyer.name}\n${agreementData.lawyer.address}\n${agreementData.lawyer.phone}\n${agreementData.lawyer.email}\n(להלן: "עורך הדין")`,
+                              text: `עו"ד ${agreementData.lawyer.name}\n${agreementData.lawyer.address}\n${agreementData.lawyer.phone}\n${agreementData.lawyer.email}\n(להלן: "עורך הדין")`,
                               font: 'David',
                               rightToLeft: true,
                               size: SIZES.normal
@@ -520,7 +523,7 @@ export default function ProfessionalFeeAgreementExporter({
                             bidirectional: true,
                             children: [
                               new TextRun({
-                                text: `${client.name}\n${client.address}\n${client.phone}\n${client.email}\n${agreementData.clients.length > 1 ? '' : '(להלן: "הלקוח")'}`,
+                                text: `${client.name}\n${client.address}\n${client.phone}\n${client.email}`,
                                 font: 'David',
                                 rightToLeft: true,
                                 size: SIZES.normal
@@ -528,20 +531,18 @@ export default function ProfessionalFeeAgreementExporter({
                             ]
                           })
                         ),
-                        ...(agreementData.clients.length > 1 ? [
-                          new Paragraph({
-                            alignment: AlignmentType.RIGHT,
-                            bidirectional: true,
-                            children: [
-                              new TextRun({
-                                text: '(להלן: "הלקוחות")',
-                                font: 'David',
-                                rightToLeft: true,
-                                size: SIZES.normal
-                              })
-                            ]
-                          })
-                        ] : [])
+                        new Paragraph({
+                          alignment: AlignmentType.RIGHT,
+                          bidirectional: true,
+                          children: [
+                            new TextRun({
+                              text: agreementData.clients.length > 1 ? '(להלן: "הלקוחות")' : '(להלן: "הלקוח")',
+                              font: 'David',
+                              rightToLeft: true,
+                              size: SIZES.normal
+                            })
+                          ]
+                        })
                       ]
                     }),
                     new TableCell({
@@ -673,7 +674,7 @@ export default function ProfessionalFeeAgreementExporter({
               children: [new TextRun("")]
             }),
             
-            // ✅ הסעיפים עם מספור נכון
+            // ✅ הסעיפים עם מספור רציף
             // סעיפים מותאמים אישית
             ...(agreementData.customSections || []).flatMap((section: any) => 
               createSectionParagraphs(section, 0)
