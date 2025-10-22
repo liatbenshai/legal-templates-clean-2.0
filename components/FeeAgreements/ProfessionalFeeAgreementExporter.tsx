@@ -103,7 +103,7 @@ export default function ProfessionalFeeAgreementExporter({
     
     try {
       const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell,
-              AlignmentType, WidthType, BorderStyle, LevelFormat, TextDirection, VerticalAlign } = await import('docx');
+              AlignmentType, WidthType, BorderStyle, LevelFormat, TextDirection, VerticalAlign, Header, Footer } = await import('docx');
 
       // 🎯 הגדרת צבעים ומידות
       const COLORS = {
@@ -215,7 +215,8 @@ export default function ProfessionalFeeAgreementExporter({
                   text: "הסכם שכר טרחה",
                   bold: true,
                   size: SIZES.title,
-                  font: "David"
+                  font: "David",
+                  rightToLeft: true
                 })
               ]
             }),
@@ -566,7 +567,10 @@ export default function ProfessionalFeeAgreementExporter({
               children: [
                 new TextRun({
                   text: "לפיכך הוסכם, הותנה והוצהר בין הצדדים כדלקמן:",
-                  bold: true
+                  bold: true,
+                  font: 'David',
+                  rightToLeft: true,
+                  size: SIZES.normal
                 })
               ]
             }),
