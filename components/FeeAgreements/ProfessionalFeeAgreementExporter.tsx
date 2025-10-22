@@ -182,9 +182,11 @@ export default function ProfessionalFeeAgreementExporter({
       // פונקציה ליצירת פסקאות מסעיף
       const createSectionParagraphs = (section: any, level: number = 0) => {
         const paragraphs = [];
+        console.log('🔍 createSectionParagraphs - section:', section);
         
         // כותרת הסעיף (אם יש)
         if (section.title) {
+          console.log('🔍 Adding title:', section.title);
           paragraphs.push(
             new Paragraph({
               numbering: { reference: "main-numbering", level: level },
@@ -204,6 +206,7 @@ export default function ProfessionalFeeAgreementExporter({
         
         // תוכן הסעיף (אם יש)
         if (section.text) {
+          console.log('🔍 Adding text:', section.text);
           paragraphs.push(
             new Paragraph({
               alignment: AlignmentType.BOTH,
