@@ -445,7 +445,7 @@ export default function ProfessionalFeeAgreementExporter({
                       },
                       children: [
                         new Paragraph({
-                          alignment: AlignmentType.BOTH,
+                          alignment: AlignmentType.RIGHT,
                           bidirectional: true,
                           children: [
                             new TextRun({
@@ -453,49 +453,49 @@ export default function ProfessionalFeeAgreementExporter({
                               font: 'David',
                               rightToLeft: true,
                               size: SIZES.normal
-                            }),
-                            new TextRun({
-                              text: '\n',
-                              font: 'David',
-                              rightToLeft: true,
-                              size: SIZES.normal
-                            }),
+                            })
+                          ]
+                        }),
+                        new Paragraph({
+                          alignment: AlignmentType.RIGHT,
+                          bidirectional: true,
+                          children: [
                             new TextRun({
                               text: agreementData.lawyer.address,
                               font: 'David',
                               rightToLeft: true,
                               size: SIZES.normal
-                            }),
-                            new TextRun({
-                              text: '\n',
-                              font: 'David',
-                              rightToLeft: true,
-                              size: SIZES.normal
-                            }),
+                            })
+                          ]
+                        }),
+                        new Paragraph({
+                          alignment: AlignmentType.RIGHT,
+                          bidirectional: true,
+                          children: [
                             new TextRun({
                               text: agreementData.lawyer.phone,
                               font: 'David',
                               rightToLeft: true,
                               size: SIZES.normal
-                            }),
-                            new TextRun({
-                              text: '\n',
-                              font: 'David',
-                              rightToLeft: true,
-                              size: SIZES.normal
-                            }),
+                            })
+                          ]
+                        }),
+                        new Paragraph({
+                          alignment: AlignmentType.RIGHT,
+                          bidirectional: true,
+                          children: [
                             new TextRun({
                               text: agreementData.lawyer.email,
                               font: 'David',
                               rightToLeft: true,
                               size: SIZES.normal
-                            }),
-                            new TextRun({
-                              text: '\n',
-                              font: 'David',
-                              rightToLeft: true,
-                              size: SIZES.normal
-                            }),
+                            })
+                          ]
+                        }),
+                        new Paragraph({
+                          alignment: AlignmentType.RIGHT,
+                          bidirectional: true,
+                          children: [
                             new TextRun({
                               text: '(להלן: "עורך הדין")',
                               font: 'David',
@@ -565,9 +565,9 @@ export default function ProfessionalFeeAgreementExporter({
                         right: { style: BorderStyle.NONE }
                       },
                       children: [
-                        ...agreementData.clients.map(client => 
+                        ...agreementData.clients.map(client => [
                           new Paragraph({
-                            alignment: AlignmentType.BOTH,
+                            alignment: AlignmentType.RIGHT,
                             bidirectional: true,
                             children: [
                               new TextRun({
@@ -575,37 +575,37 @@ export default function ProfessionalFeeAgreementExporter({
                                 font: 'David',
                                 rightToLeft: true,
                                 size: SIZES.normal
-                              }),
-                              new TextRun({
-                                text: '\n',
-                                font: 'David',
-                                rightToLeft: true,
-                                size: SIZES.normal
-                              }),
+                              })
+                            ]
+                          }),
+                          new Paragraph({
+                            alignment: AlignmentType.RIGHT,
+                            bidirectional: true,
+                            children: [
                               new TextRun({
                                 text: client.address,
                                 font: 'David',
                                 rightToLeft: true,
                                 size: SIZES.normal
-                              }),
-                              new TextRun({
-                                text: '\n',
-                                font: 'David',
-                                rightToLeft: true,
-                                size: SIZES.normal
-                              }),
+                              })
+                            ]
+                          }),
+                          new Paragraph({
+                            alignment: AlignmentType.RIGHT,
+                            bidirectional: true,
+                            children: [
                               new TextRun({
                                 text: client.phone,
                                 font: 'David',
                                 rightToLeft: true,
                                 size: SIZES.normal
-                              }),
-                              new TextRun({
-                                text: '\n',
-                                font: 'David',
-                                rightToLeft: true,
-                                size: SIZES.normal
-                              }),
+                              })
+                            ]
+                          }),
+                          new Paragraph({
+                            alignment: AlignmentType.RIGHT,
+                            bidirectional: true,
+                            children: [
                               new TextRun({
                                 text: client.email,
                                 font: 'David',
@@ -614,7 +614,7 @@ export default function ProfessionalFeeAgreementExporter({
                               })
                             ]
                           })
-                        ),
+                        ]).flat(),
                         new Paragraph({
                           alignment: AlignmentType.BOTH,
                           bidirectional: true,
