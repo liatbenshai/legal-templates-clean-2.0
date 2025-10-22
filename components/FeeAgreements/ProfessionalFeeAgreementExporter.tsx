@@ -240,7 +240,7 @@ export default function ProfessionalFeeAgreementExporter({
           paragraphs.push(
             new Paragraph({
               numbering: { reference: "main-numbering", level: level },
-              alignment: AlignmentType.RIGHT,
+              alignment: AlignmentType.BOTH,
               bidirectional: true,
               spacing: { 
                 before: level === 0 ? SPACING.beforeHeading : SPACING.beforeParagraph,
@@ -262,7 +262,7 @@ export default function ProfessionalFeeAgreementExporter({
           paragraphs.push(
             new Paragraph({
               numbering: { reference: "main-numbering", level: level },
-              alignment: AlignmentType.RIGHT,
+              alignment: AlignmentType.BOTH,
               bidirectional: true,
               spacing: { 
                 before: level === 0 ? SPACING.beforeHeading : SPACING.beforeParagraph,
@@ -285,7 +285,7 @@ export default function ProfessionalFeeAgreementExporter({
           paragraphs.push(
             new Paragraph({
               numbering: { reference: "main-numbering", level: level },
-              alignment: AlignmentType.RIGHT,
+              alignment: AlignmentType.BOTH,
               bidirectional: true,
               spacing: { 
                 before: SPACING.beforeParagraph,
@@ -340,7 +340,7 @@ export default function ProfessionalFeeAgreementExporter({
                   level: 0,
                   format: LevelFormat.DECIMAL,
                   text: "%1.",
-                  alignment: AlignmentType.RIGHT,
+                  alignment: AlignmentType.BOTH,
                   style: {
                     paragraph: {
                       indent: { left: 720, hanging: 360 }
@@ -351,7 +351,7 @@ export default function ProfessionalFeeAgreementExporter({
                   level: 1,
                   format: LevelFormat.DECIMAL,
                   text: "%1.%2.",
-                  alignment: AlignmentType.RIGHT,
+                  alignment: AlignmentType.BOTH,
                   style: {
                     paragraph: {
                       indent: { left: 1080, hanging: 360 }
@@ -362,7 +362,7 @@ export default function ProfessionalFeeAgreementExporter({
                   level: 2,
                   format: LevelFormat.DECIMAL,
                   text: "%1.%2.%3.",
-                  alignment: AlignmentType.RIGHT,
+                  alignment: AlignmentType.BOTH,
                   style: {
                     paragraph: {
                       indent: { left: 1440, hanging: 360 }
@@ -445,7 +445,7 @@ export default function ProfessionalFeeAgreementExporter({
                       },
                       children: [
                         new Paragraph({
-                          alignment: AlignmentType.RIGHT,
+                          alignment: AlignmentType.BOTH,
                           bidirectional: true,
                           children: [
                             new TextRun({
@@ -567,7 +567,7 @@ export default function ProfessionalFeeAgreementExporter({
                       children: [
                         ...agreementData.clients.map(client => 
                           new Paragraph({
-                            alignment: AlignmentType.RIGHT,
+                            alignment: AlignmentType.BOTH,
                             bidirectional: true,
                             children: [
                               new TextRun({
@@ -616,7 +616,7 @@ export default function ProfessionalFeeAgreementExporter({
                           })
                         ),
                         new Paragraph({
-                          alignment: AlignmentType.RIGHT,
+                          alignment: AlignmentType.BOTH,
                           bidirectional: true,
                           children: [
                             new TextRun({
@@ -688,7 +688,7 @@ export default function ProfessionalFeeAgreementExporter({
                       },
                       children: [
                         new Paragraph({
-                          alignment: AlignmentType.RIGHT,
+                          alignment: AlignmentType.BOTH,
                           bidirectional: true,
                           children: [
                             new TextRun({
@@ -711,7 +711,7 @@ export default function ProfessionalFeeAgreementExporter({
                       },
                       children: [
                         new Paragraph({
-                          alignment: AlignmentType.RIGHT,
+                          alignment: AlignmentType.BOTH,
                           bidirectional: true,
                           children: [
                             new TextRun({
