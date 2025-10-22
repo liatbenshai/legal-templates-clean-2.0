@@ -868,10 +868,11 @@ export default function ProfessionalFeeAgreementExporter({
                     })
             ] : []),
             
-            // סעיפים כללים - מוסרים כדי לאפשר שליטה מלאה
-            // ...(agreementData.generalClauses ? Object.values(agreementData.generalClauses).flatMap(categoryClauses => 
-            //   categoryClauses.flatMap(clause => createSectionParagraphs(clause, 0))
-            // ) : []),
+            // סעיפים כללים (אם אין סעיפים מותאמים אישית שכוללים אותם)
+            ...(agreementData.generalClauses && (!agreementData.customSections || agreementData.customSections.length === 0) ? 
+              Object.values(agreementData.generalClauses).flatMap(categoryClauses => 
+                categoryClauses.flatMap(clause => createSectionParagraphs(clause, 0))
+              ) : []),
             
             // רווח לפני טבלת החתימות
             new Paragraph({
