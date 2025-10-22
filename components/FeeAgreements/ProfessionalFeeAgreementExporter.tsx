@@ -264,7 +264,7 @@ export default function ProfessionalFeeAgreementExporter({
                         new Paragraph({
                           alignment: AlignmentType.RIGHT,
                           bidirectional: true,
-                          spacing: { line: 276 },
+                          spacing: { line: SPACING.line },
                           children: [
                             new TextRun({
                               text: agreementData.lawyer.name,
@@ -278,7 +278,7 @@ export default function ProfessionalFeeAgreementExporter({
                         new Paragraph({
                           alignment: AlignmentType.RIGHT,
                           bidirectional: true,
-                          spacing: { line: 276 },
+                          spacing: { line: SPACING.line },
                           children: [new TextRun({ 
                             text: agreementData.lawyer.address,
                             font: 'David',
@@ -289,7 +289,7 @@ export default function ProfessionalFeeAgreementExporter({
                         new Paragraph({
                           alignment: AlignmentType.RIGHT,
                           bidirectional: true,
-                          spacing: { line: 276 },
+                          spacing: { line: SPACING.line },
                           children: [new TextRun({
                             text: agreementData.lawyer.phone,
                             font: 'David',
@@ -300,7 +300,7 @@ export default function ProfessionalFeeAgreementExporter({
                         new Paragraph({
                           alignment: AlignmentType.RIGHT,
                           bidirectional: true,
-                          spacing: { line: 276 },
+                          spacing: { line: SPACING.line },
                           children: [new TextRun({
                             text: agreementData.lawyer.email,
                             font: 'David',
@@ -311,7 +311,7 @@ export default function ProfessionalFeeAgreementExporter({
                         new Paragraph({
                           alignment: AlignmentType.RIGHT,
                           bidirectional: true,
-                          spacing: { line: 276 },
+                          spacing: { line: SPACING.line },
                           children: [new TextRun({
                             text: `(להלן: "עורך הדין")`,
                             font: 'David',
@@ -332,10 +332,14 @@ export default function ProfessionalFeeAgreementExporter({
                       children: [
                         new Paragraph({
                           alignment: AlignmentType.CENTER,
+                          bidirectional: true,
                           children: [
                             new TextRun({
                               text: "בין",
-                              bold: true
+                              bold: true,
+                              font: 'David',
+                              rightToLeft: true,
+                              size: SIZES.normal
                             })
                           ]
                         })
@@ -394,7 +398,7 @@ export default function ProfessionalFeeAgreementExporter({
                           new Paragraph({
                             alignment: AlignmentType.RIGHT,
                             bidirectional: true,
-                            spacing: { line: 276 },
+                            spacing: { line: SPACING.line },
                             children: [
                               new TextRun({
                                 text: `${index + 1}. ${client.name}`,
@@ -408,7 +412,7 @@ export default function ProfessionalFeeAgreementExporter({
                           new Paragraph({
                             alignment: AlignmentType.RIGHT,
                             bidirectional: true,
-                            spacing: { line: 276 },
+                            spacing: { line: SPACING.line },
                             children: [new TextRun({
                               text: client.address,
                               font: 'David',
@@ -419,7 +423,7 @@ export default function ProfessionalFeeAgreementExporter({
                           new Paragraph({
                             alignment: AlignmentType.RIGHT,
                             bidirectional: true,
-                            spacing: { line: 276 },
+                            spacing: { line: SPACING.line },
                             children: [new TextRun({
                               text: client.phone,
                               font: 'David',
@@ -430,7 +434,7 @@ export default function ProfessionalFeeAgreementExporter({
                           new Paragraph({
                             alignment: AlignmentType.RIGHT,
                             bidirectional: true,
-                            spacing: { line: 276 },
+                            spacing: { line: SPACING.line },
                             children: [new TextRun({
                               text: client.email,
                               font: 'David',
@@ -443,7 +447,7 @@ export default function ProfessionalFeeAgreementExporter({
                             new Paragraph({
                               alignment: AlignmentType.RIGHT,
                               bidirectional: true,
-                              spacing: { line: 276 },
+                              spacing: { line: SPACING.line },
                               children: [new TextRun({
                                 text: `(להלן: "${getGenderText('הלקוח', 'הלקוחה', 'הלקוחות')}")`,
                                 font: 'David',
@@ -465,10 +469,14 @@ export default function ProfessionalFeeAgreementExporter({
                         children: [
                           new Paragraph({
                             alignment: AlignmentType.CENTER,
+                            bidirectional: true,
                             children: [
                               new TextRun({
                                 text: index === 0 ? "לבין" : "",
-                                bold: true
+                                bold: true,
+                                font: 'David',
+                                rightToLeft: true,
+                                size: SIZES.normal
                               })
                             ]
                           })
@@ -514,7 +522,7 @@ export default function ProfessionalFeeAgreementExporter({
                         new Paragraph({
                           alignment: AlignmentType.RIGHT,
                           bidirectional: true,
-                          spacing: { line: 317 },
+                          spacing: { line: SPACING.line },
                           children: [new TextRun({
                             text: whereasText,
                             font: 'David',
@@ -536,7 +544,7 @@ export default function ProfessionalFeeAgreementExporter({
                         new Paragraph({
                           alignment: AlignmentType.RIGHT,
                           bidirectional: true,
-                          spacing: { line: 317 },
+                          spacing: { line: SPACING.line },
                           children: [
                             new TextRun({
                               text: "הואיל",
