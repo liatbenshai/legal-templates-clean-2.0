@@ -766,13 +766,15 @@ export default function ProfessionalFeeAgreementExporter({
               if (agreementData.customSections && agreementData.customSections.length > 0) {
                 allSections.push(...agreementData.customSections);
               }
+              
               // סעיפים מקטגוריות השירותים
-              else if (agreementData.serviceCategories && agreementData.selectedServiceType) {
+              if (agreementData.serviceCategories && agreementData.selectedServiceType) {
                 const serviceClauses = agreementData.serviceCategories[agreementData.selectedServiceType]?.clauses || [];
                 allSections.push(...serviceClauses.filter(clause => !clause.id.includes('_002') && !clause.id.includes('_003')));
               }
+              
               // סעיפים כלליים
-              else if (agreementData.generalClauses) {
+              if (agreementData.generalClauses) {
                 Object.values(agreementData.generalClauses).forEach(categoryClauses => {
                   allSections.push(...categoryClauses);
                 });
