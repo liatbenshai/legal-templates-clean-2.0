@@ -162,6 +162,32 @@ export default function ProfessionalFeeAgreementExporter({
     return result;
   };
 
+  // פונקציה ליצירת טקסט שכר טרחה דינמי
+  const generateFeeText = () => {
+    const { fees } = agreementData;
+    if (!fees || !fees.type) return '';
+    
+    const formatAmount = (amount: string) => {
+      if (!amount) return '_______';
+      const num = parseInt(amount.replace(/[^\d]/g, ''));
+      return num ? num.toLocaleString('he-IL') : '_______';
+    };
+    
+    switch (fees.type) {
+      case 'סכום_כולל':
+        return `שכר הטרחה בעד השירות המשפטי יעמוד על סך של ${formatAmount(fees.totalAmount || '')} ש"ח בתוספת מע"מ כחוק, ${fees.paymentStructure || 'ישולם במלואו במעמד החתימה על הסכם שכר טרחה זה'}.`;
+      
+      case 'מקדמה_והצלחה':
+        return `שכר הטרחה בעד השירות המשפטי יעמוד על מקדמה בסך ${formatAmount(fees.advancePayment || '')} ש"ח בתוספת מע"מ כחוק, ו-${fees.successPercentage || '___'}% מהסכום שיתקבל בפועל. המקדמה ישולמה במעמד החתימה על הסכם זה, והאחוז ישולם עם קבלת התשלום מהצד שכנגד.`;
+      
+      case 'סכום_ואחוזים':
+        return `שכר הטרחה בעד השירות המשפטי יעמוד על סכום קבוע של ${formatAmount(fees.fixedAmount || '')} ש"ח בתוספת מע"מ כחוק, ו-${fees.successPercentage || '___'}% מכל סכום שיתקבל בפועל מהזכייה.`;
+      
+      default:
+        return 'שכר הטרחה ייקבע בהתאם לסוג השירות ויובא לידיעת הלקוח.';
+    }
+  };
+
 
   const exportToWord = async () => {
     setIsExporting(true);
@@ -853,16 +879,45 @@ export default function ProfessionalFeeAgreementExporter({
             // סעיפים מה-JSON עם תמיכה בהיררכיה
             
             
-            // סעיפים מקטגוריות השירותים החדשות - רק הקטגוריה שנבחרה
-            ...(agreementData.serviceCategories && agreementData.selectedServiceType ? 
+            // סעיפים מותאמים אישית (תאימות לאחור) - קודם
+            ...(agreementData.customSections || []).flatMap((section: any) => 
+              createSectionParagraphs(section, 0)
+            ),
+            
+            // סעיפים מקטגוריות השירותים החדשות - רק הקטגוריה שנבחרה (אם אין סעיפים מותאמים)
+            ...(agreementData.serviceCategories && agreementData.selectedServiceType && (!agreementData.customSections || agreementData.customSections.length === 0) ? 
               (agreementData.serviceCategories[agreementData.selectedServiceType]?.clauses || []).flatMap(clause => 
                 createSectionParagraphs(clause, 0)
               ) : []),
             
-            // סעיפים מותאמים אישית (תאימות לאחור)
-            ...(agreementData.customSections || []).flatMap((section: any) => 
-              createSectionParagraphs(section, 0)
-            ),
+            // סעיף שכר טרחה דינמי (אם יש נתונים)
+            ...(agreementData.fees && agreementData.fees.type ? [
+                new Paragraph({
+                  numbering: { reference: "main-numbering", level: 0 },
+                alignment: AlignmentType.BOTH,
+                  bidirectional: true,
+                  children: [
+                    new TextRun({
+                    text: "שכר טרחה",
+                      font: 'David',
+                      rightToLeft: true,
+                      size: SIZES.normal
+                    })
+                  ]
+              }),
+                    new Paragraph({
+                alignment: AlignmentType.BOTH,
+                      bidirectional: true,
+                      children: [
+                        new TextRun({
+                    text: generateFeeText(),
+                          font: 'David',
+                          rightToLeft: true,
+                          size: SIZES.normal
+                        })
+                      ]
+                    })
+            ] : []),
             
             // סעיפים כללים
             ...(agreementData.generalClauses ? Object.values(agreementData.generalClauses).flatMap(categoryClauses => 
@@ -894,18 +949,18 @@ export default function ProfessionalFeeAgreementExporter({
                   children: [
                     // עמודות הלקוחות (מצד שמאל)
                     ...agreementData.clients.map((client, index) => 
-                      new TableCell({
-                        width: { size: 2500, type: WidthType.DXA },
-                        borders: {
-                          top: { style: BorderStyle.SINGLE, size: 1, color: COLORS.black },
-                          bottom: { style: BorderStyle.NONE },
-                          left: { style: BorderStyle.NONE },
-                          right: { style: BorderStyle.NONE }
-                        },
-                        children: [
-                          new Paragraph({
-                            alignment: AlignmentType.CENTER,
-                            bidirectional: true,
+                    new TableCell({
+                      width: { size: 2500, type: WidthType.DXA },
+                      borders: {
+                        top: { style: BorderStyle.SINGLE, size: 1, color: COLORS.black },
+                        bottom: { style: BorderStyle.NONE },
+                        left: { style: BorderStyle.NONE },
+                        right: { style: BorderStyle.NONE }
+                      },
+                      children: [
+                        new Paragraph({
+                          alignment: AlignmentType.CENTER,
+                          bidirectional: true,
                             children: [new TextRun({
                               text: client.name,
                               font: 'David',
@@ -932,27 +987,27 @@ export default function ProfessionalFeeAgreementExporter({
                       ]
                     }),
                     // עמודת עורך הדין (מצד ימין)
-                    new TableCell({
-                      width: { size: 2500, type: WidthType.DXA },
-                      borders: {
-                        top: { style: BorderStyle.SINGLE, size: 1, color: COLORS.black },
-                        bottom: { style: BorderStyle.NONE },
-                        left: { style: BorderStyle.NONE },
-                        right: { style: BorderStyle.NONE }
-                      },
-                      children: [
-                        new Paragraph({
-                          alignment: AlignmentType.CENTER,
-                          bidirectional: true,
+                      new TableCell({
+                        width: { size: 2500, type: WidthType.DXA },
+                        borders: {
+                          top: { style: BorderStyle.SINGLE, size: 1, color: COLORS.black },
+                          bottom: { style: BorderStyle.NONE },
+                          left: { style: BorderStyle.NONE },
+                          right: { style: BorderStyle.NONE }
+                        },
+                        children: [
+                          new Paragraph({
+                            alignment: AlignmentType.CENTER,
+                            bidirectional: true,
                           children: [new TextRun({
                             text: `${agreementData.lawyer.name}, עו"ד`,
                             font: 'David',
                             rightToLeft: true,
                             size: SIZES.normal
                           })]
-                        })
-                      ]
-                    })
+                          })
+                        ]
+                      })
                   ]
                 })
               ]
