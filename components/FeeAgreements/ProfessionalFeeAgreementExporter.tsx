@@ -129,9 +129,12 @@ export default function ProfessionalFeeAgreementExporter({
   // פונקציה להחלפת משתני מגדר - תומכת בפורמט החדש של קלאוד
   const applyGenderToText = (text: string) => {
     const clientsGender = getClientsGender();
+    console.log('🔍 applyGenderToText - input text:', text);
+    console.log('🔍 applyGenderToText - clientsGender:', clientsGender);
     
     // טיפול בפורמט החדש: {{gender:זכר|נקבה|רבים}}
     let result = text.replace(/\{\{gender:([^|]+)\|([^|]+)\|([^}]+)\}\}/g, (match, male, female, plural) => {
+      console.log('🔍 Found gender pattern:', match, 'male:', male, 'female:', female, 'plural:', plural);
       switch (clientsGender) {
         case 'male': return male;
         case 'female': return female;
@@ -142,6 +145,7 @@ export default function ProfessionalFeeAgreementExporter({
     
     // טיפול במשתנה {{לקוח}} - בלי או עם ה' הידיעה
     result = result.replace(/ה?\{\{לקוח\}\}/g, (match) => {
+      console.log('🔍 Found לקוח pattern:', match);
       const hasHey = match.startsWith('ה');
       switch (clientsGender) {
         case 'male': return hasHey ? 'הלקוח' : 'לקוח';
@@ -153,15 +157,16 @@ export default function ProfessionalFeeAgreementExporter({
     
     // טיפול במשתנה {{צד}} - בלי או עם ה' הידיעה
     result = result.replace(/ה?\{\{צד\}\}/g, (match) => {
+      console.log('🔍 Found צד pattern:', match);
       const hasHey = match.startsWith('ה');
-      switch (clientsGender) {
-        case 'male': return hasHey ? 'הצד' : 'צד';
-        case 'female': return hasHey ? 'הצד' : 'צד';
-        case 'plural': return hasHey ? 'הצדדים' : 'צדדים';
-        default: return hasHey ? 'הצד' : 'צד';
-      }
+      const replacement = hasHey ? 
+        (clientsGender === 'plural' ? 'הצדדים' : 'הצד') : 
+        (clientsGender === 'plural' ? 'צדדים' : 'צד');
+      console.log('🔍 Replacing with:', replacement);
+      return replacement;
     });
     
+    console.log('🔍 applyGenderToText - result:', result);
     return result;
   };
 
