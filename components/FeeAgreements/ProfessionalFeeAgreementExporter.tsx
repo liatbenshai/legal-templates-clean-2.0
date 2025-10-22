@@ -131,15 +131,15 @@ export default function ProfessionalFeeAgreementExporter({
   const applyGenderToText = (text: string) => {
     const clientsGender = getClientsGender();
     
-    // טיפול בפורמט החדש: {{gender:זכר|נקבה|רבים}} או {{gender:המצווה|המצווה|המצווים}}
+    // טיפול בפורמט החדש: {{gender:זכר|נקבה|רבים}}
     let result = text.replace(/\{\{gender:([^|]+)\|([^|]+)\|([^}]+)\}\}/g, (match, male, female, plural) => {
-      // אם כל הערכים זהים (כמו המצווה|המצווה|המצווים), החזר לפי מגדר
-      if (male === female && female === plural) {
+      // בהסכמי שכר טרחה, תמיד החזר "לקוח/לקוחה/לקוחות"
+      if (male.includes('מצווה') || female.includes('מצווה') || plural.includes('מצווים')) {
         switch (clientsGender) {
-          case 'male': return male;
-          case 'female': return female;
-          case 'plural': return plural;
-          default: return male;
+          case 'male': return 'הלקוח';
+          case 'female': return 'הלקוחה';
+          case 'plural': return 'הלקוחות';
+          default: return 'הלקוח';
         }
       }
       // אחרת, החזר לפי מגדר רגיל
@@ -868,10 +868,10 @@ export default function ProfessionalFeeAgreementExporter({
                     })
             ] : []),
             
-            // סעיפים כללים
-            ...(agreementData.generalClauses ? Object.values(agreementData.generalClauses).flatMap(categoryClauses => 
-              categoryClauses.flatMap(clause => createSectionParagraphs(clause, 0))
-            ) : []),
+            // סעיפים כללים - מוסרים כדי לאפשר שליטה מלאה
+            // ...(agreementData.generalClauses ? Object.values(agreementData.generalClauses).flatMap(categoryClauses => 
+            //   categoryClauses.flatMap(clause => createSectionParagraphs(clause, 0))
+            // ) : []),
             
             // רווח לפני טבלת החתימות
             new Paragraph({
