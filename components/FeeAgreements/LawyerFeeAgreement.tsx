@@ -1761,7 +1761,9 @@ ________________________           ${agreementData.clients.map((_, i) => '______
         <ProfessionalFeeAgreementExporter
           agreementData={{
             ...agreementData,
-            customSections: customSections
+            customSections: customSections,
+            serviceCategories: feeAgreementTemplates.serviceCategories,
+            generalClauses: feeAgreementTemplates.generalClauses
           }}
           agreementDate={{
             day: new Date(agreementDate).getDate().toString(),
