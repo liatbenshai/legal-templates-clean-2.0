@@ -240,7 +240,7 @@ export default function ProfessionalFeeAgreementExporter({
           paragraphs.push(
             new Paragraph({
               numbering: { reference: "main-numbering", level: level },
-              alignment: AlignmentType.BOTH,
+              alignment: AlignmentType.RIGHT,
               bidirectional: true,
               spacing: { 
                 before: level === 0 ? SPACING.beforeHeading : SPACING.beforeParagraph,
@@ -262,7 +262,7 @@ export default function ProfessionalFeeAgreementExporter({
           paragraphs.push(
             new Paragraph({
               numbering: { reference: "main-numbering", level: level },
-              alignment: AlignmentType.BOTH,
+              alignment: AlignmentType.RIGHT,
               bidirectional: true,
               spacing: { 
                 before: level === 0 ? SPACING.beforeHeading : SPACING.beforeParagraph,
@@ -285,7 +285,7 @@ export default function ProfessionalFeeAgreementExporter({
           paragraphs.push(
             new Paragraph({
               numbering: { reference: "main-numbering", level: level },
-              alignment: AlignmentType.BOTH,
+              alignment: AlignmentType.RIGHT,
               bidirectional: true,
               spacing: { 
                 before: SPACING.beforeParagraph,
