@@ -129,9 +129,12 @@ export default function ProfessionalFeeAgreementExporter({
   // פונקציה להחלפת משתני מגדר - תומכת בפורמט החדש של קלאוד
   const applyGenderToText = (text: string) => {
     const clientsGender = getClientsGender();
+    console.log('🔍 applyGenderToText - input:', text);
+    console.log('🔍 applyGenderToText - clientsGender:', clientsGender);
     
     // טיפול בפורמט החדש: {{gender:זכר|נקבה|רבים}}
     let result = text.replace(/\{\{gender:([^|]+)\|([^|]+)\|([^}]+)\}\}/g, (match, male, female, plural) => {
+      console.log('🔍 Found gender pattern:', match);
       switch (clientsGender) {
         case 'male': return male;
         case 'female': return female;
@@ -142,24 +145,27 @@ export default function ProfessionalFeeAgreementExporter({
     
     // טיפול במשתנה {{לקוח}} - בלי או עם ה' הידיעה
     result = result.replace(/ה?\{\{לקוח\}\}/g, (match) => {
+      console.log('🔍 Found לקוח pattern:', match);
       const hasHey = match.startsWith('ה');
-      switch (clientsGender) {
-        case 'male': return hasHey ? 'הלקוח' : 'לקוח';
-        case 'female': return hasHey ? 'הלקוחה' : 'לקוחה';
-        case 'plural': return hasHey ? 'הלקוחות' : 'לקוחות';
-        default: return hasHey ? 'הלקוח' : 'לקוח';
-      }
+      const replacement = hasHey ? 
+        (clientsGender === 'plural' ? 'הלקוחות' : (clientsGender === 'female' ? 'הלקוחה' : 'הלקוח')) : 
+        (clientsGender === 'plural' ? 'לקוחות' : (clientsGender === 'female' ? 'לקוחה' : 'לקוח'));
+      console.log('🔍 Replacing לקוח with:', replacement);
+      return replacement;
     });
     
     // טיפול במשתנה {{צד}} - בלי או עם ה' הידיעה
     result = result.replace(/ה?\{\{צד\}\}/g, (match) => {
+      console.log('🔍 Found צד pattern:', match);
       const hasHey = match.startsWith('ה');
       const replacement = hasHey ? 
         (clientsGender === 'plural' ? 'הצדדים' : 'הצד') : 
         (clientsGender === 'plural' ? 'צדדים' : 'צד');
+      console.log('🔍 Replacing צד with:', replacement);
       return replacement;
     });
     
+    console.log('🔍 applyGenderToText - result:', result);
     return result;
   };
 
@@ -321,7 +327,7 @@ export default function ProfessionalFeeAgreementExporter({
         beforeHeading: 360,
         afterHeading: 240,
         betweenParagraphs: 240,
-        line: 414  // 1.5 spacing (276 * 1.5)
+        line: 276  // 1.0 spacing
       };
 
       // 🔢 הגדרת מספור מקצועי
@@ -796,9 +802,13 @@ export default function ProfessionalFeeAgreementExporter({
             }),
             
             // סעיפים מקטגוריות השירותים החדשות
-            ...(agreementData.serviceCategories ? Object.values(agreementData.serviceCategories).flatMap(category => 
-              category.clauses.flatMap(clause => createSectionParagraphs(clause, 0))
-            ) : []),
+            ...(agreementData.serviceCategories ? Object.values(agreementData.serviceCategories).flatMap(category => {
+              console.log('🔍 Processing category:', category.serviceName);
+              return category.clauses.flatMap(clause => {
+                console.log('🔍 Processing clause:', clause.title, 'text:', clause.text);
+                return createSectionParagraphs(clause, 0);
+              });
+            }) : []),
             
             // סעיפים כללים
             ...(agreementData.generalClauses ? Object.values(agreementData.generalClauses).flatMap(categoryClauses => 
