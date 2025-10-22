@@ -231,8 +231,9 @@ export default function ProfessionalFeeAgreementExporter({
         const paragraphs = [];
         
         // כותרת הסעיף + תוכן ביחד (כמו בדוגמה)
-        if (section.title && section.text) {
-          const combinedText = `${section.title} ${section.text}`;
+        if (section.title && (section.text || section.content)) {
+          const content = section.text || section.content || '';
+          const combinedText = `${section.title} ${content}`;
           paragraphs.push(
             new Paragraph({
               numbering: { reference: "main-numbering", level: level },
@@ -275,8 +276,9 @@ export default function ProfessionalFeeAgreementExporter({
               ]
             })
           );
-        } else if (section.text) {
+        } else if (section.text || section.content) {
           // רק תוכן
+          const content = section.text || section.content || '';
           paragraphs.push(
             new Paragraph({
               numbering: { reference: "main-numbering", level: level },
@@ -289,7 +291,7 @@ export default function ProfessionalFeeAgreementExporter({
               },
               children: [
                 new TextRun({
-                  text: applyGenderToText(section.text),
+                  text: applyGenderToText(content),
                   font: 'David',
                   rightToLeft: true,
                   size: SIZES.normal
@@ -335,7 +337,7 @@ export default function ProfessionalFeeAgreementExporter({
                   level: 0,
                   format: LevelFormat.DECIMAL,
                   text: "%1.",
-                  alignment: AlignmentType.START,
+                  alignment: AlignmentType.RIGHT,
                   style: {
                     paragraph: {
                       indent: { left: 720, hanging: 360 }
@@ -346,7 +348,7 @@ export default function ProfessionalFeeAgreementExporter({
                   level: 1,
                   format: LevelFormat.DECIMAL,
                   text: "%1.%2.",
-                  alignment: AlignmentType.START,
+                  alignment: AlignmentType.RIGHT,
                   style: {
                     paragraph: {
                       indent: { left: 1080, hanging: 360 }
@@ -357,7 +359,7 @@ export default function ProfessionalFeeAgreementExporter({
                   level: 2,
                   format: LevelFormat.DECIMAL,
                   text: "%1.%2.%3.",
-                  alignment: AlignmentType.START,
+                  alignment: AlignmentType.RIGHT,
                   style: {
                     paragraph: {
                       indent: { left: 1440, hanging: 360 }

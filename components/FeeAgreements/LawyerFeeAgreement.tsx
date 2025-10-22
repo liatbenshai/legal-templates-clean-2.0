@@ -645,6 +645,24 @@ export default function LawyerFeeAgreement() {
         return;
       }
 
+      // טען תת-תת-סעיפים לכל תת-סעיף
+      const subSubSectionsPromises = (subSections || []).map(async (sub: any) => {
+        const { data: subSubSections, error: subSubError } = await supabase
+          .from('hierarchical_sections')
+          .select('*')
+          .eq('parent_id', sub.id)
+          .order('order_index');
+
+        if (subSubError) {
+          console.error('Error loading sub-sub sections for', sub.title, ':', subSubError);
+          return [];
+        }
+
+        return subSubSections || [];
+      });
+
+      const subSubSectionsResults = await Promise.all(subSubSectionsPromises);
+
       // צור סעיפים במבנה הנכון
       const mainSectionId = generateSectionId();
       const mainSection = {
@@ -656,20 +674,46 @@ export default function LawyerFeeAgreement() {
         type: 'text' as const
       };
 
-      const subSectionsFormatted = (subSections || []).map((sub: any, index: number) => ({
-        id: generateSectionId(),
-        title: sub.title,
-        content: sub.content || '',
-        level: 'sub' as const,
-        parentId: mainSectionId,
-        order: getNextOrder() + index + 1,
-        type: 'text' as const
-      }));
+      let currentOrder = getNextOrder() + 1;
+      const allSections = [mainSection];
+
+      // עבד על תתי סעיפים
+      (subSections || []).forEach((sub: any, subIndex: number) => {
+        const subSectionId = generateSectionId();
+        const subSection = {
+          id: subSectionId,
+          title: sub.title,
+          content: sub.content || '',
+          level: 'sub' as const,
+          parentId: mainSectionId,
+          order: currentOrder++,
+          type: 'text' as const
+        };
+        allSections.push(subSection);
+
+        // עבד על תת-תת-סעיפים
+        const subSubSections = subSubSectionsResults[subIndex] || [];
+        subSubSections.forEach((subSub: any) => {
+          const subSubSection = {
+            id: generateSectionId(),
+            title: subSub.title,
+            content: subSub.content || '',
+            level: 'sub-sub' as const,
+            parentId: subSectionId,
+            order: currentOrder++,
+            type: 'text' as const
+          };
+          allSections.push(subSubSection);
+        });
+      });
 
       // הוסף את כל הסעיפים
-      setCustomSections(prev => [...prev, mainSection, ...subSectionsFormatted]);
+      setCustomSections(prev => [...prev, ...allSections]);
 
-      alert(`✅ נטען סעיף "${selectedMainSection.title}" עם ${subSectionsFormatted.length} תתי סעיפים!`);
+      const totalSubSections = (subSections || []).length;
+      const totalSubSubSections = subSubSectionsResults.reduce((sum, arr) => sum + arr.length, 0);
+      
+      alert(`✅ נטען סעיף "${selectedMainSection.title}" עם ${totalSubSections} תתי סעיפים ו-${totalSubSubSections} תת-תת-סעיפים!`);
     } catch (err) {
       console.error('Error loading hierarchical sections:', err);
       alert('שגיאה בטעינת הסעיפים');
