@@ -129,12 +129,9 @@ export default function ProfessionalFeeAgreementExporter({
   // פונקציה להחלפת משתני מגדר - תומכת בפורמט החדש של קלאוד
   const applyGenderToText = (text: string) => {
     const clientsGender = getClientsGender();
-    console.log('🔍 applyGenderToText - input:', text);
-    console.log('🔍 applyGenderToText - clientsGender:', clientsGender);
     
     // טיפול בפורמט החדש: {{gender:זכר|נקבה|רבים}}
     let result = text.replace(/\{\{gender:([^|]+)\|([^|]+)\|([^}]+)\}\}/g, (match, male, female, plural) => {
-      console.log('🔍 Found gender pattern:', match);
       switch (clientsGender) {
         case 'male': return male;
         case 'female': return female;
@@ -145,27 +142,22 @@ export default function ProfessionalFeeAgreementExporter({
     
     // טיפול במשתנה {{לקוח}} - בלי או עם ה' הידיעה
     result = result.replace(/ה?\{\{לקוח\}\}/g, (match) => {
-      console.log('🔍 Found לקוח pattern:', match);
       const hasHey = match.startsWith('ה');
       const replacement = hasHey ? 
         (clientsGender === 'plural' ? 'הלקוחות' : (clientsGender === 'female' ? 'הלקוחה' : 'הלקוח')) : 
         (clientsGender === 'plural' ? 'לקוחות' : (clientsGender === 'female' ? 'לקוחה' : 'לקוח'));
-      console.log('🔍 Replacing לקוח with:', replacement);
       return replacement;
     });
     
     // טיפול במשתנה {{צד}} - בלי או עם ה' הידיעה
     result = result.replace(/ה?\{\{צד\}\}/g, (match) => {
-      console.log('🔍 Found צד pattern:', match);
       const hasHey = match.startsWith('ה');
       const replacement = hasHey ? 
         (clientsGender === 'plural' ? 'הצדדים' : 'הצד') : 
         (clientsGender === 'plural' ? 'צדדים' : 'צד');
-      console.log('🔍 Replacing צד with:', replacement);
       return replacement;
     });
     
-    console.log('🔍 applyGenderToText - result:', result);
     return result;
   };
 
@@ -174,9 +166,6 @@ export default function ProfessionalFeeAgreementExporter({
     setIsExporting(true);
     setExportStatus(null);
     
-    // בדיקה מה יש ב-agreementData
-    console.log('🔍 agreementData.serviceCategories:', agreementData.serviceCategories);
-    console.log('🔍 agreementData.customSections:', agreementData.customSections);
     
     try {
       const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell,
@@ -800,20 +789,15 @@ export default function ProfessionalFeeAgreementExporter({
             // סעיפים מה-JSON עם תמיכה בהיררכיה
             
             
-            // סעיפים מה-JSON עם תמיכה בהיררכיה
-            ...(agreementData.customSections || []).flatMap((section: any) => {
-              console.log('🔍 Exporting section:', section.title, 'subSections:', section.subSections, 'subSubSections:', section.subSubSections);
-              return createSectionParagraphs(section, 0);
-            }),
-            
             // סעיפים מקטגוריות השירותים החדשות
-            ...(agreementData.serviceCategories ? Object.values(agreementData.serviceCategories).flatMap(category => {
-              console.log('🔍 Processing category:', category.serviceName, 'clauses count:', category.clauses.length);
-              return category.clauses.flatMap(clause => {
-                console.log('🔍 Processing clause:', clause.title, 'text:', clause.text);
-                return createSectionParagraphs(clause, 0);
-              });
-            }) : []),
+            ...(agreementData.serviceCategories ? Object.values(agreementData.serviceCategories).flatMap(category => 
+              category.clauses.flatMap(clause => createSectionParagraphs(clause, 0))
+            ) : []),
+            
+            // סעיפים מותאמים אישית (תאימות לאחור)
+            ...(agreementData.customSections || []).flatMap((section: any) => 
+              createSectionParagraphs(section, 0)
+            ),
             
             // סעיפים כללים
             ...(agreementData.generalClauses ? Object.values(agreementData.generalClauses).flatMap(categoryClauses => 
