@@ -181,7 +181,7 @@ export default function ProfessionalFeeAgreementExporter({
     const formatAmount = (amount: string) => {
       if (!amount) return '_______';
       const num = parseInt(amount.replace(/[^\d]/g, ''));
-      return num ? num.toLocaleString('he-IL') : '_______';
+      return num ? num.toLocaleString('en-US') : '_______';
     };
     
     switch (fees.type) {
@@ -694,8 +694,13 @@ export default function ProfessionalFeeAgreementExporter({
                 });
               }
               
-              // הוספת סעיף שכר טרחה דינמי
-              if (agreementData.fees && agreementData.fees.type) {
+              // בדיקה אם שכר טרחה כבר קיים בסעיפים
+              const hasFeeSection = allSections.some(section => 
+                section.title && section.title.toLowerCase().includes('שכר') && section.title.toLowerCase().includes('טרחה')
+              );
+              
+              // הוספת סעיף שכר טרחה דינמי רק אם הוא לא קיים כבר
+              if (agreementData.fees && agreementData.fees.type && !hasFeeSection) {
                 allSections.push({
                   title: 'שכר טרחה',
                   text: generateFeeText()
@@ -832,7 +837,9 @@ export default function ProfessionalFeeAgreementExporter({
            agreementData.lawyer.license &&
            agreementData.clients.length > 0 &&
            agreementData.clients.every(c => c.name && c.idNumber) &&
-           agreementData.case.subject;
+           agreementData.case.subject &&
+           agreementData.fees &&
+           agreementData.fees.type;
   };
 
   return (
