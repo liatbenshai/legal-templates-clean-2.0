@@ -140,23 +140,25 @@ export default function ProfessionalFeeAgreementExporter({
       }
     });
     
-    // טיפול בפורמט הישן: {{לקוח}} -> הלקוח/הלקוחה/הלקוחות
-    result = result.replace(/\{\{לקוח\}\}/g, () => {
+    // טיפול במשתנה {{לקוח}} - בלי או עם ה' הידיעה
+    result = result.replace(/ה?\{\{לקוח\}\}/g, (match) => {
+      const hasHey = match.startsWith('ה');
       switch (clientsGender) {
-        case 'male': return 'הלקוח';
-        case 'female': return 'הלקוחה';
-        case 'plural': return 'הלקוחות';
-        default: return 'הלקוח';
+        case 'male': return hasHey ? 'הלקוח' : 'לקוח';
+        case 'female': return hasHey ? 'הלקוחה' : 'לקוחה';
+        case 'plural': return hasHey ? 'הלקוחות' : 'לקוחות';
+        default: return hasHey ? 'הלקוח' : 'לקוח';
       }
     });
     
-    // טיפול בפורמט הישן: {{צד}} -> הצד/הצד/הצדדים
-    result = result.replace(/\{\{צד\}\}/g, () => {
+    // טיפול במשתנה {{צד}} - בלי או עם ה' הידיעה
+    result = result.replace(/ה?\{\{צד\}\}/g, (match) => {
+      const hasHey = match.startsWith('ה');
       switch (clientsGender) {
-        case 'male': return 'הצד';
-        case 'female': return 'הצד';
-        case 'plural': return 'הצדדים';
-        default: return 'הצד';
+        case 'male': return hasHey ? 'הצד' : 'צד';
+        case 'female': return hasHey ? 'הצד' : 'צד';
+        case 'plural': return hasHey ? 'הצדדים' : 'צדדים';
+        default: return hasHey ? 'הצד' : 'צד';
       }
     });
     
