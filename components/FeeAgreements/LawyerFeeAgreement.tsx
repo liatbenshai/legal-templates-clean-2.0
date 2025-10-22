@@ -1763,7 +1763,8 @@ ________________________           ${agreementData.clients.map((_, i) => '______
             ...agreementData,
             customSections: customSections,
             serviceCategories: feeAgreementTemplates.serviceCategories,
-            generalClauses: feeAgreementTemplates.generalClauses
+            generalClauses: feeAgreementTemplates.generalClauses,
+            selectedServiceType: selectedServiceType
           }}
           agreementDate={{
             day: new Date(agreementDate).getDate().toString(),
