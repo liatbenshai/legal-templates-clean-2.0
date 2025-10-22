@@ -178,60 +178,122 @@ export default function ProfessionalFeeAgreementExporter({
       const createSectionParagraphs = (section: any, level: number = 0) => {
         const paragraphs = [];
         
-        // סעיף ראשי
-        paragraphs.push(
-          new Paragraph({
-            numbering: { reference: "main-numbering", level: level },
-            alignment: AlignmentType.BOTH,
-            bidirectional: true,
-            children: [
-              new TextRun({
-                text: applyGenderToText(section.text || section.title),
-                font: 'David',
-                rightToLeft: true,
-                size: SIZES.normal
-              })
-            ]
-          })
-        );
+        // כותרת הסעיף (אם יש)
+        if (section.title) {
+          paragraphs.push(
+            new Paragraph({
+              numbering: { reference: "main-numbering", level: level },
+              alignment: AlignmentType.BOTH,
+              bidirectional: true,
+              children: [
+                new TextRun({
+                  text: applyGenderToText(section.title),
+                  font: 'David',
+                  rightToLeft: true,
+                  size: SIZES.normal
+                })
+              ]
+            })
+          );
+        }
+        
+        // תוכן הסעיף (אם יש)
+        if (section.text) {
+          paragraphs.push(
+            new Paragraph({
+              alignment: AlignmentType.BOTH,
+              bidirectional: true,
+              children: [
+                new TextRun({
+                  text: applyGenderToText(section.text),
+                  font: 'David',
+                  rightToLeft: true,
+                  size: SIZES.normal
+                })
+              ]
+            })
+          );
+        }
         
         // תת-סעיפים
         if (section.subSections && Array.isArray(section.subSections)) {
           section.subSections.forEach((subSection: any) => {
-            paragraphs.push(
-              new Paragraph({
-                numbering: { reference: "main-numbering", level: level + 1 },
-                alignment: AlignmentType.BOTH,
-                bidirectional: true,
-                children: [
-                  new TextRun({
-                    text: applyGenderToText(subSection.text || subSection.title),
-                    font: 'David',
-                    rightToLeft: true,
-                    size: SIZES.normal
-                  })
-                ]
-              })
-            );
+            // כותרת תת-סעיף (אם יש)
+            if (subSection.title) {
+              paragraphs.push(
+                new Paragraph({
+                  numbering: { reference: "main-numbering", level: level + 1 },
+                  alignment: AlignmentType.BOTH,
+                  bidirectional: true,
+                  children: [
+                    new TextRun({
+                      text: applyGenderToText(subSection.title),
+                      font: 'David',
+                      rightToLeft: true,
+                      size: SIZES.normal
+                    })
+                  ]
+                })
+              );
+            }
+            
+            // תוכן תת-סעיף (אם יש)
+            if (subSection.text) {
+              paragraphs.push(
+                new Paragraph({
+                  alignment: AlignmentType.BOTH,
+                  bidirectional: true,
+                  children: [
+                    new TextRun({
+                      text: applyGenderToText(subSection.text),
+                      font: 'David',
+                      rightToLeft: true,
+                      size: SIZES.normal
+                    })
+                  ]
+                })
+              );
+            }
             
             // תת-תת-סעיפים
             if (subSection.subSubSections && Array.isArray(subSection.subSubSections)) {
               subSection.subSubSections.forEach((subSubSection: any) => {
-                paragraphs.push(
-                  new Paragraph({
-                    numbering: { reference: "main-numbering", level: level + 2 },
-                    alignment: AlignmentType.BOTH,
-                    bidirectional: true,
-                    children: [
-                      new TextRun({
-                        text: applyGenderToText(subSubSection.text || subSubSection.title),
-                        font: 'David',
-                        rightToLeft: true,
-                        size: SIZES.normal
-                      })
-                    ]
-                  })
-                );
+                // כותרת תת-תת-סעיף (אם יש)
+                if (subSubSection.title) {
+                  paragraphs.push(
+                    new Paragraph({
+                      numbering: { reference: "main-numbering", level: level + 2 },
+                      alignment: AlignmentType.BOTH,
+                      bidirectional: true,
+                      children: [
+                        new TextRun({
+                          text: applyGenderToText(subSubSection.title),
+                          font: 'David',
+                          rightToLeft: true,
+                          size: SIZES.normal
+                        })
+                      ]
+                    })
+                  );
+                }
+                
+                // תוכן תת-תת-סעיף (אם יש)
+                if (subSubSection.text) {
+                  paragraphs.push(
+                    new Paragraph({
+                      alignment: AlignmentType.BOTH,
+                      bidirectional: true,
+                      children: [
+                        new TextRun({
+                          text: applyGenderToText(subSubSection.text),
+                          font: 'David',
+                          rightToLeft: true,
+                          size: SIZES.normal
+                        })
+                      ]
+                    })
+                  );
+                }
               });
             }
           });
