@@ -195,6 +195,9 @@ export default function ProfessionalFeeAgreementExporter({
             }
           }
         },
+        creator: "מערכת תבניות משפטיות",
+        title: "הסכם שכר טרחה",
+        description: "הסכם שכר טרחה מקצועי",
         numbering: {
           config: numberingConfig
         },
