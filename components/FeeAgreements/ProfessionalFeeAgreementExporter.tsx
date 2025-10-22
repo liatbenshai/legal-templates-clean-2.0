@@ -141,8 +141,7 @@ export default function ProfessionalFeeAgreementExporter({
               alignment: AlignmentType.RIGHT,
               style: {
                 paragraph: {
-                  indent: { left: 720, hanging: 360 },
-                  rightToLeft: true
+                  indent: { left: 720, hanging: 360 }
                 },
                 run: { bold: true }
               }
@@ -154,8 +153,7 @@ export default function ProfessionalFeeAgreementExporter({
               alignment: AlignmentType.RIGHT,
               style: {
                 paragraph: {
-                  indent: { left: 1440, hanging: 360 },
-                  rightToLeft: true
+                  indent: { left: 1440, hanging: 360 }
                 }
               }
             },
@@ -166,8 +164,7 @@ export default function ProfessionalFeeAgreementExporter({
               alignment: AlignmentType.RIGHT,
               style: {
                 paragraph: {
-                  indent: { left: 2160, hanging: 360 },
-                  rightToLeft: true
+                  indent: { left: 2160, hanging: 360 }
                 }
               }
             }
