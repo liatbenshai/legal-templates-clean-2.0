@@ -191,10 +191,6 @@ export default function ProfessionalFeeAgreementExporter({
                 font: "David", 
                 size: SIZES.normal,
                 rightToLeft: true
-              },
-              paragraph: {
-                alignment: AlignmentType.RIGHT,
-                spacing: { line: SPACING.line, lineRule: "auto" }
               }
             }
           }
