@@ -174,6 +174,10 @@ export default function ProfessionalFeeAgreementExporter({
     setIsExporting(true);
     setExportStatus(null);
     
+    // בדיקה מה יש ב-agreementData
+    console.log('🔍 agreementData.serviceCategories:', agreementData.serviceCategories);
+    console.log('🔍 agreementData.customSections:', agreementData.customSections);
+    
     try {
       const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell,
               AlignmentType, WidthType, BorderStyle, LevelFormat, TextDirection, VerticalAlign, Header, Footer } = await import('docx');
@@ -795,6 +799,7 @@ export default function ProfessionalFeeAgreementExporter({
             // תוכן המסמך - סעיפים מה-JSON עם היררכיה מלאה
             // סעיפים מה-JSON עם תמיכה בהיררכיה
             
+            
             // סעיפים מה-JSON עם תמיכה בהיררכיה
             ...(agreementData.customSections || []).flatMap((section: any) => {
               console.log('🔍 Exporting section:', section.title, 'subSections:', section.subSections, 'subSubSections:', section.subSubSections);
@@ -803,7 +808,7 @@ export default function ProfessionalFeeAgreementExporter({
             
             // סעיפים מקטגוריות השירותים החדשות
             ...(agreementData.serviceCategories ? Object.values(agreementData.serviceCategories).flatMap(category => {
-              console.log('🔍 Processing category:', category.serviceName);
+              console.log('🔍 Processing category:', category.serviceName, 'clauses count:', category.clauses.length);
               return category.clauses.flatMap(clause => {
                 console.log('🔍 Processing clause:', clause.title, 'text:', clause.text);
                 return createSectionParagraphs(clause, 0);
