@@ -517,20 +517,20 @@ export default function ProfessionalFeeAgreementExporter({
                         right: { style: BorderStyle.NONE }
                       },
                       children: [
-                        ...agreementData.clients.map(client => 
-                          new Paragraph({
-                            alignment: AlignmentType.RIGHT,
-                            bidirectional: true,
-                            children: [
-                              new TextRun({
-                                text: `${client.name}\n${client.address}\n${client.phone}\n${client.email}`,
-                                font: 'David',
-                                rightToLeft: true,
-                                size: SIZES.normal
-                              })
-                            ]
-                          })
-                        ),
+                        new Paragraph({
+                          alignment: AlignmentType.RIGHT,
+                          bidirectional: true,
+                          children: [
+                            new TextRun({
+                              text: agreementData.clients.map(client => 
+                                `${client.name}\n${client.address}\n${client.phone}\n${client.email}`
+                              ).join('\n\n'),
+                              font: 'David',
+                              rightToLeft: true,
+                              size: SIZES.normal
+                            })
+                          ]
+                        }),
                         new Paragraph({
                           alignment: AlignmentType.RIGHT,
                           bidirectional: true,
