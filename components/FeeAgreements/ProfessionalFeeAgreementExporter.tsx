@@ -194,8 +194,6 @@ export default function ProfessionalFeeAgreementExporter({
               },
               paragraph: {
                 alignment: AlignmentType.RIGHT,
-                rightToLeft: true,
-                bidirectional: true,
                 spacing: { line: SPACING.line, lineRule: "auto" }
               }
             }
