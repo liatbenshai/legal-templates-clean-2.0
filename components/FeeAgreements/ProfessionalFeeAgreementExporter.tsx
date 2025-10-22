@@ -229,17 +229,25 @@ export default function ProfessionalFeeAgreementExporter({
         gray: '666666'
       };
 
-      // פונקציה ליצירת פסקאות מסעיף עם המספור הנכון
-      const createSectionParagraphs = (section: any, level: number = 0) => {
+      // פונקציה ליצירת פסקאות מסעיף עם מספור ידני
+      const createSectionParagraphs = (section: any, level: number = 0, sectionNumber: number = 1, subSectionNumber: number = 1, subSubSectionNumber: number = 1) => {
         const paragraphs = [];
         
-        // כותרת הסעיף + תוכן ביחד (כמו בדוגמה)
-        if (section.title && (section.text || section.content)) {
-          const content = section.text || section.content || '';
-          const combinedText = `${section.title} ${content}`;
+        // כותרת הסעיף עם מספור ידני
+        if (section.title) {
+          let numberedTitle = '';
+          if (level === 0) {
+            numberedTitle = `${sectionNumber}. ${section.title}`;
+          } else if (level === 1) {
+            numberedTitle = `${sectionNumber}.${subSectionNumber}. ${section.title}`;
+          } else if (level === 2) {
+            numberedTitle = `${sectionNumber}.${subSectionNumber}.${subSubSectionNumber}. ${section.title}`;
+          } else {
+            numberedTitle = section.title;
+          }
+          
           paragraphs.push(
             new Paragraph({
-              numbering: { reference: "main-numbering", level: level },
               alignment: AlignmentType.BOTH,
               bidirectional: true,
               spacing: { 
@@ -249,7 +257,7 @@ export default function ProfessionalFeeAgreementExporter({
               },
               children: [
                 new TextRun({
-                  text: applyGenderToText(combinedText),
+                  text: applyGenderToText(numberedTitle),
                   font: 'David',
                   rightToLeft: true,
                   size: SIZES.normal
@@ -257,34 +265,13 @@ export default function ProfessionalFeeAgreementExporter({
               ]
             })
           );
-        } else if (section.title) {
-          // רק כותרת
-          paragraphs.push(
-            new Paragraph({
-              numbering: { reference: "main-numbering", level: level },
-              alignment: AlignmentType.BOTH,
-              bidirectional: true,
-              spacing: { 
-                before: level === 0 ? SPACING.beforeHeading : SPACING.beforeParagraph,
-                after: SPACING.afterParagraph,
-                line: SPACING.line
-              },
-              children: [
-                new TextRun({
-                  text: applyGenderToText(section.title),
-                  font: 'David',
-                  rightToLeft: true,
-                  size: SIZES.normal
-                })
-              ]
-            })
-          );
-        } else if (section.text || section.content) {
-          // רק תוכן
+        }
+        
+        // תוכן הסעיף ללא מספור (אם יש)
+        if (section.text || section.content) {
           const content = section.text || section.content || '';
           paragraphs.push(
             new Paragraph({
-              numbering: { reference: "main-numbering", level: level },
               alignment: AlignmentType.RIGHT,
               bidirectional: true,
               spacing: { 
@@ -306,15 +293,15 @@ export default function ProfessionalFeeAgreementExporter({
         
         // תתי-סעיפים (subSections)
         if (section.subSections && Array.isArray(section.subSections)) {
-          section.subSections.forEach((subSection: any) => {
-            paragraphs.push(...createSectionParagraphs(subSection, level + 1));
+          section.subSections.forEach((subSection: any, index: number) => {
+            paragraphs.push(...createSectionParagraphs(subSection, level + 1, sectionNumber, index + 1, 1));
           });
         }
         
         // תתי-תתי-סעיפים (subSubSections)
         if (section.subSubSections && Array.isArray(section.subSubSections)) {
-          section.subSubSections.forEach((subSubSection: any) => {
-            paragraphs.push(...createSectionParagraphs(subSubSection, level + 2));
+          section.subSubSections.forEach((subSubSection: any, index: number) => {
+            paragraphs.push(...createSectionParagraphs(subSubSection, level + 2, sectionNumber, subSectionNumber, index + 1));
           });
         }
         
@@ -331,48 +318,6 @@ export default function ProfessionalFeeAgreementExporter({
 
       // יצירת המסמך
       const doc = new Document({
-        numbering: {
-          config: [
-            {
-              reference: "main-numbering",
-              levels: [
-                {
-                  level: 0,
-                  format: LevelFormat.DECIMAL,
-                  text: "%1.",
-                  alignment: AlignmentType.BOTH,
-                  style: {
-                    paragraph: {
-                      indent: { left: 720, hanging: 360 }
-                    }
-                  }
-                },
-                {
-                  level: 1,
-                  format: LevelFormat.DECIMAL,
-                  text: "%1.%2.",
-                  alignment: AlignmentType.BOTH,
-                  style: {
-                    paragraph: {
-                      indent: { left: 1080, hanging: 360 }
-                    }
-                  }
-                },
-                {
-                  level: 2,
-                  format: LevelFormat.DECIMAL,
-                  text: "%1.%2.%3.",
-                  alignment: AlignmentType.BOTH,
-                  style: {
-                    paragraph: {
-                      indent: { left: 1440, hanging: 360 }
-                    }
-                  }
-                }
-              ]
-            }
-          ]
-        },
         sections: [{
           properties: {
             page: {
@@ -794,8 +739,8 @@ export default function ProfessionalFeeAgreementExporter({
               }
               
               // יצירת הסעיפים עם מספור רציף
-              return allSections.flatMap((section: any) => 
-                createSectionParagraphs(section, 0)
+              return allSections.flatMap((section: any, index: number) => 
+                createSectionParagraphs(section, 0, index + 1)
               );
             })(),
             
