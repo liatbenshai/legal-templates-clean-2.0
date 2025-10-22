@@ -449,7 +449,55 @@ export default function ProfessionalFeeAgreementExporter({
                           bidirectional: true,
                           children: [
                             new TextRun({
-                              text: `${agreementData.lawyer.name}\n${agreementData.lawyer.address}\n${agreementData.lawyer.phone}\n${agreementData.lawyer.email}\n(להלן: "עורך הדין")`,
+                              text: agreementData.lawyer.name,
+                              font: 'David',
+                              rightToLeft: true,
+                              size: SIZES.normal
+                            }),
+                            new TextRun({
+                              text: '\n',
+                              font: 'David',
+                              rightToLeft: true,
+                              size: SIZES.normal
+                            }),
+                            new TextRun({
+                              text: agreementData.lawyer.address,
+                              font: 'David',
+                              rightToLeft: true,
+                              size: SIZES.normal
+                            }),
+                            new TextRun({
+                              text: '\n',
+                              font: 'David',
+                              rightToLeft: true,
+                              size: SIZES.normal
+                            }),
+                            new TextRun({
+                              text: agreementData.lawyer.phone,
+                              font: 'David',
+                              rightToLeft: true,
+                              size: SIZES.normal
+                            }),
+                            new TextRun({
+                              text: '\n',
+                              font: 'David',
+                              rightToLeft: true,
+                              size: SIZES.normal
+                            }),
+                            new TextRun({
+                              text: agreementData.lawyer.email,
+                              font: 'David',
+                              rightToLeft: true,
+                              size: SIZES.normal
+                            }),
+                            new TextRun({
+                              text: '\n',
+                              font: 'David',
+                              rightToLeft: true,
+                              size: SIZES.normal
+                            }),
+                            new TextRun({
+                              text: '(להלן: "עורך הדין")',
                               font: 'David',
                               rightToLeft: true,
                               size: SIZES.normal
@@ -523,7 +571,43 @@ export default function ProfessionalFeeAgreementExporter({
                             bidirectional: true,
                             children: [
                               new TextRun({
-                                text: `${client.name}\n${client.address}\n${client.phone}\n${client.email}`,
+                                text: client.name,
+                                font: 'David',
+                                rightToLeft: true,
+                                size: SIZES.normal
+                              }),
+                              new TextRun({
+                                text: '\n',
+                                font: 'David',
+                                rightToLeft: true,
+                                size: SIZES.normal
+                              }),
+                              new TextRun({
+                                text: client.address,
+                                font: 'David',
+                                rightToLeft: true,
+                                size: SIZES.normal
+                              }),
+                              new TextRun({
+                                text: '\n',
+                                font: 'David',
+                                rightToLeft: true,
+                                size: SIZES.normal
+                              }),
+                              new TextRun({
+                                text: client.phone,
+                                font: 'David',
+                                rightToLeft: true,
+                                size: SIZES.normal
+                              }),
+                              new TextRun({
+                                text: '\n',
+                                font: 'David',
+                                rightToLeft: true,
+                                size: SIZES.normal
+                              }),
+                              new TextRun({
+                                text: client.email,
                                 font: 'David',
                                 rightToLeft: true,
                                 size: SIZES.normal
