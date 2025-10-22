@@ -675,7 +675,15 @@ export default function LawyerFeeAgreement() {
       };
 
       let currentOrder = getNextOrder() + 1;
-      const allSections = [mainSection];
+      const allSections: Array<{
+        id: string;
+        title: string;
+        content: string;
+        level: 'main' | 'sub' | 'sub-sub';
+        parentId?: string;
+        order: number;
+        type: 'text';
+      }> = [mainSection];
 
       // עבד על תתי סעיפים
       (subSections || []).forEach((sub: any, subIndex: number) => {
