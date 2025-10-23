@@ -183,16 +183,16 @@ export default function ProfessionalFeeAgreementExporter({
     
     switch (fees.type) {
       case 'סכום_כולל':
-        return `שכר הטרחה בעד השירות המשפטי יעמוד על סך של ${formatAmount(fees.totalAmount || '')} ש"ח בתוספת מע"מ כחוק, ${fees.paymentStructure || 'ישולם במלואו במעמד החתימה על הסכם שכר טרחה זה'}.`;
+        return `בעד השירות המשפטי יעמוד על סך של ${formatAmount(fees.totalAmount || '')} ש"ח בתוספת מע"מ כחוק, ${fees.paymentStructure || 'ישולם במלואו במעמד החתימה על הסכם שכר טרחה זה'}.`;
       
       case 'מקדמה_והצלחה':
-        return `שכר הטרחה בעד השירות המשפטי יעמוד על מקדמה בסך ${formatAmount(fees.advancePayment || '')} ש"ח בתוספת מע"מ כחוק, ו-${fees.successPercentage || '___'}% מהסכום שיתקבל בפועל. המקדמה ישולמה במעמד החתימה על הסכם זה, והאחוז ישולם עם קבלת התשלום מהצד שכנגד.`;
+        return `בעד השירות המשפטי יעמוד על מקדמה בסך ${formatAmount(fees.advancePayment || '')} ש"ח בתוספת מע"מ כחוק, ו-${fees.successPercentage || '___'}% מהסכום שיתקבל בפועל. המקדמה ישולמה במעמד החתימה על הסכם זה, והאחוז ישולם עם קבלת התשלום מהצד שכנגד.`;
       
       case 'סכום_ואחוזים':
-        return `שכר הטרחה בעד השירות המשפטי יעמוד על סכום קבוע של ${formatAmount(fees.fixedAmount || '')} ש"ח בתוספת מע"מ כחוק, ו-${fees.successPercentage || '___'}% מכל סכום שיתקבל בפועל מהזכייה.`;
+        return `בעד השירות המשפטי יעמוד על סכום קבוע של ${formatAmount(fees.fixedAmount || '')} ש"ח בתוספת מע"מ כחוק, ו-${fees.successPercentage || '___'}% מכל סכום שיתקבל בפועל מהזכייה.`;
       
       default:
-        return 'שכר הטרחה ייקבע בהתאם לסוג השירות ויובא לידיעת הלקוח.';
+        return 'ייקבע בהתאם לסוג השירות ויובא לידיעת הלקוח.';
     }
   };
 
@@ -226,14 +226,36 @@ export default function ProfessionalFeeAgreementExporter({
         gray: '666666'
       };
 
+      // קביעת המגדר הכולל של הלקוחות
+      const clientsGender = getClientsGender();
+      
       // פונקציה ליצירת פסקאות מסעיף עם המספור הנכון
       const createSectionParagraphs = (section: any, level: number = 0) => {
         const paragraphs = [];
         
-        // כותרת הסעיף + תוכן ביחד (כמו בדוגמה)
-        if (section.title && (section.text || section.content)) {
+        // פונקציה להסרת הכותרת מהטקסט אם היא מופיעה בהתחלה
+        const removeTitle = (text: string, title: string) => {
+          if (!text || !title) return text;
+          // הסרת רווחים מיותרים ובדיקה אם הטקסט מתחיל עם הכותרת
+          const cleanText = text.trim();
+          const cleanTitle = title.trim();
+          if (cleanText.startsWith(cleanTitle)) {
+            // הסר את הכותרת והחזר את השאר (ללא רווח בהתחלה)
+            return cleanText.substring(cleanTitle.length).trim();
+          }
+          return text;
+        };
+        
+        // תוכן הסעיף בלבד (ללא כותרת)
+        if (section.text || section.content) {
           const content = section.text || section.content || '';
-          const combinedText = `${section.title} ${content}`;
+          // שלב 1: החלפת משתני מגדר מיוחדים {{gender:זכר|נקבה|רבים}} ו-{{לקוח}}
+          const withGenderVars = applyGenderToText(content);
+          // שלב 2: החלפת כל הטקסט לפי מגדר (פעלים, תארים וכו')
+          let withFullGender = replaceTextWithGender(withGenderVars, clientsGender);
+          // שלב 3: הסרת "-ל" שהוספנו כדי למנוע החלפת "עד" למגדר
+          withFullGender = withFullGender.replace(/עד-ל\s+/g, 'עד ');
+          
           paragraphs.push(
             new Paragraph({
               numbering: { reference: "main-numbering", level: level },
@@ -246,52 +268,7 @@ export default function ProfessionalFeeAgreementExporter({
               },
               children: [
                 new TextRun({
-                  text: applyGenderToText(combinedText),
-                  font: 'David',
-                  rightToLeft: true,
-                  size: SIZES.normal
-                })
-              ]
-            })
-          );
-        } else if (section.title) {
-          // רק כותרת
-          paragraphs.push(
-            new Paragraph({
-              numbering: { reference: "main-numbering", level: level },
-              alignment: AlignmentType.BOTH,
-              bidirectional: true,
-              spacing: { 
-                before: level === 0 ? SPACING.beforeHeading : SPACING.beforeParagraph,
-                after: SPACING.afterParagraph,
-                line: SPACING.line
-              },
-              children: [
-                new TextRun({
-                  text: applyGenderToText(section.title),
-                  font: 'David',
-                  rightToLeft: true,
-                  size: SIZES.normal
-                })
-              ]
-            })
-          );
-        } else if (section.text || section.content) {
-          // רק תוכן
-          const content = section.text || section.content || '';
-          paragraphs.push(
-            new Paragraph({
-              numbering: { reference: "main-numbering", level: level },
-              alignment: AlignmentType.BOTH,
-              bidirectional: true,
-              spacing: { 
-                before: SPACING.beforeParagraph,
-                after: SPACING.afterParagraph,
-                line: SPACING.line
-              },
-              children: [
-                new TextRun({
-                  text: applyGenderToText(content),
+                  text: withFullGender,
                   font: 'David',
                   rightToLeft: true,
                   size: SIZES.normal
@@ -301,17 +278,78 @@ export default function ProfessionalFeeAgreementExporter({
           );
         }
         
-        // תתי-סעיפים (subSections)
+        // תתי-סעיפים (subSections) - עובר על כל תת-סעיף ומטפל גם ב-subSubSections שלו
         if (section.subSections && Array.isArray(section.subSections)) {
           section.subSections.forEach((subSection: any) => {
-            paragraphs.push(...createSectionParagraphs(subSection, level + 1));
-          });
-        }
-        
-        // תתי-תתי-סעיפים (subSubSections)
-        if (section.subSubSections && Array.isArray(section.subSubSections)) {
-          section.subSubSections.forEach((subSubSection: any) => {
-            paragraphs.push(...createSectionParagraphs(subSubSection, level + 2));
+            // תוכן תת-הסעיף
+            if (subSection.text || subSection.content) {
+              const subContent = subSection.text || subSection.content || '';
+              // שלב 1: החלפת משתני מגדר מיוחדים
+              const withGenderVars = applyGenderToText(subContent);
+              // שלב 2: החלפת כל הטקסט לפי מגדר
+              let withFullGender = replaceTextWithGender(withGenderVars, clientsGender);
+              // שלב 3: הסרת "-ל" שהוספנו כדי למנוע החלפת "עד" למגדר
+              withFullGender = withFullGender.replace(/עד-ל\s+/g, 'עד ');
+              
+              paragraphs.push(
+                new Paragraph({
+                  numbering: { reference: "main-numbering", level: level + 1 },
+                  alignment: AlignmentType.BOTH,
+                  bidirectional: true,
+                  spacing: { 
+                    before: SPACING.beforeParagraph,
+                    after: SPACING.afterParagraph,
+                    line: SPACING.line
+                  },
+                  children: [
+                    new TextRun({
+                      text: withFullGender,
+                      font: 'David',
+                      rightToLeft: true,
+                      size: SIZES.normal
+                    })
+                  ]
+                })
+              );
+            }
+            
+            // תתי-תתי-סעיפים (subSubSections) של תת-הסעיף הזה
+            if (subSection.subSubSections && Array.isArray(subSection.subSubSections)) {
+              subSection.subSubSections.forEach((subSubSection: any) => {
+                if (subSubSection.text || subSubSection.content) {
+                  const subSubContent = subSubSection.text || subSubSection.content || '';
+                  // הסרת הכותרת אם היא מופיעה בתחילת הטקסט
+                  const contentWithoutTitle = removeTitle(subSubContent, subSubSection.title);
+                  // שלב 1: החלפת משתני מגדר מיוחדים
+                  const withGenderVars = applyGenderToText(contentWithoutTitle);
+                  // שלב 2: החלפת כל הטקסט לפי מגדר
+                  let withFullGender = replaceTextWithGender(withGenderVars, clientsGender);
+                  // שלב 3: הסרת "-ל" שהוספנו כדי למנוע החלפת "עד" למגדר
+                  withFullGender = withFullGender.replace(/עד-ל\s+/g, 'עד ');
+                  
+                  paragraphs.push(
+                    new Paragraph({
+                      numbering: { reference: "main-numbering", level: level + 2 },
+                      alignment: AlignmentType.BOTH,
+                      bidirectional: true,
+                      spacing: { 
+                        before: SPACING.beforeParagraph,
+                        after: SPACING.afterParagraph,
+                        line: SPACING.line
+                      },
+                      children: [
+                        new TextRun({
+                          text: withFullGender,
+                          font: 'David',
+                          rightToLeft: true,
+                          size: SIZES.normal
+                        })
+                      ]
+                    })
+                  );
+                }
+              });
+            }
           });
         }
         
@@ -321,9 +359,9 @@ export default function ProfessionalFeeAgreementExporter({
       // יצירת הואילים
       const clientGenderText = getGenderText('הלקוח', 'הלקוחה', 'הלקוחות');
       const whereas = [
-        `ו${agreementData.lawyer.name} ${getGenderText('הינו עורך דין', 'הינה עורכת דין', 'הינם עורכי דין')} בעל${getGenderText('', 'ת', '')} רישיון לעריכת דין בישראל;`,
+        `ו${agreementData.lawyer.name} הינו עורך דין בעל רישיון לעריכת דין בישראל;`,
         `${clientGenderText} ${getGenderText('פנה', 'פנתה', 'פנו')} אל עורך הדין בבקשה לקבל ייצוג משפטי;`,
-        `עורך הדין ${getGenderText('הסכים', 'הסכימה', 'הסכימו')} לייצג את ${clientGenderText} בתנאים המפורטים להלן;`
+        `עורך הדין הסכים לייצג את ${clientGenderText} בתנאים המפורטים להלן;`
       ];
 
       // יצירת המסמך
@@ -341,6 +379,11 @@ export default function ProfessionalFeeAgreementExporter({
                   style: {
                     paragraph: {
                       indent: { left: 720, hanging: 360 }
+                    },
+                    run: {
+                      font: 'David',
+                      size: SIZES.normal,
+                      rightToLeft: true
                     }
                   }
                 },
@@ -352,6 +395,11 @@ export default function ProfessionalFeeAgreementExporter({
                   style: {
                     paragraph: {
                       indent: { left: 1080, hanging: 360 }
+                    },
+                    run: {
+                      font: 'David',
+                      size: SIZES.normal,
+                      rightToLeft: true
                     }
                   }
                 },
@@ -363,6 +411,11 @@ export default function ProfessionalFeeAgreementExporter({
                   style: {
                     paragraph: {
                       indent: { left: 1440, hanging: 360 }
+                    },
+                    run: {
+                      font: 'David',
+                      size: SIZES.normal,
+                      rightToLeft: true
                     }
                   }
                 }
@@ -446,7 +499,55 @@ export default function ProfessionalFeeAgreementExporter({
                           bidirectional: true,
                           children: [
                             new TextRun({
-                              text: `${agreementData.lawyer.name}\n${agreementData.lawyer.address}\n${agreementData.lawyer.phone}\n${agreementData.lawyer.email}\n(להלן: "עורך הדין")`,
+                              text: agreementData.lawyer.name,
+                              font: 'David',
+                              rightToLeft: true,
+                              size: SIZES.normal
+                            })
+                          ]
+                        }),
+                        new Paragraph({
+                          alignment: AlignmentType.RIGHT,
+                          bidirectional: true,
+                          children: [
+                            new TextRun({
+                              text: agreementData.lawyer.address,
+                              font: 'David',
+                              rightToLeft: true,
+                              size: SIZES.normal
+                            })
+                          ]
+                        }),
+                        new Paragraph({
+                          alignment: AlignmentType.RIGHT,
+                          bidirectional: true,
+                          children: [
+                            new TextRun({
+                              text: `טלפון: ${agreementData.lawyer.phone}`,
+                              font: 'David',
+                              rightToLeft: true,
+                              size: SIZES.normal
+                            })
+                          ]
+                        }),
+                        new Paragraph({
+                          alignment: AlignmentType.RIGHT,
+                          bidirectional: true,
+                          children: [
+                            new TextRun({
+                              text: `דוא"ל: ${agreementData.lawyer.email}`,
+                              font: 'David',
+                              rightToLeft: true,
+                              size: SIZES.normal
+                            })
+                          ]
+                        }),
+                        new Paragraph({
+                          alignment: AlignmentType.RIGHT,
+                          bidirectional: true,
+                          children: [
+                            new TextRun({
+                              text: '(להלן: "עורך הדין")',
                               font: 'David',
                               rightToLeft: true,
                               size: SIZES.normal
@@ -514,27 +615,84 @@ export default function ProfessionalFeeAgreementExporter({
                         right: { style: BorderStyle.NONE }
                       },
                       children: [
-                        ...agreementData.clients.map(client => 
+                        ...agreementData.clients.flatMap((client, clientIndex) => [
+                          ...(clientIndex > 0 ? [
+                            new Paragraph({
+                              alignment: AlignmentType.RIGHT,
+                              bidirectional: true,
+                              children: [new TextRun("")]
+                            })
+                          ] : []),
                           new Paragraph({
                             alignment: AlignmentType.RIGHT,
                             bidirectional: true,
                             children: [
                               new TextRun({
-                                text: `${client.name}\n${client.address}\n${client.phone}\n${client.email}\n${agreementData.clients.length > 1 ? '' : '(להלן: "הלקוח")'}`,
+                                text: client.name,
                                 font: 'David',
                                 rightToLeft: true,
                                 size: SIZES.normal
                               })
                             ]
-                          })
-                        ),
+                          }),
+                          new Paragraph({
+                            alignment: AlignmentType.RIGHT,
+                            bidirectional: true,
+                            children: [
+                              new TextRun({
+                                text: client.address,
+                                font: 'David',
+                                rightToLeft: true,
+                                size: SIZES.normal
+                              })
+                            ]
+                          }),
+                          new Paragraph({
+                            alignment: AlignmentType.RIGHT,
+                            bidirectional: true,
+                            children: [
+                              new TextRun({
+                                text: `טלפון: ${client.phone}`,
+                                font: 'David',
+                                rightToLeft: true,
+                                size: SIZES.normal
+                              })
+                            ]
+                          }),
+                          new Paragraph({
+                            alignment: AlignmentType.RIGHT,
+                            bidirectional: true,
+                            children: [
+                              new TextRun({
+                                text: `דוא"ל: ${client.email}`,
+                                font: 'David',
+                                rightToLeft: true,
+                                size: SIZES.normal
+                              })
+                            ]
+                          }),
+                          ...(agreementData.clients.length === 1 && clientIndex === agreementData.clients.length - 1 ? [
+                            new Paragraph({
+                              alignment: AlignmentType.RIGHT,
+                              bidirectional: true,
+                              children: [
+                                new TextRun({
+                                  text: `(להלן: "${clientGenderText}")`,
+                                  font: 'David',
+                                  rightToLeft: true,
+                                  size: SIZES.normal
+                                })
+                              ]
+                            })
+                          ] : [])
+                        ]),
                         ...(agreementData.clients.length > 1 ? [
                           new Paragraph({
                             alignment: AlignmentType.RIGHT,
                             bidirectional: true,
                             children: [
                               new TextRun({
-                                text: '(להלן: "הלקוחות")',
+                                text: `(להלן: "${clientGenderText}")`,
                                 font: 'David',
                                 rightToLeft: true,
                                 size: SIZES.normal
@@ -685,28 +843,6 @@ export default function ProfessionalFeeAgreementExporter({
                 .filter(clause => !clause.id.includes('_002') && !clause.id.includes('_003'))
                 .flatMap(clause => createSectionParagraphs(clause, 0))
               : []),
-            
-            // סעיף שכר טרחה דינמי
-            ...(agreementData.fees && agreementData.fees.type ? [
-              new Paragraph({
-                numbering: { reference: "main-numbering", level: 0 },
-                alignment: AlignmentType.BOTH,
-                bidirectional: true,
-                spacing: {
-                  before: SPACING.beforeHeading,
-                  after: SPACING.afterParagraph,
-                  line: SPACING.line
-                },
-                children: [
-                  new TextRun({
-                    text: `שכר טרחה ${generateFeeText()}`,
-                    font: 'David',
-                    rightToLeft: true,
-                    size: SIZES.normal
-                  })
-                ]
-              })
-            ] : []),
             
             // סעיפים כלליים
             ...(agreementData.generalClauses && (!agreementData.customSections || agreementData.customSections.length === 0) ? 
