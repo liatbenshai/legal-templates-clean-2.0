@@ -200,6 +200,17 @@ export default function LawyerFeeAgreement() {
       v.name === name ? { ...v, usageCount: v.usageCount + 1 } : v
     ));
   };
+
+  // פונקציה לעדכון פרטי שכר הטרחה
+  const updateFees = (field: keyof FeeAgreementData['fees'], value: string) => {
+    setAgreementData(prev => ({
+      ...prev,
+      fees: {
+        ...prev.fees,
+        [field]: value
+      }
+    }));
+  };
   
   // פונקציות לניהול מודל הוספת משתנה
   const openAddVariableModal = () => {
@@ -963,12 +974,6 @@ export default function LawyerFeeAgreement() {
     }));
   };
 
-  const updateFees = (field: keyof typeof agreementData.fees, value: string) => {
-    setAgreementData(prev => ({
-      ...prev,
-      fees: { ...prev.fees, [field]: value }
-    }));
-  };
 
   const updateTerms = (field: keyof typeof agreementData.terms, value: string) => {
     setAgreementData(prev => ({
