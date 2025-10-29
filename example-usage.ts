@@ -12,15 +12,12 @@
 import { 
   defaultWillSections,
   getDefaultSectionsForWillType,
-  getAllDefaultSections,
-  processDefaultWillSection 
+  getAllDefaultSections
 } from './lib/professional-will-texts';
 
 import { 
-  processDefaultWillSection as processSection,
+  replaceTextWithGender as processSection,
   detectGenderFromName,
-  processFullWillWithAutoGender,
-  detectMultipleGendersFromText,
   replaceTextWithGender,
   Gender
 } from './lib/hebrew-gender';
@@ -96,7 +93,7 @@ export function exampleGenderProcessing() {
 
   genders.forEach(({ name, value }) => {
     console.log(`🎭 עיבוד עבור ${name}:`);
-    const processed = processSection(section.content, testData, value);
+    const processed = processSection(section.content, value);
     console.log(processed.substring(0, 150) + '...\n');
   });
 }
@@ -131,11 +128,11 @@ export function exampleGenderDetection() {
 
   console.log('\n🔍 זיהוי מגדר מרובה:');
   const multipleNames = 'יוסף, מרים ואביגיל כהן';
-  const multipleResult = detectMultipleGendersFromText(multipleNames);
+  // TODO: Implement detectMultipleGendersFromText function
   console.log(`📝 טקסט: ${multipleNames}`);
-  console.log(`🎯 מגדר דומיננטי: ${multipleResult.dominantGender}`);
-  console.log(`📊 מגדרים שזוהו: ${multipleResult.genders.join(', ')}`);
-  console.log(`✅ רמת ביטחון: ${(multipleResult.confidence * 100).toFixed(1)}%\n`);
+  console.log(`🎯 מגדר דומיננטי: לא זמין (פונקציה לא מוגדרת)`);
+  console.log(`📊 מגדרים שזוהו: לא זמין (פונקציה לא מוגדרת)`);
+  console.log(`✅ רמת ביטחון: לא זמין (פונקציה לא מוגדרת)\n`);
 }
 
 // =============================================================================
@@ -157,28 +154,20 @@ export function exampleFullWillProcessing() {
   `.trim();
 
   // עיבוד עם זיהוי מגדר אוטומטי
-  const result = processFullWillWithAutoGender(
-    sampleWill,
-    'דוד כהן',           // שם המצווה
-    'שרה כהן',           // שם בן/בת הזוג
-    ['יוסף', 'מרים', 'אביגיל']  // שמות הילדים
-  );
-
+  // TODO: Implement processFullWillWithAutoGender function
+  const testatorGender = detectGenderFromName('דוד כהן') || 'male';
+  const spouseGender = detectGenderFromName('שרה כהן') || 'female';
+  
   console.log('🎭 מגדרים שזוהו:');
-  Object.entries(result.detectedGenders).forEach(([role, gender]) => {
-    const roleText = role === 'testator' ? 'מצווה' :
-                    role === 'spouse' ? 'בן/בת זוג' :
-                    role === 'heirs' ? 'יורשים' : role;
-    const genderText = gender === 'male' ? 'זכר' :
-                      gender === 'female' ? 'נקבה' :
-                      gender === 'plural' ? 'רבים' : gender;
-    console.log(`  ${roleText}: ${genderText}`);
-  });
+  console.log(`  מצווה: ${testatorGender === 'male' ? 'זכר' : testatorGender === 'female' ? 'נקבה' : 'לא זוהה'}`);
+  console.log(`  בן/בת זוג: ${spouseGender === 'male' ? 'זכר' : spouseGender === 'female' ? 'נקבה' : 'לא זוהה'}`);
+  console.log(`  יורשים: לא זמין (פונקציה לא מוגדרת)`);
 
-  console.log(`\n✅ רמת ביטחון: ${(result.confidence * 100).toFixed(1)}%\n`);
+  console.log(`\n✅ רמת ביטחון: לא זמין (פונקציה לא מוגדרת)\n`);
 
-  console.log('📄 צוואה מעובדת:');
-  console.log(result.processedContent);
+  console.log('📄 צוואה מעובדת (דוגמה בסיסית):');
+  const processedContent = replaceTextWithGender(sampleWill, testatorGender);
+  console.log(processedContent);
   console.log('\n');
 }
 
