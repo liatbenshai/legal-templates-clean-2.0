@@ -154,10 +154,14 @@ export default function Navbar() {
               {mounted && currentUser && (
                 <>
                   <div className="border-t border-gray-200 my-2"></div>
-                  <Link href="/editor" className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition">
-                    <FileText className="w-4 h-4 text-indigo-600" />
-                    <span>עורך חדש</span>
-                  </Link>
+              <Link href="/editor" className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition">
+                <FileText className="w-4 h-4 text-indigo-600" />
+                <span>עורך חדש</span>
+              </Link>
+              <Link href="/tools/will-generator" className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition">
+                <Scale className="w-4 h-4 text-purple-600" />
+                <span>עורך צוואות מתקדם</span>
+              </Link>
                   <Link href="/my-documents" className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition">
                     <FileText className="w-4 h-4 text-cyan-600" />
                     <span>המסמכים שלי</span>
