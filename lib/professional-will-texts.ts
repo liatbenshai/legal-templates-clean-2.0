@@ -814,10 +814,15 @@ export const sectionsWarehouse: SectionTemplate[] = [
 ];
 
 /**
- * פונקציה לקבלת כל הסעיפים הרלוונטיים לסוג צוואה
+ * פונקציה לקבלת כל הסעיפים הרלוונטיים לסוג צוואה כולל דיפולטיביים
  */
 export function getSectionsForWillType(willType: 'individual' | 'mutual'): ProfessionalWillSection[] {
   let sections: ProfessionalWillSection[] = [];
+  
+  // סעיפים דיפולטיביים חדשים (בעדיפות גבוהה)
+  sections = sections.concat(defaultWillSections.filter(section => 
+    section.category === 'both' || section.category === willType
+  ));
   
   // סעיפים משותפים
   sections = sections.concat(commonWillSections);
@@ -831,6 +836,22 @@ export function getSectionsForWillType(willType: 'individual' | 'mutual'): Profe
   
   // מיון לפי סדר
   return sections.sort((a, b) => a.order - b.order);
+}
+
+/**
+ * פונקציה לקבלת רק הסעיפים הדיפולטיביים החדשים
+ */
+export function getDefaultSectionsForWillType(willType: 'individual' | 'mutual'): ProfessionalWillSection[] {
+  return defaultWillSections.filter(section => 
+    section.category === 'both' || section.category === willType
+  ).sort((a, b) => a.order - b.order);
+}
+
+/**
+ * פונקציה לקבלת כל הסעיפים הדיפולטיביים
+ */
+export function getAllDefaultSections(): ProfessionalWillSection[] {
+  return defaultWillSections.sort((a, b) => a.order - b.order);
 }
 
 /**
@@ -910,7 +931,162 @@ export function convertToPlural(text: string): string {
 /**
  * פונקציה ליצירת תוכן צוואה מלא עם הטקסטים המקצועיים
  */
-// 60 סעיפים חדשים מבוססים על צוואות אמיתיות
+// סעיפים דיפולטיביים חדשים לצוואות - תמיכה מלאה במגדר (זכר/נקבה/רבים)
+export const defaultWillSections: ProfessionalWillSection[] = [
+  // סעיפי פתיחה דיפולטיביים
+  {
+    id: 'default-identity-declaration',
+    title: 'הצהרת זהות (דיפולטיבי)',
+    category: 'both',
+    content: `אני {{testator_full_name}}, ת.ז. {{testator_id}}, {{gender:תושב|תושבת|תושבי}} {{testator_city}}, רחוב {{testator_address}}, גיל {{testator_age}} שנים, {{gender:נשוי|נשואה|נשואים}} ל{{spouse_full_name}} ו{{gender:אב|אם|הורים}} ל{{children_count}} ילדים, {{gender:מצהיר|מצהירה|מצהירים}} בזאת:`,
+    variables: ['testator_full_name', 'testator_id', 'testator_city', 'testator_address', 'testator_age', 'spouse_full_name', 'children_count'],
+    required: true,
+    order: 1
+  },
+  
+  {
+    id: 'default-competency-declaration',
+    title: 'הצהרת כשירות (דיפולטיבי)',
+    category: 'both',
+    content: `אני {{gender:מצהיר|מצהירה|מצהירים}} בזאת כי אני {{gender:בריא|בריאה|בריאים}} בגופי ובנפשי, {{gender:מבין|מבינה|מבינים}} את משמעותה של צוואה זו, ו{{gender:עורך|עורכת|עורכים}} אותה מרצוני החופשי ללא כל לחץ או השפעה חיצונית. אני {{gender:בן|בת|בני}} יותר מ-18 שנים ו{{gender:כשיר|כשירה|כשירים}} על פי כל דין לערוך צוואה זו.`,
+    variables: [],
+    required: true,
+    order: 2
+  },
+
+  {
+    id: 'default-asset-scope',
+    title: 'היקף הנכסים (דיפולטיבי)',
+    category: 'both',
+    content: `צוואה זו חלה על כל רכושי ונכסיי מכל מין וסוג, בין בארץ ובין בחו"ל, כולל:
+• כל הנכסים המקרקעין והדירות {{gender:שברשותי|שברשותי|שברשותנו}}
+• כל החשבונות הבנקאיים, הפיקדונות וניירות הערך
+• כל המטלטלין, התכשיטים והחפצים האישיים
+• כל הזכויות והתביעות שיש לי כנגד כל אדם או גוף
+• כל הקניין הרוחני וזכויות היוצרים
+• כל רכוש אחר שאירש או אקבל בעתיד`,
+    variables: [],
+    required: true,
+    order: 3
+  },
+
+  // סעיפי ירושה דיפולטיביים
+  {
+    id: 'default-children-inheritance',
+    title: 'ירושה שוויונית לילדים (דיפולטיבי)',
+    category: 'individual',
+    content: `אני {{gender:מצווה|מצווה|מצווים}} את כל עיזבוני ל{{children_count}} {{gender:ילדיי|ילדיי|ילדינו}}: {{children_list}}, בחלקים שווים לכל אחד מהם.
+    
+כל {{gender:ילד|ילד|ילד}} יקבל חלק של {{inheritance_percentage}}% מכלל העיזבון.
+
+במקרה שילד מ{{gender:ילדיי|ילדיי|ילדינו}} יפטר לפני, חלקו יעבור לילדיו ({{gender:נכדיי|נכדיי|נכדינו}}) בחלקים שווים. אם אין לו ילדים, חלקו יתחלק בין יתר {{gender:ילדיי|ילדיי|ילדינו}} הנותרים בחיים.`,
+    variables: ['children_count', 'children_list', 'inheritance_percentage'],
+    required: true,
+    order: 8
+  },
+
+  {
+    id: 'default-spouse-inheritance',
+    title: 'ירושה עם בן/בת זוג (דיפולטיבי)',
+    category: 'individual',
+    content: `אני {{gender:מצווה|מצווה|מצווים}}:
+
+1. לבן/בת זוגי {{spouse_full_name}} - {{spouse_percentage}}% מכלל העיזבון
+2. ל{{children_count}} {{gender:ילדיי|ילדיי|ילדינו}} - {{children_percentage}}% מכלל העיזבון בחלקים שווים
+
+דירת המגורים המשותפת {{property_address}} תעבור לבן/בת זוגי {{spouse_full_name}} עם זכות מגורים לכל החיים, ולאחר {{gender:פטירתו|פטירתה|פטירתם}} תעבור ל{{gender:ילדיי|ילדיי|ילדינו}} בחלקים שווים.`,
+    variables: ['spouse_full_name', 'spouse_percentage', 'children_count', 'children_percentage', 'property_address'],
+    required: false,
+    order: 9
+  },
+
+  // סעיפי הגנה דיפולטיביים
+  {
+    id: 'default-contest-protection',
+    title: 'הגנה מפני התנגדות (דיפולטיבי)',
+    category: 'both',
+    content: `כל {{gender:יורש|יורשת|יורש}} שיתנגד לצוואה זו או יערער עליה בכל דרך שהיא, יאבד את זכותו לירושה ויקבל במקום זאת סכום סימלי של שקל אחד (₪1) בלבד.
+
+הוראה זו חלה גם על:
+• {{gender:מי שפועל בשמו או מטעמו|מי שפועלת בשמה או מטעמה|מי שפועלים בשמם או מטעמם}}
+• כל {{gender:עורך דין או יועץ שיסייע בהתנגדות|עורכת דין או יועצת שתסייע בהתנגדות|עורך דין או יועץ שיסייע בהתנגדות}}
+• כל {{gender:קרוב משפחה שיעודד התנגדות|קרובת משפחה שתעודד התנגדות|קרוב משפחה שיעודד התנגדות}}`,
+    variables: [],
+    required: true,
+    order: 15
+  },
+
+  {
+    id: 'default-family-harmony',
+    title: 'שמירה על שלום המשפחה (דיפולטיבי)',
+    category: 'both',
+    content: `אני {{gender:מבקש|מבקשת|מבקשים}} מכל {{gender:יורשיי|יורשיי|יורשינו}} לכבד זה את זה ולפעול ברוח טובה לקיום צוואתי זו.
+
+במקרה של מחלוקת, {{gender:אני מורה|אני מורה|אנו מורים}} כי {{gender:יורשיי|יורשיי|יורשינו}} ינסו ראשית לפתור את המחלוקת בדרכי שלום ובאמצעות גישור.
+
+רק אם הגישור יכשל, ניתן יהיה לפנות לבית המשפט, אך כל הוצאות משפטיות יחולקו בין הצדדים באופן שווה.`,
+    variables: [],
+    required: true,
+    order: 16
+  },
+
+  // סעיפי רכוש דיפולטיביים
+  {
+    id: 'default-bank-accounts',
+    title: 'חשבונות בנק (דיפולטיבי)',
+    category: 'both',
+    content: `כל החשבונות הבנקאיים {{gender:שלי|שלי|שלנו}} יעברו ל{{gender:יורשיי|יורשיי|יורשינו}} לפי החלוקה הקבועה בצוואה זו.
+
+החשבונות כוללים:
+• חשבון עובר ושב בבנק {{main_bank}} סניף {{main_branch}} חשבון מס' {{main_account}}
+• חשבון חיסכון בבנק {{savings_bank}} חשבון מס' {{savings_account}}
+• כל חשבון נוסף שיתגלה לאחר {{gender:פטירתי|פטירתי|פטירתנו}}
+
+{{gender:יורשיי|יורשיי|יורשינו}} יהיו {{gender:רשאים|רשאיות|רשאים}} לסגור את החשבונות ולחלק את היתרות ביניהם.`,
+    variables: ['main_bank', 'main_branch', 'main_account', 'savings_bank', 'savings_account'],
+    required: false,
+    order: 20
+  },
+
+  {
+    id: 'default-personal-items',
+    title: 'חפצים אישיים (דיפולטיבי)',
+    category: 'both',
+    content: `החפצים האישיים {{gender:שלי|שלי|שלנו}} יחולקו כדלקמן:
+
+• התכשיטים - ל{{jewelry_heir}} שתהיה {{gender:אחראית|אחראית|אחראים}} לחלוקתם בצורה הוגנת
+• הספרים והמסמכים - ל{{documents_heir}} לשימור או תרומה לספרייה
+• התמונות ואלבומי המשפחה - ל{{photos_heir}} לשימור ושיתוף עם המשפחה
+• כלי הבית והמטלטלין - יחולקו בין {{gender:יורשיי|יורשיי|יורשינו}} לפי הסכמה ביניהם
+• חפצים בעלי ערך רגשי - יחולקו באופן שישמור על זכרון המשפחה`,
+    variables: ['jewelry_heir', 'documents_heir', 'photos_heir'],
+    required: false,
+    order: 21
+  },
+
+  // סעיפי דיגיטל ומודרניים
+  {
+    id: 'default-digital-assets',
+    title: 'נכסים דיגיטליים (דיפולטיבי)',
+    category: 'both',
+    content: `כל הנכסים הדיגיטליים {{gender:שלי|שלי|שלנו}} יעברו ל{{digital_heir}}:
+
+• כל החשבונות ברשתות החברתיות (פייסבוק, אינסטגרם, לינקדאין, טוויטר)
+• כל הקבצים באחסון הענן (Google Drive, Dropbox, iCloud, OneDrive)
+• כל התמונות והסרטונים הדיגיטליים
+• כל האימיילים וההודעות
+• כל אתרי האינטרנט והדומיינים {{gender:שברשותי|שברשותי|שברשותנו}}
+• כל הקריפטו והארנקים הדיגיטליים
+• כל זכויות היוצרים הדיגיטליות
+
+הגישה לחשבונות נמצאת ב{{password_location}} או אצל {{password_keeper}}.`,
+    variables: ['digital_heir', 'password_location', 'password_keeper'],
+    required: false,
+    order: 22
+  }
+];
+
+// 60 סעיפים חדשים מבוססים על צוואות אמיתיות  
 export const enhancedWillSections: ProfessionalWillSection[] = [
   // סעיפים מקדמים
   {
