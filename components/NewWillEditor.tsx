@@ -115,8 +115,17 @@ export default function NewWillEditor() {
       items: filledItems
     };
     
-    const filename = `צוואה_${willType === 'individual' ? 'יחיד' : 'הדדית'}_${new Date().toISOString().split('T')[0]}.docx`;
-    exportWillToWord(willDocument, filename);
+    // העבר את כל הפרטים מהטופס
+    const formData = {
+      testator,
+      ...(willType === 'mutual' && spouse),
+      willDate,
+      lawyerName,
+      willType
+    };
+    
+    const filename = `צוואה_${willType === 'individual' ? 'יחיד' : 'הדדית'}_${testator.fullName || 'מצווה'}_${new Date().toISOString().split('T')[0]}.docx`;
+    exportWillToWord(willDocument, formData, filename);
   };
 
   // טעינת סעיפים דיפולטיביים
