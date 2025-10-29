@@ -498,9 +498,12 @@ export default function ProfessionalWordExporter({
         );
       }
 
+      // הגדרת משתני מגדר מרכזיים
+      const testatorIsFemale = willData.testator?.gender === 'female';
+      const gender = willData.type === 'mutual' ? 'plural' : (willData.testator?.gender || 'male');
+
       // סעיף 1 - ביטול צוואות קודמות (ללא כותרת "כללי")
       let sectionNum = 1;
-      const gender = willData.testator?.gender === 'female';
       sections.push(
         new Paragraph({
           numbering: { reference: 'main-numbering', level: 0 },
@@ -510,7 +513,7 @@ export default function ProfessionalWordExporter({
             new TextRun({
               text: willData.type === 'mutual' 
                 ? 'למען הסר ספק, הרינו מבטלים בזאת ביטול גמור, מוחלט ושלם, כל צוואה ו/או הוראה שניתנה על ידינו בעבר טרם מועד חתימתנו על צוואה זו, בין בכתב ובין בעל פה, בכל הנוגע לרכושנו ולנכסנו, לרבות כל מסמך, כתב, או שיחה שבעל פה, אשר יש בה משום גילוי דעת באשר לרצוננו בנוגע לעיזבוננו לאחר מותנו.'
-                : `למען הסר ספק, הריני מבטל${gender ? 'ת' : ''} בזאת ביטול גמור, מוחלט ושלם, כל צוואה ו/או הוראה שניתנה על ידי בעבר טרם מועד חתימתי על צוואה זו, בין בכתב ובין בעל פה, בכל הנוגע לרכושי ולנכסיי, לרבות כל מסמך, כתב, או שיחה שבעל פה, אשר יש בה משום גילוי דעת באשר לרצוני בנוגע לעיזבוני לאחר מותי.`,
+                : `למען הסר ספק, הריני מבטל${testatorIsFemale ? 'ת' : ''} בזאת ביטול גמור, מוחלט ושלם, כל צוואה ו/או הוראה שניתנה על ידי בעבר טרם מועד חתימתי על צוואה זו, בין בכתב ובין בעל פה, בכל הנוגע לרכושי ולנכסיי, לרבות כל מסמך, כתב, או שיחה שבעל פה, אשר יש בה משום גילוי דעת באשר לרצוני בנוגע לעיזבוני לאחר מותי.`,
               font: 'David',
               rightToLeft: true,
               size: SIZES.normal
@@ -541,23 +544,6 @@ export default function ProfessionalWordExporter({
 
       // פרטי העיזבון
       sections.push(new Paragraph({ text: '' }));
-      sections.push(
-        new Paragraph({
-          heading: HeadingLevel.HEADING_1,
-          alignment: AlignmentType.RIGHT,
-          bidirectional: true,
-          children: [
-            new TextRun({ 
-              text: 'פרטי העיזבון', 
-              font: 'David', 
-              rightToLeft: true,
-              size: SIZES.heading1,
-              bold: true
-            })
-          ]
-        })
-      );
-      
       sectionNum++;
       sections.push(
         new Paragraph({
@@ -577,18 +563,17 @@ export default function ProfessionalWordExporter({
         })
       );
 
-      // 🏠 נכסי מקרקעין
+      // 🏠 נכסי מקרקעין - תתי-סעיפים 3.1, 3.2 וכו'
       if (willData.properties && willData.properties.length > 0) {
-        willData.properties.forEach((property: any, index: number) => {
-          sectionNum++;
+        willData.properties.filter((p: any) => p.address || p.city || p.block || p.plot).forEach((property: any, index: number) => {
           sections.push(
             new Paragraph({
-              numbering: { reference: 'main-numbering', level: 0 },
+              numbering: { reference: 'main-numbering', level: 1 },
               alignment: AlignmentType.BOTH,
               bidirectional: true,
               children: [
                 new TextRun({
-                  text: `זכויות בדירה הרשומה בטאבו ${property.address || '[כתובת]'}, בעיר ${property.city || '[עיר]'}, הידועה כגוש: ${property.block || '[מספר]'}, חלקה: ${property.plot || '[מספר]'}, תת חלקה: ${property.subPlot || '[מספר]'} (להלן: "${property.name || 'דירת המגורים'}") וכן את מטלטליה בין המחוברים חיבור של קבע ובין שאינם מחוברים חיבור של קבע.`,
+                  text: `${property.name || `נכס ${index + 1}`}: זכויות בדירה הרשומה בטאבו ${property.address || '[כתובת]'}, בעיר ${property.city || '[עיר]'}${property.block ? `, הידועה כגוש: ${property.block}` : ''}${property.plot ? `, חלקה: ${property.plot}` : ''}${property.subPlot ? `, תת חלקה: ${property.subPlot}` : ''}${property.ownership && property.ownership !== '100%' ? ` (אחוז בעלות: ${property.ownership})` : ''} וכן את מטלטליה בין המחוברים חיבור של קבע ובין שאינם מחוברים חיבור של קבע.`,
                   font: 'David',
                   rightToLeft: true,
                   size: SIZES.normal
@@ -599,13 +584,12 @@ export default function ProfessionalWordExporter({
         });
       }
 
-      // 💰 חשבונות בנק
+      // 💰 חשבונות בנק - תתי-סעיפים (המשך המספור)
       if (willData.bankAccounts && willData.bankAccounts.length > 0) {
-        willData.bankAccounts.forEach((account: any) => {
-          sectionNum++;
+        willData.bankAccounts.filter((a: any) => a.bank || a.accountNumber).forEach((account: any, index: number) => {
           sections.push(
             new Paragraph({
-              numbering: { reference: 'main-numbering', level: 0 },
+              numbering: { reference: 'main-numbering', level: 1 },
               alignment: AlignmentType.BOTH,
               bidirectional: true,
               children: [
@@ -621,16 +605,19 @@ export default function ProfessionalWordExporter({
         });
       }
 
-      // 💵 כספים במזומן
-      sectionNum++;
+      // 💵 כספים במזומן - תת-סעיף (המשך המספור)
+      const totalProperties = willData.properties ? willData.properties.filter((p: any) => p.address || p.city || p.block || p.plot).length : 0;
+      const totalBankAccounts = willData.bankAccounts ? willData.bankAccounts.filter((a: any) => a.bank || a.accountNumber).length : 0;
+      const cashSubSectionNum = totalProperties + totalBankAccounts + 1;
+      
       sections.push(
         new Paragraph({
-          numbering: { reference: 'main-numbering', level: 0 },
+          numbering: { reference: 'main-numbering', level: 1 },
           alignment: AlignmentType.BOTH,
           bidirectional: true,
           children: [
             new TextRun({
-              text: `את כלל הכספים במזומן הנמצאים ${willData.type === 'mutual' ? 'ברשותנו' : 'ברשותי'}, לרבות שטרות כסף המוחזקים ${willData.type === 'mutual' ? 'בביתנו' : 'בביתי'}, בכספת או בכל מקום אחר.`,
+              text: `את כלל הכספים במזומן הנמצאים ${willData.type === 'mutual' ? 'ברשותנו' : 'ברשותי'}, לרבות שטרות כסף המוחזקים ${willData.type === 'mutual' ? 'בביתנו' : 'בביתי'}, ${willData.type === 'mutual' ? 'בכספתנו' : 'בכספת'} או בכל מקום אחר.`,
               font: 'David',
               rightToLeft: true,
               size: SIZES.normal
@@ -638,6 +625,99 @@ export default function ProfessionalWordExporter({
           ]
         })
       );
+
+      // תתי-סעיפים קבועים נוספים לסעיף 3
+      const fixedSubSections = [
+        {
+          num: totalProperties + totalBankAccounts + 2,
+          title: 'מיטלטלין',
+          content: {
+            male: 'כלל המיטלטלין שברשותי, לרבות אך מבלי לגרוע מכלליות האמור: ריהוט, מכשירי חשמל, ציוד אלקטרוני, תכשיטים, יצירות אמנות, ספרים, כלי עבודה, חפצים אישיים, כלי בית, וכל חפץ מיטלטלין אחר המצוי בדירת המגורים או בכל מקום אחר והנמצא בבעלותי או בחזקתי במועד פטירתי.',
+            female: 'כלל המיטלטלין שברשותי, לרבות אך מבלי לגרוע מכלליות האמור: ריהוט, מכשירי חשמל, ציוד אלקטרוני, תכשיטים, יצירות אמנות, ספרים, כלי עבודה, חפצים אישיים, כלי בית, וכל חפץ מיטלטלין אחר המצוי בדירת המגורים או בכל מקום אחר והנמצאת בבעלותי או בחזקתי במועד פטירתי.',
+            plural: 'כלל המיטלטלין שברשותנו, לרבות אך מבלי לגרוע מכלליות האמור: ריהוט, מכשירי חשמל, ציוד אלקטרוני, תכשיטים, יצירות אמנות, ספרים, כלי עבודה, חפצים אישיים, כלי בית, וכל חפץ מיטלטלין אחר המצוי בדירת המגורים או בכל מקום אחר והנמצאים בבעלותנו או בחזקתנו במועד פטירתנו.'
+          }
+        },
+        {
+          num: totalProperties + totalBankAccounts + 3,
+          title: 'נכסים דיגיטליים',
+          content: {
+            male: 'כלל הנכסים, הזכויות והחשבונות הדיגיטליים שברשותי, לרבות אך מבלי לגרוע מכלליות האמור: מחשבים, טלפונים ניידים, טאבלטים וכל מכשיר אלקטרוני אחר; חשבונות דואר אלקטרוני; חשבונות ברשתות חברתיות; קבצים דיגיטליים לרבות מסמכים, תמונות, סרטונים ומוזיקה; נכסים וירטואליים; מטבעות קריפטוגרפים ונכסים דיגיטליים אחרים; זכויות בתוכנות ומערכות מחשב; חשבונות אחסון ענן; וכל נכס, זכות או תוכן דיגיטלי אחר שברשותי או בשליטתי.',
+            female: 'כלל הנכסים, הזכויות והחשבונות הדיגיטליים שברשותי, לרבות אך מבלי לגרוע מכלליות האמור: מחשבים, טלפונים ניידים, טאבלטים וכל מכשיר אלקטרוני אחר; חשבונות דואר אלקטרוני; חשבונות ברשתות חברתיות; קבצים דיגיטליים לרבות מסמכים, תמונות, סרטונים ומוזיקה; נכסים וירטואליים; מטבעות קריפטוגרפים ונכסים דיגיטליים אחרים; זכויות בתוכנות ומערכות מחשב; חשבונות אחסון ענן; וכל נכס, זכות או תוכן דיגיטלי אחר שברשותי או בשליטתי.',
+            plural: 'כלל הנכסים, הזכויות והחשבונות הדיגיטליים שברשותנו, לרבות אך מבלי לגרוע מכלליות האמור: מחשבים, טלפונים ניידים, טאבלטים וכל מכשיר אלקטרוני אחר; חשבונות דואר אלקטרוני; חשבונות ברשתות חברתיות; קבצים דיגיטליים לרבות מסמכים, תמונות, סרטונים ומוזיקה; נכסים וירטואליים; מטבעות קריפטוגרפים ונכסים דיגיטליים אחרים; זכויות בתוכנות ומערכות מחשב; חשבונות אחסון ענן; וכל נכס, זכות או תוכן דיגיטלי אחר שברשותנו או בשליטתנו.'
+          }
+        },
+        {
+          num: totalProperties + totalBankAccounts + 4,
+          title: 'נכסים עתידיים',
+          content: {
+            male: 'כל כסף, זכות, תשלום או נכס אחר אשר יגיעו לעיזבוני לאחר מועד פטירתי, לרבות אך מבלי לגרוע מכלליות האמור: החזרי מס הכנסה, דיבידנדים, ריביות, תמלוגים, פיצויים, תגמולים, גמלאות, קצבאות, תביעות תלויות ועומדות, זכויות פיצוי מכל מין וסוג שהוא, כספי ביטוח שטרם נתבעו, וכן כל סכום או נכס אחר המגיע או שיגיע מכל מקור שהוא, בין אם הזכות להם התגבשה טרם מועד פטירתי ובין אם תתגבש לאחר מכן.',
+            female: 'כל כסף, זכות, תשלום או נכס אחר אשר יגיעו לעיזבוני לאחר מועד פטירתי, לרבות אך מבלי לגרוע מכלליות האמור: החזרי מס הכנסה, דיבידנדים, ריביות, תמלוגים, פיצויים, תגמולים, גמלאות, קצבאות, תביעות תלויות ועומדות, זכויות פיצוי מכל מין וסוג שהוא, כספי ביטוח שטרם נתבעו, וכן כל סכום או נכס אחר המגיע או שיגיע מכל מקור שהוא, בין אם הזכות להם התגבשה טרם מועד פטירתי ובין אם תתגבש לאחר מכן.',
+            plural: 'כל כסף, זכות, תשלום או נכס אחר אשר יגיעו לעיזבוננו לאחר מועד פטירתנו, לרבות אך מבלי לגרוע מכלליות האמור: החזרי מס הכנסה, דיבידנדים, ריביות, תמלוגים, פיצויים, תגמולים, גמלאות, קצבאות, תביעות תלויות ועומדות, זכויות פיצוי מכל מין וסוג שהוא, כספי ביטוח שטרם נתבעו, וכן כל סכום או נכס אחר המגיע או שיגיע מכל מקור שהוא, בין אם הזכות להם התגבשה טרם מועד פטירתנו ובין אם תתגבש לאחר מכן.'
+          }
+        },
+        {
+          num: totalProperties + totalBankAccounts + 5,
+          title: 'תביעות וזכויות משפטיות',
+          content: {
+            male: 'כלל התביעות, הזכויות והסעדים העומדים לי, נגד כל גורם שהוא, בין שהוגשו בעניינם הליכים משפטיים ובין אם לאו, וכן כל פסק דין, החלטה או הסדר שיינתנו לטובתי או עיזבוני לאחר מועד הפטירה.',
+            female: 'כלל התביעות, הזכויות והסעדים העומדים לי, נגד כל גורם שהוא, בין שהוגשו בעניינם הליכים משפטיים ובין אם לאו, וכן כל פסק דין, החלטה או הסדר שיינתנו לטובתי או עיזבוני לאחר מועד הפטירה.',
+            plural: 'כלל התביעות, הזכויות והסעדים העומדים לנו, נגד כל גורם שהוא, בין שהוגשו בעניינם הליכים משפטיים ובין אם לאו, וכן כל פסק דין, החלטה או הסדר שיינתנו לטובתנו או עיזבוננו לאחר מועד הפטירה.'
+          }
+        }
+      ];
+      
+      fixedSubSections.forEach((subSection) => {
+        sections.push(
+          new Paragraph({
+            numbering: { reference: 'main-numbering', level: 1 },
+            alignment: AlignmentType.BOTH,
+            bidirectional: true,
+            children: [
+              new TextRun({
+                text: subSection.content[gender] || subSection.content.male,
+                font: 'David',
+                rightToLeft: true,
+                size: SIZES.normal
+              })
+            ]
+          })
+        );
+      });
+
+      // תתי-סעיפים נוספים של סעיף 3 (מ-customSections)
+      if (willData.customSections) {
+        const section3SubSections = willData.customSections.filter((s: any) => 
+          s.level === 'sub' && s.parentId === 'section_3'
+        ).sort((a: any, b: any) => a.order - b.order);
+        
+        section3SubSections.forEach((subSection: any) => {
+          const currentSubSectionNum = totalProperties + totalBankAccounts + 1 + (section3SubSections.indexOf(subSection) + 1);
+          let subContent = subSection.content || subSection.title || '';
+          
+          // החלפת משתנים
+          if (willData.testator?.gender === 'female') {
+            subContent = subContent.replace(/\{\{gender:([^|]*)\|([^}]*)\}\}/g, '$2');
+          } else {
+            subContent = subContent.replace(/\{\{gender:([^|]*)\|([^}]*)\}\}/g, '$1');
+          }
+          
+          sections.push(
+            new Paragraph({
+              numbering: { reference: 'main-numbering', level: 1 },
+              alignment: AlignmentType.BOTH,
+              bidirectional: true,
+              children: [
+                new TextRun({
+                  text: `${subSection.title || `תת-סעיף ${currentSubSectionNum}`}: ${subContent}`,
+                  font: 'David',
+                  rightToLeft: true,
+                  size: SIZES.normal
+                })
+              ]
+            })
+          );
+        });
+      }
 
       // יורשים
       sections.push(new Paragraph({ text: '' }));
@@ -895,6 +975,77 @@ export default function ProfessionalWordExporter({
         );
       }
 
+      // סעיפים קבועים נוספים אחרי הטבלה
+      const mainCustomSectionsCount = willData.customSections ? willData.customSections.filter((s: any) => s.level === 'main' && !s.isFixed).length : 0;
+      const baseSectionNum = 4 + mainCustomSectionsCount + 1;
+      
+      const newFixedSections = [
+        {
+          num: baseSectionNum,
+          title: 'קופות גמל וביטוח',
+          content: {
+            male: 'כל זכויות החיסכון והביטוח המצויות בקופות הגמל, קרנות הפנסיה, קופות התגמולים, קרנות ההשתלמות, תוכניות החיסכון, פוליסות ביטוח החיים וכל מוצר פיננסי אחר (להלן: "הקופות") ישולמו למוטבים הרשומים בקופות במועד הפטירה, וזאת בהתאם לרישום בפועל בקופות במועד הפטירה.\n\nמובהר בזאת, כי ככל שבאחת או יותר מהקופות לא יהיו רשומים מוטבים במועד הפטירה, יראו את הזכויות באותן קופות כחלק מעיזבון המצווה, והן יחולקו בהתאם להוראות צוואה זו ולפי הוראותיה המפורשות.',
+            female: 'כל זכויות החיסכון והביטוח המצויות בקופות הגמל, קרנות הפנסיה, קופות התגמולים, קרנות ההשתלמות, תוכניות החיסכון, פוליסות ביטוח החיים וכל מוצר פיננסי אחר (להלן: "הקופות") ישולמו למוטבים הרשומים בקופות במועד הפטירה, וזאת בהתאם לרישום בפועל בקופות במועד הפטירה.\n\nמובהר בזאת, כי ככל שבאחת או יותר מהקופות לא יהיו רשומים מוטבים במועד הפטירה, יראו את הזכויות באותן קופות כחלק מעיזבון המצווה, והן יחולקו בהתאם להוראות צוואה זו ולפי הוראותיה המפורשות.',
+            plural: 'כל זכויות החיסכון והביטוח המצויות בקופות הגמל, קרנות הפנסיה, קופות התגמולים, קרנות ההשתלמות, תוכניות החיסכון, פוליסות ביטוח החיים וכל מוצר פיננסי אחר (להלן: "הקופות") ישולמו למוטבים הרשומים בקופות במועד הפטירה, וזאת בהתאם לרישום בפועל בקופות במועד הפטירה.\n\nמובהר בזאת, כי ככל שבאחת או יותר מהקופות לא יהיו רשומים מוטבים במועד הפטירה, יראו את הזכויות באותן קופות כחלק מעיזבון המצווים, והן יחולקו בהתאם להוראות צוואה זו ולפי הוראותיה המפורשות.'
+          }
+        },
+        {
+          num: baseSectionNum + 1,
+          title: 'דרישה לקיום הצוואה',
+          content: {
+            male: 'הנני דורש מכל אדם ומכל רשות לקיים צוואה זו ולא לערער עליה ולא להתנגד לה ולא לתקוף אותה, ואם יתעורר אי פעם ספק כלשהו בקשר לצוואה זו, הרי שיש להתיר את הספק לפי הדין ולתת לה תוקף ולקיים אותה.',
+            female: 'הנני דורשת מכל אדם ומכל רשות לקיים צוואה זו ולא לערער עליה ולא להתנגד לה ולא לתקוף אותה, ואם יתעורר אי פעם ספק כלשהו בקשר לצוואה זו, הרי שיש להתיר את הספק לפי הדין ולתת לה תוקף ולקיים אותה.',
+            plural: 'הננו דורשים מכל אדם ומכל רשות לקיים צוואה זו ולא לערער עליה ולא להתנגד לה ולא לתקוף אותה, ואם יתעורר אי פעם ספק כלשהו בקשר לצוואה זו, הרי שיש להתיר את הספק לפי הדין ולתת לה תוקף ולקיים אותה.'
+          }
+        }
+      ];
+      
+      // הוספת הסעיפים החדשים
+      newFixedSections.forEach((section) => {
+        sections.push(new Paragraph({ text: '' })); // רווח לפני הסעיף
+        sectionNum = section.num; // עדכון המספור
+        const contentLines = (section.content[gender] || section.content.male).split('\n\n');
+        
+        // הוספת הכותרת
+        // הוספת התוכן (בלי כותרת, רק עם מספור)
+        contentLines.forEach((line, index) => {
+          if (index === 0) {
+            // שורה ראשונה - עם מספור הסעיף
+            sections.push(
+              new Paragraph({
+                numbering: { reference: 'main-numbering', level: 0 },
+                alignment: AlignmentType.BOTH,
+                bidirectional: true,
+                children: [
+                  new TextRun({
+                    text: line,
+                    font: 'David',
+                    rightToLeft: true,
+                    size: SIZES.normal
+                  })
+                ]
+              })
+            );
+          } else {
+            // שורות נוספות (בלי מספור)
+            sections.push(
+              new Paragraph({
+                alignment: AlignmentType.BOTH,
+                bidirectional: true,
+                children: [
+                  new TextRun({
+                    text: line,
+                    font: 'David',
+                    rightToLeft: true,
+                    size: SIZES.normal
+                  })
+                ]
+              })
+            );
+          }
+        });
+      });
+
       // 🎯 הוספת סעיפים מהמחסן אחרי חלוקת העיזבון - עם התאמת מגדר!
       if (willData.customSections && willData.customSections.length > 0) {
         sections.push(new Paragraph({ text: '' }));
@@ -1018,6 +1169,110 @@ export default function ProfessionalWordExporter({
             );
           }
           
+          // הוספת טבלה אם יש tableId
+          if (section.tableId && willData.inheritanceTables) {
+            const table = willData.inheritanceTables.find((t: any) => t.id === section.tableId);
+            if (table && table.heirs && table.heirs.length > 0) {
+              // יצירת שורות הטבלה
+              const tableRows = [
+                // כותרת הטבלה
+                new TableRow({
+                  children: [
+                    new TableCell({
+                      children: [new Paragraph({ text: 'שם פרטי', alignment: AlignmentType.RIGHT })],
+                      shading: { fill: 'E0E0E0' }
+                    }),
+                    new TableCell({
+                      children: [new Paragraph({ text: 'שם משפחה', alignment: AlignmentType.RIGHT })],
+                      shading: { fill: 'E0E0E0' }
+                    }),
+                    new TableCell({
+                      children: [new Paragraph({ text: 'ת.ז.', alignment: AlignmentType.RIGHT })],
+                      shading: { fill: 'E0E0E0' }
+                    }),
+                    new TableCell({
+                      children: [new Paragraph({ text: 'קרבה', alignment: AlignmentType.RIGHT })],
+                      shading: { fill: 'E0E0E0' }
+                    }),
+                    new TableCell({
+                      children: [new Paragraph({ text: 'חלק', alignment: AlignmentType.RIGHT })],
+                      shading: { fill: 'E0E0E0' }
+                    }),
+                    new TableCell({
+                      children: [new Paragraph({ text: 'מגדר', alignment: AlignmentType.RIGHT })],
+                      shading: { fill: 'E0E0E0' }
+                    })
+                  ]
+                })
+              ];
+
+              // שורות היורשים
+              table.heirs.forEach((heir: any) => {
+                tableRows.push(
+                  new TableRow({
+                    children: [
+                      new TableCell({
+                        children: [new Paragraph({ text: heir.firstName || '', alignment: AlignmentType.RIGHT })]
+                      }),
+                      new TableCell({
+                        children: [new Paragraph({ text: heir.lastName || '', alignment: AlignmentType.RIGHT })]
+                      }),
+                      new TableCell({
+                        children: [new Paragraph({ text: heir.id || '', alignment: AlignmentType.RIGHT })]
+                      }),
+                      new TableCell({
+                        children: [new Paragraph({ text: heir.relation || '', alignment: AlignmentType.RIGHT })]
+                      }),
+                      new TableCell({
+                        children: [new Paragraph({ text: heir.share || '', alignment: AlignmentType.RIGHT })]
+                      }),
+                      new TableCell({
+                        children: [new Paragraph({ text: heir.gender === 'female' ? 'נקבה' : 'זכר', alignment: AlignmentType.RIGHT })]
+                      })
+                    ]
+                  })
+                );
+              });
+
+              sections.push(
+                new Table({
+                  width: { size: 100, type: WidthType.PERCENTAGE },
+                  rows: tableRows,
+                  borders: {
+                    top: { style: BorderStyle.SINGLE, size: 1, color: '000000' },
+                    bottom: { style: BorderStyle.SINGLE, size: 1, color: '000000' },
+                    left: { style: BorderStyle.SINGLE, size: 1, color: '000000' },
+                    right: { style: BorderStyle.SINGLE, size: 1, color: '000000' },
+                    insideHorizontal: { style: BorderStyle.SINGLE, size: 1, color: '000000' },
+                    insideVertical: { style: BorderStyle.SINGLE, size: 1, color: '000000' }
+                  }
+                })
+              );
+              
+              // הוספת תתי-סעיפים של הטבלה
+              if (table.subSections && table.subSections.length > 0) {
+                const sortedSubSections = [...table.subSections].sort((a: any, b: any) => a.order - b.order);
+                sortedSubSections.forEach((subSection: any, subIndex: number) => {
+                  sections.push(
+                    new Paragraph({
+                      numbering: { reference: 'main-numbering', level: 1 },
+                      alignment: AlignmentType.BOTH,
+                      bidirectional: true,
+                      children: [
+                        new TextRun({
+                          text: `${subSection.title || `תת-סעיף ${subIndex + 1}`}: ${subSection.content || ''}`,
+                          font: 'David',
+                          rightToLeft: true,
+                          size: SIZES.normal
+                        })
+                      ]
+                    })
+                  );
+                });
+              }
+            }
+          }
+          
           // הוספת תת-סעיפים אם קיימים
           if (section.sub_sections && section.sub_sections.length > 0) {
             const sortedSubSections = [...section.sub_sections].sort((a: any, b: any) => a.order - b.order);
@@ -1082,57 +1337,97 @@ export default function ProfessionalWordExporter({
         });
       }
 
-      // סעיפי סיום
-      sections.push(new Paragraph({ text: '' }));
-      sections.push(
-        new Paragraph({
-          heading: HeadingLevel.HEADING_1,
-          alignment: AlignmentType.RIGHT,
-          bidirectional: true,
-          children: [
-            new TextRun({
-              text: 'הוראות כלליות',
-              font: 'David',
-              rightToLeft: true,
-              size: SIZES.heading1,
-              bold: true
-            })
-          ]
-        })
-      );
+      // סעיפים קבועים אחרונים לפני הצהרת המצווה - ללא כותרות, רק סעיפים
+      const finalFixedSectionsBaseNum = baseSectionNum + 2;
+      const finalGender = willData.type === 'mutual' ? 'plural' : (willData.testator?.gender || 'male');
+      
+      const finalFixedSections = [
+        {
+          num: finalFixedSectionsBaseNum,
+          content: {
+            male: 'במקרה של פטירת אחד מהיורשים הנזכרים לעיל לפני פטירתי, חלקו יעבור ליורשיו החוקיים.',
+            female: 'במקרה של פטירת אחד מהיורשים הנזכרים לעיל לפני פטירתי, חלקו יעבור ליורשיו החוקיים.',
+            plural: 'במקרה של פטירת אחד מהיורשים הנזכרים לעיל לפני פטירתנו, חלקו יעבור ליורשיו החוקיים.'
+          }
+        },
+        {
+          num: finalFixedSectionsBaseNum + 1,
+          content: {
+            male: 'כל זכויות החיסכון והביטוח המצויות בקופות הגמל, קרנות הפנסיה, קופות התגמולים, קרנות ההשתלמות, תוכניות החיסכון, פוליסות ביטוח החיים וכל מוצר פיננסי אחר (להלן: "הקופות") ישולמו למוטבים הרשומים בקופות במועד הפטירה, וזאת בהתאם לרישום בפועל בקופות במועד הפטירה.\n\nמובהר בזאת, כי ככל שבאחת או יותר מהקופות לא יהיו רשומים מוטבים במועד הפטירה, יראו את הזכויות באותן קופות כחלק מעיזבון המצווה, והן יחולקו בהתאם להוראות צוואה זו ולפי הוראותיה המפורשות.',
+            female: 'כל זכויות החיסכון והביטוח המצויות בקופות הגמל, קרנות הפנסיה, קופות התגמולים, קרנות ההשתלמות, תוכניות החיסכון, פוליסות ביטוח החיים וכל מוצר פיננסי אחר (להלן: "הקופות") ישולמו למוטבים הרשומים בקופות במועד הפטירה, וזאת בהתאם לרישום בפועל בקופות במועד הפטירה.\n\nמובהר בזאת, כי ככל שבאחת או יותר מהקופות לא יהיו רשומים מוטבים במועד הפטירה, יראו את הזכויות באותן קופות כחלק מעיזבון המצווה, והן יחולקו בהתאם להוראות צוואה זו ולפי הוראותיה המפורשות.',
+            plural: 'כל זכויות החיסכון והביטוח המצויות בקופות הגמל, קרנות הפנסיה, קופות התגמולים, קרנות ההשתלמות, תוכניות החיסכון, פוליסות ביטוח החיים וכל מוצר פיננסי אחר (להלן: "הקופות") ישולמו למוטבים הרשומים בקופות במועד הפטירה, וזאת בהתאם לרישום בפועל בקופות במועד הפטירה.\n\nמובהר בזאת, כי ככל שבאחת או יותר מהקופות לא יהיו רשומים מוטבים במועד הפטירה, יראו את הזכויות באותן קופות כחלק מעיזבון המצווים, והן יחולקו בהתאם להוראות צוואה זו ולפי הוראותיה המפורשות.'
+          }
+        },
+        {
+          num: finalFixedSectionsBaseNum + 2,
+          content: {
+            male: 'הנני דורש מכל אדם ומכל רשות לקיים צוואה זו ולא לערער עליה ולא להתנגד לה ולא לתקוף אותה, ואם יתעורר אי פעם ספק כלשהו בקשר לצוואה זו, הרי שיש להתיר את הספק לפי הדין ולתת לה תוקף ולקיים אותה.',
+            female: 'הנני דורשת מכל אדם ומכל רשות לקיים צוואה זו ולא לערער עליה ולא להתנגד לה ולא לתקוף אותה, ואם יתעורר אי פעם ספק כלשהו בקשר לצוואה זו, הרי שיש להתיר את הספק לפי הדין ולתת לה תוקף ולקיים אותה.',
+            plural: 'הננו דורשים מכל אדם ומכל רשות לקיים צוואה זו ולא לערער עליה ולא להתנגד לה ולא לתקוף אותה, ואם יתעורר אי פעם ספק כלשהו בקשר לצוואה זו, הרי שיש להתיר את הספק לפי הדין ולתת לה תוקף ולקיים אותה.'
+          }
+        }
+      ];
+      
+      // הוספת הסעיפים האחרונים (ללא כותרות, רק סעיפים)
+      finalFixedSections.forEach((section) => {
+        sections.push(new Paragraph({ text: '' }));
+        sectionNum = section.num;
+        const contentLines = (section.content[finalGender] || section.content.male).split('\n\n');
+        
+        // הוספת הסעיף (ללא כותרת נפרדת)
+        contentLines.forEach((line, index) => {
+          if (index === 0) {
+            // שורה ראשונה - עם מספור הסעיף
+            sections.push(
+              new Paragraph({
+                numbering: { reference: 'main-numbering', level: 0 },
+                alignment: AlignmentType.BOTH,
+                bidirectional: true,
+                children: [
+                  new TextRun({
+                    text: line,
+                    font: 'David',
+                    rightToLeft: true,
+                    size: SIZES.normal
+                  })
+                ]
+              })
+            );
+          } else {
+            // שורות נוספות (כמו "מובהר בזאת...")
+            sections.push(
+              new Paragraph({
+                alignment: AlignmentType.BOTH,
+                bidirectional: true,
+                children: [
+                  new TextRun({
+                    text: line,
+                    font: 'David',
+                    rightToLeft: true,
+                    size: SIZES.normal
+                  })
+                ]
+              })
+            );
+          }
+        });
+      });
 
-      sectionNum++;
+      // הצהרת המצווה - ולראיה באתי על החתום
+      sections.push(new Paragraph({ text: '' }));
+      const signatureText = willData.type === 'mutual'
+        ? 'ולראיה באנו על החתום מרצוננו הטוב והחופשי, בפני העדות החתומות הנקובות בשמותיהן וכתובותיהן בלי להיות נתונים לכל השפעה בלתי הוגנת, לחץ או כפיה שהם וכשאיננו סובלים מאיזו חולשה גופנית או רוחנית הגורעת או המונעת מאתנו את כושרינו המשפטי לערוך צוואה בעלת תוקף חוקי, לאחר שהצהרנו בנוכחות שתי עדות הצוואה המפורטות להלן כי זו צוואתנו, וביקשנו מהן לאשר בחתימתן שכך הצהרנו וחתמנו בפניהן.'
+        : (finalGender === 'female'
+          ? 'ולראיה באתי על החתום מרצוני הטוב והחופשי, בפני העדות החתומות הנקובות בשמותיהן וכתובותיהן בלי להיות נתונה לכל השפעה בלתי הוגנת, לחץ או כפיה שהם וכשאינני סובלת מאיזו חולשה גופנית או רוחנית הגורעת או המונעת ממני את כושרי המשפטי לערוך צוואה בעלת תוקף חוקי, לאחר שהצהרתי בנוכחות שתי עדות הצוואה המפורטות להלן כי זו צוואתי, וביקשתי מהן לאשר בחתימתן שכך הצהרתי וחתמתי בפניהן.'
+          : 'ולראיה באתי על החתום מרצוני הטוב והחופשי, בפני העדות החתומות הנקובות בשמותיהן וכתובותיהן בלי להיות נתון לכל השפעה בלתי הוגנת, לחץ או כפיה שהם וכשאינני סובל מאיזו חולשה גופנית או רוחנית הגורעת או המונעת ממני את כושרי המשפטי לערוך צוואה בעלת תוקף חוקי, לאחר שהצהרתי בנוכחות שתי עדות הצוואה המפורטות להלן כי זו צוואתי, וביקשתי מהן לאשר בחתימתן שכך הצהרתי וחתמתי בפניהן.');
+      
       sections.push(
         new Paragraph({
-          numbering: { reference: 'main-numbering', level: 0 },
           alignment: AlignmentType.BOTH,
           bidirectional: true,
           children: [
             new TextRun({
-              text: willData.type === 'mutual'
-                ? 'במקרה של פטירת אחד מהיורשים הנזכרים לעיל לפני פטירתנו, חלקו יעבור ליורשיו החוקיים.'
-                : 'במקרה של פטירת אחד מהיורשים הנזכרים לעיל לפני פטירתי, חלקו יעבור ליורשיו החוקיים.',
-              font: 'David',
-              rightToLeft: true,
-              size: SIZES.normal
-            })
-          ]
-        })
-      );
-
-      // סעיף סיום - ולראיה באתי על החתום
-      sections.push(new Paragraph({ text: '' }));
-      sectionNum++;
-      sections.push(
-        new Paragraph({
-          numbering: { reference: 'main-numbering', level: 0 },
-          alignment: AlignmentType.BOTH,
-          bidirectional: true,
-          children: [
-            new TextRun({
-              text: willData.type === 'mutual'
-                ? `ולראיה באנו על החתום מרצוננו הטוב והחופשי, בפני העדים החתומים הנקובים בשמותיהם וכתובותיהם בלי להיות נתונים לכל השפעה בלתי הוגנת, לחץ או כפיה שהם וכשאיננו סובלים מאיזו חולשה גופנית או רוחנית הגורעת או המונעת מאיתנו את כושרנו המשפטי לערוך צוואה בעלת תוקף חוקי, לאחר שהצהרנו בנוכחות שני עדי הצוואה המפורטים להלן כי זו צוואתנו, וביקשנו מהם לאשר בחתימתם שכך הצהרנו וחתמנו בפניהם.`
-                : `ולראיה באתי על החתום מרצוני הטוב והחופשי, בפני העדות החתומות הנקובות בשמותיהן וכתובותיהן בלי להיות ${gender ? 'נתונה' : 'נתון'} לכל השפעה בלתי הוגנת, לחץ או כפיה שהם וכשאינני ${gender ? 'סובלת' : 'סובל'} מאיזו חולשה גופנית או רוחנית הגורעת או המונעת ממני את כושרי המשפטי לערוך צוואה בעלת תוקף חוקי, לאחר שהצהרתי בנוכחות שתי עדות הצוואה המפורטות להלן כי זו צוואתי, וביקשתי מהן לאשר בחתימתן שכך הצהרתי וחתמתי בפניהן.`,
+              text: signatureText,
               font: 'David',
               rightToLeft: true,
               size: SIZES.normal

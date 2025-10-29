@@ -1,7 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
+import { X, GripVertical } from 'lucide-react';
+import { DndContext, closestCenter, DragEndEvent } from '@dnd-kit/core';
+import { arrayMove, SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import GenderSelector from './GenderSelector';
 import ProfessionalWordExporter from './ProfessionalWordExporter';
 import type { Gender } from '@/lib/hebrew-gender';
@@ -52,6 +55,652 @@ interface Witness {
 
 interface ProfessionalWillFormProps {
   defaultWillType?: 'individual' | 'mutual';
+}
+
+// רכיב SortableSectionItem להזזת סעיפים
+function SortableSectionItem({ 
+  section, 
+  getSectionNumber, 
+  changeSectionLevel, 
+  moveSectionUp, 
+  moveSectionDown,
+  handleLoadSectionToWarehouse,
+  handleSaveSectionTemplate,
+  handleLoadSectionToDocument,
+  onDelete,
+  onEdit,
+  inheritanceTables,
+  setInheritanceTables,
+  customSections,
+  setCustomSections
+}: {
+  section: any;
+  getSectionNumber: (section: any) => string;
+  changeSectionLevel: (id: string, level: 'main' | 'sub' | 'sub-sub') => void;
+  moveSectionUp: (id: string) => void;
+  moveSectionDown: (id: string) => void;
+  handleLoadSectionToWarehouse: (section: any) => void;
+  handleSaveSectionTemplate: (section: any) => void;
+  handleLoadSectionToDocument: (section: any, type: 'fee-agreement' | 'advance-directives') => void;
+  onDelete: (id: string) => void;
+  onEdit: (id: string, content: string) => void;
+  onEditTitle: (id: string, title: string) => void;
+  inheritanceTables: any[];
+  setInheritanceTables: any;
+  customSections: any[];
+  setCustomSections: any;
+}) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editContent, setEditContent] = useState(section.content);
+  const [editTitle, setEditTitle] = useState(section.title);
+  
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ 
+    id: section.id 
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  const handleSave = () => {
+    onEdit(section.id, editContent);
+    // עדכון הכותרת אם השתנה
+    if (editTitle !== section.title) {
+      onEditTitle(section.id, editTitle);
+    }
+    setIsEditing(false);
+  };
+
+  const handleCancel = () => {
+    setEditContent(section.content);
+    setEditTitle(section.title);
+    setIsEditing(false);
+  };
+
+  // עדכון כאשר הסעיף משתנה
+  useEffect(() => {
+    setEditContent(section.content);
+    setEditTitle(section.title);
+  }, [section.content, section.title]);
+
+  return (
+    <div 
+      ref={setNodeRef} 
+      style={style}
+      className={`bg-white p-3 rounded-lg border ${
+        section.isFixed ? 'border-purple-400 bg-purple-50' :
+        section.level === 'main' ? 'border-green-400' : 
+        section.level === 'sub' ? 'border-blue-400' : 'border-purple-400'
+      } ${section.level === 'sub' ? 'ml-4' : section.level === 'sub-sub' ? 'ml-8' : ''}`}
+    >
+      <div className="flex justify-between items-center mb-2">
+        <div className="flex items-center gap-2">
+          {/* ידית גרירה */}
+          <button
+            {...attributes}
+            {...listeners}
+            className="cursor-grab active:cursor-grabbing p-1 hover:bg-gray-100 rounded"
+            title="גרור להזזה"
+          >
+            <GripVertical className="w-4 h-4 text-gray-400" />
+          </button>
+          
+          <span className="text-xs bg-gray-100 px-2 py-1 rounded text-gray-600">
+            {getSectionNumber(section)}
+          </span>
+          {section.isFixed && (
+            <span className="text-xs bg-purple-200 text-purple-800 px-2 py-1 rounded">
+              📌 קבוע
+            </span>
+          )}
+          <span className={`text-xs px-2 py-1 rounded ${
+            section.level === 'main' ? 'bg-green-100 text-green-700' : 
+            section.level === 'sub' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'
+          }`}>
+            {section.level === 'main' ? 'ראשי' : section.level === 'sub' ? 'תת-סעיף' : 'תת-תת-סעיף'}
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          {/* כפתור עריכה */}
+          <button
+            onClick={() => setIsEditing(!isEditing)}
+            className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition"
+            title="ערוך סעיף"
+          >
+            ✏️
+          </button>
+          
+          {/* כפתורי רמה */}
+          <div className="flex gap-1">
+            <button
+              onClick={() => changeSectionLevel(section.id, 'main')}
+              className={`px-2 py-1 text-xs rounded ${
+                section.level === 'main' ? 'bg-green-200 text-green-800' : 'bg-gray-100 text-gray-600 hover:bg-green-100'
+              }`}
+              title="הפוך לראשי"
+            >
+              ראשי
+            </button>
+            <button
+              onClick={() => changeSectionLevel(section.id, 'sub')}
+              className={`px-2 py-1 text-xs rounded ${
+                section.level === 'sub' ? 'bg-blue-200 text-blue-800' : 'bg-gray-100 text-gray-600 hover:bg-blue-100'
+              }`}
+              title="הפוך לתת-סעיף"
+            >
+              תת
+            </button>
+            <button
+              onClick={() => changeSectionLevel(section.id, 'sub-sub')}
+              className={`px-2 py-1 text-xs rounded ${
+                section.level === 'sub-sub' ? 'bg-purple-200 text-purple-800' : 'bg-gray-100 text-gray-600 hover:bg-purple-100'
+              }`}
+              title="הפוך לתת-תת-סעיף"
+            >
+              תת-תת
+            </button>
+          </div>
+          
+          {/* כפתורי טעינה למחסן ומסמכים */}
+          <div className="flex gap-1">
+            <button
+              onClick={() => handleLoadSectionToWarehouse(section)}
+              className="text-xs px-2 py-1 bg-orange-100 text-orange-700 rounded hover:bg-orange-200 transition"
+              title="טען למחסן אישי"
+            >
+              מחסן
+            </button>
+            <button
+              onClick={() => handleSaveSectionTemplate(section)}
+              className="text-xs px-2 py-1 bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200 transition"
+              title="שמור כתבנית קבועה"
+            >
+              תבנית
+            </button>
+          </div>
+          
+          {/* כפתור מחיקה */}
+          <button
+            onClick={() => onDelete(section.id)}
+            className="text-red-500 hover:text-red-700 text-xs"
+            title="מחק סעיף"
+          >
+            🗑️
+          </button>
+        </div>
+      </div>
+      {isEditing ? (
+        <div className="space-y-2">
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">כותרת:</label>
+            <input
+              type="text"
+              value={editTitle}
+              onChange={(e) => setEditTitle(e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded text-sm"
+              dir="rtl"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">תוכן:</label>
+            <textarea
+              value={editContent}
+              onChange={(e) => setEditContent(e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded text-sm"
+              rows={6}
+              dir="rtl"
+            />
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={handleSave}
+              className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700"
+            >
+              שמור
+            </button>
+            <button
+              onClick={handleCancel}
+              className="px-3 py-1 bg-gray-600 text-white rounded text-sm hover:bg-gray-700"
+            >
+              ביטול
+            </button>
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* תוכן הסעיף */}
+          {section.content && (
+            <div className="text-sm text-gray-700 whitespace-pre-line mb-3">
+              <span className="font-semibold">{getSectionNumber(section)}: </span>
+              {section.content}
+            </div>
+          )}
+          
+          {/* טבלה אם יש tableId */}
+          {section.tableId && (() => {
+            const table = inheritanceTables.find(t => t.id === section.tableId);
+            if (!table) return null;
+            
+            return (
+              <div className="mb-3">
+                <div className="overflow-x-auto">
+                  <table className="w-full bg-white rounded-lg border text-sm">
+                    <thead className="bg-purple-50">
+                      <tr>
+                        <th className="px-3 py-2 text-right border">שם פרטי</th>
+                        <th className="px-3 py-2 text-right border">שם משפחה</th>
+                        <th className="px-3 py-2 text-right border">ת.ז.</th>
+                        <th className="px-3 py-2 text-right border">קרבה</th>
+                        <th className="px-3 py-2 text-right border">חלק</th>
+                        <th className="px-3 py-2 text-right border">מגדר</th>
+                        <th className="px-3 py-2 text-right border">פעולות</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {table.heirs.map((heir: any, heirIndex: number) => (
+                        <tr key={heirIndex} className="border-t">
+                          <td className="px-3 py-2 border">
+                            <input
+                              type="text"
+                              value={heir.firstName || ''}
+                              onChange={(e) => {
+                                setInheritanceTables((prev: any[]) => prev.map(t => 
+                                  t.id === table.id 
+                                    ? { ...t, heirs: t.heirs.map((h: any, i: number) => i === heirIndex ? { ...h, firstName: e.target.value } : h) }
+                                    : t
+                                ));
+                              }}
+                              className="w-full px-2 py-1 border rounded text-sm"
+                              dir="rtl"
+                              placeholder="שם פרטי"
+                            />
+                          </td>
+                          <td className="px-3 py-2 border">
+                            <input
+                              type="text"
+                              value={heir.lastName || ''}
+                              onChange={(e) => {
+                                setInheritanceTables((prev: any[]) => prev.map(t => 
+                                  t.id === table.id 
+                                    ? { ...t, heirs: t.heirs.map((h: any, i: number) => i === heirIndex ? { ...h, lastName: e.target.value } : h) }
+                                    : t
+                                ));
+                              }}
+                              className="w-full px-2 py-1 border rounded text-sm"
+                              dir="rtl"
+                              placeholder="שם משפחה"
+                            />
+                          </td>
+                          <td className="px-3 py-2 border">
+                            <input
+                              type="text"
+                              value={heir.id || ''}
+                              onChange={(e) => {
+                                setInheritanceTables((prev: any[]) => prev.map(t => 
+                                  t.id === table.id 
+                                    ? { ...t, heirs: t.heirs.map((h: any, i: number) => i === heirIndex ? { ...h, id: e.target.value } : h) }
+                                    : t
+                                ));
+                              }}
+                              className="w-full px-2 py-1 border rounded text-sm"
+                              dir="ltr"
+                              placeholder="ת.ז."
+                            />
+                          </td>
+                          <td className="px-3 py-2 border">
+                            <input
+                              type="text"
+                              value={heir.relation || ''}
+                              onChange={(e) => {
+                                setInheritanceTables((prev: any[]) => prev.map(t => 
+                                  t.id === table.id 
+                                    ? { ...t, heirs: t.heirs.map((h: any, i: number) => i === heirIndex ? { ...h, relation: e.target.value } : h) }
+                                    : t
+                                ));
+                              }}
+                              className="w-full px-2 py-1 border rounded text-sm"
+                              dir="rtl"
+                              placeholder="קרבה"
+                            />
+                          </td>
+                          <td className="px-3 py-2 border">
+                            <input
+                              type="text"
+                              value={heir.share || ''}
+                              onChange={(e) => {
+                                setInheritanceTables((prev: any[]) => prev.map(t => 
+                                  t.id === table.id 
+                                    ? { ...t, heirs: t.heirs.map((h: any, i: number) => i === heirIndex ? { ...h, share: e.target.value } : h) }
+                                    : t
+                                ));
+                              }}
+                              className="w-full px-2 py-1 border rounded text-sm"
+                              dir="ltr"
+                              placeholder="חלק"
+                            />
+                          </td>
+                          <td className="px-3 py-2 border">
+                            <select
+                              value={heir.gender || 'male'}
+                              onChange={(e) => {
+                                setInheritanceTables((prev: any[]) => prev.map(t => 
+                                  t.id === table.id 
+                                    ? { ...t, heirs: t.heirs.map((h: any, i: number) => i === heirIndex ? { ...h, gender: e.target.value } : h) }
+                                    : t
+                                ));
+                              }}
+                              className="w-full px-2 py-1 border rounded text-sm"
+                            >
+                              <option value="male">זכר</option>
+                              <option value="female">נקבה</option>
+                            </select>
+                          </td>
+                          <td className="px-3 py-2 border">
+                            <button
+                              onClick={() => {
+                                setInheritanceTables((prev: any[]) => prev.map(t => 
+                                  t.id === table.id 
+                                    ? { ...t, heirs: t.heirs.filter((_: any, i: number) => i !== heirIndex) }
+                                    : t
+                                ));
+                              }}
+                              className="text-red-500 hover:text-red-700 text-xs"
+                              title="מחק יורש"
+                            >
+                              🗑️
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                      {table.heirs.length === 0 && (
+                        <tr>
+                          <td colSpan={7} className="px-3 py-4 text-center text-gray-500 border">
+                            אין יורשים בטבלה זו. לחץ על "➕ הוסף יורש" להוסיף יורשים.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+                <button
+                  onClick={() => {
+                    const newHeir = {
+                      firstName: '',
+                      lastName: '',
+                      id: '',
+                      relation: '',
+                      share: '',
+                      gender: 'male'
+                    };
+                    setInheritanceTables((prev: any[]) => prev.map(t => 
+                      t.id === table.id 
+                        ? { ...t, heirs: [...t.heirs, newHeir] }
+                        : t
+                    ));
+                  }}
+                  className="mt-2 px-3 py-1 bg-purple-100 text-purple-700 rounded text-sm hover:bg-purple-200 border border-purple-300"
+                >
+                  ➕ הוסף יורש
+                </button>
+                
+                {/* תתי-סעיפים מתחת לטבלה */}
+                <div className="mt-3 space-y-2">
+                  {table.subSections && table.subSections.length > 0 && table.subSections.sort((a: any, b: any) => a.order - b.order).map((subSection: any, subIndex: number) => (
+                    <InheritanceTableSubSection
+                      key={subSection.id}
+                      subSection={subSection}
+                      subIndex={subIndex}
+                      sectionNumber={getSectionNumber(section)}
+                      onUpdate={(updated) => {
+                        setInheritanceTables((prev: any[]) => prev.map(t => 
+                          t.id === table.id 
+                            ? { ...t, subSections: t.subSections.map((s: any) => s.id === subSection.id ? updated : s) || [] }
+                            : t
+                        ));
+                      }}
+                      onDelete={() => {
+                        setInheritanceTables((prev: any[]) => prev.map(t => 
+                          t.id === table.id 
+                            ? { ...t, subSections: t.subSections.filter((s: any) => s.id !== subSection.id) || [] }
+                            : t
+                        ));
+                      }}
+                    />
+                  ))}
+                  
+                  {/* כפתור הוספת תת-סעיף */}
+                  <button
+                    onClick={() => {
+                      const title = prompt('כותרת תת-הסעיף:');
+                      if (title) {
+                        const newSubSection = {
+                          id: `sub-${Date.now()}`,
+                          title: title.trim(),
+                          content: prompt('תוכן תת-הסעיף:') || '',
+                          order: (table.subSections?.length || 0) + 1
+                        };
+                        setInheritanceTables((prev: any[]) => prev.map(t => 
+                          t.id === table.id 
+                            ? { ...t, subSections: [...(t.subSections || []), newSubSection] }
+                            : t
+                        ));
+                      }
+                    }}
+                    className="w-full px-3 py-2 bg-purple-100 text-purple-700 rounded text-sm hover:bg-purple-200 border border-purple-300"
+                  >
+                    ➕ הוסף תת-סעיף מתחת לטבלה
+                  </button>
+                </div>
+              </div>
+            );
+          })()}
+        </>
+      )}
+    </div>
+  );
+}
+
+// קומפוננטה לתת-סעיף של סעיף 3
+function Section3SubSectionItem({
+  subSection,
+  subSectionNum,
+  onUpdate,
+  onDelete
+}: {
+  subSection: { id: string; title: string; content: string };
+  subSectionNum: number;
+  onUpdate: (updated: { id: string; title: string; content: string }) => void;
+  onDelete: () => void;
+}) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editTitle, setEditTitle] = useState(subSection.title);
+  const [editContent, setEditContent] = useState(subSection.content);
+
+  useEffect(() => {
+    setEditTitle(subSection.title);
+    setEditContent(subSection.content);
+  }, [subSection.title, subSection.content]);
+
+  const handleSave = () => {
+    onUpdate({
+      ...subSection,
+      title: editTitle,
+      content: editContent
+    });
+    setIsEditing(false);
+  };
+
+  const handleCancel = () => {
+    setEditTitle(subSection.title);
+    setEditContent(subSection.content);
+    setIsEditing(false);
+  };
+
+  return (
+    <div className="bg-blue-50 p-3 rounded border border-blue-200 mr-4">
+      <div className="flex justify-between items-center mb-1">
+        {isEditing ? (
+          <input
+            type="text"
+            value={editTitle}
+            onChange={(e) => setEditTitle(e.target.value)}
+            className="flex-1 px-2 py-1 border rounded text-sm"
+            dir="rtl"
+          />
+        ) : (
+          <h4 className="font-semibold text-blue-800 mb-1">3.{subSectionNum} - {subSection.title}</h4>
+        )}
+        <div className="flex gap-1">
+          {isEditing ? (
+            <>
+              <button
+                onClick={handleSave}
+                className="px-2 py-1 bg-green-100 text-green-700 rounded text-xs hover:bg-green-200"
+              >
+                ✓ שמור
+              </button>
+              <button
+                onClick={handleCancel}
+                className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs hover:bg-gray-200"
+              >
+                ✕ ביטול
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={() => setIsEditing(true)}
+                className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs hover:bg-blue-200"
+              >
+                ✏️ ערוך
+              </button>
+              <button
+                onClick={onDelete}
+                className="text-red-500 hover:text-red-700 text-xs px-2 py-1"
+              >
+                🗑️
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+      {isEditing ? (
+        <textarea
+          value={editContent}
+          onChange={(e) => setEditContent(e.target.value)}
+          className="w-full px-2 py-1 border rounded text-sm mt-2"
+          rows={4}
+          dir="rtl"
+        />
+      ) : (
+        <div className="text-sm text-gray-700">{subSection.content}</div>
+      )}
+    </div>
+  );
+}
+
+// קומפוננטה לתת-סעיף של טבלת ירושה
+function InheritanceTableSubSection({
+  subSection,
+  subIndex,
+  onUpdate,
+  onDelete,
+  sectionNumber
+}: {
+  subSection: { id: string; title: string; content: string; order: number };
+  subIndex: number;
+  onUpdate: (updated: { id: string; title: string; content: string; order: number }) => void;
+  onDelete: () => void;
+  sectionNumber?: string;
+}) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editTitle, setEditTitle] = useState(subSection.title);
+  const [editContent, setEditContent] = useState(subSection.content);
+
+  useEffect(() => {
+    setEditTitle(subSection.title);
+    setEditContent(subSection.content);
+  }, [subSection.title, subSection.content]);
+
+  const handleSave = () => {
+    onUpdate({
+      ...subSection,
+      title: editTitle,
+      content: editContent
+    });
+    setIsEditing(false);
+  };
+
+  const handleCancel = () => {
+    setEditTitle(subSection.title);
+    setEditContent(subSection.content);
+    setIsEditing(false);
+  };
+
+  return (
+    <div className="bg-purple-50 p-2 rounded border border-purple-200">
+      <div className="flex justify-between items-center mb-1">
+        {isEditing ? (
+          <input
+            type="text"
+            value={editTitle}
+            onChange={(e) => setEditTitle(e.target.value)}
+            className="flex-1 px-2 py-1 border rounded text-sm"
+            dir="rtl"
+          />
+        ) : (
+          <h5 className="font-semibold text-purple-800 text-sm">
+            {sectionNumber ? `${sectionNumber}.${subIndex + 1}` : `${subIndex + 1}`} - {subSection.title}
+          </h5>
+        )}
+        <div className="flex gap-1">
+          {isEditing ? (
+            <>
+              <button
+                onClick={handleSave}
+                className="px-2 py-1 bg-green-100 text-green-700 rounded text-xs hover:bg-green-200"
+              >
+                ✓ שמור
+              </button>
+              <button
+                onClick={handleCancel}
+                className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs hover:bg-gray-200"
+              >
+                ✕ ביטול
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={() => setIsEditing(true)}
+                className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs hover:bg-blue-200"
+              >
+                ✏️ ערוך
+              </button>
+              <button
+                onClick={onDelete}
+                className="text-red-500 hover:text-red-700 text-xs px-2 py-1"
+              >
+                🗑️
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+      {isEditing ? (
+        <textarea
+          value={editContent}
+          onChange={(e) => setEditContent(e.target.value)}
+          className="w-full px-2 py-1 border rounded text-sm mt-2"
+          rows={4}
+          dir="rtl"
+        />
+      ) : (
+        <div className="text-sm text-gray-700 whitespace-pre-line">{subSection.content}</div>
+      )}
+    </div>
+  );
 }
 
 export default function ProfessionalWillForm({ defaultWillType = 'individual' }: ProfessionalWillFormProps = {}) {
@@ -182,7 +831,9 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
     parentId?: string;
     order: number;
     type?: 'text' | 'property' | 'heirs' | 'bank-account';
+    tableId?: string; // ID של טבלה מקושרת
     tableData?: any;
+    isFixed?: boolean; // סעיף קבוע
   }>>([
     { 
       id: 'section_1', 
@@ -203,6 +854,32 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
   ]);
   const [heirsDisplayMode, setHeirsDisplayMode] = useState<'table' | 'list'>('list');
   const [showFullWill, setShowFullWill] = useState(false);
+  
+  // טבלאות ירושה (כולל טבלה ראשית וטבלאות נוספות)
+  const [inheritanceTables, setInheritanceTables] = useState<Array<{
+    id: string;
+    title: string;
+    isMain: boolean; // האם זו הטבלה הראשית
+    heirs: Heir[]; // רק לטבלאות נוספות - הראשית משתמשת ב-heirs state
+    order: number;
+    subSections?: Array<{
+      id: string;
+      title: string;
+      content: string;
+      order: number;
+    }>;
+  }>>([
+    {
+      id: 'main-inheritance-table',
+      title: 'חלוקת העיזבון',
+      isMain: true,
+      heirs: [],
+      order: 1,
+      subSections: []
+    }
+  ]);
+  
+  // עדכון הטבלה הראשית כשה-heirs משתנים - הטבלה הראשית תמיד משתמשת ב-heirs state הנוכחי
   
   // מערכת משתנים
   const [variables, setVariables] = useState<Array<{
@@ -240,6 +917,17 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
     title: '',
     content: '',
     category: 'custom'
+  });
+
+  // מודל הוספת סעיף קבוע
+  const [addFixedSectionModal, setAddFixedSectionModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    content: string;
+  }>({
+    isOpen: false,
+    title: '',
+    content: ''
   });
 
   // מודל הוספת סעיף עם טבלה
@@ -371,6 +1059,98 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
     
     closeAddSectionModal();
   };
+
+  // פונקציות לניהול מודל הוספת סעיף קבוע
+  const openAddFixedSectionModal = () => {
+    setAddFixedSectionModal({
+      isOpen: true,
+      title: '',
+      content: ''
+    });
+  };
+
+  const closeAddFixedSectionModal = () => {
+    setAddFixedSectionModal({
+      isOpen: false,
+      title: '',
+      content: ''
+    });
+  };
+
+  const handleAddFixedSection = () => {
+    if (!addFixedSectionModal.title.trim() || !addFixedSectionModal.content.trim()) return;
+    
+    const newSection = {
+      id: generateSectionId(),
+      title: addFixedSectionModal.title.trim(),
+      content: addFixedSectionModal.content.trim(),
+      level: 'main' as const,
+      order: getNextOrder(),
+      type: 'text' as const,
+      isFixed: true // סעיף קבוע
+    };
+    
+    setCustomSections(prev => [...prev, newSection]);
+    closeAddFixedSectionModal();
+  };
+
+  // הוספת סעיף עם טבלה
+  const handleAddSectionWithTable = () => {
+    const sectionTitle = prompt('כותרת הסעיף:');
+    if (!sectionTitle) return;
+
+    const sectionId = generateSectionId();
+    const tableId = generateSectionId();
+    
+    // יצירת טבלה חדשה
+    const newTable = {
+      id: tableId,
+      title: 'טבלת חלוקה',
+      isMain: false,
+      heirs: [],
+      order: inheritanceTables.length + 1,
+      subSections: []
+    };
+    
+    setInheritanceTables(prev => [...prev, newTable]);
+
+    // יצירת סעיף חדש שמקושר לטבלה
+    const newSection = {
+      id: sectionId,
+      title: sectionTitle.trim(),
+      content: prompt('תוכן הסעיף (אופציונלי):') || '',
+      level: 'main' as const,
+      order: getNextOrder(),
+      type: 'text' as const,
+      tableId: tableId, // קישור לטבלה
+      isFixed: false
+    };
+
+    setCustomSections(prev => [...prev, newSection]);
+  };
+
+  // Drag and Drop handler להזזת סעיפים
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    
+    if (over && active.id !== over.id) {
+      setCustomSections((prev) => {
+        const sortedSections = [...prev].sort((a, b) => a.order - b.order);
+        const oldIndex = sortedSections.findIndex(s => s.id === active.id);
+        const newIndex = sortedSections.findIndex(s => s.id === over.id);
+        
+        if (oldIndex !== -1 && newIndex !== -1) {
+          const newSections = arrayMove(sortedSections, oldIndex, newIndex);
+          // עדכון סדר
+          return newSections.map((section, index) => ({
+            ...section,
+            order: index + 1
+          }));
+        }
+        return prev;
+      });
+    }
+  };
   
   // פונקציות לניהול היררכיית סעיפים
   const generateSectionId = () => `section_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -431,22 +1211,57 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
   };
   
   const getSectionNumber = (section: any) => {
-    const sortedSections = [...customSections].sort((a, b) => a.order - b.order);
-    const mainSections = sortedSections.filter(s => s.level === 'main');
-    const subSections = sortedSections.filter(s => s.level === 'sub' && s.parentId === section.parentId);
-    const subSubSections = sortedSections.filter(s => s.level === 'sub-sub' && s.parentId === section.parentId);
+    // סעיפים קבועים: 1, 2, 3, 4
+    const fixedSectionsCount = 4;
+    
+    // סעיפים מותאמים אישית (לא קבועים) ברמה ראשית
+    const sortedMainCustomSections = [...customSections]
+      .filter(s => s.level === 'main' && !s.isFixed)
+      .sort((a, b) => a.order - b.order);
+    
+    // סעיפים קבועים ברמה ראשית (אחרי סעיף 4)
+    const sortedFixedSections = [...customSections]
+      .filter(s => s.level === 'main' && s.isFixed)
+      .sort((a, b) => a.order - b.order);
+    
+    // כל הסעיפים הראשיים
+    const allMainSections = [...sortedMainCustomSections, ...sortedFixedSections];
     
     if (section.level === 'main') {
-      const mainIndex = mainSections.findIndex(s => s.id === section.id);
-      return (mainIndex + 1).toString();
+      // מצא את הסעיף ברשימה
+      const mainIndex = allMainSections.findIndex(s => s.id === section.id);
+      // המספור מתחיל מ-5 (אחרי סעיפים 1, 2, 3, 4 הקבועים)
+      return `${fixedSectionsCount + mainIndex + 1}`;
     } else if (section.level === 'sub') {
-      const mainIndex = mainSections.findIndex(s => s.id === section.parentId);
+      // מצא את הסעיף הראשי שיור
+      const parentMain = allMainSections.find(s => s.id === section.parentId);
+      if (!parentMain) return '';
+      
+      const parentMainIndex = allMainSections.findIndex(s => s.id === section.parentId);
+      const parentSectionNum = fixedSectionsCount + parentMainIndex + 1;
+      
+      // מצא את כל התתי-סעיפים של הסעיף הראשי הזה
+      const subSections = [...customSections]
+        .filter(s => s.level === 'sub' && s.parentId === section.parentId)
+        .sort((a, b) => a.order - b.order);
+      
       const subIndex = subSections.findIndex(s => s.id === section.id);
-      return `${mainIndex + 1}.${subIndex + 1}`;
+      return `${parentSectionNum}.${subIndex + 1}`;
     } else if (section.level === 'sub-sub') {
-      const mainIndex = mainSections.findIndex(s => s.id === section.parentId);
+      // מצא את הסעיף הראשי שיור
+      const parentMain = allMainSections.find(s => s.id === section.parentId);
+      if (!parentMain) return '';
+      
+      const parentMainIndex = allMainSections.findIndex(s => s.id === section.parentId);
+      const parentSectionNum = fixedSectionsCount + parentMainIndex + 1;
+      
+      // מצא את כל התתי-תתי-סעיפים
+      const subSubSections = [...customSections]
+        .filter(s => s.level === 'sub-sub' && s.parentId === section.parentId)
+        .sort((a, b) => a.order - b.order);
+      
       const subSubIndex = subSubSections.findIndex(s => s.id === section.id);
-      return `${mainIndex + 1}.${subSubIndex + 1}`;
+      return `${parentSectionNum}.${subSubIndex + 1}`;
     }
     
     return '';
@@ -921,6 +1736,7 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
     vehicleInstructions,
     digitalAssets: true,
     customSections,
+    inheritanceTables, // הוספת הטבלאות לייצוא
     guardian: guardian.name ? guardian : undefined,
     guardianGender: guardian.gender
   });
@@ -1114,23 +1930,6 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
       type: 'text',
       tableData: null
     });
-  };
-
-  const handleAddSectionWithTable = () => {
-    if (!addSectionWithTableModal.title.trim()) return;
-    
-    const newSection = {
-      id: generateSectionId(),
-      title: addSectionWithTableModal.title.trim(),
-      content: addSectionWithTableModal.content.trim(),
-      level: 'main' as const,
-      order: getNextOrder(),
-      type: addSectionWithTableModal.type,
-      tableData: addSectionWithTableModal.tableData
-    };
-    
-    setCustomSections(prev => [...prev, newSection]);
-    closeAddSectionWithTableModal();
   };
 
   const handleSaveToLearning = (section: EditableSectionType, userCorrection?: string) => {
@@ -2103,169 +2902,709 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
                 <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">קבוע</span>
               </div>
               <div className="text-sm text-gray-700 whitespace-pre-line">
-                צוואתי זו תחול על כלל רכושי מכל מין וסוג שהוא, בין בארץ ובין בחו"ל, ללא יוצא מן הכלל, בין אם הוא בבעלותי הבלעדית ובין אם בבעלותי המשותפת עם אחרים. מבלי לגרוע מכלליות האמור לעיל, צוואתי זו תחול גם על כספים, תוכניות חיסכון, קרנות נאמנות, ניירות ערך, תביעות, פנסיות, תגמולים, ביטוחי חיים, קצבאות, בין אם מופקדים בבנק ובין אם בידי כל גורם אחר, וכן על זכויות אחרות מכל סוג שהוא, וכל רכוש אחר בין במיטלטלין ובין במקרקעין (רשומים ושאינם רשומים), אשר בבעלותי כיום ו/או יגיעו לידי בעתיד (להלן: "העיזבון"), לרבות:
+                צוואתי זו תחול על כלל רכושי מכל מין וסוג שהוא, בין בארץ ובין בחו"ל, ללא יוצא מן הכלל, בין אם הוא בבעלותי הבלעדית ובין אם בבעלותי המשותפת עם אחרים. מבלי לגרוע מכלליות האמור לעיל, צוואתי זו תחול גם על כספים, תוכניות חיסכון, קרנות נאמנות, ניירות ערך, תביעות, פנסיות, תגמולים, ביטוחי חיים, קצבאות, בין אם מופקדים בבנק ובין אם בידי כל גורם אחר, וכן על זכויות אחרות מכל סוג שהוא, וכל רכוש אחר בין במיטלטלין ובין במקרקעין (רשומים ושאינם רשומים), אשר בבעלותי כיום ו/או יגיעו לידי בעתיד (להלן: "העיזבון"):
+              </div>
+              
+              {/* תתי-סעיפים של סעיף 3 - פרטי העיזבון */}
+              <div className="mt-4 space-y-2">
+                {/* נכסים - 3.1, 3.2 וכו' */}
+                {properties.filter(p => p.address || p.city || p.block || p.plot).map((property, index) => (
+                  <div key={index} className="bg-blue-50 p-3 rounded border border-blue-200 mr-4">
+                    <h4 className="font-semibold text-blue-800 mb-1">3.{index + 1} - {property.name || `נכס ${index + 1}`}</h4>
+                    <div className="text-sm text-gray-700">
+                      {property.address || property.city || property.block || property.plot ? (
+                        <>
+                          זכויות בדירה הרשומה בטאבו {property.address || '[כתובת]'}, בעיר {property.city || '[עיר]'}, 
+                          {property.block && ` הידועה כגוש: ${property.block}`}
+                          {property.plot && `, חלקה: ${property.plot}`}
+                          {property.subPlot && `, תת חלקה: ${property.subPlot}`}
+                          {property.ownership && property.ownership !== '100%' && ` (אחוז בעלות: ${property.ownership})`}
+                          {' וכן את מטלטליה בין המחוברים חיבור של קבע ובין שאינם מחוברים חיבור של קבע.'}
+                        </>
+                      ) : (
+                        `נכס ${index + 1} - פרטים לא הוזנו`
+                      )}
+                    </div>
+                  </div>
+                ))}
+                
+                {/* חשבונות בנק - המשך המספור */}
+                {bankAccounts.filter(a => a.bank || a.accountNumber).map((account, index) => {
+                  const propertyCount = properties.filter(p => p.address || p.city || p.block || p.plot).length;
+                  const subSectionNum = propertyCount + index + 1;
+                  return (
+                    <div key={`bank-${index}`} className="bg-blue-50 p-3 rounded border border-blue-200 mr-4">
+                      <h4 className="font-semibold text-blue-800 mb-1">3.{subSectionNum} - חשבון בנק</h4>
+                      <div className="text-sm text-gray-700">
+                        חשבון הבנק המנוהל על שמי בבנק {account.bank || '[שם הבנק]'}, סניף מספר {account.branch || '[מספר]'}, 
+                        חשבון מספר {account.accountNumber || '[מספר]'}, לרבות יתרת הכספים בחשבון, פיקדונות חיסכון וכלל הזכויות הכספיות הנובעות מחשבון זה.
+                      </div>
+                    </div>
+                  );
+                })}
+                
+                {/* כספים במזומן */}
+                {(() => {
+                  const propertyCount = properties.filter(p => p.address || p.city || p.block || p.plot).length;
+                  const bankCount = bankAccounts.filter(a => a.bank || a.accountNumber).length;
+                  const cashSubSectionNum = propertyCount + bankCount + 1;
+                  const gender = willType === 'mutual' ? 'plural' : (testator.gender || 'male');
+                  let cashText = 'את כלל הכספים במזומן הנמצאים ברשותי, לרבות שטרות כסף המוחזקים בביתי, בכספת או בכל מקום אחר.';
+                  if (gender === 'female') {
+                    cashText = 'את כלל הכספים במזומן הנמצאים ברשותי, לרבות שטרות כסף המוחזקים בביתי, בכספת או בכל מקום אחר.';
+                  } else if (gender === 'plural') {
+                    cashText = 'את כלל הכספים במזומן הנמצאים ברשותנו, לרבות שטרות כסף המוחזקים בביתנו, בכספתנו או בכל מקום אחר.';
+                  }
+                  return (
+                    <div className="bg-blue-50 p-3 rounded border border-blue-200 mr-4">
+                      <h4 className="font-semibold text-blue-800 mb-1">3.{cashSubSectionNum} - כספים במזומן</h4>
+                      <div className="text-sm text-gray-700">
+                        {cashText}
+                      </div>
+                    </div>
+                  );
+                })()}
+                
+                {/* תתי-סעיפים קבועים נוספים לסעיף 3 */}
+                {(() => {
+                  const propertyCount = properties.filter(p => p.address || p.city || p.block || p.plot).length;
+                  const bankCount = bankAccounts.filter(a => a.bank || a.accountNumber).length;
+                  const fixedSubSections = [
+                    {
+                      num: propertyCount + bankCount + 2,
+                      title: 'מיטלטלין',
+                      content: {
+                        male: 'כלל המיטלטלין שברשותי, לרבות אך מבלי לגרוע מכלליות האמור: ריהוט, מכשירי חשמל, ציוד אלקטרוני, תכשיטים, יצירות אמנות, ספרים, כלי עבודה, חפצים אישיים, כלי בית, וכל חפץ מיטלטלין אחר המצוי בדירת המגורים או בכל מקום אחר והנמצא בבעלותי או בחזקתי במועד פטירתי.',
+                        female: 'כלל המיטלטלין שברשותי, לרבות אך מבלי לגרוע מכלליות האמור: ריהוט, מכשירי חשמל, ציוד אלקטרוני, תכשיטים, יצירות אמנות, ספרים, כלי עבודה, חפצים אישיים, כלי בית, וכל חפץ מיטלטלין אחר המצוי בדירת המגורים או בכל מקום אחר והנמצאת בבעלותי או בחזקתי במועד פטירתי.',
+                        plural: 'כלל המיטלטלין שברשותנו, לרבות אך מבלי לגרוע מכלליות האמור: ריהוט, מכשירי חשמל, ציוד אלקטרוני, תכשיטים, יצירות אמנות, ספרים, כלי עבודה, חפצים אישיים, כלי בית, וכל חפץ מיטלטלין אחר המצוי בדירת המגורים או בכל מקום אחר והנמצאים בבעלותנו או בחזקתנו במועד פטירתנו.'
+                      }
+                    },
+                    {
+                      num: propertyCount + bankCount + 3,
+                      title: 'נכסים דיגיטליים',
+                      content: {
+                        male: 'כלל הנכסים, הזכויות והחשבונות הדיגיטליים שברשותי, לרבות אך מבלי לגרוע מכלליות האמור: מחשבים, טלפונים ניידים, טאבלטים וכל מכשיר אלקטרוני אחר; חשבונות דואר אלקטרוני; חשבונות ברשתות חברתיות; קבצים דיגיטליים לרבות מסמכים, תמונות, סרטונים ומוזיקה; נכסים וירטואליים; מטבעות קריפטוגרפים ונכסים דיגיטליים אחרים; זכויות בתוכנות ומערכות מחשב; חשבונות אחסון ענן; וכל נכס, זכות או תוכן דיגיטלי אחר שברשותי או בשליטתי.',
+                        female: 'כלל הנכסים, הזכויות והחשבונות הדיגיטליים שברשותי, לרבות אך מבלי לגרוע מכלליות האמור: מחשבים, טלפונים ניידים, טאבלטים וכל מכשיר אלקטרוני אחר; חשבונות דואר אלקטרוני; חשבונות ברשתות חברתיות; קבצים דיגיטליים לרבות מסמכים, תמונות, סרטונים ומוזיקה; נכסים וירטואליים; מטבעות קריפטוגרפים ונכסים דיגיטליים אחרים; זכויות בתוכנות ומערכות מחשב; חשבונות אחסון ענן; וכל נכס, זכות או תוכן דיגיטלי אחר שברשותי או בשליטתי.',
+                        plural: 'כלל הנכסים, הזכויות והחשבונות הדיגיטליים שברשותנו, לרבות אך מבלי לגרוע מכלליות האמור: מחשבים, טלפונים ניידים, טאבלטים וכל מכשיר אלקטרוני אחר; חשבונות דואר אלקטרוני; חשבונות ברשתות חברתיות; קבצים דיגיטליים לרבות מסמכים, תמונות, סרטונים ומוזיקה; נכסים וירטואליים; מטבעות קריפטוגרפים ונכסים דיגיטליים אחרים; זכויות בתוכנות ומערכות מחשב; חשבונות אחסון ענן; וכל נכס, זכות או תוכן דיגיטלי אחר שברשותנו או בשליטתנו.'
+                      }
+                    },
+                    {
+                      num: propertyCount + bankCount + 4,
+                      title: 'נכסים עתידיים',
+                      content: {
+                        male: 'כל כסף, זכות, תשלום או נכס אחר אשר יגיעו לעיזבוני לאחר מועד פטירתי, לרבות אך מבלי לגרוע מכלליות האמור: החזרי מס הכנסה, דיבידנדים, ריביות, תמלוגים, פיצויים, תגמולים, גמלאות, קצבאות, תביעות תלויות ועומדות, זכויות פיצוי מכל מין וסוג שהוא, כספי ביטוח שטרם נתבעו, וכן כל סכום או נכס אחר המגיע או שיגיע מכל מקור שהוא, בין אם הזכות להם התגבשה טרם מועד פטירתי ובין אם תתגבש לאחר מכן.',
+                        female: 'כל כסף, זכות, תשלום או נכס אחר אשר יגיעו לעיזבוני לאחר מועד פטירתי, לרבות אך מבלי לגרוע מכלליות האמור: החזרי מס הכנסה, דיבידנדים, ריביות, תמלוגים, פיצויים, תגמולים, גמלאות, קצבאות, תביעות תלויות ועומדות, זכויות פיצוי מכל מין וסוג שהוא, כספי ביטוח שטרם נתבעו, וכן כל סכום או נכס אחר המגיע או שיגיע מכל מקור שהוא, בין אם הזכות להם התגבשה טרם מועד פטירתי ובין אם תתגבש לאחר מכן.',
+                        plural: 'כל כסף, זכות, תשלום או נכס אחר אשר יגיעו לעיזבוננו לאחר מועד פטירתנו, לרבות אך מבלי לגרוע מכלליות האמור: החזרי מס הכנסה, דיבידנדים, ריביות, תמלוגים, פיצויים, תגמולים, גמלאות, קצבאות, תביעות תלויות ועומדות, זכויות פיצוי מכל מין וסוג שהוא, כספי ביטוח שטרם נתבעו, וכן כל סכום או נכס אחר המגיע או שיגיע מכל מקור שהוא, בין אם הזכות להם התגבשה טרם מועד פטירתנו ובין אם תתגבש לאחר מכן.'
+                      }
+                    },
+                    {
+                      num: propertyCount + bankCount + 5,
+                      title: 'תביעות וזכויות משפטיות',
+                      content: {
+                        male: 'כלל התביעות, הזכויות והסעדים העומדים לי, נגד כל גורם שהוא, בין שהוגשו בעניינם הליכים משפטיים ובין אם לאו, וכן כל פסק דין, החלטה או הסדר שיינתנו לטובתי או עיזבוני לאחר מועד הפטירה.',
+                        female: 'כלל התביעות, הזכויות והסעדים העומדים לי, נגד כל גורם שהוא, בין שהוגשו בעניינם הליכים משפטיים ובין אם לאו, וכן כל פסק דין, החלטה או הסדר שיינתנו לטובתי או עיזבוני לאחר מועד הפטירה.',
+                        plural: 'כלל התביעות, הזכויות והסעדים העומדים לנו, נגד כל גורם שהוא, בין שהוגשו בעניינם הליכים משפטיים ובין אם לאו, וכן כל פסק דין, החלטה או הסדר שיינתנו לטובתנו או עיזבוננו לאחר מועד הפטירה.'
+                      }
+                    }
+                  ];
+                  const gender = willType === 'mutual' ? 'plural' : (testator.gender || 'male');
+                  return (
+                    <>
+                      {fixedSubSections.map((subSection) => (
+                        <div key={subSection.num} className="bg-blue-50 p-3 rounded border border-blue-200 mr-4">
+                          <h4 className="font-semibold text-blue-800 mb-1">3.{subSection.num} - {subSection.title}</h4>
+                          <div className="text-sm text-gray-700">
+                            {subSection.content[gender] || subSection.content.male}
+                          </div>
+                        </div>
+                      ))}
+                    </>
+                  );
+                })()}
+                
+                {/* תתי-סעיפים נוספים לסעיף 3 */}
+                {(() => {
+                  const section3SubSections = customSections.filter(s => 
+                    (s.level === 'sub' && s.parentId === 'section_3') || 
+                    s.type === 'property' || 
+                    s.type === 'bank-account'
+                  );
+                  return section3SubSections.length > 0 && (
+                    <>
+                      {section3SubSections.map((subSection, index) => {
+                        const propertyCount = properties.filter(p => p.address || p.city || p.block || p.plot).length;
+                        const bankCount = bankAccounts.filter(a => a.bank || a.accountNumber).length;
+                        const cashCount = 1; // כספים במזומן
+                        const subSectionNum = propertyCount + bankCount + cashCount + index + 1;
+                        
+                        return (
+                          <Section3SubSectionItem
+                            key={subSection.id}
+                            subSection={subSection}
+                            subSectionNum={subSectionNum}
+                            onUpdate={(updated) => {
+                              setCustomSections(prev => prev.map(s => 
+                                s.id === subSection.id ? updated : s
+                              ));
+                            }}
+                            onDelete={() => {
+                              setCustomSections(prev => prev.filter(s => s.id !== subSection.id));
+                            }}
+                          />
+                        );
+                      })}
+                    </>
+                  );
+                })()}
+                
+                {/* כפתור הוספת תת-סעיף לסעיף 3 */}
+                <button
+                  onClick={() => {
+                    const title = prompt('כותרת תת-הסעיף:');
+                    if (title) {
+                      const propertyCount = properties.filter(p => p.address || p.city || p.block || p.plot).length;
+                      const bankCount = bankAccounts.filter(a => a.bank || a.accountNumber).length;
+                      const cashCount = 1;
+                      const newSubSection = {
+                        id: generateSectionId(),
+                        title: title.trim(),
+                        content: prompt('תוכן תת-הסעיף:') || '',
+                        level: 'sub' as const,
+                        parentId: 'section_3',
+                        order: propertyCount + bankCount + cashCount + 1,
+                        type: 'text' as const
+                      };
+                      setCustomSections(prev => [...prev, newSubSection]);
+                    }
+                  }}
+                  className="w-full px-3 py-2 bg-blue-100 text-blue-700 rounded text-sm hover:bg-blue-200 border border-blue-300 mr-4"
+                >
+                  ➕ הוסף תת-סעיף לסעיף 3
+                </button>
               </div>
             </div>
 
-            {/* סעיפים מותאמים אישית - כאן! */}
+            {/* סעיפים מותאמים אישית וקבועים - כאן! */}
             {customSections.length > 0 && (
               <div className="bg-green-50 p-4 rounded-lg border border-green-300">
-                <h3 className="font-semibold text-green-800 mb-3">סעיפים מותאמים אישית</h3>
-                <div className="space-y-3">
-                  {customSections
-                    .sort((a, b) => a.order - b.order)
-                    .map((section) => (
-                    <div key={section.id} className={`bg-white p-3 rounded-lg border ${
-                      section.level === 'main' ? 'border-green-400' : 
-                      section.level === 'sub' ? 'border-blue-400' : 'border-purple-400'
-                    } ${section.level === 'sub' ? 'ml-4' : section.level === 'sub-sub' ? 'ml-8' : ''}`}>
-                      <div className="flex justify-between items-center mb-2">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs bg-gray-100 px-2 py-1 rounded text-gray-600">
-                            {getSectionNumber(section)}
-                          </span>
-                          <h4 className="font-medium text-green-800">
-                            {section.title || `סעיף מותאם`}
-                          </h4>
-                          <span className={`text-xs px-2 py-1 rounded ${
-                            section.level === 'main' ? 'bg-green-100 text-green-700' : 
-                            section.level === 'sub' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'
-                          }`}>
-                            {section.level === 'main' ? 'ראשי' : section.level === 'sub' ? 'תת-סעיף' : 'תת-תת-סעיף'}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {/* כפתורי רמה */}
-                          <div className="flex gap-1">
-                            <button
-                              onClick={() => changeSectionLevel(section.id, 'main')}
-                              className={`px-2 py-1 text-xs rounded ${
-                                section.level === 'main' ? 'bg-green-200 text-green-800' : 'bg-gray-100 text-gray-600 hover:bg-green-100'
-                              }`}
-                              title="הפוך לראשי"
-                            >
-                              ראשי
-                            </button>
-                            <button
-                              onClick={() => changeSectionLevel(section.id, 'sub')}
-                              className={`px-2 py-1 text-xs rounded ${
-                                section.level === 'sub' ? 'bg-blue-200 text-blue-800' : 'bg-gray-100 text-gray-600 hover:bg-blue-100'
-                              }`}
-                              title="הפוך לתת-סעיף"
-                            >
-                              תת
-                            </button>
-                            <button
-                              onClick={() => changeSectionLevel(section.id, 'sub-sub')}
-                              className={`px-2 py-1 text-xs rounded ${
-                                section.level === 'sub-sub' ? 'bg-purple-200 text-purple-800' : 'bg-gray-100 text-gray-600 hover:bg-purple-100'
-                              }`}
-                              title="הפוך לתת-תת-סעיף"
-                            >
-                              תת-תת
-                            </button>
-                          </div>
-                          
-                          {/* כפתורי הזזה */}
-                          <div className="flex flex-col gap-1">
-                            <button
-                              onClick={() => moveSectionUp(section.id)}
-                              className="p-1 rounded text-green-600 hover:text-green-800 hover:bg-green-50"
-                              title="הזז למעלה"
-                            >
-                              ↑
-                            </button>
-                            <button
-                              onClick={() => moveSectionDown(section.id)}
-                              className="p-1 rounded text-green-600 hover:text-green-800 hover:bg-green-50"
-                              title="הזז למטה"
-                            >
-                              ↓
-                            </button>
-                          </div>
-                          
-                          {/* כפתורי טעינה למחסן ומסמכים */}
-                          <div className="flex gap-1">
-                            <button
-                              onClick={() => handleLoadSectionToWarehouse(section)}
-                              className="text-xs px-2 py-1 bg-orange-100 text-orange-700 rounded hover:bg-orange-200 transition"
-                              title="טען למחסן אישי"
-                            >
-                              מחסן
-                            </button>
-                            <button
-                              onClick={() => handleSaveSectionTemplate(section)}
-                              className="text-xs px-2 py-1 bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200 transition"
-                              title="שמור כתבנית קבועה"
-                            >
-                              תבנית
-                            </button>
-                            <button
-                              onClick={() => handleLoadSectionToDocument(section, 'fee-agreement')}
-                              className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition"
-                              title="טען לשכר טרחה"
-                            >
-                              שכ"ט
-                            </button>
-                            <button
-                              onClick={() => handleLoadSectionToDocument(section, 'advance-directives')}
-                              className="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded hover:bg-purple-200 transition"
-                              title="טען להנחיות מקדימות"
-                            >
-                              הנחיות
-                            </button>
-                          </div>
-                          
-                          {/* כפתור מחיקה */}
-                          <button
-                            onClick={() => setCustomSections(prev => prev.filter(s => s.id !== section.id))}
-                            className="text-red-500 hover:text-red-700 text-xs"
-                          >
-                            🗑️
-                          </button>
-                        </div>
-                      </div>
-                      <div className="text-sm text-gray-700 whitespace-pre-line">
-                        {section.content}
-                      </div>
-                    </div>
-                  ))}
+                <div className="flex justify-between items-center mb-3">
+                  <h3 className="font-semibold text-green-800">
+                    סעיפים מותאמים אישית {customSections.filter(s => s.isFixed).length > 0 && 
+                      <span className="text-purple-700">({customSections.filter(s => s.isFixed).length} סעיפים קבועים)</span>}
+                  </h3>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleAddSectionWithTable}
+                      className="px-3 py-1 bg-purple-600 text-white rounded text-sm hover:bg-purple-700"
+                      title="הוסף סעיף עם טבלה"
+                    >
+                      📊 הוסף סעיף עם טבלה
+                    </button>
+                    <button
+                      onClick={openAddFixedSectionModal}
+                      className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700"
+                    >
+                      📌 הוסף סעיף קבוע
+                    </button>
+                  </div>
                 </div>
+                <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                  <SortableContext items={customSections.map(s => s.id)} strategy={verticalListSortingStrategy}>
+                    <div className="space-y-3">
+                      {customSections
+                        .sort((a, b) => a.order - b.order)
+                        .map((section) => (
+                        <SortableSectionItem
+                          key={section.id}
+                          section={section}
+                          getSectionNumber={getSectionNumber}
+                          changeSectionLevel={changeSectionLevel}
+                          moveSectionUp={moveSectionUp}
+                          moveSectionDown={moveSectionDown}
+                          handleLoadSectionToWarehouse={handleLoadSectionToWarehouse}
+                          handleSaveSectionTemplate={handleSaveSectionTemplate}
+                          handleLoadSectionToDocument={handleLoadSectionToDocument}
+                          onDelete={(id) => {
+                            const sectionToDelete = customSections.find(s => s.id === id);
+                            if (sectionToDelete?.tableId) {
+                              setInheritanceTables(prev => prev.filter(t => t.id !== sectionToDelete.tableId));
+                            }
+                            setCustomSections(prev => prev.filter(s => s.id !== id));
+                          }}
+                          onEdit={(id, newContent) => setCustomSections(prev => prev.map(s => s.id === id ? { ...s, content: newContent } : s))}
+                          onEditTitle={(id, newTitle) => setCustomSections(prev => prev.map(s => s.id === id ? { ...s, title: newTitle } : s))}
+                          inheritanceTables={inheritanceTables}
+                          setInheritanceTables={setInheritanceTables}
+                          customSections={customSections}
+                          setCustomSections={setCustomSections}
+                        />
+                      ))}
+                    </div>
+                  </SortableContext>
+                </DndContext>
               </div>
             )}
 
-            {/* סעיף 4 - מקרה פטירת יורש */}
-            <div className="bg-white p-4 rounded-lg border border-blue-300">
-              <div className="flex justify-between items-center mb-2">
-                <h3 className="font-semibold text-blue-800">סעיף 4 - מקרה פטירת יורש</h3>
-                <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">קבוע</span>
-              </div>
-              <div className="text-sm text-gray-700 whitespace-pre-line">
-                במקרה של פטירת אחד מהיורשים הנזכרים לעיל לפני פטירתי, חלקו יעבור ליורשיו החוקיים.
-              </div>
+            {/* כותרת לפני סעיף 4 */}
+            <div className="bg-white p-4 rounded-lg border border-purple-400">
+              <h2 className="font-bold text-lg text-purple-900 mb-2">
+                {(() => {
+                  const gender = willType === 'mutual' ? 'plural' : (testator.gender || 'male');
+                  const text = gender === 'female' 
+                    ? 'הוראות בדבר חלוקת עזבוני'
+                    : gender === 'plural'
+                    ? 'הוראות בדבר חלוקת עזבוננו'
+                    : 'הוראות בדבר חלוקת עזבוני';
+                  return replaceTextWithGender(text, gender);
+                })()}
+              </h2>
             </div>
 
-            {/* סעיף 5 - סעיף שיתוף פעולה */}
-            <div className="bg-white p-4 rounded-lg border border-blue-300">
-              <div className="flex justify-between items-center mb-2">
-                <h3 className="font-semibold text-blue-800">סעיף 5 - סעיף שיתוף פעולה</h3>
-                <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">קבוע</span>
+            {/* סעיף 4 - חלוקת העיזבון (טבלת יורשים) */}
+            <div className="bg-white p-4 rounded-lg border border-purple-400">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="font-semibold text-purple-800">סעיף 4 - חלוקת העיזבון</h3>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      const tableId = generateSectionId();
+                      const newTable = {
+                        id: tableId,
+                        title: `טבלת חלוקה ${inheritanceTables.length + 1}`,
+                        isMain: false,
+                        heirs: [],
+                        order: inheritanceTables.length + 1,
+                        subSections: []
+                      };
+                      setInheritanceTables(prev => [...prev, newTable]);
+                    }}
+                    className="px-3 py-1 bg-purple-600 text-white rounded text-sm hover:bg-purple-700"
+                  >
+                    ➕ הוסף טבלה
+                  </button>
+                </div>
               </div>
-              <div className="text-sm text-gray-700 whitespace-pre-line">
-                הנני מצווה, כי ביצוע וקיום צוואה זו יהא ברוח טובה בשיתוף פעולה הדדי בין היורשים.
+              
+              {/* טקסט לפני הטבלה */}
+              <div className="text-sm text-gray-700 whitespace-pre-line mb-4">
+                {(() => {
+                  const gender = willType === 'mutual' ? 'plural' : (testator.gender || 'male');
+                  let text = '';
+                  if (gender === 'female') {
+                    text = 'הואיל והנני מבקשת להסדיר את חלוקת העיזבון לאחר מותי, הריני מצווה בזאת את כלל עזבוני, כפי שיהא במועד פטירתי כמפורט להלן:';
+                  } else if (gender === 'plural') {
+                    text = 'הואיל ואנחנו מבקשים להסדיר את חלוקת העיזבון לאחר מותנו, הרינו מצווים בזאת את כלל עזבוננו, כפי שיהא במועד פטירתנו כמפורט להלן:';
+                  } else {
+                    text = 'הואיל והנני מבקש להסדיר את חלוקת העיזבון לאחר מותי, הריני מצווה בזאת את כלל עזבוני, כפי שיהא במועד פטירתי כמפורט להלן:';
+                  }
+                  return replaceTextWithGender(text, gender);
+                })()}
               </div>
+              
+              {/* טבלאות ירושה */}
+              {inheritanceTables.map((table, tableIndex) => (
+                <div key={table.id} className={`mb-4 ${tableIndex > 0 ? 'mt-6 pt-4 border-t border-purple-200' : ''}`}>
+                  <div className="flex justify-between items-center mb-2">
+                    <h4 className="font-medium text-purple-700">
+                      {table.title || `טבלת חלוקה ${tableIndex + 1}`}
+                    </h4>
+                    <div className="flex gap-2">
+                      {!table.isMain && (
+                        <>
+                          <button
+                            onClick={() => {
+                              const newTitle = prompt('שנה את שם הטבלה:', table.title);
+                              if (newTitle !== null) {
+                                setInheritanceTables(prev => prev.map(t => 
+                                  t.id === table.id ? { ...t, title: newTitle || table.title } : t
+                                ));
+                              }
+                            }}
+                            className="px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs hover:bg-purple-200"
+                          >
+                            ✏️ שנה שם
+                          </button>
+                          <button
+                            onClick={() => {
+                              const newHeir: Heir = {
+                                firstName: '',
+                                lastName: '',
+                                id: '',
+                                relation: '',
+                                share: '',
+                                gender: 'male'
+                              };
+                              setInheritanceTables(prev => prev.map(t => 
+                                t.id === table.id 
+                                  ? { ...t, heirs: [...t.heirs, newHeir] }
+                                  : t
+                              ));
+                            }}
+                            className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs hover:bg-blue-200"
+                          >
+                            ➕ הוסף יורש
+                          </button>
+                        </>
+                      )}
+                      {inheritanceTables.length > 1 && (
+                        <button
+                          onClick={() => setInheritanceTables(prev => prev.filter(t => t.id !== table.id))}
+                          className="text-red-500 hover:text-red-700 text-xs px-2 py-1"
+                        >
+                          🗑️ מחק טבלה
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* טבלת היורשים */}
+                  <div className="overflow-x-auto mb-3">
+                    <table className="w-full bg-white rounded-lg border text-sm">
+                      <thead className="bg-purple-50">
+                        <tr>
+                          <th className="px-3 py-2 text-right border">שם פרטי</th>
+                          <th className="px-3 py-2 text-right border">שם משפחה</th>
+                          <th className="px-3 py-2 text-right border">ת.ז.</th>
+                          <th className="px-3 py-2 text-right border">קרבה</th>
+                          <th className="px-3 py-2 text-right border">חלק</th>
+                          <th className="px-3 py-2 text-right border">מגדר</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {(table.isMain ? heirs : table.heirs).map((heir, heirIndex) => (
+                          <tr key={heirIndex} className="border-t">
+                            <td className="px-3 py-2 border">
+                              {table.isMain ? heir.firstName : (
+                                <input
+                                  type="text"
+                                  value={heir.firstName}
+                                  onChange={(e) => {
+                                    setInheritanceTables(prev => prev.map(t => 
+                                      t.id === table.id 
+                                        ? { ...t, heirs: t.heirs.map((h, i) => i === heirIndex ? { ...h, firstName: e.target.value } : h) }
+                                        : t
+                                    ));
+                                  }}
+                                  className="w-full px-2 py-1 border rounded text-sm"
+                                  dir="rtl"
+                                  placeholder="שם פרטי"
+                                />
+                              )}
+                            </td>
+                            <td className="px-3 py-2 border">
+                              {table.isMain ? heir.lastName : (
+                                <input
+                                  type="text"
+                                  value={heir.lastName}
+                                  onChange={(e) => {
+                                    setInheritanceTables(prev => prev.map(t => 
+                                      t.id === table.id 
+                                        ? { ...t, heirs: t.heirs.map((h, i) => i === heirIndex ? { ...h, lastName: e.target.value } : h) }
+                                        : t
+                                    ));
+                                  }}
+                                  className="w-full px-2 py-1 border rounded text-sm"
+                                  dir="rtl"
+                                  placeholder="שם משפחה"
+                                />
+                              )}
+                            </td>
+                            <td className="px-3 py-2 border">
+                              {table.isMain ? heir.id : (
+                                <input
+                                  type="text"
+                                  value={heir.id}
+                                  onChange={(e) => {
+                                    setInheritanceTables(prev => prev.map(t => 
+                                      t.id === table.id 
+                                        ? { ...t, heirs: t.heirs.map((h, i) => i === heirIndex ? { ...h, id: e.target.value } : h) }
+                                        : t
+                                    ));
+                                  }}
+                                  className="w-full px-2 py-1 border rounded text-sm"
+                                  dir="ltr"
+                                  placeholder="ת.ז."
+                                />
+                              )}
+                            </td>
+                            <td className="px-3 py-2 border">
+                              {table.isMain ? heir.relation : (
+                                <input
+                                  type="text"
+                                  value={heir.relation}
+                                  onChange={(e) => {
+                                    setInheritanceTables(prev => prev.map(t => 
+                                      t.id === table.id 
+                                        ? { ...t, heirs: t.heirs.map((h, i) => i === heirIndex ? { ...h, relation: e.target.value } : h) }
+                                        : t
+                                    ));
+                                  }}
+                                  className="w-full px-2 py-1 border rounded text-sm"
+                                  dir="rtl"
+                                  placeholder="קרבה"
+                                />
+                              )}
+                            </td>
+                            <td className="px-3 py-2 border">
+                              {table.isMain ? heir.share : (
+                                <input
+                                  type="text"
+                                  value={heir.share}
+                                  onChange={(e) => {
+                                    setInheritanceTables(prev => prev.map(t => 
+                                      t.id === table.id 
+                                        ? { ...t, heirs: t.heirs.map((h, i) => i === heirIndex ? { ...h, share: e.target.value } : h) }
+                                        : t
+                                    ));
+                                  }}
+                                  className="w-full px-2 py-1 border rounded text-sm"
+                                  dir="ltr"
+                                  placeholder="חלק"
+                                />
+                              )}
+                            </td>
+                            <td className="px-3 py-2 border">
+                              {table.isMain ? (heir.gender === 'male' ? 'זכר' : 'נקבה') : (
+                                <select
+                                  value={heir.gender}
+                                  onChange={(e) => {
+                                    setInheritanceTables(prev => prev.map(t => 
+                                      t.id === table.id 
+                                        ? { ...t, heirs: t.heirs.map((h, i) => i === heirIndex ? { ...h, gender: e.target.value as 'male' | 'female' } : h) }
+                                        : t
+                                    ));
+                                  }}
+                                  className="w-full px-2 py-1 border rounded text-sm"
+                                >
+                                  <option value="male">זכר</option>
+                                  <option value="female">נקבה</option>
+                                </select>
+                              )}
+                              {!table.isMain && (
+                                <button
+                                  onClick={() => {
+                                    setInheritanceTables(prev => prev.map(t => 
+                                      t.id === table.id 
+                                        ? { ...t, heirs: t.heirs.filter((_, i) => i !== heirIndex) }
+                                        : t
+                                    ));
+                                  }}
+                                  className="ml-2 text-red-500 hover:text-red-700 text-xs"
+                                  title="מחק יורש"
+                                >
+                                  🗑️
+                                </button>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                        {(table.isMain ? heirs : table.heirs).length === 0 && (
+                          <tr>
+                            <td colSpan={6} className="px-3 py-4 text-center text-gray-500 border">
+                              {table.isMain 
+                                ? 'אין יורשים בטבלה זו. ערוך את הטבלה בחלק "יורשים" למעלה.'
+                                : 'אין יורשים בטבלה זו. לחץ על "➕ הוסף יורש" להוסיף יורשים.'}
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                  
+                  {/* תתי-סעיפים של הטבלה */}
+                  <div className="space-y-2 mr-4">
+                        {table.subSections && table.subSections.length > 0 && (
+                      <>
+                        {table.subSections.sort((a, b) => a.order - b.order).map((subSection, subIndex) => (
+                          <InheritanceTableSubSection
+                            key={subSection.id}
+                            subSection={subSection}
+                            subIndex={subIndex}
+                            onUpdate={(updated) => {
+                              setInheritanceTables(prev => prev.map(t => 
+                                t.id === table.id 
+                                  ? { ...t, subSections: t.subSections?.map(s => 
+                                      s.id === subSection.id ? updated : s
+                                    ) || [] }
+                                  : t
+                              ));
+                            }}
+                            onDelete={() => {
+                              setInheritanceTables(prev => prev.map(t => 
+                                t.id === table.id 
+                                  ? { ...t, subSections: t.subSections?.filter(s => s.id !== subSection.id) || [] }
+                                  : t
+                              ));
+                            }}
+                          />
+                        ))}
+                      </>
+                    )}
+                    
+                    {/* כפתור הוספת תת-סעיף */}
+                    <button
+                      onClick={() => {
+                        const title = prompt('כותרת תת-הסעיף:');
+                        if (title) {
+                          const newSubSection = {
+                            id: generateSectionId(),
+                            title: title.trim(),
+                            content: prompt('תוכן תת-הסעיף:') || '',
+                            order: (table.subSections?.length || 0) + 1
+                          };
+                          setInheritanceTables(prev => prev.map(t => 
+                            t.id === table.id 
+                              ? { ...t, subSections: [...(t.subSections || []), newSubSection] }
+                              : t
+                          ));
+                        }
+                      }}
+                      className="w-full px-3 py-2 bg-purple-100 text-purple-700 rounded text-sm hover:bg-purple-200 border border-purple-300"
+                    >
+                      ➕ הוסף תת-סעיף לטבלה זו
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
 
-            {/* סעיף 6 - הצהרה חתימה סופית */}
-            <div className="bg-white p-4 rounded-lg border border-blue-300">
-              <div className="flex justify-between items-center mb-2">
-                <h3 className="font-semibold text-blue-800">סעיף 6 - הצהרה חתימה סופית</h3>
-                <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">קבוע</span>
-              </div>
-              <div className="text-sm text-gray-700 whitespace-pre-line">
-                ולראיה באתי על החתום מרצוני הטוב והחופשי, בהיותי בדעה צלולה ולאחר שיקול דעת, בפני העדים הח"מ הנקובים בשמותיהם וכתובותיהם ולאחר שהצהרתי בנוכחות שני עדי הצוואה המפורטים להלן כי זו צוואתי.
-              </div>
+            {/* כפתורים להוספת סעיפים מותאמים אישית */}
+            <div className="mb-6">
+                <div className="flex justify-between items-center mb-3">
+                  <h2 className="text-lg font-semibold text-blue-800">סעיפים מותאמים אישית</h2>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        const newSection: EditableSectionType = {
+                          id: `section-${Date.now()}`,
+                          title: 'סעיף חדש',
+                          content: '',
+                          level: 'main',
+                          order: customSections.length > 0 ? Math.max(...customSections.map(s => s.order)) + 1 : 1,
+                          isFixed: false
+                        };
+                        setCustomSections(prev => [...prev, newSection]);
+                      }}
+                      className="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
+                    >
+                      ➕ הוסף סעיף
+                    </button>
+                    <button
+                      onClick={handleAddSectionWithTable}
+                      className="px-3 py-1 bg-purple-600 text-white rounded text-sm hover:bg-purple-700"
+                    >
+                      📊 הוסף סעיף עם טבלה
+                    </button>
+                    <button
+                      onClick={openAddFixedSectionModal}
+                      className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700"
+                    >
+                      📌 הוסף סעיף קבוע
+                    </button>
+                  </div>
+                </div>
+                <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                  <SortableContext items={customSections.map(s => s.id)} strategy={verticalListSortingStrategy}>
+                    <div className="space-y-3">
+                      {customSections
+                        .sort((a, b) => a.order - b.order)
+                        .map((section) => (
+                        <SortableSectionItem
+                          key={section.id}
+                          section={section}
+                          getSectionNumber={getSectionNumber}
+                          changeSectionLevel={changeSectionLevel}
+                          moveSectionUp={moveSectionUp}
+                          moveSectionDown={moveSectionDown}
+                          handleLoadSectionToWarehouse={handleLoadSectionToWarehouse}
+                          handleSaveSectionTemplate={handleSaveSectionTemplate}
+                          handleLoadSectionToDocument={handleLoadSectionToDocument}
+                          onDelete={(id) => {
+                            const sectionToDelete = customSections.find(s => s.id === id);
+                            if (sectionToDelete?.tableId) {
+                              setInheritanceTables(prev => prev.filter(t => t.id !== sectionToDelete.tableId));
+                            }
+                            setCustomSections(prev => prev.filter(s => s.id !== id));
+                          }}
+                          onEdit={(id, newContent) => setCustomSections(prev => prev.map(s => s.id === id ? { ...s, content: newContent } : s))}
+                          onEditTitle={(id, newTitle) => setCustomSections(prev => prev.map(s => s.id === id ? { ...s, title: newTitle } : s))}
+                          inheritanceTables={inheritanceTables}
+                          setInheritanceTables={setInheritanceTables}
+                          customSections={customSections}
+                          setCustomSections={setCustomSections}
+                        />
+                      ))}
+                    </div>
+                  </SortableContext>
+                </DndContext>
             </div>
+
+            {/* סעיפים קבועים אחרונים לפני הצהרת המצווה - ללא כותרות, רק סעיפים */}
+            {(() => {
+              // חישוב מספור דינמי - הסעיפים המותאמים אישית (customSections) יקבלו מספור לפי הסדר שלהם
+              // אחריהם הסעיפים הקבועים האלה
+              const mainCustomSectionsCount = customSections.filter(s => s.level === 'main' && !s.isFixed).length;
+              const baseSectionNum = 4 + mainCustomSectionsCount + 1;
+              const gender = willType === 'mutual' ? 'plural' : (testator.gender || 'male');
+              
+              const finalFixedSections = [
+                {
+                  num: baseSectionNum,
+                  content: {
+                    male: 'במקרה של פטירת אחד מהיורשים הנזכרים לעיל לפני פטירתי, חלקו יעבור ליורשיו החוקיים.',
+                    female: 'במקרה של פטירת אחד מהיורשים הנזכרים לעיל לפני פטירתי, חלקו יעבור ליורשיו החוקיים.',
+                    plural: 'במקרה של פטירת אחד מהיורשים הנזכרים לעיל לפני פטירתנו, חלקו יעבור ליורשיו החוקיים.'
+                  }
+                },
+                {
+                  num: baseSectionNum + 1,
+                  content: {
+                    male: 'כל זכויות החיסכון והביטוח המצויות בקופות הגמל, קרנות הפנסיה, קופות התגמולים, קרנות ההשתלמות, תוכניות החיסכון, פוליסות ביטוח החיים וכל מוצר פיננסי אחר (להלן: "הקופות") ישולמו למוטבים הרשומים בקופות במועד הפטירה, וזאת בהתאם לרישום בפועל בקופות במועד הפטירה.\n\nמובהר בזאת, כי ככל שבאחת או יותר מהקופות לא יהיו רשומים מוטבים במועד הפטירה, יראו את הזכויות באותן קופות כחלק מעיזבון המצווה, והן יחולקו בהתאם להוראות צוואה זו ולפי הוראותיה המפורשות.',
+                    female: 'כל זכויות החיסכון והביטוח המצויות בקופות הגמל, קרנות הפנסיה, קופות התגמולים, קרנות ההשתלמות, תוכניות החיסכון, פוליסות ביטוח החיים וכל מוצר פיננסי אחר (להלן: "הקופות") ישולמו למוטבים הרשומים בקופות במועד הפטירה, וזאת בהתאם לרישום בפועל בקופות במועד הפטירה.\n\nמובהר בזאת, כי ככל שבאחת או יותר מהקופות לא יהיו רשומים מוטבים במועד הפטירה, יראו את הזכויות באותן קופות כחלק מעיזבון המצווה, והן יחולקו בהתאם להוראות צוואה זו ולפי הוראותיה המפורשות.',
+                    plural: 'כל זכויות החיסכון והביטוח המצויות בקופות הגמל, קרנות הפנסיה, קופות התגמולים, קרנות ההשתלמות, תוכניות החיסכון, פוליסות ביטוח החיים וכל מוצר פיננסי אחר (להלן: "הקופות") ישולמו למוטבים הרשומים בקופות במועד הפטירה, וזאת בהתאם לרישום בפועל בקופות במועד הפטירה.\n\nמובהר בזאת, כי ככל שבאחת או יותר מהקופות לא יהיו רשומים מוטבים במועד הפטירה, יראו את הזכויות באותן קופות כחלק מעיזבון המצווים, והן יחולקו בהתאם להוראות צוואה זו ולפי הוראותיה המפורשות.'
+                  }
+                },
+                {
+                  num: baseSectionNum + 2,
+                  content: {
+                    male: 'הנני דורש מכל אדם ומכל רשות לקיים צוואה זו ולא לערער עליה ולא להתנגד לה ולא לתקוף אותה, ואם יתעורר אי פעם ספק כלשהו בקשר לצוואה זו, הרי שיש להתיר את הספק לפי הדין ולתת לה תוקף ולקיים אותה.',
+                    female: 'הנני דורשת מכל אדם ומכל רשות לקיים צוואה זו ולא לערער עליה ולא להתנגד לה ולא לתקוף אותה, ואם יתעורר אי פעם ספק כלשהו בקשר לצוואה זו, הרי שיש להתיר את הספק לפי הדין ולתת לה תוקף ולקיים אותה.',
+                    plural: 'הננו דורשים מכל אדם ומכל רשות לקיים צוואה זו ולא לערער עליה ולא להתנגד לה ולא לתקוף אותה, ואם יתעורר אי פעם ספק כלשהו בקשר לצוואה זו, הרי שיש להתיר את הספק לפי הדין ולתת לה תוקף ולקיים אותה.'
+                  }
+                }
+              ];
+              
+              return (
+                <>
+                  {finalFixedSections.map((section) => (
+                    <div key={section.num} className="bg-white p-4 rounded-lg border border-blue-300">
+                      <div className="text-sm text-gray-700 whitespace-pre-line">
+                        <span className="font-semibold">סעיף {section.num}: </span>
+                        {section.content[gender] || section.content.male}
+                      </div>
+                    </div>
+                  ))}
+                </>
+              );
+            })()}
+
+            {/* הצהרת המצווה */}
+            {(() => {
+              const gender = willType === 'mutual' ? 'plural' : (testator.gender || 'male');
+              const signatureText = willType === 'mutual'
+                ? 'ולראיה באנו על החתום מרצוננו הטוב והחופשי, בפני העדות החתומות הנקובות בשמותיהן וכתובותיהן בלי להיות נתונים לכל השפעה בלתי הוגנת, לחץ או כפיה שהם וכשאיננו סובלים מאיזו חולשה גופנית או רוחנית הגורעת או המונעת מאתנו את כושרינו המשפטי לערוך צוואה בעלת תוקף חוקי, לאחר שהצהרנו בנוכחות שתי עדות הצוואה המפורטות להלן כי זו צוואתנו, וביקשנו מהן לאשר בחתימתן שכך הצהרנו וחתמנו בפניהן.'
+                : (gender === 'female'
+                  ? 'ולראיה באתי על החתום מרצוני הטוב והחופשי, בפני העדות החתומות הנקובות בשמותיהן וכתובותיהן בלי להיות נתונה לכל השפעה בלתי הוגנת, לחץ או כפיה שהם וכשאינני סובלת מאיזו חולשה גופנית או רוחנית הגורעת או המונעת ממני את כושרי המשפטי לערוך צוואה בעלת תוקף חוקי, לאחר שהצהרתי בנוכחות שתי עדות הצוואה המפורטות להלן כי זו צוואתי, וביקשתי מהן לאשר בחתימתן שכך הצהרתי וחתמתי בפניהן.'
+                  : 'ולראיה באתי על החתום מרצוני הטוב והחופשי, בפני העדות החתומות הנקובות בשמותיהן וכתובותיהן בלי להיות נתון לכל השפעה בלתי הוגנת, לחץ או כפיה שהם וכשאינני סובל מאיזו חולשה גופנית או רוחנית הגורעת או המונעת ממני את כושרי המשפטי לערוך צוואה בעלת תוקף חוקי, לאחר שהצהרתי בנוכחות שתי עדות הצוואה המפורטות להלן כי זו צוואתי, וביקשתי מהן לאשר בחתימתן שכך הצהרתי וחתמתי בפניהן.');
+              
+              return (
+                <div className="bg-white p-4 rounded-lg border border-blue-300">
+                  <div className="text-sm text-gray-700 whitespace-pre-line">
+                    {signatureText}
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* הצהרת העדים */}
             <div className="bg-white p-4 rounded-lg border border-blue-300">
@@ -2368,6 +3707,12 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
               >
                 ➕ הוסף סעיף למחסן
+              </button>
+              <button
+                onClick={openAddFixedSectionModal}
+                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
+              >
+                📌 הוסף סעיף קבוע
               </button>
             </div>
           </div>
@@ -2490,6 +3835,47 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
                   <h3 className="font-semibold text-blue-800 mb-2">פתיחה משפטית</h3>
                   <div className="text-sm text-gray-700 whitespace-pre-line">
                     {generateProfessionalWillContent(willType, getWillData(), []).split('\n\n')[0]}
+                  </div>
+                </div>
+
+                {/* סעיף 3 - היקף העיזבון עם תתי-סעיפים */}
+                <div className="border-l-4 border-blue-500 pl-4">
+                  <h3 className="font-semibold text-blue-800 mb-2">סעיף 3 - היקף העיזבון</h3>
+                  <div className="text-sm text-gray-700 whitespace-pre-line mb-3">
+                    צוואתי זו תחול על כלל רכושי מכל מין וסוג שהוא, בין בארץ ובין בחו"ל, ללא יוצא מן הכלל, בין אם הוא בבעלותי הבלעדית ובין אם בבעלותי המשותפת עם אחרים. מבלי לגרוע מכלליות האמור לעיל, צוואתי זו תחול גם על כספים, תוכניות חיסכון, קרנות נאמנות, ניירות ערך, תביעות, פנסיות, תגמולים, ביטוחי חיים, קצבאות, בין אם מופקדים בבנק ובין אם בידי כל גורם אחר, וכן על זכויות אחרות מכל סוג שהוא, וכל רכוש אחר בין במיטלטלין ובין במקרקעין (רשומים ושאינם רשומים), אשר בבעלותי כיום ו/או יגיעו לידי בעתיד (להלן: "העיזבון"):
+                  </div>
+                  
+                  {/* תתי-סעיפים */}
+                  <div className="space-y-2 mr-4">
+                    {/* נכסים */}
+                    {properties.filter(p => p.address || p.city || p.block || p.plot).map((property, index) => (
+                      <div key={index} className="bg-blue-50 p-2 rounded text-sm">
+                        <span className="font-semibold text-blue-800">3.{index + 1} - {property.name || `נכס ${index + 1}`}:</span>
+                        <span className="text-gray-700">
+                          {' '}זכויות בדירה הרשומה בטאבו {property.address || '[כתובת]'}, בעיר {property.city || '[עיר]'}
+                          {property.block && `, גוש: ${property.block}`}
+                          {property.plot && `, חלקה: ${property.plot}`}
+                          {property.subPlot && `, תת חלקה: ${property.subPlot}`}
+                          {property.ownership && property.ownership !== '100%' && ` (אחוז בעלות: ${property.ownership})`}
+                          {' וכן את מטלטליה בין המחוברים חיבור של קבע ובין שאינם מחוברים חיבור של קבע.'}
+                        </span>
+                      </div>
+                    ))}
+                    
+                    {/* חשבונות בנק */}
+                    {bankAccounts.filter(a => a.bank || a.accountNumber).map((account, index) => {
+                      const propertyCount = properties.filter(p => p.address || p.city || p.block || p.plot).length;
+                      const subSectionNum = propertyCount + index + 1;
+                      return (
+                        <div key={`bank-${index}`} className="bg-blue-50 p-2 rounded text-sm">
+                          <span className="font-semibold text-blue-800">3.{subSectionNum} - חשבון בנק:</span>
+                          <span className="text-gray-700">
+                            {' '}חשבון הבנק המנוהל על שמי בבנק {account.bank || '[שם הבנק]'}, סניף מספר {account.branch || '[מספר]'}, 
+                            חשבון מספר {account.accountNumber || '[מספר]'}, לרבות יתרת הכספים בחשבון, פיקדונות חיסכון וכלל הזכויות הכספיות הנובעות מחשבון זה.
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
 
@@ -2823,6 +4209,65 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
                 className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:bg-gray-300 disabled:cursor-not-allowed"
               >
                 שמור למחסן
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* מודל הוספת סעיף קבוע */}
+      {addFixedSectionModal.isOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-lg w-full mx-4">
+            <h3 className="text-xl font-bold text-purple-900 mb-4">
+              📌 הוסף סעיף קבוע
+            </h3>
+            <p className="text-sm text-gray-600 mb-4">
+              סעיף קבוע יופיע בכל הצוואות שנוצרות. ניתן לערוך ולהזיז אותו בכל עת.
+            </p>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  כותרת הסעיף
+                </label>
+                <input
+                  type="text"
+                  value={addFixedSectionModal.title}
+                  onChange={(e) => setAddFixedSectionModal(prev => ({ ...prev, title: e.target.value }))}
+                  placeholder="לדוגמה: הוראות לגבי חיות מחמד"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-purple-500 focus:border-purple-500"
+                  dir="rtl"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  תוכן הסעיף
+                </label>
+                <textarea
+                  value={addFixedSectionModal.content}
+                  onChange={(e) => setAddFixedSectionModal(prev => ({ ...prev, content: e.target.value }))}
+                  placeholder="לדוגמה: אני מצווה כי הכלב שלי יעבור לטיפול של בתי הבכורה."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-purple-500 focus:border-purple-500 h-32 resize-none"
+                  dir="rtl"
+                />
+              </div>
+            </div>
+            
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={closeAddFixedSectionModal}
+                className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
+              >
+                ביטול
+              </button>
+              <button
+                onClick={handleAddFixedSection}
+                disabled={!addFixedSectionModal.title.trim() || !addFixedSectionModal.content.trim()}
+                className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition disabled:bg-gray-300 disabled:cursor-not-allowed"
+              >
+                הוסף סעיף קבוע
               </button>
             </div>
           </div>
