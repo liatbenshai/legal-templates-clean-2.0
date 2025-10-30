@@ -754,6 +754,7 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
     }
   }, []);
 
+
   // Warehouse hook
   const { addSection, updateSection, sections: warehouseSections } = useWarehouse(testator.fullName || 'anonymous');
 
@@ -1495,6 +1496,18 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
     testatorGender: 'male',
     pendingSection: null
   });
+
+  // עדכון מגדר במודל המשתנים כשהמגדר משתנה
+  useEffect(() => {
+    if (variablesCompletionModal.isOpen) {
+      const currentTestatorGender = willType === 'mutual' ? 'plural' : (testator.gender === 'organization' ? 'male' : (testator.gender || 'male')) as 'male' | 'female' | 'plural';
+      setVariablesCompletionModal(prev => ({
+        ...prev,
+        testatorGender: currentTestatorGender
+      }));
+      console.log('🔄 עדכון מגדר במודל המשתנים:', currentTestatorGender);
+    }
+  }, [testator.gender, willType, variablesCompletionModal.isOpen]);
 
   // מערכת למידה
   const [showLearningSystem, setShowLearningSystem] = useState(false);
@@ -2298,6 +2311,16 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
                     ...section,
                     content: replaceTextWithGender(section.content, gender)
                   })));
+                  
+                  // עדכון מגדר במודל המשתנים אם הוא פתוח
+                  if (variablesCompletionModal.isOpen) {
+                    const currentTestatorGender = willType === 'mutual' ? 'plural' : (gender === 'organization' ? 'male' : gender) as 'male' | 'female' | 'plural';
+                    setVariablesCompletionModal(prev => ({
+                      ...prev,
+                      testatorGender: currentTestatorGender
+                    }));
+                    console.log('🔄 עדכון מגדר במודל המשתנים:', currentTestatorGender);
+                  }
                 }}
                 label="מגדר"
                 name="testator-gender"
