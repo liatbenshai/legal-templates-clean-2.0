@@ -305,6 +305,7 @@ export function replaceTextWithGender(text: string, gender: Gender): string {
     result = result.replace(/\/ת\b/g, '');  // אני מבטל/ת → אני מבטל
     result = result.replace(/\/תוכל\b/g, '');  // יוכל/תוכל → יוכל
     result = result.replace(/([^ה])\/ה\b/g, '$1');  // אני מוריש/ה → אני מוריש
+    result = result.replace(/מוריש\/ה/g, 'מוריש'); // מוריש/ה → מוריש
     result = result.replace(/ה\/ה\b/g, 'ה');  // מצווה/ה → מצווה
     result = result.replace(/\/ים\b/g, ''); // ממנה/ים → ממנה
     result = result.replace(/\/ית\b/g, ''); // חלופי/ת → חלופי
@@ -386,6 +387,7 @@ export function replaceTextWithGender(text: string, gender: Gender): string {
     result = result.replace(/\/ת\b/g, 'ת');  // אני מבטל/ת → אני מבטלת
     result = result.replace(/\/תוכל\b/g, 'תוכל');  // יוכל/תוכל → תוכל
     result = result.replace(/([^ה])\/ה\b/g, '$1ה');  // אני מוריש/ה → אני מורישה
+    result = result.replace(/מוריש\/ה/g, 'מורישה'); // מוריש/ה → מורישה
     result = result.replace(/ה\/ה\b/g, 'ה');  // מצווה/ה → מצווה
     result = result.replace(/\/ים\b/g, ''); // תוקן! ממנה/ים → ממנה (לא ממנהים)
     result = result.replace(/\/ית\b/g, 'ית'); // חלופי/ת → חלופית
@@ -463,6 +465,7 @@ export function replaceTextWithGender(text: string, gender: Gender): string {
     result = result.replace(/\/ת\b/g, '');   // אנו מבטל/ת → אנו מבטל
     result = result.replace(/\/תוכל\b/g, '');  // יוכל/תוכל → יוכל
     result = result.replace(/([^ה])\/ה\b/g, '$1');   // אנו מוריש/ה → אנו מוריש
+    result = result.replace(/מוריש\/ה/g, 'מורישים'); // מוריש/ה → מורישים
     result = result.replace(/ה\/ה\b/g, 'ה');  // מצווה/ה → מצווה
     result = result.replace(/\/ים\b/g, 'ים'); // ממנה/ים → ממנהים
     result = result.replace(/\/ית\b/g, 'ים'); // חלופי/ת → חלופיים
