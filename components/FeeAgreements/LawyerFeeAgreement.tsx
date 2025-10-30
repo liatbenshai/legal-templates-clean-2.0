@@ -2332,6 +2332,7 @@ ________________________           ${agreementData.clients.map((_, i) => '______
                   <EditableSection
                     key={section.id}
                     section={section}
+                    userId={currentUser?.id || 'anonymous'}
                     onUpdate={handleUpdateEditableSection}
                     onSaveToWarehouse={handleSaveToWarehouse}
                     onSaveToLearning={handleSaveToLearning}
