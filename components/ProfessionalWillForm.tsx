@@ -18,6 +18,7 @@ import AILearningManager from './AILearningManager';
 import UnifiedWarehouse from './UnifiedWarehouse';
 import { useDocuments } from '@/lib/useDocuments';
 import { useWarehouse } from '@/lib/hooks/useWarehouse';
+import { supabase } from '@/lib/supabase-client';
 
 interface Property {
   name: string;
@@ -1477,7 +1478,7 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
   const [showWarehouseEditor, setShowWarehouseEditor] = useState(false);
   
   // טעינת סעיף מהמאגר המאוחד
-  const handleLoadFromWarehouse = (section: any) => {
+  const handleLoadFromWarehouse = async (section: any) => {
     try {
       console.log('🟢🟢🟢 handleLoadFromWarehouse CALLED! Section:', section);
       console.log('Section title:', section?.title);
@@ -1554,11 +1555,57 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
         console.log('Updated customSections:', updated);
         return updated;
       });
+      
+      // שמור את הסעיף ל-Supabase
+      try {
+        const documentType = willType === 'individual' ? 'will-single' : 'will-couple';
+        const result = await saveSection(
+          documentType,
+          `section_${newSection.id}`,
+          newSection.content,
+          section.content,
+          newSection.title
+        );
+        
+        if (result.success) {
+          console.log('✅ סעיף נשמר ל-Supabase:', newSection.title);
+        } else {
+          console.error('❌ שגיאה בשמירה ל-Supabase:', result.error);
+        }
+      } catch (error) {
+        console.error('❌ שגיאה בשמירה ל-Supabase:', error);
+      }
+      
       setShowUnifiedWarehouse(false);
-      alert(`✅ הסעיף "${section.title}" נטען מהמאגר!`);
+      alert(`✅ הסעיף "${section.title}" נטען מהמאגר ונשמר!`);
     } catch (error) {
       console.error('❌ Error in handleLoadFromWarehouse:', error);
       alert('שגיאה בהוספת הסעיף: ' + (error as Error).message);
+    }
+  };
+
+  // מחיקת סעיף מ-Supabase
+  const handleDeleteSection = async (id: string) => {
+    try {
+      const documentType = willType === 'individual' ? 'will-single' : 'will-couple';
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) return;
+      
+      const { error } = await supabase
+        .from('saved_documents')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('document_type', documentType)
+        .eq('section_name', `section_${id}`);
+      
+      if (error) {
+        console.error('Error deleting section from Supabase:', error);
+      } else {
+        console.log('✅ סעיף נמחק מ-Supabase:', id);
+      }
+    } catch (error) {
+      console.error('Error deleting section from Supabase:', error);
     }
   };
 
@@ -1691,7 +1738,56 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
     };
     
     loadSavedWitnesses();
-  }, []); // טען פעם אחת בלבד
+  }, []);
+
+  // טעינת סעיפים שמורים מ-Supabase
+  useEffect(() => {
+    const loadSavedSections = async () => {
+      try {
+        const documentType = willType === 'individual' ? 'will-single' : 'will-couple';
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (!user) return;
+        
+        const { data: savedSections, error } = await supabase
+          .from('saved_documents')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('document_type', documentType)
+          .like('section_name', 'section_%')
+          .order('created_at', { ascending: true });
+        
+        if (error) {
+          console.error('Error loading saved sections:', error);
+          return;
+        }
+        
+        if (savedSections && savedSections.length > 0) {
+          const loadedSections = savedSections.map((section, index) => ({
+            id: section.section_name.replace('section_', ''),
+            title: section.title || `סעיף ${index + 1}`,
+            content: section.content,
+            level: 'main' as const,
+            order: index + 1,
+            type: 'text' as const
+          }));
+          
+          setCustomSections(prev => {
+            // הוסף רק סעיפים שלא קיימים כבר
+            const existingIds = prev.map(s => s.id);
+            const newSections = loadedSections.filter(s => !existingIds.includes(s.id));
+            return [...prev, ...newSections];
+          });
+          
+          console.log(`✅ נטענו ${loadedSections.length} סעיפים שמורים`);
+        }
+      } catch (error) {
+        console.error('Error loading saved sections:', error);
+      }
+    };
+    
+    loadSavedSections();
+  }, [willType]); // טען פעם אחת בלבד
   
   // טעינת תבניות JSON
   useEffect(() => {
@@ -3168,15 +3264,52 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
                           handleLoadSectionToWarehouse={handleLoadSectionToWarehouse}
                           handleSaveSectionTemplate={handleSaveSectionTemplate}
                           handleLoadSectionToDocument={handleLoadSectionToDocument}
-                          onDelete={(id) => {
+                          onDelete={async (id) => {
                             const sectionToDelete = customSections.find(s => s.id === id);
                             if (sectionToDelete?.tableId) {
                               setInheritanceTables(prev => prev.filter(t => t.id !== sectionToDelete.tableId));
                             }
                             setCustomSections(prev => prev.filter(s => s.id !== id));
+                            await handleDeleteSection(id);
                           }}
-                          onEdit={(id, newContent) => setCustomSections(prev => prev.map(s => s.id === id ? { ...s, content: newContent } : s))}
-                          onEditTitle={(id, newTitle) => setCustomSections(prev => prev.map(s => s.id === id ? { ...s, title: newTitle } : s))}
+                          onEdit={async (id, newContent) => {
+                            setCustomSections(prev => prev.map(s => s.id === id ? { ...s, content: newContent } : s));
+                            // שמור את העריכה ל-Supabase
+                            try {
+                              const section = customSections.find(s => s.id === id);
+                              if (section) {
+                                const documentType = willType === 'individual' ? 'will-single' : 'will-couple';
+                                await saveSection(
+                                  documentType,
+                                  `section_${id}`,
+                                  newContent,
+                                  section.content,
+                                  section.title
+                                );
+                              }
+                            } catch (error) {
+                              console.error('Error saving section edit:', error);
+                            }
+                          }}
+                          onEditTitle={async (id, newTitle) => {
+                            setCustomSections(prev => prev.map(s => s.id === id ? { ...s, title: newTitle } : s));
+                            // שמור את העריכה ל-Supabase
+                            try {
+                              const section = customSections.find(s => s.id === id);
+                              if (section) {
+                                const documentType = willType === 'individual' ? 'will-single' : 'will-couple';
+                                await saveSection(
+                                  documentType,
+                                  `section_${id}`,
+                                  section.content,
+                                  section.content,
+                                  newTitle
+                                );
+                              }
+                            } catch (error) {
+                              console.error('Error saving title edit:', error);
+                            }
+                          }}
                           inheritanceTables={inheritanceTables}
                           setInheritanceTables={setInheritanceTables}
                           customSections={customSections}
@@ -3563,15 +3696,52 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
                           handleLoadSectionToWarehouse={handleLoadSectionToWarehouse}
                           handleSaveSectionTemplate={handleSaveSectionTemplate}
                           handleLoadSectionToDocument={handleLoadSectionToDocument}
-                          onDelete={(id) => {
+                          onDelete={async (id) => {
                             const sectionToDelete = customSections.find(s => s.id === id);
                             if (sectionToDelete?.tableId) {
                               setInheritanceTables(prev => prev.filter(t => t.id !== sectionToDelete.tableId));
                             }
                             setCustomSections(prev => prev.filter(s => s.id !== id));
+                            await handleDeleteSection(id);
                           }}
-                          onEdit={(id, newContent) => setCustomSections(prev => prev.map(s => s.id === id ? { ...s, content: newContent } : s))}
-                          onEditTitle={(id, newTitle) => setCustomSections(prev => prev.map(s => s.id === id ? { ...s, title: newTitle } : s))}
+                          onEdit={async (id, newContent) => {
+                            setCustomSections(prev => prev.map(s => s.id === id ? { ...s, content: newContent } : s));
+                            // שמור את העריכה ל-Supabase
+                            try {
+                              const section = customSections.find(s => s.id === id);
+                              if (section) {
+                                const documentType = willType === 'individual' ? 'will-single' : 'will-couple';
+                                await saveSection(
+                                  documentType,
+                                  `section_${id}`,
+                                  newContent,
+                                  section.content,
+                                  section.title
+                                );
+                              }
+                            } catch (error) {
+                              console.error('Error saving section edit:', error);
+                            }
+                          }}
+                          onEditTitle={async (id, newTitle) => {
+                            setCustomSections(prev => prev.map(s => s.id === id ? { ...s, title: newTitle } : s));
+                            // שמור את העריכה ל-Supabase
+                            try {
+                              const section = customSections.find(s => s.id === id);
+                              if (section) {
+                                const documentType = willType === 'individual' ? 'will-single' : 'will-couple';
+                                await saveSection(
+                                  documentType,
+                                  `section_${id}`,
+                                  section.content,
+                                  section.content,
+                                  newTitle
+                                );
+                              }
+                            } catch (error) {
+                              console.error('Error saving title edit:', error);
+                            }
+                          }}
                           inheritanceTables={inheritanceTables}
                           setInheritanceTables={setInheritanceTables}
                           customSections={customSections}
