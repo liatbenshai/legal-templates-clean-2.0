@@ -8,7 +8,7 @@ import { CSS } from '@dnd-kit/utilities';
 import GenderSelector from './GenderSelector';
 import ProfessionalWordExporter from './ProfessionalWordExporter';
 import type { Gender } from '@/lib/hebrew-gender';
-import { replaceTextWithGender } from '@/lib/hebrew-gender';
+import { replaceTextWithGender, detectGenderFromName } from '@/lib/hebrew-gender';
 import { generateProfessionalWillContent } from '@/lib/professional-will-texts';
 import { EditableSection as EditableSectionType } from '@/lib/learning-system/types';
 import { learningEngine } from '@/lib/learning-system/learning-engine';
@@ -1530,12 +1530,20 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
         return;
       }
       
-      // אם אין משתנים, הוסף ישירות
+      // אם אין משתנים, הוסף ישירות עם החלפת מגדר
       console.log('Adding section directly (no variables)');
+      
+      // החלף מגדר לפי מגדר המצווה
+      const testatorGender = willType === 'mutual' ? 'plural' : (testator.gender === 'organization' ? 'male' : (testator.gender || 'male')) as 'male' | 'female' | 'plural';
+      console.log(`🔄 מחליף מגדר לסעיף לפי מגדר המצווה: ${testatorGender}`);
+      const genderedContent = replaceTextWithGender(section.content, testatorGender);
+      console.log(`📝 תוכן לפני: ${section.content.substring(0, 100)}`);
+      console.log(`📝 תוכן אחרי: ${genderedContent.substring(0, 100)}`);
+      
       const newSection = {
         id: generateSectionId(),
         title: section.title,
-        content: section.content,
+        content: genderedContent,
         level: 'main' as const,
         order: getNextOrder(),
         type: 'text' as const
@@ -4854,10 +4862,48 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
                     }
                   });
                   
+                  // שלב 1.5: זיהוי מגדר מההקשר והשם שהוזן
+                  // אם הטקסט אומר "חלקו" = זכר, "חלקה" = נקבה
+                  // אם השם מכיל "בן" = זכר, "בת" = נקבה
+                  let detectedGenderFromContext: 'male' | 'female' | 'plural' | null = null;
+                  
+                  // בדוק את הטקסט אחרי החלפת משתנים
+                  if (content.includes('חלקו') && !content.includes('חלקה')) {
+                    detectedGenderFromContext = 'male';
+                    console.log('✅ זוהה מגדר זכר מההקשר: "חלקו"');
+                  } else if (content.includes('חלקה') && !content.includes('חלקו')) {
+                    detectedGenderFromContext = 'female';
+                    console.log('✅ זוהה מגדר נקבה מההקשר: "חלקה"');
+                  }
+                  
+                  // בדוק את השם שהוזן - אם יש "בן" = זכר, "בת" = נקבה
+                  // גם בדוק את השם הפרטי עצמו (למשל "ירון" = זכר)
+                  Object.entries(variablesCompletionModal.values).forEach(([variable, value]) => {
+                    if (value && typeof value === 'string') {
+                      if (value.includes(' בן ') || value.match(/\s+בן\s+/)) {
+                        detectedGenderFromContext = 'male';
+                        console.log(`✅ זוהה מגדר זכר מהשם: "${value}" (מכיל "בן")`);
+                      } else if (value.includes(' בת ') || value.match(/\s+בת\s+/)) {
+                        detectedGenderFromContext = 'female';
+                        console.log(`✅ זוהה מגדר נקבה מהשם: "${value}" (מכיל "בת")`);
+                      } else {
+                        // בדוק את השם הפרטי עצמו
+                        const firstName = value.split(' ')[0];
+                        if (firstName) {
+                          const detectedGender = detectGenderFromName(firstName);
+                          if (detectedGender) {
+                            detectedGenderFromContext = detectedGender as 'male' | 'female' | 'plural';
+                            console.log(`✅ זוהה מגדר ${detectedGender} מהשם הפרטי: "${firstName}"`);
+                          }
+                        }
+                      }
+                    }
+                  });
+                  
                   // שלב 2: החלף את כל התוכן לפי מגדר (לטפל בדפוסים כמו "הוא יליד/ת", "יוכל/תוכל", "ירצה/תרצה")
                   // חפש משתנה רגיש למגדר - עדיפות למשתני אפוטרופוס/שומר
                   const genderRelevantVariables = variablesCompletionModal.variables.filter(v => isGenderRelevantVariable(v));
-                  let selectedGender: 'male' | 'female' | 'plural' = (testator.gender === 'organization' ? 'male' : (testator.gender || 'male')) as 'male' | 'female' | 'plural';
+                  let selectedGender: 'male' | 'female' | 'plural' = detectedGenderFromContext || (testator.gender === 'organization' ? 'male' : (testator.gender || 'male')) as 'male' | 'female' | 'plural';
                   
                   // אם יש משתנים רגישי מגדר, קח את המגדר של הראשון שנבחר
                   if (genderRelevantVariables.length > 0) {
@@ -4946,24 +4992,37 @@ function isGenderRelevantVariable(variable: string): boolean {
     'heir_name', 'guardian_name', 'alternate_guardian', 'child_name', 
     'manager_name', 'trustee_name', 'spouse_name', 'guardian_id', 'guardian_address',
     // משתנים בעברית
-    'בן/בת זוגי', 'שם מלא', 'שם ילד/ה ראשון/ה', 'שם ילד/ה שני/ה', 'שם ילד/ה שלישי/ת',
+    'בן/בת זוגי', 'שם בן/בת הזוג', 'שם מלא', 'שם ילד/ה ראשון/ה', 'שם ילד/ה שני/ה', 'שם ילד/ה שלישי/ת',
     'הוא/היא', 'תאריך', 'תעודת זהות', 'שם מלא האפוטרופוס', 'שם מלא האפוטרופוס החלופי',
     'שם האפוטרופוס', 'שם האפוטרופוס החלופי', 'שם אפוטרופוס', 'שם אפוטרופוס החלופי',
     'מיופה_כוח', 'רשאי', 'אחראי', 'מחויב', 'יכול', 'צריך', 'חייב', 'זכאי', 
     'מתחייב', 'מסכים', 'מבקש', 'מצהיר', 'מאשר', 'הוא', 'היא', 'בן_זוג', 'בעל', 'אישה',
-    'ילד', 'ילדה', 'ילדים', 'ילדות', 'אפוטרופוס', 'אפוטרופוסית', 'אפוטרופוסים'
+    'ילד', 'ילדה', 'ילדים', 'ילדות', 'ילדיי', 'ילדי', 'אפוטרופוס', 'אפוטרופוסית', 'אפוטרופוסים'
   ];
   
   // בדיקה אם המשתנה מכיל מילים רגישות למגדר
-  const genderKeywords = ['ילד', 'אפוטרופוס', 'בן', 'בת', 'הוא', 'היא', 'רשאי', 'אחראי', 'מחויב', 'יכול', 'צריך', 'חייב', 'זכאי', 'שם'];
+  const genderKeywords = ['ילד', 'אפוטרופוס', 'בן', 'בת', 'הוא', 'היא', 'רשאי', 'אחראי', 'מחויב', 'יכול', 'צריך', 'חייב', 'זכאי', 'שם', 'זוג', 'ילדיי', 'ילדי'];
   const containsGenderKeyword = genderKeywords.some(keyword => variable.toLowerCase().includes(keyword.toLowerCase()));
+  
+  // בדיקה אם המשתנה מכיל דפוסי מגדר (כמו "בן/בת")
+  const hasGenderPattern = /בן\/בת|הוא\/היא|יוכל\/תוכל|ירצה\/תרצה|רשאי\/ת|מתחייב\/ת/.test(variable);
+  
+  // בדיקה אם המשתנה מכיל "ילדיי" או "ילדי" (גם אם לא מופיע כמילה נפרדת)
+  const hasChildrenReference = /ילדיי|ילדי/.test(variable);
   
   // בדיקה ספציפית למשתני אפוטרופוס
   if (variable.includes('אפוטרופוס') || variable.includes('אפוטרופסית') || variable.toLowerCase().includes('guardian')) {
     return true;
   }
   
-  return genderRelevantVariables.includes(variable) || containsGenderKeyword;
+  // בדיקה אם המשתנה מכיל שם של אדם (כמו "ירון בן שי")
+  // דפוס: שם פרטי + "בן" + שם משפחה או שם פרטי + "בת" + שם משפחה
+  const namePattern = /^[א-ת]+\s+(בן|בת)\s+[א-ת]+$/;
+  if (namePattern.test(variable)) {
+    return true;
+  }
+  
+  return genderRelevantVariables.includes(variable) || containsGenderKeyword || hasGenderPattern || hasChildrenReference;
 }
 
 function getVariableLabel(variable: string): string {

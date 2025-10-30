@@ -44,7 +44,8 @@ export function detectGenderFromName(name: string): Gender | null {
     'דניאל', 'עזרא', 'נחמיה', 'מלכי', 'ישעיהו', 'ירמיהו', 'יחזקאל', 'הושע', 'יואל',
     'עמוס', 'עובדיה', 'יונה', 'מיכה', 'נחום', 'חבקוק', 'צפניה', 'חגי', 'זכריה', 'מלאכי',
     'דוד', 'שלמה', 'יהושע', 'שמואל', 'אליהו', 'דניאל', 'עזרא', 'נחמיה', 'מלכי',
-    'משה', 'אהרן', 'יוסף', 'בנימין', 'יהודה', 'לוי', 'שמעון', 'דן', 'נפתלי', 'גד'
+    'משה', 'אהרן', 'יוסף', 'בנימין', 'יהודה', 'לוי', 'שמעון', 'דן', 'נפתלי', 'גד',
+    'ירון', 'אור', 'נועם', 'אלון', 'רונן', 'עמית', 'איתי', 'אליעד', 'יונתן', 'אורן'
   ];
   
   // בדיקה אם השם מכיל שם נקבה
@@ -273,6 +274,18 @@ export function replaceWithGender(word: string, gender: Gender): string {
 export function replaceTextWithGender(text: string, gender: Gender): string {
   let result = text;
   
+  // **שלב 0: הגנה על שמות - שמור "בן" כשהיא חלק משם כמו "שם בן שם משפחה"**
+  // לדוגמה: "שקד בן שי" צריך להישאר "שקד בן שי" ולא "שקד בת שי"
+  const namePattern = /([א-ת]{2,})\s+בן\s+([א-ת]{2,})/g;
+  const namePlaceholders: string[] = [];
+  let placeholderIndex = 0;
+  result = result.replace(namePattern, (match) => {
+    const placeholder = `__NAME_PLACEHOLDER_${placeholderIndex}__`;
+    namePlaceholders[placeholderIndex] = match;
+    placeholderIndex++;
+    return placeholder;
+  });
+  
   // **שלב 1: החלפת דפוסים נפוצים /ת /ה /ים /ות - תוקן!**
   if (gender === 'male') {
     result = result.replace(/\/ת\b/g, '');  // אני מבטל/ת → אני מבטל
@@ -331,6 +344,7 @@ export function replaceTextWithGender(text: string, gender: Gender): string {
     result = result.replace(/מצהיר\/ה/g, 'מצהיר'); // מצהיר/ה → מצהיר
     result = result.replace(/מעוניין\/ת/g, 'מעוניין'); // מעוניין/ת → מעוניין
     result = result.replace(/ממלא\/ת/g, 'ממלא'); // ממלא/ת → ממלא (עבור "אני ממליץ/ה")
+    result = result.replace(/רשאי\/ת/g, 'רשאי'); // רשאי/ת → רשאי
   } else if (gender === 'female') {
     result = result.replace(/\/ת\b/g, 'ת');  // אני מבטל/ת → אני מבטלת
     result = result.replace(/\/תוכל\b/g, 'תוכל');  // יוכל/תוכל → תוכל
@@ -364,7 +378,7 @@ export function replaceTextWithGender(text: string, gender: Gender): string {
     
     // דפוסים נוספים מהקובץ המלא
     result = result.replace(/מבקש\/ת/g, 'מבקשת'); // מבקש/ת → מבקשת
-    result = result.replace(/מורה\/ה/g, 'מורתי'); // מורה/ה → מורתי (command)
+    result = result.replace(/מורה\/ה/g, 'מורה'); // מורה/ה → מורה (command - זהה בזכר ונקבה)
     result = result.replace(/תושב\/ת/g, 'תושבת'); // תושב/ת → תושבת
     result = result.replace(/פטור\/ה/g, 'פטורה'); // פטור/ה → פטורה
     result = result.replace(/יידרש\/תידרש/g, 'תידרש'); // יידרש/תידרש → תידרש
@@ -384,6 +398,7 @@ export function replaceTextWithGender(text: string, gender: Gender): string {
     result = result.replace(/מצהיר\/ה/g, 'מצהירה'); // מצהיר/ה → מצהירה
     result = result.replace(/מעוניין\/ת/g, 'מעוניינת'); // מעוניין/ת → מעוניינת
     result = result.replace(/ממלא\/ת/g, 'ממלאת'); // ממלא/ת → ממלאת
+    result = result.replace(/רשאי\/ת/g, 'רשאית'); // רשאי/ת → רשאית
   } else if (gender === 'plural') {
     result = result.replace(/\/ת\b/g, '');   // אנו מבטל/ת → אנו מבטל
     result = result.replace(/\/תוכל\b/g, '');  // יוכל/תוכל → יוכל
@@ -433,6 +448,7 @@ export function replaceTextWithGender(text: string, gender: Gender): string {
     result = result.replace(/מצהיר\/ה/g, 'מצהירים'); // מצהיר/ה → מצהירים
     result = result.replace(/מעוניין\/ת/g, 'מעוניינים'); // מעוניין/ת → מעוניינים
     result = result.replace(/ממלא\/ת/g, 'ממלאים'); // ממלא/ת → ממלאים
+    result = result.replace(/רשאי\/ת/g, 'רשאים'); // רשאי/ת → רשאים
     result = result.replace(/הוא יגיע\/תגיע/g, 'הם יגיעו'); // הוא יגיע/תגיע → הם יגיעו
     result = result.replace(/הוא יקבל\/תקבל/g, 'הם יקבלו'); // הוא יקבל/תקבל → הם יקבלו
     result = result.replace(/הוא יבחר\/תבחר/g, 'הם יבחרו'); // הוא יבחר/תבחר → הם יבחרו
@@ -443,6 +459,14 @@ export function replaceTextWithGender(text: string, gender: Gender): string {
   Object.keys(hebrewDictionary).forEach(word => {
     const replacement = replaceWithGender(word, gender);
     
+    // חריגה: "בן" לא יוחלף ל"בת" כשהיא חלק משם
+    // אם יש placeholders של שמות, המילה "בן" בתוכם כבר מוגנת (היא עדיין בשורה 276-286)
+    // כאן נדלג רק אם זה "בן" שיוחלף ל"בת" - זה כבר מטופל בשלב 0
+    if (word === 'בן' && replacement === 'בת') {
+      // דלג - ה"בן" בשמות כבר מוגן ב-placeholders
+      return; // return במקום continue ב-forEach
+    }
+    
     // עושה escape למילה כדי למנוע בעיות עם תווים מיוחדים
     const escapedWord = escapeRegex(word);
     
@@ -451,6 +475,11 @@ export function replaceTextWithGender(text: string, gender: Gender): string {
     // מחפש רווחים, התחלת/סוף טקסט, או סימני פיסוק סביב המילה
     const regex = new RegExp(`(^|[\\s,.:;!?()\\[\\]"'])(${escapedWord})(?=[\\s,.:;!?()\\[\\]"']|$)`, 'g');
     result = result.replace(regex, `$1${replacement}`);
+  });
+  
+  // **שלב 3: החזר את השמות המקוריים**
+  namePlaceholders.forEach((name, index) => {
+    result = result.replace(`__NAME_PLACEHOLDER_${index}__`, name);
   });
   
   return result;
