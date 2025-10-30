@@ -127,6 +127,8 @@ export const hebrewDictionary: Record<string, GenderedWord> = {
   'כתב': { male: 'כתב', female: 'כתבה', plural: 'כתבו' },
   'קרא': { male: 'קרא', female: 'קראה', plural: 'קראו' },
   'הבין': { male: 'הבין', female: 'הבינה', plural: 'הבינו' },
+  'מעניק': { male: 'מעניק', female: 'מעניקה', plural: 'מעניקים' },
+  'יישא': { male: 'יישא', female: 'תישא', plural: 'יישאו' },
   'ידע': { male: 'ידע', female: 'ידעה', plural: 'ידעו' },
   'יכול': { male: 'יכול', female: 'יכולה', plural: 'יכולים' },
   'מסוגל': { male: 'מסוגל', female: 'מסוגלת', plural: 'מסוגלים' },
@@ -306,6 +308,10 @@ export function replaceTextWithGender(text: string, gender: Gender): string {
     result = result.replace(/\/תוכל\b/g, '');  // יוכל/תוכל → יוכל
     result = result.replace(/([^ה])\/ה\b/g, '$1');  // אני מוריש/ה → אני מוריש
     result = result.replace(/מוריש\/ה/g, 'מוריש'); // מוריש/ה → מוריש
+    result = result.replace(/מעניק\/ה/g, 'מעניק'); // מעניק/ה → מעניק
+    result = result.replace(/יישא\/תישא/g, 'יישא'); // יישא/תישא → יישא
+    result = result.replace(/יהיה רשאית/g, 'יהיה רשאי'); // יהיה רשאית → יהיה רשאי
+    result = result.replace(/תישא/g, 'יישא'); // תישא → יישא
     result = result.replace(/ה\/ה\b/g, 'ה');  // מצווה/ה → מצווה
     result = result.replace(/\/ים\b/g, ''); // ממנה/ים → ממנה
     result = result.replace(/\/ית\b/g, ''); // חלופי/ת → חלופי
@@ -388,6 +394,11 @@ export function replaceTextWithGender(text: string, gender: Gender): string {
     result = result.replace(/\/תוכל\b/g, 'תוכל');  // יוכל/תוכל → תוכל
     result = result.replace(/([^ה])\/ה\b/g, '$1ה');  // אני מוריש/ה → אני מורישה
     result = result.replace(/מוריש\/ה/g, 'מורישה'); // מוריש/ה → מורישה
+    result = result.replace(/מעניק\/ה/g, 'מעניקה'); // מעניק/ה → מעניקה
+    result = result.replace(/יישא\/תישא/g, 'תישא'); // יישא/תישא → תישא
+    result = result.replace(/יהיה רשאית/g, 'תהיה רשאית'); // יהיה רשאית → תהיה רשאית
+    result = result.replace(/יהיה רשאי/g, 'תהיה רשאית'); // יהיה רשאי → תהיה רשאית
+    result = result.replace(/יישא/g, 'תישא'); // יישא → תישא
     result = result.replace(/ה\/ה\b/g, 'ה');  // מצווה/ה → מצווה
     result = result.replace(/\/ים\b/g, ''); // תוקן! ממנה/ים → ממנה (לא ממנהים)
     result = result.replace(/\/ית\b/g, 'ית'); // חלופי/ת → חלופית
@@ -466,6 +477,12 @@ export function replaceTextWithGender(text: string, gender: Gender): string {
     result = result.replace(/\/תוכל\b/g, '');  // יוכל/תוכל → יוכל
     result = result.replace(/([^ה])\/ה\b/g, '$1');   // אנו מוריש/ה → אנו מוריש
     result = result.replace(/מוריש\/ה/g, 'מורישים'); // מוריש/ה → מורישים
+    result = result.replace(/מעניק\/ה/g, 'מעניקים'); // מעניק/ה → מעניקים
+    result = result.replace(/יישא\/תישא/g, 'יישאו'); // יישא/תישא → יישאו
+    result = result.replace(/יהיה רשאי/g, 'יהיו רשאים'); // יהיה רשאי → יהיו רשאים
+    result = result.replace(/יהיה רשאית/g, 'יהיו רשאים'); // יהיה רשאית → יהיו רשאים
+    result = result.replace(/תישא/g, 'יישאו'); // תישא → יישאו
+    result = result.replace(/יישא/g, 'יישאו'); // יישא → יישאו
     result = result.replace(/ה\/ה\b/g, 'ה');  // מצווה/ה → מצווה
     result = result.replace(/\/ים\b/g, 'ים'); // ממנה/ים → ממנהים
     result = result.replace(/\/ית\b/g, 'ים'); // חלופי/ת → חלופיים
