@@ -674,7 +674,7 @@ export default function ProfessionalWordExporter({
             bidirectional: true,
             children: [
               new TextRun({
-                text: subSection.content[gender] || subSection.content.male,
+                text: (gender in subSection.content ? subSection.content[gender as keyof typeof subSection.content] : subSection.content.male) || subSection.content.male,
                 font: 'David',
                 rightToLeft: true,
                 size: SIZES.normal
@@ -975,76 +975,9 @@ export default function ProfessionalWordExporter({
         );
       }
 
-      // סעיפים קבועים נוספים אחרי הטבלה
+      // סעיפים קבועים נוספים אחרי הטבלה - הוסרו כדי למנוע כפילות (מטופלים ב-finalFixedSections)
       const mainCustomSectionsCount = willData.customSections ? willData.customSections.filter((s: any) => s.level === 'main' && !s.isFixed).length : 0;
       const baseSectionNum = 4 + mainCustomSectionsCount + 1;
-      
-      const newFixedSections = [
-        {
-          num: baseSectionNum,
-          title: 'קופות גמל וביטוח',
-          content: {
-            male: 'כל זכויות החיסכון והביטוח המצויות בקופות הגמל, קרנות הפנסיה, קופות התגמולים, קרנות ההשתלמות, תוכניות החיסכון, פוליסות ביטוח החיים וכל מוצר פיננסי אחר (להלן: "הקופות") ישולמו למוטבים הרשומים בקופות במועד הפטירה, וזאת בהתאם לרישום בפועל בקופות במועד הפטירה.\n\nמובהר בזאת, כי ככל שבאחת או יותר מהקופות לא יהיו רשומים מוטבים במועד הפטירה, יראו את הזכויות באותן קופות כחלק מעיזבון המצווה, והן יחולקו בהתאם להוראות צוואה זו ולפי הוראותיה המפורשות.',
-            female: 'כל זכויות החיסכון והביטוח המצויות בקופות הגמל, קרנות הפנסיה, קופות התגמולים, קרנות ההשתלמות, תוכניות החיסכון, פוליסות ביטוח החיים וכל מוצר פיננסי אחר (להלן: "הקופות") ישולמו למוטבים הרשומים בקופות במועד הפטירה, וזאת בהתאם לרישום בפועל בקופות במועד הפטירה.\n\nמובהר בזאת, כי ככל שבאחת או יותר מהקופות לא יהיו רשומים מוטבים במועד הפטירה, יראו את הזכויות באותן קופות כחלק מעיזבון המצווה, והן יחולקו בהתאם להוראות צוואה זו ולפי הוראותיה המפורשות.',
-            plural: 'כל זכויות החיסכון והביטוח המצויות בקופות הגמל, קרנות הפנסיה, קופות התגמולים, קרנות ההשתלמות, תוכניות החיסכון, פוליסות ביטוח החיים וכל מוצר פיננסי אחר (להלן: "הקופות") ישולמו למוטבים הרשומים בקופות במועד הפטירה, וזאת בהתאם לרישום בפועל בקופות במועד הפטירה.\n\nמובהר בזאת, כי ככל שבאחת או יותר מהקופות לא יהיו רשומים מוטבים במועד הפטירה, יראו את הזכויות באותן קופות כחלק מעיזבון המצווים, והן יחולקו בהתאם להוראות צוואה זו ולפי הוראותיה המפורשות.'
-          }
-        },
-        {
-          num: baseSectionNum + 1,
-          title: 'דרישה לקיום הצוואה',
-          content: {
-            male: 'הנני דורש מכל אדם ומכל רשות לקיים צוואה זו ולא לערער עליה ולא להתנגד לה ולא לתקוף אותה, ואם יתעורר אי פעם ספק כלשהו בקשר לצוואה זו, הרי שיש להתיר את הספק לפי הדין ולתת לה תוקף ולקיים אותה.',
-            female: 'הנני דורשת מכל אדם ומכל רשות לקיים צוואה זו ולא לערער עליה ולא להתנגד לה ולא לתקוף אותה, ואם יתעורר אי פעם ספק כלשהו בקשר לצוואה זו, הרי שיש להתיר את הספק לפי הדין ולתת לה תוקף ולקיים אותה.',
-            plural: 'הננו דורשים מכל אדם ומכל רשות לקיים צוואה זו ולא לערער עליה ולא להתנגד לה ולא לתקוף אותה, ואם יתעורר אי פעם ספק כלשהו בקשר לצוואה זו, הרי שיש להתיר את הספק לפי הדין ולתת לה תוקף ולקיים אותה.'
-          }
-        }
-      ];
-      
-      // הוספת הסעיפים החדשים
-      newFixedSections.forEach((section) => {
-        sections.push(new Paragraph({ text: '' })); // רווח לפני הסעיף
-        sectionNum = section.num; // עדכון המספור
-        const contentLines = (section.content[gender] || section.content.male).split('\n\n');
-        
-        // הוספת הכותרת
-        // הוספת התוכן (בלי כותרת, רק עם מספור)
-        contentLines.forEach((line, index) => {
-          if (index === 0) {
-            // שורה ראשונה - עם מספור הסעיף
-            sections.push(
-              new Paragraph({
-                numbering: { reference: 'main-numbering', level: 0 },
-                alignment: AlignmentType.BOTH,
-                bidirectional: true,
-                children: [
-                  new TextRun({
-                    text: line,
-                    font: 'David',
-                    rightToLeft: true,
-                    size: SIZES.normal
-                  })
-                ]
-              })
-            );
-          } else {
-            // שורות נוספות (בלי מספור)
-            sections.push(
-              new Paragraph({
-                alignment: AlignmentType.BOTH,
-                bidirectional: true,
-                children: [
-                  new TextRun({
-                    text: line,
-                    font: 'David',
-                    rightToLeft: true,
-                    size: SIZES.normal
-                  })
-                ]
-              })
-            );
-          }
-        });
-      });
 
       // 🎯 הוספת סעיפים מהמחסן אחרי חלוקת העיזבון - עם התאמת מגדר!
       if (willData.customSections && willData.customSections.length > 0) {
@@ -1338,7 +1271,7 @@ export default function ProfessionalWordExporter({
       }
 
       // סעיפים קבועים אחרונים לפני הצהרת המצווה - ללא כותרות, רק סעיפים
-      const finalFixedSectionsBaseNum = baseSectionNum + 2;
+      const finalFixedSectionsBaseNum = baseSectionNum;
       const finalGender = willData.type === 'mutual' ? 'plural' : (willData.testator?.gender || 'male');
       
       const finalFixedSections = [
@@ -1353,17 +1286,33 @@ export default function ProfessionalWordExporter({
         {
           num: finalFixedSectionsBaseNum + 1,
           content: {
-            male: 'כל זכויות החיסכון והביטוח המצויות בקופות הגמל, קרנות הפנסיה, קופות התגמולים, קרנות ההשתלמות, תוכניות החיסכון, פוליסות ביטוח החיים וכל מוצר פיננסי אחר (להלן: "הקופות") ישולמו למוטבים הרשומים בקופות במועד הפטירה, וזאת בהתאם לרישום בפועל בקופות במועד הפטירה.\n\nמובהר בזאת, כי ככל שבאחת או יותר מהקופות לא יהיו רשומים מוטבים במועד הפטירה, יראו את הזכויות באותן קופות כחלק מעיזבון המצווה, והן יחולקו בהתאם להוראות צוואה זו ולפי הוראותיה המפורשות.',
-            female: 'כל זכויות החיסכון והביטוח המצויות בקופות הגמל, קרנות הפנסיה, קופות התגמולים, קרנות ההשתלמות, תוכניות החיסכון, פוליסות ביטוח החיים וכל מוצר פיננסי אחר (להלן: "הקופות") ישולמו למוטבים הרשומים בקופות במועד הפטירה, וזאת בהתאם לרישום בפועל בקופות במועד הפטירה.\n\nמובהר בזאת, כי ככל שבאחת או יותר מהקופות לא יהיו רשומים מוטבים במועד הפטירה, יראו את הזכויות באותן קופות כחלק מעיזבון המצווה, והן יחולקו בהתאם להוראות צוואה זו ולפי הוראותיה המפורשות.',
-            plural: 'כל זכויות החיסכון והביטוח המצויות בקופות הגמל, קרנות הפנסיה, קופות התגמולים, קרנות ההשתלמות, תוכניות החיסכון, פוליסות ביטוח החיים וכל מוצר פיננסי אחר (להלן: "הקופות") ישולמו למוטבים הרשומים בקופות במועד הפטירה, וזאת בהתאם לרישום בפועל בקופות במועד הפטירה.\n\nמובהר בזאת, כי ככל שבאחת או יותר מהקופות לא יהיו רשומים מוטבים במועד הפטירה, יראו את הזכויות באותן קופות כחלק מעיזבון המצווים, והן יחולקו בהתאם להוראות צוואה זו ולפי הוראותיה המפורשות.'
+            male: 'כל זכויות החיסכון והביטוח המצויות בקופות הגמל, קרנות הפנסיה, קופות התגמולים, קרנות ההשתלמות, תוכניות החיסכון, פוליסות ביטוח החיים וכל מוצר פיננסי אחר (להלן: "הקופות") ישולמו למוטבים הרשומים בקופות במועד הפטירה, וזאת בהתאם לרישום בפועל בקופות במועד הפטירה.',
+            female: 'כל זכויות החיסכון והביטוח המצויות בקופות הגמל, קרנות הפנסיה, קופות התגמולים, קרנות ההשתלמות, תוכניות החיסכון, פוליסות ביטוח החיים וכל מוצר פיננסי אחר (להלן: "הקופות") ישולמו למוטבים הרשומים בקופות במועד הפטירה, וזאת בהתאם לרישום בפועל בקופות במועד הפטירה.',
+            plural: 'כל זכויות החיסכון והביטוח המצויות בקופות הגמל, קרנות הפנסיה, קופות התגמולים, קרנות ההשתלמות, תוכניות החיסכון, פוליסות ביטוח החיים וכל מוצר פיננסי אחר (להלן: "הקופות") ישולמו למוטבים הרשומים בקופות במועד הפטירה, וזאת בהתאם לרישום בפועל בקופות במועד הפטירה.'
           }
         },
         {
           num: finalFixedSectionsBaseNum + 2,
           content: {
+            male: 'מובהר בזאת, כי ככל שבאחת או יותר מהקופות לא יהיו רשומים מוטבים במועד הפטירה, יראו את הזכויות באותן קופות כחלק מעיזבון המצווה, והן יחולקו בהתאם להוראות צוואה זו ולפי הוראותיה המפורשות.',
+            female: 'מובהר בזאת, כי ככל שבאחת או יותר מהקופות לא יהיו רשומים מוטבים במועד הפטירה, יראו את הזכויות באותן קופות כחלק מעיזבון המצווה, והן יחולקו בהתאם להוראות צוואה זו ולפי הוראותיה המפורשות.',
+            plural: 'מובהר בזאת, כי ככל שבאחת או יותר מהקופות לא יהיו רשומים מוטבים במועד הפטירה, יראו את הזכויות באותן קופות כחלק מעיזבון המצווים, והן יחולקו בהתאם להוראות צוואה זו ולפי הוראותיה המפורשות.'
+          }
+        },
+        {
+          num: finalFixedSectionsBaseNum + 3,
+          content: {
             male: 'הנני דורש מכל אדם ומכל רשות לקיים צוואה זו ולא לערער עליה ולא להתנגד לה ולא לתקוף אותה, ואם יתעורר אי פעם ספק כלשהו בקשר לצוואה זו, הרי שיש להתיר את הספק לפי הדין ולתת לה תוקף ולקיים אותה.',
             female: 'הנני דורשת מכל אדם ומכל רשות לקיים צוואה זו ולא לערער עליה ולא להתנגד לה ולא לתקוף אותה, ואם יתעורר אי פעם ספק כלשהו בקשר לצוואה זו, הרי שיש להתיר את הספק לפי הדין ולתת לה תוקף ולקיים אותה.',
             plural: 'הננו דורשים מכל אדם ומכל רשות לקיים צוואה זו ולא לערער עליה ולא להתנגד לה ולא לתקוף אותה, ואם יתעורר אי פעם ספק כלשהו בקשר לצוואה זו, הרי שיש להתיר את הספק לפי הדין ולתת לה תוקף ולקיים אותה.'
+          }
+        },
+        {
+          num: finalFixedSectionsBaseNum + 4,
+          content: {
+            male: 'ולראיה באתי על החתום מרצוני הטוב והחופשי, בפני העדות החתומות הנקובות בשמותיהן וכתובותיהן בלי להיות נתון לכל השפעה בלתי הוגנת, לחץ או כפיה שהם וכשאינני סובל מאיזו חולשה גופנית או רוחנית הגורעת או המונעת ממני את כושרי המשפטי לערוך צוואה בעלת תוקף חוקי, לאחר שהצהרתי בנוכחות שתי עדות הצוואה המפורטות להלן כי זו צוואתי, וביקשתי מהן לאשר בחתימתן שכך הצהרתי וחתמתי בפניהן.',
+            female: 'ולראיה באתי על החתום מרצוני הטוב והחופשי, בפני העדות החתומות הנקובות בשמותיהן וכתובותיהן בלי להיות נתונה לכל השפעה בלתי הוגנת, לחץ או כפיה שהם וכשאינני סובלת מאיזו חולשה גופנית או רוחנית הגורעת או המונעת ממני את כושרי המשפטי לערוך צוואה בעלת תוקף חוקי, לאחר שהצהרתי בנוכחות שתי עדות הצוואה המפורטות להלן כי זו צוואתי, וביקשתי מהן לאשר בחתימתן שכך הצהרתי וחתמתי בפניהן.',
+            plural: 'ולראיה באנו על החתום מרצוננו הטוב והחופשי, בפני העדות החתומות הנקובות בשמותיהן וכתובותיהן בלי להיות נתונים לכל השפעה בלתי הוגנת, לחץ או כפיה שהם וכשאיננו סובלים מאיזו חולשה גופנית או רוחנית הגורעת או המונעת מאתנו את כושרינו המשפטי לערוך צוואה בעלת תוקף חוקי, לאחר שהצהרנו בנוכחות שתי עדות הצוואה המפורטות להלן כי זו צוואתנו, וביקשנו מהן לאשר בחתימתן שכך הצהרנו וחתמנו בפניהן.'
           }
         }
       ];
@@ -1372,69 +1321,26 @@ export default function ProfessionalWordExporter({
       finalFixedSections.forEach((section) => {
         sections.push(new Paragraph({ text: '' }));
         sectionNum = section.num;
-        const contentLines = (section.content[finalGender] || section.content.male).split('\n\n');
+        const sectionContent = (finalGender in section.content ? section.content[finalGender as keyof typeof section.content] : section.content.male) || section.content.male;
         
         // הוספת הסעיף (ללא כותרת נפרדת)
-        contentLines.forEach((line, index) => {
-          if (index === 0) {
-            // שורה ראשונה - עם מספור הסעיף
-            sections.push(
-              new Paragraph({
-                numbering: { reference: 'main-numbering', level: 0 },
-                alignment: AlignmentType.BOTH,
-                bidirectional: true,
-                children: [
-                  new TextRun({
-                    text: line,
-                    font: 'David',
-                    rightToLeft: true,
-                    size: SIZES.normal
-                  })
-                ]
+        sections.push(
+          new Paragraph({
+            numbering: { reference: 'main-numbering', level: 0 },
+            alignment: AlignmentType.BOTH,
+            bidirectional: true,
+            children: [
+              new TextRun({
+                text: sectionContent,
+                font: 'David',
+                rightToLeft: true,
+                size: SIZES.normal
               })
-            );
-          } else {
-            // שורות נוספות (כמו "מובהר בזאת...")
-            sections.push(
-              new Paragraph({
-                alignment: AlignmentType.BOTH,
-                bidirectional: true,
-                children: [
-                  new TextRun({
-                    text: line,
-                    font: 'David',
-                    rightToLeft: true,
-                    size: SIZES.normal
-                  })
-                ]
-              })
-            );
-          }
-        });
+            ]
+          })
+        );
       });
 
-      // הצהרת המצווה - ולראיה באתי על החתום
-      sections.push(new Paragraph({ text: '' }));
-      const signatureText = willData.type === 'mutual'
-        ? 'ולראיה באנו על החתום מרצוננו הטוב והחופשי, בפני העדות החתומות הנקובות בשמותיהן וכתובותיהן בלי להיות נתונים לכל השפעה בלתי הוגנת, לחץ או כפיה שהם וכשאיננו סובלים מאיזו חולשה גופנית או רוחנית הגורעת או המונעת מאתנו את כושרינו המשפטי לערוך צוואה בעלת תוקף חוקי, לאחר שהצהרנו בנוכחות שתי עדות הצוואה המפורטות להלן כי זו צוואתנו, וביקשנו מהן לאשר בחתימתן שכך הצהרנו וחתמנו בפניהן.'
-        : (finalGender === 'female'
-          ? 'ולראיה באתי על החתום מרצוני הטוב והחופשי, בפני העדות החתומות הנקובות בשמותיהן וכתובותיהן בלי להיות נתונה לכל השפעה בלתי הוגנת, לחץ או כפיה שהם וכשאינני סובלת מאיזו חולשה גופנית או רוחנית הגורעת או המונעת ממני את כושרי המשפטי לערוך צוואה בעלת תוקף חוקי, לאחר שהצהרתי בנוכחות שתי עדות הצוואה המפורטות להלן כי זו צוואתי, וביקשתי מהן לאשר בחתימתן שכך הצהרתי וחתמתי בפניהן.'
-          : 'ולראיה באתי על החתום מרצוני הטוב והחופשי, בפני העדות החתומות הנקובות בשמותיהן וכתובותיהן בלי להיות נתון לכל השפעה בלתי הוגנת, לחץ או כפיה שהם וכשאינני סובל מאיזו חולשה גופנית או רוחנית הגורעת או המונעת ממני את כושרי המשפטי לערוך צוואה בעלת תוקף חוקי, לאחר שהצהרתי בנוכחות שתי עדות הצוואה המפורטות להלן כי זו צוואתי, וביקשתי מהן לאשר בחתימתן שכך הצהרתי וחתמתי בפניהן.');
-      
-      sections.push(
-        new Paragraph({
-          alignment: AlignmentType.BOTH,
-          bidirectional: true,
-          children: [
-            new TextRun({
-              text: signatureText,
-              font: 'David',
-              rightToLeft: true,
-              size: SIZES.normal
-            })
-          ]
-        })
-      );
 
       // חתימת המצווה/ים בטבלה מקצועית
       sections.push(new Paragraph({ text: '' }));

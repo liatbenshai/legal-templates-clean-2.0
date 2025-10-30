@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { X, GripVertical } from 'lucide-react';
 import { DndContext, closestCenter, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
@@ -69,6 +69,7 @@ function SortableSectionItem({
   handleLoadSectionToDocument,
   onDelete,
   onEdit,
+  onEditTitle,
   inheritanceTables,
   setInheritanceTables,
   customSections,
@@ -987,7 +988,8 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
       isOpen: true,
       variables: extractedVariables,
       values: {},
-      genders: {}
+      genders: {},
+      pendingSection: null
     });
   };
 
@@ -1449,11 +1451,20 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
     variables: string[];
     values: Record<string, string>;
     genders: Record<string, 'male' | 'female' | 'plural'>;
+    pendingSection: {
+      id: string;
+      title: string;
+      content: string;
+      level: 'main' | 'sub' | 'sub-sub';
+      order: number;
+      type: 'text';
+    } | null;
   }>({
     isOpen: false,
     variables: [],
     values: {},
-    genders: {}
+    genders: {},
+    pendingSection: null
   });
 
   // מערכת למידה
@@ -1467,18 +1478,80 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
   
   // טעינת סעיף מהמאגר המאוחד
   const handleLoadFromWarehouse = (section: any) => {
-    const newSection = {
-      id: generateSectionId(),
-      title: section.title,
-      content: section.content,
-      level: 'main' as const,
-      order: getNextOrder(),
-      type: 'text' as const
-    };
-    
-    setCustomSections(prev => [...prev, newSection]);
-    setShowUnifiedWarehouse(false);
-    alert(`✅ הסעיף "${section.title}" נטען מהמאגר!`);
+    try {
+      console.log('🟢🟢🟢 handleLoadFromWarehouse CALLED! Section:', section);
+      console.log('Section title:', section?.title);
+      console.log('Section content:', section?.content);
+      
+      if (!section || !section.content) {
+        console.error('Invalid section:', section);
+        alert('שגיאה: הסעיף לא תקין');
+        return;
+      }
+      
+      // בדיקה אם יש משתנים בתוכן (כמו {{שם_משתנה}})
+      const variableMatches = section.content.match(/\{\{([^}]+)\}\}/g);
+      const hasVariables = variableMatches && variableMatches.length > 0;
+      
+      // בדיקה אם יש דפוסי מגדר (כמו /ת /ה /ים) - רק דפוסים ברורים
+      const hasGenderPatterns = /\/(ת|ה|ים|ות)\b/.test(section.content);
+      
+      console.log('hasVariables:', hasVariables, 'hasGenderPatterns:', hasGenderPatterns);
+      
+      // אם יש משתנים או דפוסי מגדר, פתח מודל השלמה
+      if (hasVariables || hasGenderPatterns) {
+        const variables: string[] = [];
+        if (variableMatches) {
+          variableMatches.forEach((match: string) => {
+            const variableName = match.replace(/\{\{|\}\}/g, '');
+            if (!variables.includes(variableName)) {
+              variables.push(variableName);
+            }
+          });
+        }
+        
+        console.log('Opening variables modal with variables:', variables);
+        
+        setVariablesCompletionModal({
+          isOpen: true,
+          variables,
+          values: {},
+          genders: {},
+          pendingSection: {
+            id: generateSectionId(),
+            title: section.title,
+            content: section.content,
+            level: 'main' as const,
+            order: getNextOrder(),
+            type: 'text' as const
+          }
+        });
+        setShowUnifiedWarehouse(false);
+        return;
+      }
+      
+      // אם אין משתנים, הוסף ישירות
+      console.log('Adding section directly (no variables)');
+      const newSection = {
+        id: generateSectionId(),
+        title: section.title,
+        content: section.content,
+        level: 'main' as const,
+        order: getNextOrder(),
+        type: 'text' as const
+      };
+      
+      setCustomSections(prev => {
+        const updated = [...prev, newSection];
+        console.log('Updated customSections:', updated);
+        return updated;
+      });
+      setShowUnifiedWarehouse(false);
+      alert(`✅ הסעיף "${section.title}" נטען מהמאגר!`);
+    } catch (error) {
+      console.error('❌ Error in handleLoadFromWarehouse:', error);
+      alert('שגיאה בהוספת הסעיף: ' + (error as Error).message);
+    }
   };
 
   // הוספת סעיף ישירות למאגר
@@ -1953,46 +2026,9 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
   };
 
   const handleSelectFromWarehouse = async (warehouseSection: any) => {
-    const genderedContent = replaceTextWithGender(
-      warehouseSection.content,
-      willType === 'mutual' ? 'plural' : testator.gender
-    );
-    
-    const variables = extractVariablesFromContent(genderedContent);
-    
-    if (variables.length > 0) {
-      setVariablesModal({
-        section: {
-          id: warehouseSection.id || 'custom',
-          title: warehouseSection.title,
-          content: genderedContent,
-          variables: variables
-        },
-        values: variables.reduce((acc, v) => ({ ...acc, [v]: '' }), {}),
-        genders: variables.reduce((acc, v) => ({ ...acc, [v]: 'male' as 'male' | 'female' }), {})
-      });
-    } else {
-      const newSection = {
-        id: generateSectionId(),
-        title: warehouseSection.title,
-        content: genderedContent,
-        level: 'main' as const,
-        order: getNextOrder()
-      };
-      setCustomSections(prev => [...prev, newSection]);
-      
-      // עדכון מונה השימוש במחסן
-      try {
-        await updateSection(warehouseSection.id, {
-          usage_count: (warehouseSection.usage_count || 0) + 1,
-          last_used: new Date().toISOString()
-        });
-      } catch (error) {
-        console.error('Error updating usage count:', error);
-      }
-      
-      alert('✅ סעיף נוסף מהמחסן!');
-    }
+    console.log('🔵 handleSelectFromWarehouse called with:', warehouseSection);
+    // קרא ישירות ל-handleLoadFromWarehouse שמטפלת בכל הלוגיקה
+    handleLoadFromWarehouse(warehouseSection);
   };
 
   return (
@@ -3014,7 +3050,7 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
                         <div key={subSection.num} className="bg-blue-50 p-3 rounded border border-blue-200 mr-4">
                           <h4 className="font-semibold text-blue-800 mb-1">3.{subSection.num} - {subSection.title}</h4>
                           <div className="text-sm text-gray-700">
-                            {subSection.content[gender] || subSection.content.male}
+                            {(gender in subSection.content ? subSection.content[gender as keyof typeof subSection.content] : subSection.content.male) || subSection.content.male}
                           </div>
                         </div>
                       ))}
@@ -3044,7 +3080,7 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
                             subSectionNum={subSectionNum}
                             onUpdate={(updated) => {
                               setCustomSections(prev => prev.map(s => 
-                                s.id === subSection.id ? updated : s
+                                s.id === subSection.id ? { ...s, ...updated } : s
                               ));
                             }}
                             onDelete={() => {
@@ -3475,11 +3511,11 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
                   <div className="flex gap-2">
                     <button
                       onClick={() => {
-                        const newSection: EditableSectionType = {
+                        const newSection = {
                           id: `section-${Date.now()}`,
                           title: 'סעיף חדש',
                           content: '',
-                          level: 'main',
+                          level: 'main' as const,
                           order: customSections.length > 0 ? Math.max(...customSections.map(s => s.order)) + 1 : 1,
                           isFixed: false
                         };
@@ -3559,17 +3595,33 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
                 {
                   num: baseSectionNum + 1,
                   content: {
-                    male: 'כל זכויות החיסכון והביטוח המצויות בקופות הגמל, קרנות הפנסיה, קופות התגמולים, קרנות ההשתלמות, תוכניות החיסכון, פוליסות ביטוח החיים וכל מוצר פיננסי אחר (להלן: "הקופות") ישולמו למוטבים הרשומים בקופות במועד הפטירה, וזאת בהתאם לרישום בפועל בקופות במועד הפטירה.\n\nמובהר בזאת, כי ככל שבאחת או יותר מהקופות לא יהיו רשומים מוטבים במועד הפטירה, יראו את הזכויות באותן קופות כחלק מעיזבון המצווה, והן יחולקו בהתאם להוראות צוואה זו ולפי הוראותיה המפורשות.',
-                    female: 'כל זכויות החיסכון והביטוח המצויות בקופות הגמל, קרנות הפנסיה, קופות התגמולים, קרנות ההשתלמות, תוכניות החיסכון, פוליסות ביטוח החיים וכל מוצר פיננסי אחר (להלן: "הקופות") ישולמו למוטבים הרשומים בקופות במועד הפטירה, וזאת בהתאם לרישום בפועל בקופות במועד הפטירה.\n\nמובהר בזאת, כי ככל שבאחת או יותר מהקופות לא יהיו רשומים מוטבים במועד הפטירה, יראו את הזכויות באותן קופות כחלק מעיזבון המצווה, והן יחולקו בהתאם להוראות צוואה זו ולפי הוראותיה המפורשות.',
-                    plural: 'כל זכויות החיסכון והביטוח המצויות בקופות הגמל, קרנות הפנסיה, קופות התגמולים, קרנות ההשתלמות, תוכניות החיסכון, פוליסות ביטוח החיים וכל מוצר פיננסי אחר (להלן: "הקופות") ישולמו למוטבים הרשומים בקופות במועד הפטירה, וזאת בהתאם לרישום בפועל בקופות במועד הפטירה.\n\nמובהר בזאת, כי ככל שבאחת או יותר מהקופות לא יהיו רשומים מוטבים במועד הפטירה, יראו את הזכויות באותן קופות כחלק מעיזבון המצווים, והן יחולקו בהתאם להוראות צוואה זו ולפי הוראותיה המפורשות.'
+                    male: 'כל זכויות החיסכון והביטוח המצויות בקופות הגמל, קרנות הפנסיה, קופות התגמולים, קרנות ההשתלמות, תוכניות החיסכון, פוליסות ביטוח החיים וכל מוצר פיננסי אחר (להלן: "הקופות") ישולמו למוטבים הרשומים בקופות במועד הפטירה, וזאת בהתאם לרישום בפועל בקופות במועד הפטירה.',
+                    female: 'כל זכויות החיסכון והביטוח המצויות בקופות הגמל, קרנות הפנסיה, קופות התגמולים, קרנות ההשתלמות, תוכניות החיסכון, פוליסות ביטוח החיים וכל מוצר פיננסי אחר (להלן: "הקופות") ישולמו למוטבים הרשומים בקופות במועד הפטירה, וזאת בהתאם לרישום בפועל בקופות במועד הפטירה.',
+                    plural: 'כל זכויות החיסכון והביטוח המצויות בקופות הגמל, קרנות הפנסיה, קופות התגמולים, קרנות ההשתלמות, תוכניות החיסכון, פוליסות ביטוח החיים וכל מוצר פיננסי אחר (להלן: "הקופות") ישולמו למוטבים הרשומים בקופות במועד הפטירה, וזאת בהתאם לרישום בפועל בקופות במועד הפטירה.'
                   }
                 },
                 {
                   num: baseSectionNum + 2,
                   content: {
+                    male: 'מובהר בזאת, כי ככל שבאחת או יותר מהקופות לא יהיו רשומים מוטבים במועד הפטירה, יראו את הזכויות באותן קופות כחלק מעיזבון המצווה, והן יחולקו בהתאם להוראות צוואה זו ולפי הוראותיה המפורשות.',
+                    female: 'מובהר בזאת, כי ככל שבאחת או יותר מהקופות לא יהיו רשומים מוטבים במועד הפטירה, יראו את הזכויות באותן קופות כחלק מעיזבון המצווה, והן יחולקו בהתאם להוראות צוואה זו ולפי הוראותיה המפורשות.',
+                    plural: 'מובהר בזאת, כי ככל שבאחת או יותר מהקופות לא יהיו רשומים מוטבים במועד הפטירה, יראו את הזכויות באותן קופות כחלק מעיזבון המצווים, והן יחולקו בהתאם להוראות צוואה זו ולפי הוראותיה המפורשות.'
+                  }
+                },
+                {
+                  num: baseSectionNum + 3,
+                  content: {
                     male: 'הנני דורש מכל אדם ומכל רשות לקיים צוואה זו ולא לערער עליה ולא להתנגד לה ולא לתקוף אותה, ואם יתעורר אי פעם ספק כלשהו בקשר לצוואה זו, הרי שיש להתיר את הספק לפי הדין ולתת לה תוקף ולקיים אותה.',
                     female: 'הנני דורשת מכל אדם ומכל רשות לקיים צוואה זו ולא לערער עליה ולא להתנגד לה ולא לתקוף אותה, ואם יתעורר אי פעם ספק כלשהו בקשר לצוואה זו, הרי שיש להתיר את הספק לפי הדין ולתת לה תוקף ולקיים אותה.',
                     plural: 'הננו דורשים מכל אדם ומכל רשות לקיים צוואה זו ולא לערער עליה ולא להתנגד לה ולא לתקוף אותה, ואם יתעורר אי פעם ספק כלשהו בקשר לצוואה זו, הרי שיש להתיר את הספק לפי הדין ולתת לה תוקף ולקיים אותה.'
+                  }
+                },
+                {
+                  num: baseSectionNum + 4,
+                  content: {
+                    male: 'ולראיה באתי על החתום מרצוני הטוב והחופשי, בפני העדות החתומות הנקובות בשמותיהן וכתובותיהן בלי להיות נתון לכל השפעה בלתי הוגנת, לחץ או כפיה שהם וכשאינני סובל מאיזו חולשה גופנית או רוחנית הגורעת או המונעת ממני את כושרי המשפטי לערוך צוואה בעלת תוקף חוקי, לאחר שהצהרתי בנוכחות שתי עדות הצוואה המפורטות להלן כי זו צוואתי, וביקשתי מהן לאשר בחתימתן שכך הצהרתי וחתמתי בפניהן.',
+                    female: 'ולראיה באתי על החתום מרצוני הטוב והחופשי, בפני העדות החתומות הנקובות בשמותיהן וכתובותיהן בלי להיות נתונה לכל השפעה בלתי הוגנת, לחץ או כפיה שהם וכשאינני סובלת מאיזו חולשה גופנית או רוחנית הגורעת או המונעת ממני את כושרי המשפטי לערוך צוואה בעלת תוקף חוקי, לאחר שהצהרתי בנוכחות שתי עדות הצוואה המפורטות להלן כי זו צוואתי, וביקשתי מהן לאשר בחתימתן שכך הצהרתי וחתמתי בפניהן.',
+                    plural: 'ולראיה באנו על החתום מרצוננו הטוב והחופשי, בפני העדות החתומות הנקובות בשמותיהן וכתובותיהן בלי להיות נתונים לכל השפעה בלתי הוגנת, לחץ או כפיה שהם וכשאיננו סובלים מאיזו חולשה גופנית או רוחנית הגורעת או המונעת מאתנו את כושרינו המשפטי לערוך צוואה בעלת תוקף חוקי, לאחר שהצהרנו בנוכחות שתי עדות הצוואה המפורטות להלן כי זו צוואתנו, וביקשנו מהן לאשר בחתימתן שכך הצהרנו וחתמנו בפניהן.'
                   }
                 }
               ];
@@ -3580,7 +3632,7 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
                     <div key={section.num} className="bg-white p-4 rounded-lg border border-blue-300">
                       <div className="text-sm text-gray-700 whitespace-pre-line">
                         <span className="font-semibold">סעיף {section.num}: </span>
-                        {section.content[gender] || section.content.male}
+                        {section.content && ((gender in section.content ? section.content[gender as keyof typeof section.content] : section.content.male) || section.content.male)}
                       </div>
                     </div>
                   ))}
@@ -3804,7 +3856,10 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
                 </div>
                 
                 <UnifiedWarehouse
-                  onSectionSelect={handleLoadFromWarehouse}
+                  onSectionSelect={(section) => {
+                    console.log('🔴🔴🔴 Direct callback CALLED in render! Section:', section);
+                    handleLoadFromWarehouse(section);
+                  }}
                   userId={testator.fullName || 'anonymous'}
                   willType={willType}
                 />
@@ -4672,20 +4727,59 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
       )}
 
       {/* מודל השלמת משתנים */}
-      {variablesCompletionModal.isOpen && (
+      {variablesCompletionModal.isOpen && variablesCompletionModal.pendingSection && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                🔧 השלם משתנים
-              </h3>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                  🔧 השלם משתנים לפני הוספת הסעיף
+                </h3>
+                {variablesCompletionModal.pendingSection && (
+                  <p className="text-sm text-gray-600 mt-1">
+                    סעיף: <strong>{variablesCompletionModal.pendingSection.title}</strong>
+                  </p>
+                )}
+              </div>
               <button
-                onClick={() => setVariablesCompletionModal({ isOpen: false, variables: [], values: {}, genders: {} })}
+                onClick={() => setVariablesCompletionModal({ isOpen: false, variables: [], values: {}, genders: {}, pendingSection: null })}
                 className="text-gray-400 hover:text-gray-600"
               >
                 ✕
               </button>
             </div>
+            
+            {/* הצגת תוכן הסעיף */}
+            {variablesCompletionModal.pendingSection && (
+              <div className="mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                <p className="text-sm font-medium text-gray-700 mb-2">תוכן הסעיף:</p>
+                <p className="text-sm text-gray-600 whitespace-pre-wrap">{variablesCompletionModal.pendingSection.content.substring(0, 200)}{variablesCompletionModal.pendingSection.content.length > 200 ? '...' : ''}</p>
+              </div>
+            )}
+            
+            {/* בחירת מגדר כללי אם יש דפוסי מגדר בלי משתנים */}
+            {variablesCompletionModal.variables.length === 0 && (
+              <div className="mb-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  מגדר לטקסט:
+                </label>
+                <select
+                  value={testator.gender || 'male'}
+                  onChange={(e) => {
+                    // עדכן את מגדר המצווה (אבל זה לא ישפיע על הסעיף הנוכחי, רק על החלפת הטקסט)
+                    setTestator(prev => ({ ...prev, gender: e.target.value as 'male' | 'female' }));
+                  }}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm"
+                >
+                  <option value="male">זכר</option>
+                  <option value="female">נקבה</option>
+                  <option value="plural">רבים (לצוואה הדדית)</option>
+                </select>
+                <p className="text-xs text-gray-600 mt-2">
+                  הטקסט יתאים למגדר שנבחר (ייטפל בדפוסים כמו /ת /ה /ים)
+                </p>
+              </div>
+            )}
             
             <div className="space-y-4">
               {variablesCompletionModal.variables.map((variable, index) => (
@@ -4738,46 +4832,104 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
             
             <div className="flex justify-end gap-3 mt-6">
               <button
-                onClick={() => setVariablesCompletionModal({ isOpen: false, variables: [], values: {}, genders: {} })}
+                onClick={() => setVariablesCompletionModal({ isOpen: false, variables: [], values: {}, genders: {}, pendingSection: null })}
                 className="px-4 py-2 text-gray-600 hover:text-gray-800"
               >
                 ביטול
               </button>
               <button
                 onClick={() => {
-                  // החלפת משתנים בטקסט עם התחשבות במגדר
-                  let updatedText = customSections.map(section => {
-                    let content = section.content;
-                    
-                    // שלב 1: החלף משתנים
-                    variablesCompletionModal.variables.forEach(variable => {
-                      const value = variablesCompletionModal.values[variable];
-                      const gender = variablesCompletionModal.genders[variable];
-                      
-                      if (value) {
-                        // החלף את המשתנה בערך (ללא התאמת מגדר)
-                        content = content.replace(new RegExp(`\\{\\{${variable}\\}\\}`, 'g'), value);
-                      }
-                    });
-                    
-                    // שלב 2: החלף את כל התוכן לפי מגדר (לטפל בדפוסים כמו "הוא יליד/ת")
-                    // אם יש משתנים רגישי מגדר, נחליף את כל הטקסט לפי המגדר הראשון שנבחר
-                    const firstGenderVariable = variablesCompletionModal.variables.find(v => isGenderRelevantVariable(v));
-                    if (firstGenderVariable && variablesCompletionModal.genders[firstGenderVariable]) {
-                      const gender = variablesCompletionModal.genders[firstGenderVariable];
-                      content = replaceTextWithGender(content, gender);
+                  if (!variablesCompletionModal.pendingSection) {
+                    alert('שגיאה: אין סעיף להשלמה');
+                    return;
+                  }
+                  
+                  let content = variablesCompletionModal.pendingSection.content;
+                  
+                  // שלב 1: החלף משתנים
+                  variablesCompletionModal.variables.forEach(variable => {
+                    const value = variablesCompletionModal.values[variable];
+                    if (value) {
+                      content = content.replace(new RegExp(`\\{\\{${variable}\\}\\}`, 'g'), value);
                     }
-                    
-                    return { ...section, content };
                   });
                   
-                  setCustomSections(updatedText);
-                  setVariablesCompletionModal({ isOpen: false, variables: [], values: {}, genders: {} });
-                  alert('✅ משתנים הוחלפו בהצלחה!');
+                  // שלב 2: החלף את כל התוכן לפי מגדר (לטפל בדפוסים כמו "הוא יליד/ת", "יוכל/תוכל", "ירצה/תרצה")
+                  // חפש משתנה רגיש למגדר - עדיפות למשתני אפוטרופוס/שומר
+                  const genderRelevantVariables = variablesCompletionModal.variables.filter(v => isGenderRelevantVariable(v));
+                  let selectedGender: 'male' | 'female' | 'plural' = (testator.gender === 'organization' ? 'male' : (testator.gender || 'male')) as 'male' | 'female' | 'plural';
+                  
+                  // אם יש משתנים רגישי מגדר, קח את המגדר של הראשון שנבחר
+                  if (genderRelevantVariables.length > 0) {
+                    // עדיפות למשתני אפוטרופוס
+                    const guardianVariable = genderRelevantVariables.find(v => 
+                      v.includes('אפוטרופוס') || v.includes('guardian') || v.includes('שומר')
+                    );
+                    const variableToUse = guardianVariable || genderRelevantVariables[0];
+                    
+                    if (variablesCompletionModal.genders[variableToUse]) {
+                      selectedGender = variablesCompletionModal.genders[variableToUse];
+                      console.log(`✅ משתמש במגדר "${selectedGender}" עבור המשתנה "${variableToUse}"`);
+                    } else {
+                      // אם לא נבחר מגדר, השתמש ברירת מחדל
+                      console.log(`⚠️ לא נבחר מגדר למשתנה "${variableToUse}", משתמש ברירת מחדל: ${selectedGender}`);
+                    }
+                  } else {
+                    // אם אין משתנים רגישי מגדר, השתמש במגדר המצווה
+                    selectedGender = willType === 'mutual' ? 'plural' : ((testator.gender === 'organization' ? 'male' : (testator.gender || 'male')) as 'male' | 'female' | 'plural');
+                    console.log(`ℹ️ אין משתנים רגישי מגדר, משתמש במגדר המצווה: ${selectedGender}`);
+                  }
+                  
+                  console.log(`🔄 מחליף דפוסי מגדר בטקסט לפי מגדר: ${selectedGender}`);
+                  console.log(`📝 תוכן לפני החלפת מגדר: ${content.substring(0, 200)}`);
+                  // החלף דפוסי מגדר לפי המגדר שנבחר
+                  content = replaceTextWithGender(content, selectedGender);
+                  console.log(`✅ תוכן לאחר החלפת מגדר: ${content.substring(0, 200)}`);
+                  
+                  // החלפות ידניות - נסה להחליף ידנית כל הדפוסים שלא הוחלפו
+                  if (selectedGender === 'female') {
+                    // שלב 1: החלף "האפוטרופוס" ל"האפוטרופסית"
+                    content = content.replace(/האפוטרופוס/g, 'האפוטרופסית');
+                    // שלב 1.5: החלף "האפוטרופוס החלופי" ל"האפוטרופסית החלופית"
+                    content = content.replace(/האפוטרופוס החלופי/g, 'האפוטרופסית החלופית');
+                    // שלב 2: החלף "כאפוטרופוס" ל"כאפוטרופסית" (חשוב לפני החלפת "אפוטרופוס" בודד)
+                    content = content.replace(/כאפוטרופוס/g, 'כאפוטרופסית');
+                    // שלב 2.5: החלף "כאפוטרופוס חלופי" ל"כאפוטרופסית חלופית"
+                    content = content.replace(/כאפוטרופוס חלופי/g, 'כאפוטרופסית חלופית');
+                    // שלב 3: החלף "אפוטרופוס" בודד (רק אם לא "אפוטרופסית" כבר)
+                    // קודם נחליף "אפוטרופוס חלופי" ל"אפוטרופסית חלופית"
+                    content = content.replace(/אפוטרופוס חלופי/g, 'אפוטרופסית חלופית');
+                    // נשתמש בהחלפה שתדלג על המקרים שכבר הוחלפו
+                    content = content.replace(/\s+אפוטרופוס\s+/g, ' אפוטרופסית ');
+                    content = content.replace(/\s+אפוטרופוס([^ית])/g, ' אפוטרופסית$1');
+                    // החלפה כללית אחרונה לשאר המקרים
+                    content = content.replace(/אפוטרופוס(?!ית)/g, 'אפוטרופסית');
+                    // שלב 4: החלף "לא יוכל/תוכל" ו"לא ירצה/תרצה"
+                    content = content.replace(/לא יוכל\/תוכל/g, 'לא תוכל');
+                    content = content.replace(/לא ירצה\/תרצה/g, 'לא תרצה');
+                    // שלב 5: החלף "יוכל/תוכל" ו"ירצה/תרצה" בלי "לא"
+                    content = content.replace(/יוכל\/תוכל/g, 'תוכל');
+                    content = content.replace(/ירצה\/תרצה/g, 'תרצה');
+                    // שלב 6: החלף "חלופי/ת" ל"חלופית"
+                    content = content.replace(/חלופי\/ת/g, 'חלופית');
+                    // שלב 7: החלף "תפקידו/ה" ל"תפקידה"
+                    content = content.replace(/תפקידו\/ה/g, 'תפקידה');
+                    console.log(`✅ הוחלף ידנית: ${content.substring(0, 300)}`);
+                  }
+                  
+                  // הוסף את הסעיף המעודכן לרשימה
+                  const updatedSection = {
+                    ...variablesCompletionModal.pendingSection,
+                    content
+                  };
+                  
+                  setCustomSections(prev => [...prev, updatedSection]);
+                  setVariablesCompletionModal({ isOpen: false, variables: [], values: {}, genders: {}, pendingSection: null });
+                  alert(`✅ הסעיף "${updatedSection.title}" הוסף לצוואה עם המשתנים שהושלמו!`);
                 }}
                 className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
               >
-                החלף משתנים
+                הוסף סעיף
               </button>
             </div>
           </div>
@@ -4796,14 +4948,20 @@ function isGenderRelevantVariable(variable: string): boolean {
     // משתנים בעברית
     'בן/בת זוגי', 'שם מלא', 'שם ילד/ה ראשון/ה', 'שם ילד/ה שני/ה', 'שם ילד/ה שלישי/ת',
     'הוא/היא', 'תאריך', 'תעודת זהות', 'שם מלא האפוטרופוס', 'שם מלא האפוטרופוס החלופי',
+    'שם האפוטרופוס', 'שם האפוטרופוס החלופי', 'שם אפוטרופוס', 'שם אפוטרופוס החלופי',
     'מיופה_כוח', 'רשאי', 'אחראי', 'מחויב', 'יכול', 'צריך', 'חייב', 'זכאי', 
     'מתחייב', 'מסכים', 'מבקש', 'מצהיר', 'מאשר', 'הוא', 'היא', 'בן_זוג', 'בעל', 'אישה',
     'ילד', 'ילדה', 'ילדים', 'ילדות', 'אפוטרופוס', 'אפוטרופוסית', 'אפוטרופוסים'
   ];
   
   // בדיקה אם המשתנה מכיל מילים רגישות למגדר
-  const genderKeywords = ['ילד', 'אפוטרופוס', 'בן', 'בת', 'הוא', 'היא', 'רשאי', 'אחראי', 'מחויב', 'יכול', 'צריך', 'חייב', 'זכאי'];
-  const containsGenderKeyword = genderKeywords.some(keyword => variable.includes(keyword));
+  const genderKeywords = ['ילד', 'אפוטרופוס', 'בן', 'בת', 'הוא', 'היא', 'רשאי', 'אחראי', 'מחויב', 'יכול', 'צריך', 'חייב', 'זכאי', 'שם'];
+  const containsGenderKeyword = genderKeywords.some(keyword => variable.toLowerCase().includes(keyword.toLowerCase()));
+  
+  // בדיקה ספציפית למשתני אפוטרופוס
+  if (variable.includes('אפוטרופוס') || variable.includes('אפוטרופסית') || variable.toLowerCase().includes('guardian')) {
+    return true;
+  }
   
   return genderRelevantVariables.includes(variable) || containsGenderKeyword;
 }

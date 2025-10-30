@@ -185,8 +185,8 @@ export const hebrewDictionary: Record<string, GenderedWord> = {
   // מונחים משפטיים - ייפוי כוח והנחיות מקדימות
   'מיופה_כוח': { male: 'מיופה כוח', female: 'מיופת כוח', plural: 'מיופי כוח' },
   'מיופה_הכוח': { male: 'מיופה הכוח', female: 'מיופת הכוח', plural: 'מיופי הכוח' },
-  'אפוטרופוס': { male: 'אפוטרופוס', female: 'אפוטרופסת', plural: 'אפוטרופסים' },
-  'האפוטרופוס': { male: 'האפוטרופוס', female: 'האפוטרופסת', plural: 'האפוטרופסים' },
+  'אפוטרופוס': { male: 'אפוטרופוס', female: 'אפוטרופסית', plural: 'אפוטרופסים' },
+  'האפוטרופוס': { male: 'האפוטרופוס', female: 'האפוטרופסית', plural: 'האפוטרופסים' },
   'הממנה': { male: 'הממנה', female: 'הממנה', plural: 'הממנים' },
   'ממנה': { male: 'ממנה', female: 'ממנה', plural: 'ממנים' },
   'מטפל': { male: 'מטפל', female: 'מטפלת', plural: 'מטפלים' },
@@ -293,6 +293,10 @@ export function replaceTextWithGender(text: string, gender: Gender): string {
     result = result.replace(/הוא ראשון\/ה/g, 'הוא ראשון'); // הוא ראשון/ה → הוא ראשון
     result = result.replace(/הוא ירצה\/תרצה/g, 'הוא ירצה'); // הוא ירצה/תרצה → הוא ירצה
     result = result.replace(/הוא יוכל\/תוכל/g, 'הוא יוכל'); // הוא יוכל/תוכל → הוא יוכל
+    result = result.replace(/\bלא יוכל\/תוכל\b/g, 'לא יוכל'); // לא יוכל/תוכל → לא יוכל
+    result = result.replace(/\bלא ירצה\/תרצה\b/g, 'לא ירצה'); // לא ירצה/תרצה → לא ירצה
+    result = result.replace(/\bיוכל\/תוכל\b/g, 'יוכל'); // יוכל/תוכל → יוכל (גם בלי "הוא" לפני)
+    result = result.replace(/\bירצה\/תרצה\b/g, 'ירצה'); // ירצה/תרצה → ירצה (גם בלי "הוא" לפני)
     result = result.replace(/הוא יהיה\/תהיה/g, 'הוא יהיה'); // הוא יהיה/תהיה → הוא יהיה
     result = result.replace(/הוא ילך\/תלך/g, 'הוא ילך'); // הוא ילך/תלך → הוא ילך
     result = result.replace(/הוא יגיע\/תגיע/g, 'הוא יגיע'); // הוא יגיע/תגיע → הוא יגיע

@@ -18,7 +18,8 @@ import {
   RefreshCw,
   Sparkles,
   MoveHorizontal,
-  EyeOff
+  EyeOff,
+  Upload
 } from 'lucide-react';
 import EditableSection from './LearningSystem/EditableSection';
 import { EditableSection as EditableSectionType } from '@/lib/learning-system/types';
@@ -48,6 +49,7 @@ const CATEGORIES = [
 ];
 
 export default function UnifiedWarehouse({ onSectionSelect, userId, willType = 'individual' }: UnifiedWarehouseProps) {
+  console.log('UnifiedWarehouse rendered, onSectionSelect:', typeof onSectionSelect, onSectionSelect);
   // Supabase hooks
   const {
     sections,
@@ -80,6 +82,8 @@ export default function UnifiedWarehouse({ onSectionSelect, userId, willType = '
   const [showAIEditor, setShowAIEditor] = useState<string | null>(null);
   const [migrating, setMigrating] = useState(false);
   const [migrationComplete, setMigrationComplete] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   // מיגרציה אוטומטית בטעינה ראשונה
   useEffect(() => {
@@ -162,6 +166,81 @@ export default function UnifiedWarehouse({ onSectionSelect, userId, willType = '
     }
   };
 
+  // ייבוא סעיפים מקובץ JSON
+  const handleImportSections = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.name.endsWith('.json')) {
+      alert('❌ הקובץ חייב להיות בפורמט JSON (.json)');
+      return;
+    }
+
+    setImporting(true);
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+
+      // בדיקת פורמט הקובץ
+      if (!data.sections || !Array.isArray(data.sections)) {
+        alert('❌ פורמט קובץ לא תקין. הקובץ חייב להכיל מערך "sections"');
+        return;
+      }
+
+      let successCount = 0;
+      let errorCount = 0;
+
+      // הוספת כל הסעיפים
+      for (const section of data.sections) {
+        try {
+          // בדיקות תקינות
+          if (!section.title || !section.content) {
+            console.warn('סעיף חסר כותרת או תוכן:', section);
+            errorCount++;
+            continue;
+          }
+
+          await addSection({
+            user_id: userId,
+            title: section.title.trim(),
+            content: section.content.trim(),
+            category: section.category || 'custom',
+            tags: Array.isArray(section.tags) ? section.tags : (section.tags ? [section.tags] : []),
+            usage_count: 0,
+            average_rating: 0,
+            is_public: section.is_public || false,
+            is_hidden: false,
+            created_by: userId
+          });
+
+          successCount++;
+        } catch (err) {
+          console.error('שגיאה בהוספת סעיף:', section.title, err);
+          errorCount++;
+        }
+      }
+
+      // איפוס הקובץ
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+
+      await reload(); // רענון הרשימה
+
+      // הודעת סיכום
+      if (successCount > 0) {
+        alert(`✅ הובאו ${successCount} סעיפים בהצלחה!${errorCount > 0 ? `\n⚠️ ${errorCount} סעיפים לא נוספו.` : ''}`);
+      } else {
+        alert(`❌ לא הוספו סעיפים. בדוק את הקובץ ונסה שוב.`);
+      }
+    } catch (err) {
+      console.error('שגיאה בייבוא:', err);
+      alert('❌ שגיאה בקריאת הקובץ. ודאי שהקובץ בפורמט JSON תקין.');
+    } finally {
+      setImporting(false);
+    }
+  };
+
   const handleEditSection = (section: WarehouseSection) => {
     setEditingSection(section);
   };
@@ -220,10 +299,40 @@ export default function UnifiedWarehouse({ onSectionSelect, userId, willType = '
   };
 
   const handleSelectSection = async (section: WarehouseSection) => {
-    // עדכון מונה שימוש ב-Supabase
-    await incrementUsage(section.id);
-    
-    onSectionSelect(section);
+    try {
+      console.log('handleSelectSection called with:', section);
+      // עדכון מונה שימוש ב-Supabase
+      await incrementUsage(section.id);
+      
+      console.log('Calling onSectionSelect...');
+      console.log('onSectionSelect type:', typeof onSectionSelect);
+      console.log('onSectionSelect toString:', onSectionSelect?.toString?.()?.substring(0, 200));
+      if (typeof onSectionSelect === 'function') {
+        try {
+          console.log('🔵 About to execute onSectionSelect with section:', section);
+          const result: any = onSectionSelect(section);
+          console.log('🔵 onSectionSelect executed, result:', result);
+          // אם זה Promise, נמתין לו
+          if (result && typeof result === 'object' && 'then' in result && typeof result.then === 'function') {
+            (result as Promise<any>).then(() => {
+              console.log('onSectionSelect Promise resolved');
+            }).catch((err: any) => {
+              console.error('onSectionSelect Promise rejected:', err);
+            });
+          }
+          console.log('onSectionSelect called successfully, result:', result);
+        } catch (err) {
+          console.error('Error calling onSectionSelect:', err);
+          throw err;
+        }
+      } else {
+        console.error('❌ onSectionSelect is not a function! Value:', onSectionSelect);
+        alert('שגיאה: הפונקציה לא זמינה');
+      }
+    } catch (error) {
+      console.error('Error in handleSelectSection:', error);
+      alert('שגיאה בהוספת הסעיף: ' + (error as Error).message);
+    }
   };
 
   // המרת WarehouseSection ל-EditableSectionType
@@ -426,6 +535,19 @@ export default function UnifiedWarehouse({ onSectionSelect, userId, willType = '
             סעיף חדש
           </button>
 
+          <label className="flex items-center justify-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleImportSections}
+              accept=".json"
+              className="hidden"
+              disabled={importing}
+            />
+            <Upload className="w-4 h-4" />
+            {importing ? 'מייבא...' : 'ייבא מקבץ סעיפים (JSON)'}
+          </label>
+
           <button
             onClick={() => reload()}
             disabled={warehouseLoading}
@@ -620,7 +742,12 @@ export default function UnifiedWarehouse({ onSectionSelect, userId, willType = '
                   
                   <div className="flex gap-2">
                     <button
-                      onClick={() => handleSelectSection(section)}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log('🔵 Button clicked for section:', section?.title);
+                        handleSelectSection(section);
+                      }}
                       className="px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition"
                     >
                       הוסף לצוואה

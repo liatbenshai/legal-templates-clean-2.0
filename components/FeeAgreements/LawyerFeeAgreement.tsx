@@ -1651,6 +1651,43 @@ ________________________           ${agreementData.clients.map((_, i) => '______
                 <BookOpen className="w-4 h-4" />
                 מחסן סעיפים
               </button>
+              <button
+                onClick={() => setShowUnifiedWarehouse(true)}
+                className="flex items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm"
+              >
+                <Brain className="w-4 h-4" />
+                מאגר מאוחד
+              </button>
+              <button
+                onClick={() => setShowWarehouseEditor(true)}
+                className="flex items-center gap-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm"
+              >
+                <Plus className="w-4 h-4" />
+                הוסף למאגר
+              </button>
+              <button
+                onClick={() => {
+                  const title = prompt('כותרת הסעיף:');
+                  const content = prompt('תוכן הסעיף:');
+                  if (title && content) {
+                    handleAddSection(content, title);
+                  }
+                }}
+                className="flex items-center gap-2 px-3 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition text-sm"
+              >
+                <FileText className="w-4 h-4" />
+                הוסף סעיף
+              </button>
+              <button
+                onClick={() => {
+                  convertToEditableSections();
+                  setShowLearningSystem(true);
+                }}
+                className="flex items-center gap-2 px-3 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition text-sm"
+              >
+                <Brain className="w-4 h-4" />
+                מערכת למידה
+              </button>
             </div>
           </div>
           <p className="text-indigo-700 mb-3">
@@ -2270,6 +2307,37 @@ ________________________           ${agreementData.clients.map((_, i) => '______
                 userId={agreementData.clients[0]?.name || 'anonymous'}
                 willType="individual"
               />
+            </div>
+          </div>
+        )}
+
+        {/* מערכת למידה */}
+        {showLearningSystem && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-6xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-bold text-gray-900">
+                  🧠 מערכת למידה
+                </h3>
+                <button
+                  onClick={() => setShowLearningSystem(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+              
+              <div className="space-y-4">
+                {editableSections.map((section) => (
+                  <EditableSection
+                    key={section.id}
+                    section={section}
+                    onUpdate={handleUpdateEditableSection}
+                    onSaveToWarehouse={handleSaveToWarehouse}
+                    onSaveToLearning={handleSaveToLearning}
+                  />
+                ))}
+              </div>
             </div>
           </div>
         )}
