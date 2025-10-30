@@ -229,6 +229,11 @@ export const hebrewDictionary: Record<string, GenderedWord> = {
   'אחראימשפטי': { male: 'אחראי', female: 'אחראית', plural: 'אחראים' },
   'מוסמך': { male: 'מוסמך', female: 'מוסמכת', plural: 'מוסמכים' },
   'מחויבמשפטי': { male: 'מחויב', female: 'מחויבת', plural: 'מחויבים' },
+  
+  // מונחים משפטיים - נאמנות
+  'הנאמן': { male: 'הנאמן', female: 'הנאמנית', plural: 'הנאמנים' },
+  'עין': { male: 'עינו', female: 'עינה', plural: 'עיניהם' },
+  'עיני': { male: 'עיניו', female: 'עינה', plural: 'עיניהם' },
   'מורשה_פעולה': { male: 'מורשה לפעול', female: 'מורשת לפעול', plural: 'מורשים לפעול' },
   'מנוע': { male: 'מנוע', female: 'מנועה', plural: 'מנועים' },
   'חתוםמסמך': { male: 'חתום', female: 'חתומה', plural: 'חתומים' },
@@ -351,6 +356,12 @@ export function replaceTextWithGender(text: string, gender: Gender): string {
     result = result.replace(/חייו\/ה/g, 'חייו'); // חייו/ה → חייו
     result = result.replace(/בן\/בת זוגי/g, 'בן זוגי'); // בן/בת זוגי → בן זוגי
     result = result.replace(/הוא\/היא/g, 'הוא'); // הוא/היא → הוא
+    
+    // מונחים משפטיים - נאמנות
+    result = result.replace(/הנאמן\/ת/g, 'הנאמן'); // הנאמן/ת → הנאמן
+    result = result.replace(/עינו\/ה/g, 'עינו'); // עינו/ה → עינו
+    result = result.replace(/עיניו\/ה/g, 'עיניו'); // עיניו/ה → עיניו
+    result = result.replace(/כראות עינו\/ה/g, 'כראות עינו'); // כראות עינו/ה → כראות עינו
   } else if (gender === 'female') {
     result = result.replace(/\/ת\b/g, 'ת');  // אני מבטל/ת → אני מבטלת
     result = result.replace(/\/תוכל\b/g, 'תוכל');  // יוכל/תוכל → תוכל
@@ -411,6 +422,12 @@ export function replaceTextWithGender(text: string, gender: Gender): string {
     result = result.replace(/חייו\/ה/g, 'חייה'); // חייו/ה → חייה
     result = result.replace(/בן\/בת זוגי/g, 'בת זוגי'); // בן/בת זוגי → בת זוגי
     result = result.replace(/הוא\/היא/g, 'היא'); // הוא/היא → היא
+    
+    // מונחים משפטיים - נאמנות
+    result = result.replace(/הנאמן\/ת/g, 'הנאמנית'); // הנאמן/ת → הנאמנית
+    result = result.replace(/עינו\/ה/g, 'עינה'); // עינו/ה → עינה
+    result = result.replace(/עיניו\/ה/g, 'עינה'); // עיניו/ה → עינה
+    result = result.replace(/כראות עינו\/ה/g, 'כראות עינה'); // כראות עינו/ה → כראות עינה
   } else if (gender === 'plural') {
     result = result.replace(/\/ת\b/g, '');   // אנו מבטל/ת → אנו מבטל
     result = result.replace(/\/תוכל\b/g, '');  // יוכל/תוכל → יוכל
@@ -471,6 +488,12 @@ export function replaceTextWithGender(text: string, gender: Gender): string {
     result = result.replace(/הוא יקבל\/תקבל/g, 'הם יקבלו'); // הוא יקבל/תקבל → הם יקבלו
     result = result.replace(/הוא יבחר\/תבחר/g, 'הם יבחרו'); // הוא יבחר/תבחר → הם יבחרו
     result = result.replace(/הוא ימנה\/תמנה/g, 'הם ימנו'); // הוא ימנה/תמנה → הם ימנו
+    
+    // מונחים משפטיים - נאמנות
+    result = result.replace(/הנאמן\/ת/g, 'הנאמנים'); // הנאמן/ת → הנאמנים
+    result = result.replace(/עינו\/ה/g, 'עיניהם'); // עינו/ה → עיניהם
+    result = result.replace(/עיניו\/ה/g, 'עיניהם'); // עיניו/ה → עיניהם
+    result = result.replace(/כראות עינו\/ה/g, 'כראות עיניהם'); // כראות עינו/ה → כראות עיניהם
   }
   
   // **שלב 2: עבור על כל המילים במילון - תוקן עם escape ו-word boundaries טובים יותר**
