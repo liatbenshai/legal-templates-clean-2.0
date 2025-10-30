@@ -1015,6 +1015,7 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
       variables: extractedVariables,
       values: {},
       genders: {},
+      testatorGender: willType === 'mutual' ? 'plural' : (testator.gender === 'organization' ? 'male' : (testator.gender || 'male')) as 'male' | 'female' | 'plural',
       pendingSection: null
     });
   };
@@ -1477,6 +1478,7 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
     variables: string[];
     values: Record<string, string>;
     genders: Record<string, 'male' | 'female' | 'plural'>;
+    testatorGender: 'male' | 'female' | 'plural';
     pendingSection: {
       id: string;
       title: string;
@@ -1490,6 +1492,7 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
     variables: [],
     values: {},
     genders: {},
+    testatorGender: 'male',
     pendingSection: null
   });
 
@@ -1543,6 +1546,7 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
           variables,
           values: {},
           genders: {},
+          testatorGender: willType === 'mutual' ? 'plural' : (testator.gender === 'organization' ? 'male' : (testator.gender || 'male')) as 'male' | 'female' | 'plural',
           pendingSection: {
             id: generateSectionId(),
             title: section.title,
@@ -4958,13 +4962,37 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
                 )}
               </div>
               <button
-                onClick={() => setVariablesCompletionModal({ isOpen: false, variables: [], values: {}, genders: {}, pendingSection: null })}
+                onClick={() => setVariablesCompletionModal({ isOpen: false, variables: [], values: {}, genders: {}, testatorGender: 'male', pendingSection: null })}
                 className="text-gray-400 hover:text-gray-600"
               >
                 ✕
               </button>
             </div>
             
+            {/* בחירת מגדר המצווה */}
+            <div className="mb-4 p-4 bg-purple-50 rounded-lg border border-purple-200">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                מגדר המצווה:
+              </label>
+              <select
+                value={variablesCompletionModal.testatorGender}
+                onChange={(e) => {
+                  setVariablesCompletionModal(prev => ({
+                    ...prev,
+                    testatorGender: e.target.value as 'male' | 'female' | 'plural'
+                  }));
+                }}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-purple-500 focus:border-purple-500 text-sm"
+              >
+                <option value="male">זכר</option>
+                <option value="female">נקבה</option>
+                <option value="plural">רבים (לצוואה הדדית)</option>
+              </select>
+              <p className="text-xs text-gray-600 mt-2">
+                הטקסט יתאים למגדר המצווה שנבחר (ייטפל בדפוסים כמו מוריש/ה, רשאי/ת, וכו')
+              </p>
+            </div>
+
             {/* הצגת תוכן הסעיף */}
             {variablesCompletionModal.pendingSection && (
               <div className="mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
@@ -5048,7 +5076,7 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
             
             <div className="flex justify-end gap-3 mt-6">
               <button
-                onClick={() => setVariablesCompletionModal({ isOpen: false, variables: [], values: {}, genders: {}, pendingSection: null })}
+                onClick={() => setVariablesCompletionModal({ isOpen: false, variables: [], values: {}, genders: {}, testatorGender: 'male', pendingSection: null })}
                 className="px-4 py-2 text-gray-600 hover:text-gray-800"
               >
                 ביטול
@@ -5109,30 +5137,8 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
                   });
                   
                   // שלב 2: החלף את כל התוכן לפי מגדר (לטפל בדפוסים כמו "הוא יליד/ת", "יוכל/תוכל", "ירצה/תרצה")
-                  // חפש משתנה רגיש למגדר - עדיפות למשתני אפוטרופוס/שומר
-                  const genderRelevantVariables = variablesCompletionModal.variables.filter(v => isGenderRelevantVariable(v));
-                  let selectedGender: 'male' | 'female' | 'plural' = detectedGenderFromContext || (testator.gender === 'organization' ? 'male' : (testator.gender || 'male')) as 'male' | 'female' | 'plural';
-                  
-                  // אם יש משתנים רגישי מגדר, קח את המגדר של הראשון שנבחר
-                  if (genderRelevantVariables.length > 0) {
-                    // עדיפות למשתני אפוטרופוס
-                    const guardianVariable = genderRelevantVariables.find(v => 
-                      v.includes('אפוטרופוס') || v.includes('guardian') || v.includes('שומר')
-                    );
-                    const variableToUse = guardianVariable || genderRelevantVariables[0];
-                    
-                    if (variablesCompletionModal.genders[variableToUse]) {
-                      selectedGender = variablesCompletionModal.genders[variableToUse];
-                      console.log(`✅ משתמש במגדר "${selectedGender}" עבור המשתנה "${variableToUse}"`);
-                    } else {
-                      // אם לא נבחר מגדר, השתמש ברירת מחדל
-                      console.log(`⚠️ לא נבחר מגדר למשתנה "${variableToUse}", משתמש ברירת מחדל: ${selectedGender}`);
-                    }
-                  } else {
-                    // אם אין משתנים רגישי מגדר, השתמש במגדר המצווה
-                    selectedGender = willType === 'mutual' ? 'plural' : ((testator.gender === 'organization' ? 'male' : (testator.gender || 'male')) as 'male' | 'female' | 'plural');
-                    console.log(`ℹ️ אין משתנים רגישי מגדר, משתמש במגדר המצווה: ${selectedGender}`);
-                  }
+                  // השתמש במגדר המצווה שנבחר במודל
+                  const selectedGender: 'male' | 'female' | 'plural' = variablesCompletionModal.testatorGender;
                   
                   console.log(`🔄 מחליף דפוסי מגדר בטקסט לפי מגדר: ${selectedGender}`);
                   console.log(`📝 תוכן לפני החלפת מגדר: ${content.substring(0, 200)}`);
@@ -5178,7 +5184,7 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
                   };
                   
                   setCustomSections(prev => [...prev, updatedSection]);
-                  setVariablesCompletionModal({ isOpen: false, variables: [], values: {}, genders: {}, pendingSection: null });
+                  setVariablesCompletionModal({ isOpen: false, variables: [], values: {}, genders: {}, testatorGender: 'male', pendingSection: null });
                   alert(`✅ הסעיף "${updatedSection.title}" הוסף לצוואה עם המשתנים שהושלמו!`);
                 }}
                 className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
