@@ -234,6 +234,10 @@ export const hebrewDictionary: Record<string, GenderedWord> = {
   'הנאמן': { male: 'הנאמן', female: 'הנאמנית', plural: 'הנאמנים' },
   'עין': { male: 'עינו', female: 'עינה', plural: 'עיניהם' },
   'עיני': { male: 'עיניו', female: 'עינה', plural: 'עיניהם' },
+  
+  // מונחים משפטיים - אפוטרופסות (נוספים)
+  'אפוטרופסית': { male: 'אפוטרופוס', female: 'אפוטרופסית', plural: 'אפוטרופסים' },
+  'האפוטרופסית': { male: 'האפוטרופוס', female: 'האפוטרופסית', plural: 'האפוטרופסים' },
   'מורשה_פעולה': { male: 'מורשה לפעול', female: 'מורשת לפעול', plural: 'מורשים לפעול' },
   'מנוע': { male: 'מנוע', female: 'מנועה', plural: 'מנועים' },
   'חתוםמסמך': { male: 'חתום', female: 'חתומה', plural: 'חתומים' },
@@ -362,6 +366,12 @@ export function replaceTextWithGender(text: string, gender: Gender): string {
     result = result.replace(/עינו\/ה/g, 'עינו'); // עינו/ה → עינו
     result = result.replace(/עיניו\/ה/g, 'עיניו'); // עיניו/ה → עיניו
     result = result.replace(/כראות עינו\/ה/g, 'כראות עינו'); // כראות עינו/ה → כראות עינו
+    
+    // מונחים משפטיים - אפוטרופסות
+    result = result.replace(/אפוטרופוס\/ת/g, 'אפוטרופוס'); // אפוטרופוס/ת → אפוטרופוס
+    result = result.replace(/האפוטרופוס\/ת/g, 'האפוטרופוס'); // האפוטרופוס/ת → האפוטרופוס
+    result = result.replace(/אפוטרופסית\/ת/g, 'אפוטרופוס'); // אפוטרופסית/ת → אפוטרופוס
+    result = result.replace(/האפוטרופסית\/ת/g, 'האפוטרופוס'); // האפוטרופסית/ת → האפוטרופוס
   } else if (gender === 'female') {
     result = result.replace(/\/ת\b/g, 'ת');  // אני מבטל/ת → אני מבטלת
     result = result.replace(/\/תוכל\b/g, 'תוכל');  // יוכל/תוכל → תוכל
@@ -428,6 +438,12 @@ export function replaceTextWithGender(text: string, gender: Gender): string {
     result = result.replace(/עינו\/ה/g, 'עינה'); // עינו/ה → עינה
     result = result.replace(/עיניו\/ה/g, 'עינה'); // עיניו/ה → עינה
     result = result.replace(/כראות עינו\/ה/g, 'כראות עינה'); // כראות עינו/ה → כראות עינה
+    
+    // מונחים משפטיים - אפוטרופסות
+    result = result.replace(/אפוטרופוס\/ת/g, 'אפוטרופסית'); // אפוטרופוס/ת → אפוטרופסית
+    result = result.replace(/האפוטרופוס\/ת/g, 'האפוטרופסית'); // האפוטרופוס/ת → האפוטרופסית
+    result = result.replace(/אפוטרופסית\/ת/g, 'אפוטרופסית'); // אפוטרופסית/ת → אפוטרופסית
+    result = result.replace(/האפוטרופסית\/ת/g, 'האפוטרופסית'); // האפוטרופסית/ת → האפוטרופסית
   } else if (gender === 'plural') {
     result = result.replace(/\/ת\b/g, '');   // אנו מבטל/ת → אנו מבטל
     result = result.replace(/\/תוכל\b/g, '');  // יוכל/תוכל → יוכל
@@ -494,6 +510,12 @@ export function replaceTextWithGender(text: string, gender: Gender): string {
     result = result.replace(/עינו\/ה/g, 'עיניהם'); // עינו/ה → עיניהם
     result = result.replace(/עיניו\/ה/g, 'עיניהם'); // עיניו/ה → עיניהם
     result = result.replace(/כראות עינו\/ה/g, 'כראות עיניהם'); // כראות עינו/ה → כראות עיניהם
+    
+    // מונחים משפטיים - אפוטרופסות
+    result = result.replace(/אפוטרופוס\/ת/g, 'אפוטרופסים'); // אפוטרופוס/ת → אפוטרופסים
+    result = result.replace(/האפוטרופוס\/ת/g, 'האפוטרופסים'); // האפוטרופוס/ת → האפוטרופסים
+    result = result.replace(/אפוטרופסית\/ת/g, 'אפוטרופסים'); // אפוטרופסית/ת → אפוטרופסים
+    result = result.replace(/האפוטרופסית\/ת/g, 'האפוטרופסים'); // האפוטרופסית/ת → האפוטרופסים
   }
   
   // **שלב 2: עבור על כל המילים במילון - תוקן עם escape ו-word boundaries טובים יותר**
