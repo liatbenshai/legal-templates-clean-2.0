@@ -745,6 +745,15 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
     gender: 'male' as Gender
   });
 
+  // טעינת מגדר המצווה מ-localStorage
+  useEffect(() => {
+    const savedGender = localStorage.getItem('testator-gender');
+    if (savedGender && (savedGender === 'male' || savedGender === 'female' || savedGender === 'organization')) {
+      setTestator(prev => ({ ...prev, gender: savedGender as Gender }));
+      console.log('✅ נטען מגדר המצווה מ-localStorage:', savedGender);
+    }
+  }, []);
+
   // Warehouse hook
   const { addSection, updateSection, sections: warehouseSections } = useWarehouse(testator.fullName || 'anonymous');
 
@@ -811,6 +820,22 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
       gender: 'male'
     }
   ]);
+
+  // נאמן
+  const [trustee, setTrustee] = useState({
+    name: '',
+    id: '',
+    address: '',
+    gender: 'male' as 'male' | 'female'
+  });
+
+  // רואה חשבון
+  const [accountant, setAccountant] = useState({
+    name: '',
+    id: '',
+    address: '',
+    gender: 'male' as 'male' | 'female'
+  });
 
   // פרטי חתימה
   const [willDate, setWillDate] = useState({
@@ -1969,27 +1994,37 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
 
   // ← עדכון עם שמירה ל-Supabase
   const handleUpdateEditableSection = async (updatedSection: EditableSectionType) => {
+    // החלף מגדר בתוכן המעודכן
+    const testatorGender = willType === 'mutual' ? 'plural' : (testator.gender === 'organization' ? 'male' : (testator.gender || 'male')) as 'male' | 'female' | 'plural';
+    const genderedContent = replaceTextWithGender(updatedSection.content, testatorGender);
+    
+    const finalUpdatedSection = {
+      ...updatedSection,
+      content: genderedContent,
+      lastModified: new Date().toISOString()
+    };
+    
     // עדכן state locally
     setEditableSections(prev => 
       prev.map(section => 
-        section.id === updatedSection.id 
-          ? { ...updatedSection, lastModified: new Date().toISOString() }
+        section.id === finalUpdatedSection.id 
+          ? finalUpdatedSection
           : section
       )
     );
     
     // עדכן גם ב-customSections או הוראות מיוחדות
-    if (updatedSection.id.startsWith('custom-')) {
-      const index = parseInt(updatedSection.id.split('-')[1]);
+    if (finalUpdatedSection.id.startsWith('custom-')) {
+      const index = parseInt(finalUpdatedSection.id.split('-')[1]);
       setCustomSections(prev => 
         prev.map((section, i) => 
-          i === index ? { ...section, content: updatedSection.content } : section
+          i === index ? { ...section, content: finalUpdatedSection.content } : section
         )
       );
-    } else if (updatedSection.id === 'special-instructions') {
-      setSpecialInstructions(updatedSection.content);
-    } else if (updatedSection.id === 'vehicle-instructions') {
-      setVehicleInstructions(updatedSection.content);
+    } else if (finalUpdatedSection.id === 'special-instructions') {
+      setSpecialInstructions(finalUpdatedSection.content);
+    } else if (finalUpdatedSection.id === 'vehicle-instructions') {
+      setVehicleInstructions(finalUpdatedSection.content);
     }
 
     // ← שמור ל-Supabase
@@ -2251,6 +2286,9 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
                 value={testator.gender}
                 onChange={(gender) => {
                   setTestator(prev => ({ ...prev, gender }));
+                  // שמור את המגדר ב-localStorage
+                  localStorage.setItem('testator-gender', gender);
+                  console.log('💾 נשמר מגדר המצווה ב-localStorage:', gender);
                   // החלף את כל הטקסט לפי המגדר החדש
                   setCustomSections(prev => prev.map(section => ({
                     ...section,
@@ -5161,6 +5199,7 @@ function isGenderRelevantVariable(variable: string): boolean {
     // משתנים באנגלית
     'heir_name', 'guardian_name', 'alternate_guardian', 'child_name', 
     'manager_name', 'trustee_name', 'spouse_name', 'guardian_id', 'guardian_address',
+    'trustee_gender', 'accountant_name', 'accountant_gender',
     // משתנים בעברית
     'בן/בת זוגי', 'שם בן/בת הזוג', 'שם מלא', 'שם ילד/ה ראשון/ה', 'שם ילד/ה שני/ה', 'שם ילד/ה שלישי/ת',
     'הוא/היא', 'תאריך', 'תעודת זהות', 'שם מלא האפוטרופוס', 'שם מלא האפוטרופוס החלופי',
@@ -5211,6 +5250,9 @@ function getVariableLabel(variable: string): string {
     'manager_name': 'שם המנהל/ת',
     'trustee_name': 'שם המנהל/ת הנאמן/ה',
     'trustee_id': 'ת.ז. המנהל/ת הנאמן/ה',
+    'trustee_gender': 'זכר', // יוחלף בהמשך לפי המגדר הנבחר
+    'accountant_name': 'שם רואה החשבון',
+    'accountant_gender': 'זכר', // יוחלף בהמשך לפי המגדר הנבחר
     'age': 'גיל',
     'minor_children': 'ילדים קטינים',
     'spouse_name': 'שם בן/בת הזוג',

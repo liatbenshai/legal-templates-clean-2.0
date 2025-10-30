@@ -345,6 +345,12 @@ export function replaceTextWithGender(text: string, gender: Gender): string {
     result = result.replace(/מעוניין\/ת/g, 'מעוניין'); // מעוניין/ת → מעוניין
     result = result.replace(/ממלא\/ת/g, 'ממלא'); // ממלא/ת → ממלא (עבור "אני ממליץ/ה")
     result = result.replace(/רשאי\/ת/g, 'רשאי'); // רשאי/ת → רשאי
+    result = result.replace(/יחליט\/תחליט/g, 'יחליט'); // יחליט/תחליט → יחליט
+    result = result.replace(/מרצונו\/ה/g, 'מרצונו'); // מרצונו/ה → מרצונו
+    result = result.replace(/מגוריו\/ה/g, 'מגוריו'); // מגוריו/ה → מגוריו
+    result = result.replace(/חייו\/ה/g, 'חייו'); // חייו/ה → חייו
+    result = result.replace(/בן\/בת זוגי/g, 'בן זוגי'); // בן/בת זוגי → בן זוגי
+    result = result.replace(/הוא\/היא/g, 'הוא'); // הוא/היא → הוא
   } else if (gender === 'female') {
     result = result.replace(/\/ת\b/g, 'ת');  // אני מבטל/ת → אני מבטלת
     result = result.replace(/\/תוכל\b/g, 'תוכל');  // יוכל/תוכל → תוכל
@@ -399,6 +405,12 @@ export function replaceTextWithGender(text: string, gender: Gender): string {
     result = result.replace(/מעוניין\/ת/g, 'מעוניינת'); // מעוניין/ת → מעוניינת
     result = result.replace(/ממלא\/ת/g, 'ממלאת'); // ממלא/ת → ממלאת
     result = result.replace(/רשאי\/ת/g, 'רשאית'); // רשאי/ת → רשאית
+    result = result.replace(/יחליט\/תחליט/g, 'תחליט'); // יחליט/תחליט → תחליט
+    result = result.replace(/מרצונו\/ה/g, 'מרצונה'); // מרצונו/ה → מרצונה
+    result = result.replace(/מגוריו\/ה/g, 'מגוריה'); // מגוריו/ה → מגוריה
+    result = result.replace(/חייו\/ה/g, 'חייה'); // חייו/ה → חייה
+    result = result.replace(/בן\/בת זוגי/g, 'בת זוגי'); // בן/בת זוגי → בת זוגי
+    result = result.replace(/הוא\/היא/g, 'היא'); // הוא/היא → היא
   } else if (gender === 'plural') {
     result = result.replace(/\/ת\b/g, '');   // אנו מבטל/ת → אנו מבטל
     result = result.replace(/\/תוכל\b/g, '');  // יוכל/תוכל → יוכל
@@ -449,6 +461,12 @@ export function replaceTextWithGender(text: string, gender: Gender): string {
     result = result.replace(/מעוניין\/ת/g, 'מעוניינים'); // מעוניין/ת → מעוניינים
     result = result.replace(/ממלא\/ת/g, 'ממלאים'); // ממלא/ת → ממלאים
     result = result.replace(/רשאי\/ת/g, 'רשאים'); // רשאי/ת → רשאים
+    result = result.replace(/יחליט\/תחליט/g, 'יחליטו'); // יחליט/תחליט → יחליטו
+    result = result.replace(/מרצונו\/ה/g, 'מרצונם'); // מרצונו/ה → מרצונם
+    result = result.replace(/מגוריו\/ה/g, 'מגוריהם'); // מגוריו/ה → מגוריהם
+    result = result.replace(/חייו\/ה/g, 'חייהם'); // חייו/ה → חיייהם
+    result = result.replace(/בן\/בת זוגי/g, 'בני זוגי'); // בן/בת זוגי → בני זוגי
+    result = result.replace(/הוא\/היא/g, 'הם'); // הוא/היא → הם
     result = result.replace(/הוא יגיע\/תגיע/g, 'הם יגיעו'); // הוא יגיע/תגיע → הם יגיעו
     result = result.replace(/הוא יקבל\/תקבל/g, 'הם יקבלו'); // הוא יקבל/תקבל → הם יקבלו
     result = result.replace(/הוא יבחר\/תבחר/g, 'הם יבחרו'); // הוא יבחר/תבחר → הם יבחרו
