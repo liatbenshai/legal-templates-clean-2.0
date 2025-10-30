@@ -238,6 +238,11 @@ export const hebrewDictionary: Record<string, GenderedWord> = {
   // מונחים משפטיים - אפוטרופסות (נוספים)
   'אפוטרופסית': { male: 'אפוטרופוס', female: 'אפוטרופסית', plural: 'אפוטרופסים' },
   'האפוטרופסית': { male: 'האפוטרופוס', female: 'האפוטרופסית', plural: 'האפוטרופסים' },
+  
+  // מונחים משפטיים - רכוש ותכשיטים
+  'תכשיטים': { male: 'תכשיטי', female: 'תכשיטי', plural: 'תכשיטינו' },
+  'תכשירים': { male: 'תכשירי', female: 'תכשירי', plural: 'תכשירינו' },
+  'טבעת': { male: 'טבעתי', female: 'טבעתי', plural: 'טבעתנו' },
   'מורשה_פעולה': { male: 'מורשה לפעול', female: 'מורשת לפעול', plural: 'מורשים לפעול' },
   'מנוע': { male: 'מנוע', female: 'מנועה', plural: 'מנועים' },
   'חתוםמסמך': { male: 'חתום', female: 'חתומה', plural: 'חתומים' },
@@ -372,6 +377,11 @@ export function replaceTextWithGender(text: string, gender: Gender): string {
     result = result.replace(/האפוטרופוס\/ת/g, 'האפוטרופוס'); // האפוטרופוס/ת → האפוטרופוס
     result = result.replace(/אפוטרופסית\/ת/g, 'אפוטרופוס'); // אפוטרופסית/ת → אפוטרופוס
     result = result.replace(/האפוטרופסית\/ת/g, 'האפוטרופוס'); // האפוטרופסית/ת → האפוטרופוס
+    
+    // מונחים משפטיים - רכוש ותכשיטים
+    result = result.replace(/תכשיטים\/י/g, 'תכשיטי'); // תכשיטים/י → תכשיטי
+    result = result.replace(/תכשירים\/י/g, 'תכשירי'); // תכשירים/י → תכשירי
+    result = result.replace(/טבעת\/י/g, 'טבעתי'); // טבעת/י → טבעתי
   } else if (gender === 'female') {
     result = result.replace(/\/ת\b/g, 'ת');  // אני מבטל/ת → אני מבטלת
     result = result.replace(/\/תוכל\b/g, 'תוכל');  // יוכל/תוכל → תוכל
@@ -444,6 +454,11 @@ export function replaceTextWithGender(text: string, gender: Gender): string {
     result = result.replace(/האפוטרופוס\/ת/g, 'האפוטרופסית'); // האפוטרופוס/ת → האפוטרופסית
     result = result.replace(/אפוטרופסית\/ת/g, 'אפוטרופסית'); // אפוטרופסית/ת → אפוטרופסית
     result = result.replace(/האפוטרופסית\/ת/g, 'האפוטרופסית'); // האפוטרופסית/ת → האפוטרופסית
+    
+    // מונחים משפטיים - רכוש ותכשיטים
+    result = result.replace(/תכשיטים\/י/g, 'תכשיטי'); // תכשיטים/י → תכשיטי
+    result = result.replace(/תכשירים\/י/g, 'תכשירי'); // תכשירים/י → תכשירי
+    result = result.replace(/טבעת\/י/g, 'טבעתי'); // טבעת/י → טבעתי
   } else if (gender === 'plural') {
     result = result.replace(/\/ת\b/g, '');   // אנו מבטל/ת → אנו מבטל
     result = result.replace(/\/תוכל\b/g, '');  // יוכל/תוכל → יוכל
@@ -516,6 +531,11 @@ export function replaceTextWithGender(text: string, gender: Gender): string {
     result = result.replace(/האפוטרופוס\/ת/g, 'האפוטרופסים'); // האפוטרופוס/ת → האפוטרופסים
     result = result.replace(/אפוטרופסית\/ת/g, 'אפוטרופסים'); // אפוטרופסית/ת → אפוטרופסים
     result = result.replace(/האפוטרופסית\/ת/g, 'האפוטרופסים'); // האפוטרופסית/ת → האפוטרופסים
+    
+    // מונחים משפטיים - רכוש ותכשיטים
+    result = result.replace(/תכשיטים\/י/g, 'תכשיטינו'); // תכשיטים/י → תכשיטינו
+    result = result.replace(/תכשירים\/י/g, 'תכשירינו'); // תכשירים/י → תכשירינו
+    result = result.replace(/טבעת\/י/g, 'טבעתנו'); // טבעת/י → טבעתנו
   }
   
   // **שלב 2: עבור על כל המילים במילון - תוקן עם escape ו-word boundaries טובים יותר**
