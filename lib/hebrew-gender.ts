@@ -304,19 +304,48 @@ export function replaceTextWithGender(text: string, gender: Gender): string {
   
   // **שלב 1: החלפת דפוסים נפוצים /ת /ה /ים /ות - תוקן!**
   if (gender === 'male') {
+    // תיקון קריטי: קודם כל נחליף "בן/בת זוגי" ל"בן זוגי" לפני כל שאר ההחלפות
+    result = result.replace(/בן\/בת זוגי/g, 'בן זוגי'); // בן/בת זוגי → בן זוגי
+    result = result.replace(/בת\/בן זוגי/g, 'בן זוגי'); // בת/בן זוגי → בן זוגי
+    
     result = result.replace(/\/ת\b/g, '');  // אני מבטל/ת → אני מבטל
     result = result.replace(/\/תוכל\b/g, '');  // יוכל/תוכל → יוכל
     result = result.replace(/([^ה])\/ה\b/g, '$1');  // אני מוריש/ה → אני מוריש
     result = result.replace(/מוריש\/ה/g, 'מוריש'); // מוריש/ה → מוריש
     result = result.replace(/מעניק\/ה/g, 'מעניק'); // מעניק/ה → מעניק
     result = result.replace(/יישא\/תישא/g, 'יישא'); // יישא/תישא → יישא
-    result = result.replace(/יהיה רשאית/g, 'יהיה רשאי'); // יהיה רשאית → יהיה רשאי
-    result = result.replace(/תישא/g, 'יישא'); // תישא → יישא
+    result = result.replace(/יהיה רשאי\/ת/g, 'יהיה רשאי'); // יהיה רשאי/ת → יהיה רשאי
+    result = result.replace(/רשאי\/ת/g, 'רשאי'); // רשאי/ת → רשאי
     
     // תיקון מיוחד לבן/בת זוג - אם כתוב "בן זוגי" זה תמיד זכר
     result = result.replace(/בן זוגי.*יהיה רשאית/g, 'בן זוגי יהיה רשאי'); // בן זוגי יהיה רשאית → בן זוגי יהיה רשאי
     result = result.replace(/בן זוגי.*תישא/g, 'בן זוגי יישא'); // בן זוגי תישא → בן זוגי יישא
     result = result.replace(/בן זוגי.*תהיה/g, 'בן זוגי יהיה'); // בן זוגי תהיה → בן זוגי יהיה
+    
+    // תיקון מיוחד - אם יש שם + "בן זוגי" זה תמיד זכר
+    result = result.replace(/(\w+).*בן זוגי.*יהיה רשאית/g, '$1 בן זוגי יהיה רשאי'); // שם + בן זוגי יהיה רשאית → שם + בן זוגי יהיה רשאי
+    result = result.replace(/(\w+).*בן זוגי.*תישא/g, '$1 בן זוגי יישא'); // שם + בן זוגי תישא → שם + בן זוגי יישא
+    result = result.replace(/(\w+).*בן זוגי.*תהיה/g, '$1 בן זוגי יהיה'); // שם + בן זוגי תהיה → שם + בן זוגי יהיה
+    
+    // תיקון ספציפי - אם יש "בן זוגי" אז כל "יהיה רשאית" או "תישא" הופכים לזכר
+    result = result.replace(/יהיה רשאית.*בן זוגי/g, 'יהיה רשאי בן זוגי'); // יהיה רשאית + בן זוגי → יהיה רשאי בן זוגי
+    result = result.replace(/תישא.*בן זוגי/g, 'יישא בן זוגי'); // תישא + בן זוגי → יישא בן זוגי
+    result = result.replace(/תהיה.*בן זוגי/g, 'יהיה בן זוגי'); // תהיה + בן זוגי → יהיה בן זוגי
+    
+    // תיקון נוסף - אם יש "בן זוגי" אז כל "יהיה רשאית" או "תישא" הופכים לזכר
+    if (result.includes('בן זוגי') && !result.includes('בת זוגי')) {
+      result = result.replace(/יהיה רשאית/g, 'יהיה רשאי'); // יהיה רשאית → יהיה רשאי (אם יש בן זוגי)
+      result = result.replace(/תהיה רשאית/g, 'יהיה רשאי'); // תהיה רשאית → יהיה רשאי (אם יש בן זוגי)
+      result = result.replace(/תישא/g, 'יישא'); // תישא → יישא (אם יש בן זוגי)
+      result = result.replace(/תהיה/g, 'יהיה'); // תהיה → יהיה (אם יש בן זוגי)
+    }
+    
+    // תיקון נוסף - אם יש "בת זוגי" אז כל "יהיה רשאי" או "יישא" הופכים לנקבה
+    if (result.includes('בת זוגי')) {
+      result = result.replace(/יהיה רשאי/g, 'תהיה רשאית'); // יהיה רשאי → תהיה רשאית (אם יש בת זוגי)
+      result = result.replace(/יישא/g, 'תישא'); // יישא → תישא (אם יש בת זוגי)
+      result = result.replace(/יהיה/g, 'תהיה'); // יהיה → תהיה (אם יש בת זוגי)
+    }
     result = result.replace(/ה\/ה\b/g, 'ה');  // מצווה/ה → מצווה
     result = result.replace(/\/ים\b/g, ''); // ממנה/ים → ממנה
     result = result.replace(/\/ית\b/g, ''); // חלופי/ת → חלופי
@@ -375,7 +404,6 @@ export function replaceTextWithGender(text: string, gender: Gender): string {
     result = result.replace(/מרצונו\/ה/g, 'מרצונו'); // מרצונו/ה → מרצונו
     result = result.replace(/מגוריו\/ה/g, 'מגוריו'); // מגוריו/ה → מגוריו
     result = result.replace(/חייו\/ה/g, 'חייו'); // חייו/ה → חייו
-    result = result.replace(/בן\/בת זוגי/g, 'בן זוגי'); // בן/בת זוגי → בן זוגי
     result = result.replace(/הוא\/היא/g, 'הוא'); // הוא/היא → הוא
     
     // מונחים משפטיים - נאמנות
@@ -395,20 +423,40 @@ export function replaceTextWithGender(text: string, gender: Gender): string {
     result = result.replace(/תכשירים\/י/g, 'תכשירי'); // תכשירים/י → תכשירי
     result = result.replace(/טבעת\/י/g, 'טבעתי'); // טבעת/י → טבעתי
   } else if (gender === 'female') {
+    // תיקון קריטי: קודם כל נחליף "בן/בת זוגי" ל"בת זוגי" לפני כל שאר ההחלפות
+    result = result.replace(/בן\/בת זוגי/g, 'בת זוגי'); // בן/בת זוגי → בת זוגי
+    result = result.replace(/בת\/בן זוגי/g, 'בת זוגי'); // בת/בן זוגי → בת זוגי
+    
     result = result.replace(/\/ת\b/g, 'ת');  // אני מבטל/ת → אני מבטלת
     result = result.replace(/\/תוכל\b/g, 'תוכל');  // יוכל/תוכל → תוכל
     result = result.replace(/([^ה])\/ה\b/g, '$1ה');  // אני מוריש/ה → אני מורישה
     result = result.replace(/מוריש\/ה/g, 'מורישה'); // מוריש/ה → מורישה
     result = result.replace(/מעניק\/ה/g, 'מעניקה'); // מעניק/ה → מעניקה
     result = result.replace(/יישא\/תישא/g, 'תישא'); // יישא/תישא → תישא
-    result = result.replace(/יהיה רשאית/g, 'תהיה רשאית'); // יהיה רשאית → תהיה רשאית
-    result = result.replace(/יהיה רשאי/g, 'תהיה רשאית'); // יהיה רשאי → תהיה רשאית
-    result = result.replace(/יישא/g, 'תישא'); // יישא → תישא
+    result = result.replace(/יהיה רשאי\/ת/g, 'תהיה רשאית'); // יהיה רשאי/ת → תהיה רשאית
+    result = result.replace(/רשאי\/ת/g, 'רשאית'); // רשאי/ת → רשאית
     
     // תיקון מיוחד לבן/בת זוג - אם כתוב "בת זוגי" זה תמיד נקבה
     result = result.replace(/בת זוגי.*יהיה רשאי/g, 'בת זוגי תהיה רשאית'); // בת זוגי יהיה רשאי → בת זוגי תהיה רשאית
     result = result.replace(/בת זוגי.*יישא/g, 'בת זוגי תישא'); // בת זוגי יישא → בת זוגי תישא
     result = result.replace(/בת זוגי.*יהיה/g, 'בת זוגי תהיה'); // בת זוגי יהיה → בת זוגי תהיה
+    
+    // תיקון מיוחד - אם יש שם + "בת זוגי" זה תמיד נקבה
+    result = result.replace(/(\w+).*בת זוגי.*יהיה רשאי/g, '$1 בת זוגי תהיה רשאית'); // שם + בת זוגי יהיה רשאי → שם + בת זוגי תהיה רשאית
+    result = result.replace(/(\w+).*בת זוגי.*יישא/g, '$1 בת זוגי תישא'); // שם + בת זוגי יישא → שם + בת זוגי תישא
+    result = result.replace(/(\w+).*בת זוגי.*יהיה/g, '$1 בת זוגי תהיה'); // שם + בת זוגי יהיה → שם + בת זוגי תהיה
+    
+    // תיקון ספציפי - אם יש "בת זוגי" אז כל "יהיה רשאי" או "יישא" הופכים לנקבה
+    result = result.replace(/יהיה רשאי.*בת זוגי/g, 'תהיה רשאית בת זוגי'); // יהיה רשאי + בת זוגי → תהיה רשאית בת זוגי
+    result = result.replace(/יישא.*בת זוגי/g, 'תישא בת זוגי'); // יישא + בת זוגי → תישא בת זוגי
+    result = result.replace(/יהיה.*בת זוגי/g, 'תהיה בת זוגי'); // יהיה + בת זוגי → תהיה בת זוגי
+    
+    // תיקון נוסף - אם יש "בת זוגי" אז כל "יהיה רשאי" או "יישא" הופכים לנקבה
+    if (result.includes('בת זוגי')) {
+      result = result.replace(/יהיה רשאי/g, 'תהיה רשאית'); // יהיה רשאי → תהיה רשאית (אם יש בת זוגי)
+      result = result.replace(/יישא/g, 'תישא'); // יישא → תישא (אם יש בת זוגי)
+      result = result.replace(/יהיה/g, 'תהיה'); // יהיה → תהיה (אם יש בת זוגי)
+    }
     result = result.replace(/ה\/ה\b/g, 'ה');  // מצווה/ה → מצווה
     result = result.replace(/\/ים\b/g, ''); // תוקן! ממנה/ים → ממנה (לא ממנהים)
     result = result.replace(/\/ית\b/g, 'ית'); // חלופי/ת → חלופית
@@ -463,7 +511,6 @@ export function replaceTextWithGender(text: string, gender: Gender): string {
     result = result.replace(/מרצונו\/ה/g, 'מרצונה'); // מרצונו/ה → מרצונה
     result = result.replace(/מגוריו\/ה/g, 'מגוריה'); // מגוריו/ה → מגוריה
     result = result.replace(/חייו\/ה/g, 'חייה'); // חייו/ה → חייה
-    result = result.replace(/בן\/בת זוגי/g, 'בת זוגי'); // בן/בת זוגי → בת זוגי
     result = result.replace(/הוא\/היא/g, 'היא'); // הוא/היא → היא
     
     // מונחים משפטיים - נאמנות
@@ -483,16 +530,18 @@ export function replaceTextWithGender(text: string, gender: Gender): string {
     result = result.replace(/תכשירים\/י/g, 'תכשירי'); // תכשירים/י → תכשירי
     result = result.replace(/טבעת\/י/g, 'טבעתי'); // טבעת/י → טבעתי
   } else if (gender === 'plural') {
+    // תיקון קריטי: קודם כל נחליף "בן/בת זוגי" ל"בני זוגי" לפני כל שאר ההחלפות
+    result = result.replace(/בן\/בת זוגי/g, 'בני זוגי'); // בן/בת זוגי → בני זוגי
+    result = result.replace(/בת\/בן זוגי/g, 'בני זוגי'); // בת/בן זוגי → בני זוגי
+    
     result = result.replace(/\/ת\b/g, '');   // אנו מבטל/ת → אנו מבטל
     result = result.replace(/\/תוכל\b/g, '');  // יוכל/תוכל → יוכל
     result = result.replace(/([^ה])\/ה\b/g, '$1');   // אנו מוריש/ה → אנו מוריש
     result = result.replace(/מוריש\/ה/g, 'מורישים'); // מוריש/ה → מורישים
     result = result.replace(/מעניק\/ה/g, 'מעניקים'); // מעניק/ה → מעניקים
     result = result.replace(/יישא\/תישא/g, 'יישאו'); // יישא/תישא → יישאו
-    result = result.replace(/יהיה רשאי/g, 'יהיו רשאים'); // יהיה רשאי → יהיו רשאים
-    result = result.replace(/יהיה רשאית/g, 'יהיו רשאים'); // יהיה רשאית → יהיו רשאים
-    result = result.replace(/תישא/g, 'יישאו'); // תישא → יישאו
-    result = result.replace(/יישא/g, 'יישאו'); // יישא → יישאו
+    result = result.replace(/יהיה רשאי\/ת/g, 'יהיו רשאים'); // יהיה רשאי/ת → יהיו רשאים
+    result = result.replace(/רשאי\/ת/g, 'רשאים'); // רשאי/ת → רשאים
     
     // תיקון מיוחד לבן/בת זוג - ברבים זה תמיד "בני זוגי"
     result = result.replace(/בן זוגי.*יהיה רשאי/g, 'בן זוגי יהיו רשאים'); // בן זוגי יהיה רשאי → בן זוגי יהיו רשאים
@@ -553,7 +602,6 @@ export function replaceTextWithGender(text: string, gender: Gender): string {
     result = result.replace(/מרצונו\/ה/g, 'מרצונם'); // מרצונו/ה → מרצונם
     result = result.replace(/מגוריו\/ה/g, 'מגוריהם'); // מגוריו/ה → מגוריהם
     result = result.replace(/חייו\/ה/g, 'חייהם'); // חייו/ה → חיייהם
-    result = result.replace(/בן\/בת זוגי/g, 'בני זוגי'); // בן/בת זוגי → בני זוגי
     result = result.replace(/הוא\/היא/g, 'הם'); // הוא/היא → הם
     result = result.replace(/הוא יגיע\/תגיע/g, 'הם יגיעו'); // הוא יגיע/תגיע → הם יגיעו
     result = result.replace(/הוא יקבל\/תקבל/g, 'הם יקבלו'); // הוא יקבל/תקבל → הם יקבלו

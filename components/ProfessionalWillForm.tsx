@@ -5125,14 +5125,34 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
                   // אם הטקסט אומר "חלקו" = זכר, "חלקה" = נקבה
                   // אם השם מכיל "בן" = זכר, "בת" = נקבה
                   let detectedGenderFromContext: 'male' | 'female' | 'plural' | null = null;
+                  let genderConfidence = 0; // רמת ביטחון בזיהוי המגדר
                   
-                  // בדוק את הטקסט אחרי החלפת משתנים
+                  console.log('🔍 מתחיל זיהוי מגדר מההקשר...');
+                  
+                  // בדוק את הטקסט אחרי החלפת משתנים - דפוסים ברורים
                   if (content.includes('חלקו') && !content.includes('חלקה')) {
                     detectedGenderFromContext = 'male';
-                    console.log('✅ זוהה מגדר זכר מההקשר: "חלקו"');
+                    genderConfidence = 90;
+                    console.log('✅ זוהה מגדר זכר מההקשר: "חלקו" (ביטחון: 90%)');
                   } else if (content.includes('חלקה') && !content.includes('חלקו')) {
                     detectedGenderFromContext = 'female';
-                    console.log('✅ זוהה מגדר נקבה מההקשר: "חלקה"');
+                    genderConfidence = 90;
+                    console.log('✅ זוהה מגדר נקבה מההקשר: "חלקה" (ביטחון: 90%)');
+                  }
+                  
+                  // בדוק דפוסים נוספים בטקסט
+                  if (content.includes('הוא') && !content.includes('היא')) {
+                    if (genderConfidence < 80) {
+                      detectedGenderFromContext = 'male';
+                      genderConfidence = 80;
+                      console.log('✅ זוהה מגדר זכר מההקשר: "הוא" (ביטחון: 80%)');
+                    }
+                  } else if (content.includes('היא') && !content.includes('הוא')) {
+                    if (genderConfidence < 80) {
+                      detectedGenderFromContext = 'female';
+                      genderConfidence = 80;
+                      console.log('✅ זוהה מגדר נקבה מההקשר: "היא" (ביטחון: 80%)');
+                    }
                   }
                   
                   // בדוק את השם שהוזן - אם יש "בן" = זכר, "בת" = נקבה
@@ -5140,37 +5160,63 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
                   Object.entries(variablesCompletionModal.values).forEach(([variable, value]) => {
                     if (value && typeof value === 'string') {
                       if (value.includes(' בן ') || value.match(/\s+בן\s+/)) {
-                        detectedGenderFromContext = 'male';
-                        console.log(`✅ זוהה מגדר זכר מהשם: "${value}" (מכיל "בן")`);
+                        if (genderConfidence < 95) {
+                          detectedGenderFromContext = 'male';
+                          genderConfidence = 95;
+                          console.log(`✅ זוהה מגדר זכר מהשם: "${value}" (מכיל "בן") (ביטחון: 95%)`);
+                        }
                       } else if (value.includes(' בת ') || value.match(/\s+בת\s+/)) {
-                        detectedGenderFromContext = 'female';
-                        console.log(`✅ זוהה מגדר נקבה מהשם: "${value}" (מכיל "בת")`);
+                        if (genderConfidence < 95) {
+                          detectedGenderFromContext = 'female';
+                          genderConfidence = 95;
+                          console.log(`✅ זוהה מגדר נקבה מהשם: "${value}" (מכיל "בת") (ביטחון: 95%)`);
+                        }
                       } else {
                         // בדוק את השם הפרטי עצמו
                         const firstName = value.split(' ')[0];
                         if (firstName) {
                           const detectedGender = detectGenderFromName(firstName);
-                          if (detectedGender) {
+                          if (detectedGender && genderConfidence < 70) {
                             detectedGenderFromContext = detectedGender as 'male' | 'female' | 'plural';
-                            console.log(`✅ זוהה מגדר ${detectedGender} מהשם הפרטי: "${firstName}"`);
+                            genderConfidence = 70;
+                            console.log(`✅ זוהה מגדר ${detectedGender} מהשם הפרטי: "${firstName}" (ביטחון: 70%)`);
                           }
                         }
                       }
                     }
                   });
                   
-                  // שלב 2: החלף את כל התוכן לפי מגדר (לטפל בדפוסים כמו "הוא יליד/ת", "יוכל/תוכל", "ירצה/תרצה")
-                  // השתמש במגדר המצווה שנבחר במודל
-                  const selectedGender: 'male' | 'female' | 'plural' = variablesCompletionModal.testatorGender;
+                  console.log(`🎯 זיהוי מגדר סופי: ${detectedGenderFromContext || 'לא זוהה'} (ביטחון: ${genderConfidence}%)`);
                   
-                  console.log(`🔄 מחליף דפוסי מגדר בטקסט לפי מגדר: ${selectedGender}`);
+                  // שלב 2: החלף את כל התוכן לפי מגדר (לטפל בדפוסים כמו "הוא יליד/ת", "יוכל/תוכל", "ירצה/תרצה")
+                  // השתמש במגדר שזוהה מההקשר, או במגדר המצווה שנבחר במודל כגיבוי
+                  const finalGender: 'male' | 'female' | 'plural' = detectedGenderFromContext || variablesCompletionModal.testatorGender;
+                  
+                  console.log(`🔄 מחליף דפוסי מגדר בטקסט לפי מגדר: ${finalGender}`);
+                  console.log(`📝 מגדר שזוהה מההקשר: ${detectedGenderFromContext || 'לא זוהה'} (ביטחון: ${genderConfidence}%)`);
+                  console.log(`📝 מגדר שנבחר במודל: ${variablesCompletionModal.testatorGender}`);
+                  console.log(`📝 מגדר סופי שנבחר: ${finalGender}`);
                   console.log(`📝 תוכן לפני החלפת מגדר: ${content.substring(0, 200)}`);
-                  // החלף דפוסי מגדר לפי המגדר שנבחר
-                  content = replaceTextWithGender(content, selectedGender);
+                  
+                  // החלף דפוסי מגדר לפי המגדר הסופי
+                  const originalContent = content;
+                  content = replaceTextWithGender(content, finalGender);
+                  
+                  // בדוק אם היו שינויים
+                  const hasChanges = originalContent !== content;
                   console.log(`✅ תוכן לאחר החלפת מגדר: ${content.substring(0, 200)}`);
+                  console.log(`📊 שינויים בוצעו: ${hasChanges ? 'כן' : 'לא'}`);
+                  
+                  if (hasChanges) {
+                    console.log('🔍 דפוסי מגדר שזוהו בטקסט:');
+                    const genderPatterns = content.match(/[א-ת]+\/[א-ת]+/g);
+                    if (genderPatterns) {
+                      console.log(`   - דפוסים: ${genderPatterns.join(', ')}`);
+                    }
+                  }
                   
                   // החלפות ידניות - נסה להחליף ידנית כל הדפוסים שלא הוחלפו
-                  if (selectedGender === 'female') {
+                  if (finalGender === 'female') {
                     // שלב 1: החלף "האפוטרופוס" ל"האפוטרופסית"
                     content = content.replace(/האפוטרופוס/g, 'האפוטרופסית');
                     // שלב 1.5: החלף "האפוטרופוס החלופי" ל"האפוטרופסית החלופית"
