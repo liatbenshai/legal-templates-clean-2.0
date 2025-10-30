@@ -231,7 +231,7 @@ export const hebrewDictionary: Record<string, GenderedWord> = {
   'מחויבמשפטי': { male: 'מחויב', female: 'מחויבת', plural: 'מחויבים' },
   
   // מונחים משפטיים - נאמנות
-  'הנאמן': { male: 'הנאמן', female: 'הנאמנית', plural: 'הנאמנים' },
+  'הנאמן': { male: 'הנאמן', female: 'הנאמנה', plural: 'הנאמנים' },
   'עין': { male: 'עינו', female: 'עינה', plural: 'עיניהם' },
   'עיני': { male: 'עיניו', female: 'עינה', plural: 'עיניהם' },
   
@@ -434,7 +434,7 @@ export function replaceTextWithGender(text: string, gender: Gender): string {
     result = result.replace(/הוא\/היא/g, 'היא'); // הוא/היא → היא
     
     // מונחים משפטיים - נאמנות
-    result = result.replace(/הנאמן\/ת/g, 'הנאמנית'); // הנאמן/ת → הנאמנית
+    result = result.replace(/הנאמן\/ת/g, 'הנאמנה'); // הנאמן/ת → הנאמנה
     result = result.replace(/עינו\/ה/g, 'עינה'); // עינו/ה → עינה
     result = result.replace(/עיניו\/ה/g, 'עינה'); // עיניו/ה → עינה
     result = result.replace(/כראות עינו\/ה/g, 'כראות עינה'); // כראות עינו/ה → כראות עינה
