@@ -44,7 +44,7 @@ All SendEmailDialog components now have proper useEffect imports for successful 
 - **TypeScript** - Type Safety
 - **Tailwind CSS** - Styling
 - **Lucide React** - Icons
-- **AI Integration** - Claude API (מוכן לשילוב)
+- **AI Integration** - Claude API (דורש ANTHROPIC_API_KEY)
 - **Local Storage** - שמירת נתונים
 - **Hebrew Support** - תמיכה מלאה בעברית
 
@@ -70,10 +70,39 @@ All SendEmailDialog components now have proper useEffect imports for successful 
 
 ## 🛠️ התקנה והפעלה
 
-```bash
-# התקנת dependencies
-npm install
+### שלב 1: התקנת Dependencies
 
+```bash
+npm install
+```
+
+### שלב 2: הגדרת משתני סביבה
+
+צרי קובץ `.env.local` בתיקיית הפרויקט והוסיפי את המשתנים הבאים:
+
+```env
+# Anthropic API Key (לשיפור טקסט עם AI)
+ANTHROPIC_API_KEY=your_anthropic_api_key_here
+
+# Supabase (אם משתמשים)
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+
+**איך לקבל Anthropic API Key:**
+1. היכנסי ל-[Anthropic Console](https://console.anthropic.com/)
+2. צרי חשבון או התחברי
+3. לךי ל-API Keys
+4. צרי API key חדש
+5. העתיקי את המפתח והוסיפי אותו ל-`.env.local`
+
+**⚠️ חשוב:** 
+- אל תעלי את קובץ `.env.local` ל-Git (הוא כבר ב-.gitignore)
+- המפתח צריך להתחיל עם `sk-ant-` ולהכיל לפחות 20 תווים
+
+### שלב 3: הפעלת השרת
+
+```bash
 # הפעלת שרת פיתוח
 npm run dev
 
@@ -84,11 +113,21 @@ npm run build
 npm start
 ```
 
+השרת יעלה על `http://localhost:3000`
+
 ## 🌐 Deploy ל-Vercel
 
 1. **צרי פרויקט חדש ב-Vercel**
 2. **חברי ל-GitHub repository**
-3. **Deploy אוטומטי** - הכל יעבוד מיד!
+3. **הגדרי Environment Variables:**
+   - לךי ל-Settings → Environment Variables
+   - הוסיפי את המשתנים הבאים:
+     - `ANTHROPIC_API_KEY` - המפתח שלך מ-Anthropic
+     - `NEXT_PUBLIC_SUPABASE_URL` - אם משתמשים ב-Supabase
+     - `NEXT_PUBLIC_SUPABASE_ANON_KEY` - אם משתמשים ב-Supabase
+4. **Deploy** - הפרויקט יעלה אוטומטית!
+
+**⚠️ חשוב:** ללא `ANTHROPIC_API_KEY`, תכונת שיפור הטקסט עם AI לא תעבוד (תקבלי שגיאת 401).
 
 ## 📝 רישיון
 

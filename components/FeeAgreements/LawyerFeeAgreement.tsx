@@ -738,6 +738,145 @@ export default function LawyerFeeAgreement() {
       alert('שגיאה בטעינת הסעיפים');
     }
   };
+
+  // שמירת סעיפים היררכיים למאגר ב-Supabase
+  const handleSaveHierarchicalSectionToWarehouse = async () => {
+    try {
+      const { supabase } = await import('@/lib/supabase-client');
+      
+      // בדוק שהמשתמש מחובר וקבל את ה-user ID מה-session
+      const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
+      
+      if (authError || !authUser) {
+        alert('❌ יש להתחבר למערכת כדי לשמור סעיפים למאגר');
+        return;
+      }
+
+      const userId = authUser.id; // זה ה-JWT claim 'sub' שהרלס policy דורש
+
+      // מצא את כל הסעיפים הראשיים שיש להם תתי סעיפים
+      const mainSections = customSections.filter(s => s.level === 'main');
+      
+      if (mainSections.length === 0) {
+        alert('❌ אין סעיפים ראשיים לשמירה. צור סעיף ראשי עם תתי סעיפים תחילה.');
+        return;
+      }
+
+      // בחר סעיף ראשי לשמירה
+      const sectionList = mainSections.map((section, index) => 
+        `${index + 1}. ${section.title}`
+      ).join('\n');
+      
+      const choice = prompt(`בחר סעיף ראשי לשמירה למאגר:\n\n${sectionList}\n\nהזן מספר (1-${mainSections.length}):`);
+      if (!choice || isNaN(Number(choice))) return;
+      
+      const sectionIndex = Number(choice) - 1;
+      if (sectionIndex < 0 || sectionIndex >= mainSections.length) {
+        alert('מספר לא תקין');
+        return;
+      }
+
+      const selectedMainSection = mainSections[sectionIndex];
+      
+      // מצא את כל התתי סעיפים והתת-תת-סעיפים
+      const subSections = customSections.filter(s => 
+        s.level === 'sub' && s.parentId === selectedMainSection.id
+      ).sort((a, b) => a.order - b.order);
+
+      // שמור את הסעיף הראשי
+      const { data: mainSectionData, error: mainError } = await supabase
+        .from('hierarchical_sections')
+        .insert({
+          user_id: userId,
+          title: selectedMainSection.title || 'סעיף ללא כותרת',
+          content: selectedMainSection.content || '',
+          level: 'main',
+          parent_id: null,
+          order_index: selectedMainSection.order || 0,
+          category: 'fee_agreement',
+          tags: ['הסכם שכר טרחה', 'סעיף היררכי'],
+          is_public: false,
+          is_hidden: false,
+          created_by: userId
+        })
+        .select()
+        .single();
+
+      if (mainError) {
+        console.error('Error saving main section:', mainError);
+        alert('❌ שגיאה בשמירת הסעיף הראשי');
+        return;
+      }
+
+      const mainSectionId = mainSectionData.id;
+      let savedCount = 1; // הסעיף הראשי
+
+      // שמור את כל התתי סעיפים
+      for (let i = 0; i < subSections.length; i++) {
+        const subSection = subSections[i];
+        
+        // שמור את התת-סעיף
+        const { data: subSectionData, error: subError } = await supabase
+          .from('hierarchical_sections')
+          .insert({
+            user_id: userId,
+            title: subSection.title || 'תת-סעיף ללא כותרת',
+            content: subSection.content || '',
+            level: 'sub',
+            parent_id: mainSectionId,
+            order_index: subSection.order || 0,
+            category: 'fee_agreement',
+            tags: ['הסכם שכר טרחה', 'תת-סעיף'],
+            is_public: false,
+            is_hidden: false,
+            created_by: userId
+          })
+          .select()
+          .single();
+
+        if (subError) {
+          console.error('Error saving sub section:', subError);
+          continue;
+        }
+
+        savedCount++;
+        const subSectionId = subSectionData.id;
+
+        // מצא ושמור את כל התת-תת-סעיפים של התת-סעיף הזה
+        const subSubSections = customSections.filter(s => 
+          s.level === 'sub-sub' && s.parentId === subSection.id
+        ).sort((a, b) => a.order - b.order);
+
+        for (const subSubSection of subSubSections) {
+          const { error: subSubError } = await supabase
+            .from('hierarchical_sections')
+            .insert({
+              user_id: userId,
+              title: subSubSection.title || 'תת-תת-סעיף ללא כותרת',
+              content: subSubSection.content || '',
+              level: 'sub-sub',
+              parent_id: subSectionId,
+              order_index: subSubSection.order || 0,
+              category: 'fee_agreement',
+              tags: ['הסכם שכר טרחה', 'תת-תת-סעיף'],
+              is_public: false,
+              is_hidden: false,
+              created_by: userId
+            });
+
+          if (!subSubError) {
+            savedCount++;
+          }
+        }
+      }
+
+      alert(`✅ הסעיף "${selectedMainSection.title}" נשמר למאגר עם ${savedCount - 1} תתי סעיפים!`);
+    } catch (err: any) {
+      console.error('Error saving hierarchical section:', err);
+      const errorMessage = err?.message || 'שגיאה לא ידועה';
+      alert(`❌ שגיאה בשמירת הסעיף למאגר: ${errorMessage}`);
+    }
+  };
   
   // חלון מילוי משתנים
   const [variablesModal, setVariablesModal] = useState<{
@@ -1643,6 +1782,13 @@ ________________________           ${agreementData.clients.map((_, i) => '______
               >
                 <Download className="w-4 h-4" />
                 טען סעיפים היררכיים
+              </button>
+              <button
+                onClick={() => handleSaveHierarchicalSectionToWarehouse()}
+                className="flex items-center gap-2 px-3 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition text-sm"
+              >
+                <Plus className="w-4 h-4" />
+                שמור למאגר היררכי
               </button>
               <button
                 onClick={() => setShowSectionsWarehouse(true)}

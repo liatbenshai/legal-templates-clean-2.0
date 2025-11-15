@@ -99,7 +99,7 @@ export class AILegalWriter {
 
     try {
       const message = await this.client.messages.create({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-3-haiku-20240307', // מודל בסיסי וזול
         max_tokens: 4096,
         temperature: 0.3, // יציבות גבוהה לטקסט משפטי
         system: this.getSystemPrompt(),
@@ -172,7 +172,7 @@ ${inputText}
 
     try {
       const message = await this.client.messages.create({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-3-haiku-20240307', // מודל בסיסי וזול
         max_tokens: 4096,
         temperature: 0.3,
         system: this.getSystemPrompt(),
@@ -225,7 +225,7 @@ ${text}
   async getSuggestions(text: string): Promise<string[]> {
     try {
       const message = await this.client.messages.create({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-3-haiku-20240307', // מודל בסיסי וזול
         max_tokens: 1024,
         temperature: 0.5,
         system: 'אתה עורך דין מומחה. תן 3-5 הצעות קצרות לשיפור טקסט משפטי.',

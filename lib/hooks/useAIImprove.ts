@@ -56,14 +56,26 @@ export function useAIImprove() {
 
       if (!response.ok) {
         let errorMessage = 'Failed to improve text';
+        let errorDetails = '';
+        
         try {
           const errorData = await response.json();
           errorMessage = errorData.error || errorMessage;
+          errorDetails = errorData.details || '';
+          
+          // טיפול מיוחד בשגיאת 401
+          if (response.status === 401) {
+            errorMessage = 'API key לא תקין או לא מאומת';
+            errorDetails = errorData.details || 'יש לבדוק שהמפתח ANTHROPIC_API_KEY נכון ופעיל. ניתן לקבל מפתח חדש מ-https://console.anthropic.com/';
+          }
         } catch {
           const errorText = await response.text();
-          errorMessage = `Server Error: ${response.status} - ${errorText.substring(0, 100)}`;
+          errorMessage = `Server Error: ${response.status}`;
+          errorDetails = errorText.substring(0, 200);
         }
-        throw new Error(errorMessage);
+        
+        const fullError = errorDetails ? `${errorMessage}\n\n${errorDetails}` : errorMessage;
+        throw new Error(fullError);
       }
 
       const data = await response.json();

@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
         'content-type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'claude-3-5-sonnet-20241022',
+        model: 'claude-3-haiku-20240307', // מודל בסיסי וזול
         max_tokens: 1500,
         messages: [
           {

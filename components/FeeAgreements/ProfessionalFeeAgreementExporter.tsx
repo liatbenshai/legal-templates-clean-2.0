@@ -170,6 +170,65 @@ export default function ProfessionalFeeAgreementExporter({
     return result;
   };
 
+  // פונקציה לבניית מבנה היררכי מסעיפים שטוחים
+  const buildHierarchicalSections = (flatSections: any[]) => {
+    if (!flatSections || flatSections.length === 0) return [];
+    
+    // פונקציה עזר לקבלת order (תומך גם ב-order_index מ-Supabase וגם ב-order מקומי)
+    const getOrder = (section: any) => section.order_index !== undefined ? section.order_index : (section.order || 0);
+    
+    // מיין את כל הסעיפים לפי order
+    const sortedSections = [...flatSections].sort((a, b) => getOrder(a) - getOrder(b));
+    
+    // מצא את כל הסעיפים הראשיים ומיין אותם
+    const mainSections = sortedSections
+      .filter(s => s.level === 'main')
+      .sort((a, b) => getOrder(a) - getOrder(b));
+    
+    // בנה מבנה היררכי
+    return mainSections.map(mainSection => {
+      const result: any = {
+        id: mainSection.id,
+        title: mainSection.title,
+        text: mainSection.content || mainSection.title,
+        content: mainSection.content || mainSection.title,
+        subSections: []
+      };
+      
+      // מצא את כל התתי סעיפים של הסעיף הראשי הזה ומיין לפי order
+      const subSections = sortedSections
+        .filter(s => s.level === 'sub' && (s.parentId === mainSection.id || s.parent_id === mainSection.id))
+        .sort((a, b) => getOrder(a) - getOrder(b));
+      
+      // בנה את התתי סעיפים עם תתי תתי סעיפים
+      result.subSections = subSections.map(subSection => {
+        const subResult: any = {
+          id: subSection.id,
+          title: subSection.title,
+          text: subSection.content || subSection.title,
+          content: subSection.content || subSection.title,
+          subSubSections: []
+        };
+        
+        // מצא את כל התתי תתי סעיפים של התת-סעיף הזה ומיין לפי order
+        const subSubSections = sortedSections
+          .filter(s => s.level === 'sub-sub' && (s.parentId === subSection.id || s.parent_id === subSection.id))
+          .sort((a, b) => getOrder(a) - getOrder(b));
+        
+        subResult.subSubSections = subSubSections.map(subSubSection => ({
+          id: subSubSection.id,
+          title: subSubSection.title,
+          text: subSubSection.content || subSubSection.title,
+          content: subSubSection.content || subSubSection.title
+        }));
+        
+        return subResult;
+      });
+      
+      return result;
+    });
+  };
+
   // פונקציה ליצירת טקסט שכר טרחה דינמי
   const generateFeeText = () => {
     const { fees } = agreementData;
@@ -832,8 +891,8 @@ export default function ProfessionalFeeAgreementExporter({
             }),
             
             // ✅ הסעיפים עם מספור נכון
-            // סעיפים מותאמים אישית
-            ...(agreementData.customSections || []).flatMap((section: any) => 
+            // סעיפים מותאמים אישית - בניית מבנה היררכי
+            ...buildHierarchicalSections(agreementData.customSections || []).flatMap((section: any) => 
               createSectionParagraphs(section, 0)
             ),
             

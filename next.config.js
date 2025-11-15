@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'standalone',
+  // output: 'standalone', // הוסר זמנית כדי לפתור בעיית clientModules
 }
 
 module.exports = nextConfig
