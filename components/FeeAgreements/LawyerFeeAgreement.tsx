@@ -59,13 +59,16 @@ interface FeeAgreementData {
 
   // תמחור
   fees: {
-    type: 'סכום_כולל' | 'מקדמה_והצלחה' | 'סכום_ואחוזים';
+    type: 'סכום_כולל';
     totalAmount?: string;
-    paymentStructure?: string;
-    advancePayment?: string;
-    successPercentage?: string;
-    fixedAmount?: string; // סכום קבוע בתוספת אחוזים
-    stages?: string;
+    paymentStructure?: 'מלא מראש' | 'שלבים';
+    paymentStages?: Array<{
+      id: string;
+      type: 'amount' | 'percentage'; // סכום או אחוז
+      description: string; // פירוט
+      value: string; // כמה
+      paymentTiming: string; // זמני תשלום (עם חתימת ההסכם, בתאריך מסוים, וכו')
+    }>;
   };
 
   // תנאים
@@ -141,10 +144,7 @@ export default function LawyerFeeAgreement() {
       type: 'סכום_כולל',
       totalAmount: '',
       paymentStructure: 'מלא מראש',
-      advancePayment: '',
-      successPercentage: '',
-      fixedAmount: '',
-      stages: ''
+      paymentStages: []
     },
     terms: {
       paymentTerms: '',
@@ -202,7 +202,7 @@ export default function LawyerFeeAgreement() {
   };
 
   // פונקציה לעדכון פרטי שכר הטרחה
-  const updateFees = (field: keyof FeeAgreementData['fees'], value: string) => {
+  const updateFees = (field: keyof FeeAgreementData['fees'], value: any) => {
     setAgreementData(prev => ({
       ...prev,
       fees: {
@@ -211,6 +211,187 @@ export default function LawyerFeeAgreement() {
       }
     }));
   };
+
+  // עדכון/יצירת סעיף שכר הטרחה
+  const updateFeeSection = () => {
+    setCustomSections(prev => {
+      // הסר סעיפים ישנים של שכר טרחה
+      const oldTitles = ['שכר טרחה', 'תמחור', 'מבנה תמחור', 'תנאי תשלום'];
+      const withoutOldFee = prev.filter(section => {
+        // אם זה סעיף שכר טרחה ישן (אבל לא החדש שלנו), הסר אותו
+        const isOldFeeSection = oldTitles.some(title => 
+          section.title.includes(title) && section.title !== 'שכר טרחה עבור השירות'
+        );
+        
+        // גם הסר תתי סעיפים של סעיפים ישנים
+        if (isOldFeeSection || (section.parentId && prev.find(p => oldTitles.some(title => p.title.includes(title) && p.title !== 'שכר טרחה עבור השירות') && p.id === section.parentId))) {
+          return false;
+        }
+        
+        return true;
+      });
+      
+      // בדוק אם הסעיף כבר קיים
+      const existingSection = withoutOldFee.find(s => s.title === 'שכר טרחה עבור השירות');
+      const mainSectionId = existingSection?.id || generateSectionId();
+      
+      // מצא את סעיף "תיאור השירות" או הסעיף הראשון שאינו שכר טרחה
+      const serviceDescriptionSection = withoutOldFee.find(s => 
+        s.title.includes('תיאור') || 
+        s.title.includes('שירות') ||
+        s.title.includes('ייצוג')
+      ) || withoutOldFee.find(s => s.title !== 'שכר טרחה עבור השירות');
+      
+      // קבע את המיקום - אחרי סעיף תיאור השירות (אם קיים) או בתחילה
+      let feeOrder = 1;
+      if (serviceDescriptionSection) {
+        // מצא את הסדר של סעיף תיאור השירות + כמה תתי סעיפים יש לו + 1
+        const serviceSections = withoutOldFee.filter(s => 
+          s.id === serviceDescriptionSection.id || s.parentId === serviceDescriptionSection.id
+        );
+        feeOrder = Math.max(...serviceSections.map(s => s.order), 0) + 1;
+      }
+      
+      // בניית תוכן הסעיף הראשי
+      let mainContent = '';
+      
+      // הוסף תיאור השירות (אם לא כבר מופיע בסעיף אחר)
+      if (agreementData.case.subject && !serviceDescriptionSection) {
+        mainContent += `שכר הטרחה נקבע עבור השירות המשפטי הבא:\n${agreementData.case.subject}\n\n`;
+      }
+      
+      // הוסף את הסכום הכולל
+      if (agreementData.fees.totalAmount) {
+        const formattedAmount = formatNumber(agreementData.fees.totalAmount);
+        mainContent += `שכר הטרחה הכולל בעד השירות המפורט לעיל הוא סכום של ${formattedAmount} ש"ח + מע"ם.\n\n`;
+      }
+      
+      // הוסף את מבנה התשלום
+      if (agreementData.fees.paymentStructure === 'מלא מראש') {
+        mainContent += 'התשלום יבוצע במלואו מראש עם חתימת ההסכם.';
+      } else if (agreementData.fees.paymentStructure === 'שלבים') {
+        mainContent += 'התשלום יבוצע בחלוקה לשלבים כמפורט להלן:';
+      }
+      
+      const mainSection = {
+        id: mainSectionId,
+        title: 'שכר טרחה עבור השירות',
+        content: mainContent,
+        level: 'main' as const,
+        order: feeOrder
+      };
+      
+      // הסר את הסעיף הישן (אם קיים) ותתי הסעיפים שלו
+      const withoutOldMain = withoutOldFee.filter(s => 
+        s.title !== 'שכר טרחה עבור השירות' && s.parentId !== mainSectionId
+      );
+      
+      // אם יש מבנה תשלום עם שלבים, עדכן את התתי סעיפים
+      if (agreementData.fees.paymentStructure === 'שלבים' && agreementData.fees.paymentStages && agreementData.fees.paymentStages.length > 0) {
+        const newSubsections = agreementData.fees.paymentStages.map((stage, index) => {
+          const stageValue = stage.type === 'amount' 
+            ? (stage.value ? `${formatNumber(stage.value)} ש"ח` : '')
+            : (stage.value ? `${stage.value}%` : '');
+          
+          let content = '';
+          if (stage.description) {
+            content += stage.description;
+          }
+          if (stageValue) {
+            content += (content ? '\n' : '') + `${stage.type === 'amount' ? 'סכום' : 'אחוז'}: ${stageValue}`;
+          }
+          if (stage.paymentTiming) {
+            content += (content ? '\n' : '') + `תשלום: ${stage.paymentTiming}`;
+          }
+          
+          return {
+            id: stage.id,
+            title: `שלב ${index + 1}`,
+            content: content || `שלב תשלום ${index + 1}`,
+            level: 'sub' as const,
+            parentId: mainSectionId,
+            order: feeOrder + index + 1
+          };
+        });
+        
+        // מיון - שכר טרחה אחרי תיאור השירות, אחריו תתי הסעיפים שלו, ואז שאר הסעיפים
+        const allSections = [...withoutOldMain, mainSection, ...newSubsections];
+        
+        return allSections.sort((a, b) => a.order - b.order).map((section, index) => ({
+          ...section,
+          order: index + 1
+        }));
+      } else {
+        // תשלום מלא מראש - רק הסעיף הראשי
+        const allSections = [...withoutOldMain, mainSection];
+        
+        // מיון מחדש לפי הסדר
+        return allSections.sort((a, b) => {
+          // שמור על סדר הסעיפים הקיימים, אבל הוסף את שכר הטרחה אחרי תיאור השירות
+          if (a.id === mainSectionId) {
+            return feeOrder - b.order;
+          }
+          if (b.id === mainSectionId) {
+            return a.order - feeOrder;
+          }
+          return a.order - b.order;
+        }).map((section, index) => ({
+          ...section,
+          order: index + 1
+        }));
+      }
+    });
+  };
+
+
+
+  // הוספת שלב תשלום חדש
+  const addPaymentStage = () => {
+    const newStage = {
+      id: `stage_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      type: 'amount' as 'amount' | 'percentage',
+      description: '',
+      value: '',
+      paymentTiming: ''
+    };
+    
+    setAgreementData(prev => ({
+      ...prev,
+      fees: {
+        ...prev.fees,
+        paymentStages: [...(prev.fees.paymentStages || []), newStage]
+      }
+    }));
+  };
+
+  // הסרת שלב תשלום
+  const removePaymentStage = (stageId: string) => {
+    setAgreementData(prev => ({
+      ...prev,
+      fees: {
+        ...prev.fees,
+        paymentStages: (prev.fees.paymentStages || []).filter(s => s.id !== stageId)
+      }
+    }));
+  };
+
+  // עדכון שלב תשלום
+  const updatePaymentStage = (stageId: string, field: string, value: any) => {
+    setAgreementData(prev => ({
+      ...prev,
+      fees: {
+        ...prev.fees,
+        paymentStages: (prev.fees.paymentStages || []).map(stage =>
+          stage.id === stageId ? { ...stage, [field]: value } : stage
+        )
+      }
+    }));
+  };
+
+  // עדכון סעיף שכר טרחה כאשר משתנים פרטי התמחור או השירות
+  useEffect(() => {
+    updateFeeSection();
+  }, [agreementData.fees.totalAmount, agreementData.fees.paymentStructure, agreementData.fees.paymentStages, agreementData.case.subject]);
   
   // פונקציות לניהול מודל הוספת משתנה
   const openAddVariableModal = () => {
@@ -972,23 +1153,6 @@ export default function LawyerFeeAgreement() {
       updatedText = updatedText.replace(/________ ש"ח/g, `${formattedAmount} ש"ח`);
     }
     
-    // החלפת מקדמה
-    if (agreementData.fees.advancePayment) {
-      const formattedAdvance = formatNumber(agreementData.fees.advancePayment);
-      updatedText = updatedText.replace(/מקדמה: _____ ש"ח/g, `מקדמה: ${formattedAdvance} ש"ח`);
-    }
-    
-    // החלפת סכום קבוע
-    if (agreementData.fees.fixedAmount) {
-      const formattedFixed = formatNumber(agreementData.fees.fixedAmount);
-      updatedText = updatedText.replace(/סכום קבוע: _____ ש"ח/g, `סכום קבוע: ${formattedFixed} ש"ח`);
-    }
-    
-    // החלפת אחוז הצלחה
-    if (agreementData.fees.successPercentage) {
-      updatedText = updatedText.replace(/___%/g, `${agreementData.fees.successPercentage}%`);
-    }
-    
     // הסרת שורות עם שדות לא רלוונטיים
     updatedText = updatedText.replace(/1\.2\. בית המשפט\/בית הדין:.*?\n/g, '');
     updatedText = updatedText.replace(/1\.4\. רמת מורכבות:.*?\n/g, '');
@@ -1097,7 +1261,7 @@ export default function LawyerFeeAgreement() {
         setCustomSections(updatedSections);
       }
     }
-  }, [agreementData.fees.totalAmount, agreementData.fees.advancePayment, agreementData.fees.successPercentage, agreementData.fees.fixedAmount]);
+  }, [agreementData.fees.totalAmount]);
 
   const updateLawyer = (field: keyof typeof agreementData.lawyer, value: string | 'male' | 'female') => {
     setAgreementData(prev => ({
@@ -1640,133 +1804,128 @@ ________________________           ${agreementData.clients.map((_, i) => '______
               💡 <strong>טיפ:</strong> המספרים יוצגו אוטומטית עם פסיקים (למשל: 5,000 ש"ח)
             </p>
           </div>
-          
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">סוג תמחור</label>
-            <select
-              value={agreementData.fees.type}
-              onChange={(e) => updateFees('type', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-yellow-500 focus:border-yellow-500"
-              dir="rtl"
-            >
-              <option value="סכום_כולל">סכום כולל</option>
-              <option value="מקדמה_והצלחה">מקדמה + אחוז הצלחה</option>
-              <option value="סכום_ואחוזים">סכום קבוע + אחוז מהזכייה</option>
-            </select>
-          </div>
 
           <div className="space-y-4">
-            {agreementData.fees.type === 'סכום_כולל' && (
-              <>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">סכום כולל (₪)</label>
-                  <input
-                    type="text"
-                    value={agreementData.fees.totalAmount ? formatNumber(agreementData.fees.totalAmount) : ''}
-                    onChange={(e) => updateFees('totalAmount', unformatNumber(e.target.value))}
-                    placeholder="5,000"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-yellow-500 focus:border-yellow-500"
-                    dir="ltr"
-                  />
-                </div>
-                  
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">מבנה התשלום</label>
-                  <select
-                    value={agreementData.fees.paymentStructure || 'מלא מראש'}
-                    onChange={(e) => updateFees('paymentStructure', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-yellow-500 focus:border-yellow-500"
-                    dir="rtl"
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">סכום כולל (₪)</label>
+              <input
+                type="text"
+                value={agreementData.fees.totalAmount ? formatNumber(agreementData.fees.totalAmount) : ''}
+                onChange={(e) => updateFees('totalAmount', unformatNumber(e.target.value))}
+                placeholder="5,000"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-yellow-500 focus:border-yellow-500"
+                dir="ltr"
+              />
+            </div>
+              
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">מבנה התשלום</label>
+              <select
+                value={agreementData.fees.paymentStructure || 'מלא מראש'}
+                onChange={(e) => updateFees('paymentStructure', e.target.value as 'מלא מראש' | 'שלבים')}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-yellow-500 focus:border-yellow-500"
+                dir="rtl"
+              >
+                <option value="מלא מראש">תשלום מלא מראש</option>
+                <option value="שלבים">חלוקה לשלבים</option>
+              </select>
+            </div>
+            
+            {agreementData.fees.paymentStructure === 'שלבים' && (
+              <div className="bg-white p-4 rounded-lg border border-yellow-300">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900">שלבי תשלום</h3>
+                  <button
+                    onClick={addPaymentStage}
+                    className="flex items-center gap-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm"
                   >
-                    <option value="מלא מראש">תשלום מלא מראש</option>
-                    <option value="50%-50%">חלוקה 50%-50%</option>
-                    <option value="30%-70%">חלוקה 30%-70%</option>
-                    <option value="שלבים">חלוקה לשלבים</option>
-                  </select>
+                    <Plus className="w-4 h-4" />
+                    הוסף שלב
+                  </button>
                 </div>
                 
-                {agreementData.fees.paymentStructure === 'שלבים' && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">פירוט השלבים</label>
-                    <textarea
-                      value={agreementData.fees.stages || ''}
-                      onChange={(e) => updateFees('stages', e.target.value)}
-                      placeholder="למשל: 30% עם החתימה, 40% בסיום הטיוטה, 30% עם החתימה על ההסכם"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-yellow-500 focus:border-yellow-500"
-                      rows={3}
-                      dir="rtl"
-                    />
+                {agreementData.fees.paymentStages && agreementData.fees.paymentStages.length > 0 ? (
+                  <div className="space-y-4">
+                    {agreementData.fees.paymentStages.map((stage, index) => (
+                      <div key={stage.id} className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                        <div className="flex justify-between items-center mb-3">
+                          <h4 className="font-semibold text-gray-800">שלב {index + 1}</h4>
+                          <button
+                            onClick={() => removePaymentStage(stage.id)}
+                            className="text-red-500 hover:text-red-700"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                        
+                        <div className="space-y-3">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">סוג תשלום</label>
+                            <select
+                              value={stage.type}
+                              onChange={(e) => updatePaymentStage(stage.id, 'type', e.target.value)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-yellow-500 focus:border-yellow-500"
+                              dir="rtl"
+                            >
+                              <option value="amount">סכום</option>
+                              <option value="percentage">אחוז</option>
+                            </select>
+                          </div>
+                          
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">פירוט</label>
+                            <input
+                              type="text"
+                              value={stage.description}
+                              onChange={(e) => updatePaymentStage(stage.id, 'description', e.target.value)}
+                              placeholder="למשל: תשלום ראשון, תשלום עבור הטיוטה, וכו'"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-yellow-500 focus:border-yellow-500"
+                              dir="rtl"
+                            />
+                          </div>
+                          
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              {stage.type === 'amount' ? 'סכום (₪)' : 'אחוז (%)'}
+                            </label>
+                            <input
+                              type="text"
+                              value={stage.type === 'amount' 
+                                ? (stage.value ? formatNumber(stage.value) : '')
+                                : stage.value}
+                              onChange={(e) => {
+                                const value = stage.type === 'amount' 
+                                  ? unformatNumber(e.target.value)
+                                  : e.target.value;
+                                updatePaymentStage(stage.id, 'value', value);
+                              }}
+                              placeholder={stage.type === 'amount' ? "5,000" : "30"}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-yellow-500 focus:border-yellow-500"
+                              dir="ltr"
+                            />
+                          </div>
+                          
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">זמני תשלום</label>
+                            <input
+                              type="text"
+                              value={stage.paymentTiming}
+                              onChange={(e) => updatePaymentStage(stage.id, 'paymentTiming', e.target.value)}
+                              placeholder="למשל: עם חתימת ההסכם, בתאריך 01/01/2025, לאחר אישור הטיוטה"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-yellow-500 focus:border-yellow-500"
+                              dir="rtl"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <p>אין שלבי תשלום. לחץ על "הוסף שלב" כדי להתחיל.</p>
                   </div>
                 )}
-              </>
-            )}
-
-            {agreementData.fees.type === 'מקדמה_והצלחה' && (
-              <>
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">מקדמה מראש (₪)</label>
-                    <input
-                      type="text"
-                      value={agreementData.fees.advancePayment ? formatNumber(agreementData.fees.advancePayment) : ''}
-                      onChange={(e) => updateFees('advancePayment', unformatNumber(e.target.value))}
-                      placeholder="10,000"
-                      className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-yellow-500 focus:border-yellow-500 w-full"
-                      dir="ltr"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">אחוז הצלחה (%)</label>
-                    <input
-                      type="text"
-                      value={agreementData.fees.successPercentage || ''}
-                      onChange={(e) => updateFees('successPercentage', e.target.value)}
-                      placeholder="10"
-                      className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-yellow-500 focus:border-yellow-500 w-full"
-                      dir="ltr"
-                    />
-                  </div>
-                </div>
-                    
-                <div className="bg-white p-3 rounded border border-yellow-300 text-sm">
-                  <strong>דוגמה:</strong> מקדמה 10,000 ₪ + 10% מהסכום שיתקבל בפועל
-                </div>
-              </>
-            )}
-
-            {agreementData.fees.type === 'סכום_ואחוזים' && (
-              <>
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">סכום קבוע (₪)</label>
-                    <input
-                      type="text"
-                      value={agreementData.fees.fixedAmount ? formatNumber(agreementData.fees.fixedAmount) : ''}
-                      onChange={(e) => updateFees('fixedAmount', unformatNumber(e.target.value))}
-                      placeholder="15,000"
-                      className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-yellow-500 focus:border-yellow-500 w-full"
-                      dir="ltr"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">אחוז מהזכייה (%)</label>
-                    <input
-                      type="text"
-                      value={agreementData.fees.successPercentage || ''}
-                      onChange={(e) => updateFees('successPercentage', e.target.value)}
-                      placeholder="5"
-                      className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-yellow-500 focus:border-yellow-500 w-full"
-                      dir="ltr"
-                    />
-                  </div>
-                </div>
-                    
-                <div className="bg-white p-3 rounded border border-yellow-300 text-sm">
-                  <strong>דוגמה:</strong> סכום קבוע 15,000 ₪ + 5% מכל סכום שיתקבל בפועל מהזכייה
-                </div>
-              </>
+              </div>
             )}
           </div>
         </section>
