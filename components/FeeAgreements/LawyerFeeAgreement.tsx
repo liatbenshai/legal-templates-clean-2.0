@@ -235,21 +235,57 @@ export default function LawyerFeeAgreement() {
       const existingSection = withoutOldFee.find(s => s.title === 'שכר טרחה עבור השירות');
       const mainSectionId = existingSection?.id || generateSectionId();
       
-      // מצא את סעיף "תיאור השירות" או הסעיף הראשון שאינו שכר טרחה
-      const serviceDescriptionSection = withoutOldFee.find(s => 
-        s.title.includes('תיאור') || 
-        s.title.includes('שירות') ||
-        s.title.includes('ייצוג')
-      ) || withoutOldFee.find(s => s.title !== 'שכר טרחה עבור השירות');
+      // מצא את סעיף "תיאור השירות" או "היקף השירות" - הסעיף הראשון שטעון מה-JSON
+      // נחפש סעיף ראשי (level === 'main') שאינו שכר טרחה, וסינון לפי מיקום בסדר
+      const mainSections = withoutOldFee
+        .filter(s => s.level === 'main' && s.title !== 'שכר טרחה עבור השירות')
+        .sort((a, b) => a.order - b.order);
       
-      // קבע את המיקום - אחרי סעיף תיאור השירות (אם קיים) או בתחילה
+      // נחפש סעיף שמתאר את השירות - בדרך כלל הראשון ברשימה (היקף השירות, תיאור השירות וכו')
+      // קודם נחפש סעיף שמתחיל ב"היקף" או "תיאור" - זה הסעיף הראשון מה-JSON
+      let serviceDescriptionSection = mainSections.find(s => 
+        s.title.startsWith('היקף') || 
+        s.title.startsWith('תיאור') ||
+        (s.title.includes('תיאור') && s.order === 1) ||
+        (s.title.includes('היקף') && s.order === 1)
+      );
+      
+      // אם לא נמצא, נחפש את הסעיף הראשון ברשימה
+      if (!serviceDescriptionSection && mainSections.length > 0) {
+        serviceDescriptionSection = mainSections[0];
+      }
+      
+      // קבע את המיקום - אחרי סעיף תיאור השירות (אם קיים) או אחרי הסעיף הראשון
       let feeOrder = 1;
       if (serviceDescriptionSection) {
-        // מצא את הסדר של סעיף תיאור השירות + כמה תתי סעיפים יש לו + 1
-        const serviceSections = withoutOldFee.filter(s => 
-          s.id === serviceDescriptionSection.id || s.parentId === serviceDescriptionSection.id
+        // מצא את כל הסעיפים שקשורים לסעיף תיאור השירות (כולל תתי סעיפים והיררכיה מלאה)
+        const findAllChildren = (sectionId: string, allSections: typeof withoutOldFee): string[] => {
+          const children = allSections.filter(s => s.parentId === sectionId);
+          let result: string[] = [sectionId];
+          children.forEach(child => {
+            result = [...result, ...findAllChildren(child.id, allSections)];
+          });
+          return result;
+        };
+        
+        const serviceSectionIds = findAllChildren(serviceDescriptionSection.id, withoutOldFee);
+        const serviceSections = withoutOldFee.filter(s => serviceSectionIds.includes(s.id));
+        
+        // קח את הסדר הגבוה ביותר + 1
+        const maxOrder = serviceSections.length > 0 
+          ? Math.max(...serviceSections.map(s => s.order), 0)
+          : serviceDescriptionSection.order;
+        feeOrder = maxOrder + 1;
+      } else if (mainSections.length > 0) {
+        // אם יש סעיפים אחרים, שכר הטרחה יופיע אחרי הראשון
+        const firstMainSection = mainSections[0];
+        const firstSectionWithChildren = withoutOldFee.filter(s => 
+          s.id === firstMainSection.id || s.parentId === firstMainSection.id
         );
-        feeOrder = Math.max(...serviceSections.map(s => s.order), 0) + 1;
+        const maxOrder = firstSectionWithChildren.length > 0
+          ? Math.max(...firstSectionWithChildren.map(s => s.order), 0)
+          : firstMainSection.order;
+        feeOrder = maxOrder + 1;
       }
       
       // בניית תוכן הסעיף הראשי
@@ -263,7 +299,7 @@ export default function LawyerFeeAgreement() {
       // הוסף את הסכום הכולל
       if (agreementData.fees.totalAmount) {
         const formattedAmount = formatNumber(agreementData.fees.totalAmount);
-        mainContent += `שכר הטרחה הכולל בעד השירות המפורט לעיל הוא סכום של ${formattedAmount} ש"ח + מע"ם.\n\n`;
+        mainContent += `שכר הטרחה הכולל בעד השירות המפורט לעיל הוא סכום של ${formattedAmount} ש"ח + מע"מ.\n\n`;
       }
       
       // הוסף את מבנה התשלום
@@ -290,7 +326,7 @@ export default function LawyerFeeAgreement() {
       if (agreementData.fees.paymentStructure === 'שלבים' && agreementData.fees.paymentStages && agreementData.fees.paymentStages.length > 0) {
         const newSubsections = agreementData.fees.paymentStages.map((stage, index) => {
           const stageValue = stage.type === 'amount' 
-            ? (stage.value ? `${formatNumber(stage.value)} ש"ח` : '')
+            ? (stage.value ? `${formatNumber(stage.value)} ש"ח + מע"מ` : '')
             : (stage.value ? `${stage.value}%` : '');
           
           let content = '';
@@ -315,27 +351,37 @@ export default function LawyerFeeAgreement() {
         });
         
         // מיון - שכר טרחה אחרי תיאור השירות, אחריו תתי הסעיפים שלו, ואז שאר הסעיפים
-        const allSections = [...withoutOldMain, mainSection, ...newSubsections];
+        // נוסיף את שכר הטרחה ותתי הסעיפים שלו במקום הנכון
+        const sectionsBeforeFee = withoutOldMain.filter(s => s.order < feeOrder);
+        const sectionsAfterFee = withoutOldMain.filter(s => s.order >= feeOrder);
         
-        return allSections.sort((a, b) => a.order - b.order).map((section, index) => ({
+        // נשמור על הסדר: סעיפים לפני שכר טרחה -> שכר טרחה ותתי סעיפים -> סעיפים אחרי שכר טרחה
+        const allSections = [
+          ...sectionsBeforeFee,
+          mainSection,
+          ...newSubsections,
+          ...sectionsAfterFee
+        ];
+        
+        // עדכן את הסדר של כל הסעיפים
+        return allSections.map((section, index) => ({
           ...section,
           order: index + 1
         }));
       } else {
         // תשלום מלא מראש - רק הסעיף הראשי
-        const allSections = [...withoutOldMain, mainSection];
+        const sectionsBeforeFee = withoutOldMain.filter(s => s.order < feeOrder);
+        const sectionsAfterFee = withoutOldMain.filter(s => s.order >= feeOrder);
         
-        // מיון מחדש לפי הסדר
-        return allSections.sort((a, b) => {
-          // שמור על סדר הסעיפים הקיימים, אבל הוסף את שכר הטרחה אחרי תיאור השירות
-          if (a.id === mainSectionId) {
-            return feeOrder - b.order;
-          }
-          if (b.id === mainSectionId) {
-            return a.order - feeOrder;
-          }
-          return a.order - b.order;
-        }).map((section, index) => ({
+        // נשמור על הסדר: סעיפים לפני שכר טרחה -> שכר טרחה -> סעיפים אחרי שכר טרחה
+        const allSections = [
+          ...sectionsBeforeFee,
+          mainSection,
+          ...sectionsAfterFee
+        ];
+        
+        // עדכן את הסדר של כל הסעיפים
+        return allSections.map((section, index) => ({
           ...section,
           order: index + 1
         }));
@@ -527,17 +573,21 @@ export default function LawyerFeeAgreement() {
     const subSections = sortedSections.filter(s => s.level === 'sub' && s.parentId === section.parentId);
     const subSubSections = sortedSections.filter(s => s.level === 'sub-sub' && s.parentId === section.parentId);
     
+    // הסעיף הראשון תמיד "תיאור השירות" (1), אז הסעיפים הראשיים מ-customSections מתחילים מ-2
+    const sectionOffset = 1; // הסעיף הראשון הוא תמיד תיאור השירות
+    
     if (section.level === 'main') {
       const mainIndex = mainSections.findIndex(s => s.id === section.id);
-      return (mainIndex + 1).toString();
+      return (mainIndex + 1 + sectionOffset).toString();
     } else if (section.level === 'sub') {
+      const mainParent = sortedSections.find(s => s.id === section.parentId);
       const mainIndex = mainSections.findIndex(s => s.id === section.parentId);
       const subIndex = subSections.findIndex(s => s.id === section.id);
-      return `${mainIndex + 1}.${subIndex + 1}`;
+      return `${mainIndex + 1 + sectionOffset}.${subIndex + 1}`;
     } else if (section.level === 'sub-sub') {
       const mainIndex = mainSections.findIndex(s => s.id === section.parentId);
       const subSubIndex = subSubSections.findIndex(s => s.id === section.id);
-      return `${mainIndex + 1}.${subSubIndex + 1}`;
+      return `${mainIndex + 1 + sectionOffset}.${subSubIndex + 1}`;
     }
     
     return '';
@@ -1149,8 +1199,8 @@ export default function LawyerFeeAgreement() {
     // החלפת סכומים
     if (agreementData.fees.totalAmount) {
       const formattedAmount = formatNumber(agreementData.fees.totalAmount);
-      updatedText = updatedText.replace(/_______ ש"ח/g, `${formattedAmount} ש"ח`);
-      updatedText = updatedText.replace(/________ ש"ח/g, `${formattedAmount} ש"ח`);
+      updatedText = updatedText.replace(/_______ ש"ח/g, `${formattedAmount} ש"ח + מע"מ`);
+      updatedText = updatedText.replace(/________ ש"ח/g, `${formattedAmount} ש"ח + מע"מ`);
     }
     
     // הסרת שורות עם שדות לא רלוונטיים
@@ -1507,6 +1557,172 @@ export default function LawyerFeeAgreement() {
   };
 
 
+  // פונקציה לקבלת מגדר הלקוח/ה
+  const getClientsGender = (): 'male' | 'female' | 'plural' => {
+    if (agreementData.clients.length === 0) return 'male';
+    if (agreementData.clients.length === 1) {
+      return agreementData.clients[0].gender;
+    }
+    
+    // אם יש יותר מלקוח אחד - בדוק אם כולם מאותו מגדר
+    const genders = agreementData.clients.map(c => c.gender);
+    const uniqueGenders = [...new Set(genders)];
+    
+    if (uniqueGenders.length === 1) {
+      // כולם מאותו מגדר - החזר אותו מגדר
+      return uniqueGenders[0];
+    } else {
+      // יש גברים ונשים - החזר 'plural' (רבים)
+      return 'plural';
+    }
+  };
+
+  // פונקציה ליצירת טקסט הואיל מה-JSON
+  const generatePreambleText = (): string => {
+    const preamble = feeAgreementTemplates.preamble;
+    const clientsGender = getClientsGender();
+    
+    if (!preamble || !preamble.whereas) {
+      // אם אין במאגר, השתמש בטקסט ברירת מחדל
+      const defaultText = `הואיל ועורך הדין הוא עורך דין בעל רישיון תקף לעריכת דין בישראל;
+
+והואיל {{multipleClients:והלקוחות פנו|והלקוח פנה}} אל עורך הדין בבקשה לקבל שירות משפטי;
+
+והואיל ועורך הדין הסכים לייצג את {{multipleClients:הלקוחות|הלקוח}} בתנאים המפורטים להלן;
+
+והואיל והצדדים מעוניינים לקבוע את תנאי ההתקשרות ביניהם;`;
+      
+      let text = defaultText;
+      const multipleClients = agreementData.clients.length > 1;
+      text = text.replace(/\{\{multipleClients:([^|]+)\|([^}]+)\}\}/g, 
+        multipleClients ? '$1' : '$2');
+      return replaceTextWithGender(text, clientsGender);
+    }
+
+    const multipleClients = agreementData.clients.length > 1;
+    return preamble.whereas.map(w => {
+      let text = w.text;
+      
+      // קודם החלף את משתני multipleClients (כולל אם יש בתוכם gender)
+      // נטפל בתבנית {{multipleClients:ערך|ערך {{gender:...}}}}
+      text = text.replace(/\{\{multipleClients:([^|]+)\|([^}]+)\}\}/g, (match, pluralText, singularText) => {
+        const chosenText = multipleClients ? pluralText : singularText;
+        // אם הטקסט הנבחר מכיל {{gender:...}}, נטפל בו
+        return chosenText;
+      });
+      
+      text = text.replace(/\{\{serviceDescription\}\}/g, agreementData.case.subject || '[תיאור השירות המשפטי]');
+      
+      // הגנה על "עורך הדין" וכל מה שקשור אליו - נשמור אותו כזכר תמיד
+      // נשמור את כל הביטויים הקשורים לעורך הדין לפני החלפת מגדר
+      const lawyerPhrases: { [key: string]: string } = {};
+      let phraseIndex = 0;
+      
+      // מצא ושמור כל ביטוי שקשור לעורך הדין - כולל "בעל רישיון" ו"הוא"
+      const lawyerPatterns = [
+        /עורך הדין הוא עורך דין בעל רישיון[^;]*;/g,
+        /עורך דין בעל רישיון[^;]*;/g,
+        /עורך הדין הסכים/g,
+        /עורך הדין הוא/g,
+        /שירותיו של עורך הדין/g,
+        /עורך הדין.*הסכים/g,
+        /עורך הדין.*לייצג/g,
+        /הוא עורך דין/g,
+        /בעל רישיון תקף/g
+      ];
+      
+      lawyerPatterns.forEach(pattern => {
+        text = text.replace(pattern, (match) => {
+          const placeholder = `__LAWYER_PHRASE_${phraseIndex}__`;
+          lawyerPhrases[placeholder] = match;
+          phraseIndex++;
+          return placeholder;
+        });
+      });
+      
+      // גם נשמור את "עורך הדין" עצמו
+      text = text.replace(/עורך הדין/g, '__LAWYER_PLACEHOLDER__');
+      // גם נשמור "עורך דין" (בלי ה' הידיעה)
+      text = text.replace(/עורך דין(?! בעל)/g, '__LAWYER_NO_HEY__');
+      
+      // הגנה על מילים שצריכות להישאר ללא שינוי במגדר בהסכמי שכר טרחה
+      const protectedPhrases: { [key: string]: string } = {};
+      let protectedIndex = 0;
+      
+      // מילים שתמיד יישארו ללא שינוי
+      const protectedPatterns = [
+        /\bמידע מלא\b/g,  // מידע מלא (לא מידע מלאה)
+        /\bשאינו נכלל\b/g,  // שאינו נכלל (לא שאינו נכללה)
+        /\bשכר טרחה\b/g,  // שכר טרחה (לא שכרה טרחה)
+        /\bשכר הטרחה\b/g,  // שכר הטרחה (לא שכרה הטרחה)
+        /\bמינוי אפוטרופוס\b/g,  // מינוי אפוטרופוס
+        /\bבמלואו\b/g,  // במלואו (לא באופן מלאה)
+        /\bעד\s+(?:ל|שני|סיום|יום|מיצוי|לקבלת)/g,  // עד למיצוי, עד שני, עד לסיום, עד ליום, עד לקבלת
+        /\bעד\s+(?:סבבי|תיקונים|סיום)/g,  // עד שני סבבי תיקונים, עד לסיום
+      ];
+      
+      protectedPatterns.forEach(pattern => {
+        text = text.replace(pattern, (match) => {
+          const placeholder = `__PROTECTED_${protectedIndex}__`;
+          protectedPhrases[placeholder] = match;
+          protectedIndex++;
+          return placeholder;
+        });
+      });
+      
+      // הגנה מיוחדת על המילה "עד" כשהיא לא חלק מ"עדה" או "עדים" או "עדות"
+      // נשמור "עד" כשהיא מופיעה לפני מילות יחס או מספרים
+      text = text.replace(/\bעד\s+(?!עד[הא]|עדי|עדות|עדים)/g, '__UNTIL_PLACEHOLDER__');
+      
+      // החלפת מגדר - תבנית {{gender:זכר|נקבה|רבים}}
+      text = text.replace(/\{\{gender:([^|]+)\|([^|]+)\|([^}]+)\}\}/g, (match, male, female, plural) => {
+        switch (clientsGender) {
+          case 'male': return male;
+          case 'female': return female;
+          case 'plural': return plural;
+          default: return male;
+        }
+      });
+      
+      // החלפת מגדר כללית (פעלים, תארים וכו') - רק עבור הלקוח
+      let result = replaceTextWithGender(text, clientsGender);
+      
+      // החזרת כל הביטויים הקשורים לעורך הדין כזכר תמיד
+      Object.keys(lawyerPhrases).forEach(placeholder => {
+        result = result.replace(new RegExp(placeholder, 'g'), lawyerPhrases[placeholder]);
+      });
+      result = result.replace(/__LAWYER_PLACEHOLDER__/g, 'עורך הדין');
+      result = result.replace(/__LAWYER_NO_HEY__/g, 'עורך דין');
+      
+      // החזרת המילים המוגנות
+      Object.keys(protectedPhrases).forEach(placeholder => {
+        result = result.replace(new RegExp(placeholder, 'g'), protectedPhrases[placeholder]);
+      });
+      result = result.replace(/__UNTIL_PLACEHOLDER__/g, 'עד ');
+      
+      // תיקון נוסף - אם משהו השתנה בטעות, נשנה אותו חזרה
+      result = result.replace(/עורך הדין הסכימה/g, 'עורך הדין הסכים');
+      result = result.replace(/עורך דין בעלת/g, 'עורך דין בעל');
+      result = result.replace(/עורך הדין.*בעלת/g, 'עורך הדין בעל');
+      result = result.replace(/היא עורך דין/g, 'הוא עורך דין');
+      result = result.replace(/שירותיה של עורך הדין/g, 'שירותיו של עורך הדין');
+      result = result.replace(/עורך הדין.*הסכימה/g, (match) => match.replace(/הסכימה/g, 'הסכים'));
+      
+      // תיקון מילים שצריכות להישאר ללא שינוי
+      result = result.replace(/מידע מלאה/g, 'מידע מלא');
+      result = result.replace(/שאינו נכללה/g, 'שאינו נכלל');
+      result = result.replace(/שכרה טרחה/g, 'שכר טרחה');
+      result = result.replace(/שכרה הטרחה/g, 'שכר הטרחה');
+      result = result.replace(/מינוי אפוטרופסית/g, 'מינוי אפוטרופוס');
+      result = result.replace(/באופן מלאה/g, 'במלואו');
+      result = result.replace(/במלואה/g, 'במלואו');
+      result = result.replace(/עדה למיצוי/g, 'עד למיצוי');
+      result = result.replace(/עדה\s+(?:ל|שני|סיום|יום|לקבלת)/g, (match) => match.replace(/עדה/g, 'עד'));
+      
+      return result;
+    }).join('\n\n');
+  };
+
   const generateFeeAgreement = (): string => {
     const clientsSection = agreementData.clients.map((client, index) => {
       const clientLabel = agreementData.clients.length > 1 ? `הלקוח ${index + 1}` : 'הלקוח';
@@ -1517,6 +1733,130 @@ export default function LawyerFeeAgreement() {
          דוא"ל: ${client.email || '[כתובת אימייל]'}
          (להלן: "${clientLabel}")`;
     }).join('\n\n');
+
+    const preambleText = generatePreambleText();
+    const thereforeText = feeAgreementTemplates.preamble?.therefore || 'לפיכך הוסכם, הותנה והוצהר בין הצדדים כדלקמן:';
+
+    // מצא את היקף השירותים האוטומטי לפי סוג השירות
+    const serviceName = agreementData.case.subject || '';
+    const serviceScopeMapping = (feeAgreementTemplates.preamble?.serviceScopeMapping || {}) as Record<string, string>;
+    const serviceScope = (serviceScopeMapping[serviceName] || 'שירות משפטי לפי הצורך') as string;
+    const clientsGender = getClientsGender();
+    
+    // צור את הסעיף הראשון החדש
+    const firstSectionTemplate = feeAgreementTemplates.preamble?.firstSection?.text || 
+      '{{multipleClients:הלקוחות|הלקוח}} שכרו את שירותיו של עורך הדין לצורך ייעוץ משפטי וטיפול משפטי בעניין {{serviceType}}. השירותים המשפטיים יכללו, בין היתר, את הפעולות המפורטות להלן: {{serviceScope}}. מובהר ומוסכם כי כל שירות משפטי אחר, שאינו נכלל במפורש בהגדרה זו, יחייב הסכם נפרד בכתב ותשלום שכר טרחה נוסף.';
+    
+    let firstSectionText = firstSectionTemplate;
+    const multipleClients = agreementData.clients.length > 1;
+    
+    // קודם החלף את משתני multipleClients (כולל אם יש בתוכם gender)
+    firstSectionText = firstSectionText.replace(/\{\{multipleClients:([^|]+)\|([^}]+)\}\}/g, 
+      multipleClients ? '$1' : '$2');
+    
+    firstSectionText = firstSectionText.replace(/\{\{serviceType\}\}/g, serviceName || '[תיאור השירות המשפטי]');
+    firstSectionText = firstSectionText.replace(/\{\{serviceScope\}\}/g, serviceScope);
+    
+    // הגנה על "עורך הדין" וכל מה שקשור אליו - נשמור אותו כזכר תמיד
+    // נשמור את כל הביטויים הקשורים לעורך הדין לפני החלפת מגדר
+    const lawyerPhrases: { [key: string]: string } = {};
+    let phraseIndex = 0;
+    
+    // מצא ושמור כל ביטוי שקשור לעורך הדין - כולל "בעל רישיון" ו"הוא"
+    const lawyerPatterns = [
+      /עורך הדין הוא עורך דין בעל רישיון[^;]*;/g,
+      /עורך דין בעל רישיון[^;]*;/g,
+      /שירותיו של עורך הדין/g,
+      /עורך הדין.*לצורך/g,
+      /עורך הדין.*ייעוץ/g,
+      /הוא עורך דין/g,
+      /בעל רישיון תקף/g
+    ];
+    
+    lawyerPatterns.forEach(pattern => {
+      firstSectionText = firstSectionText.replace(pattern, (match) => {
+        const placeholder = `__LAWYER_PHRASE_${phraseIndex}__`;
+        lawyerPhrases[placeholder] = match;
+        phraseIndex++;
+        return placeholder;
+      });
+    });
+    
+    // גם נשמור את "עורך הדין" עצמו
+    firstSectionText = firstSectionText.replace(/עורך הדין/g, '__LAWYER_PLACEHOLDER__');
+    // גם נשמור "עורך דין" (בלי ה' הידיעה)
+    firstSectionText = firstSectionText.replace(/עורך דין(?! בעל)/g, '__LAWYER_NO_HEY__');
+    
+    // הגנה על מילים שצריכות להישאר ללא שינוי במגדר בהסכמי שכר טרחה
+    const protectedPhrases: { [key: string]: string } = {};
+    let protectedIndex = 0;
+    
+    // מילים שתמיד יישארו ללא שינוי
+    const protectedPatterns = [
+      /\bמידע מלא\b/g,  // מידע מלא (לא מידע מלאה)
+      /\bשאינו נכלל\b/g,  // שאינו נכלל (לא שאינו נכללה)
+      /\bשכר טרחה\b/g,  // שכר טרחה (לא שכרה טרחה)
+      /\bשכר הטרחה\b/g,  // שכר הטרחה (לא שכרה הטרחה)
+      /\bמינוי אפוטרופוס\b/g,  // מינוי אפוטרופוס
+      /\bבמלואו\b/g,  // במלואו (לא באופן מלאה)
+      /\bעד\s+(?:ל|שני|סיום|יום|מיצוי|לקבלת)/g,  // עד למיצוי, עד שני, עד לסיום, עד ליום, עד לקבלת
+      /\bעד\s+(?:סבבי|תיקונים|סיום)/g,  // עד שני סבבי תיקונים, עד לסיום
+    ];
+    
+    protectedPatterns.forEach(pattern => {
+      firstSectionText = firstSectionText.replace(pattern, (match) => {
+        const placeholder = `__PROTECTED_${protectedIndex}__`;
+        protectedPhrases[placeholder] = match;
+        protectedIndex++;
+        return placeholder;
+      });
+    });
+    
+    // הגנה מיוחדת על המילה "עד" כשהיא לא חלק מ"עדה" או "עדים" או "עדות"
+    // נשמור "עד" כשהיא מופיעה לפני מילות יחס או מספרים
+    firstSectionText = firstSectionText.replace(/\bעד\s+(?!עד[הא]|עדי|עדות|עדים)/g, '__UNTIL_PLACEHOLDER__');
+    
+    // החלפת מגדר - תבנית {{gender:זכר|נקבה|רבים}}
+    firstSectionText = firstSectionText.replace(/\{\{gender:([^|]+)\|([^|]+)\|([^}]+)\}\}/g, (match, male, female, plural) => {
+      switch (clientsGender) {
+        case 'male': return male;
+        case 'female': return female;
+        case 'plural': return plural;
+        default: return male;
+      }
+    });
+    
+    // החלפת מגדר כללית (פעלים, תארים וכו') - רק עבור הלקוח
+    firstSectionText = replaceTextWithGender(firstSectionText, clientsGender);
+    
+    // החזרת כל הביטויים הקשורים לעורך הדין כזכר תמיד
+    Object.keys(lawyerPhrases).forEach(placeholder => {
+      firstSectionText = firstSectionText.replace(new RegExp(placeholder, 'g'), lawyerPhrases[placeholder]);
+    });
+    firstSectionText = firstSectionText.replace(/__LAWYER_PLACEHOLDER__/g, 'עורך הדין');
+    firstSectionText = firstSectionText.replace(/__LAWYER_NO_HEY__/g, 'עורך דין');
+    
+    // החזרת המילים המוגנות
+    Object.keys(protectedPhrases).forEach(placeholder => {
+      firstSectionText = firstSectionText.replace(new RegExp(placeholder, 'g'), protectedPhrases[placeholder]);
+    });
+    firstSectionText = firstSectionText.replace(/__UNTIL_PLACEHOLDER__/g, 'עד ');
+    
+    // תיקון נוסף - אם משהו השתנה בטעות, נשנה אותו חזרה
+    firstSectionText = firstSectionText.replace(/עורך דין בעלת/g, 'עורך דין בעל');
+    firstSectionText = firstSectionText.replace(/היא עורך דין/g, 'הוא עורך דין');
+    firstSectionText = firstSectionText.replace(/שירותיה של עורך הדין/g, 'שירותיו של עורך הדין');
+    
+    // תיקון מילים שצריכות להישאר ללא שינוי
+    firstSectionText = firstSectionText.replace(/מידע מלאה/g, 'מידע מלא');
+    firstSectionText = firstSectionText.replace(/שאינו נכללה/g, 'שאינו נכלל');
+    firstSectionText = firstSectionText.replace(/שכרה טרחה/g, 'שכר טרחה');
+    firstSectionText = firstSectionText.replace(/שכרה הטרחה/g, 'שכר הטרחה');
+    firstSectionText = firstSectionText.replace(/מינוי אפוטרופסית/g, 'מינוי אפוטרופוס');
+    firstSectionText = firstSectionText.replace(/באופן מלאה/g, 'במלואו');
+    firstSectionText = firstSectionText.replace(/במלואה/g, 'במלואו');
+    firstSectionText = firstSectionText.replace(/עדה למיצוי/g, 'עד למיצוי');
+    firstSectionText = firstSectionText.replace(/עדה\s+(?:ל|שני|סיום|יום|לקבלת)/g, (match) => match.replace(/עדה/g, 'עד'));
 
     let baseAgreement = `הסכם שכר טרחה
 
@@ -1529,29 +1869,61 @@ export default function LawyerFeeAgreement() {
 
 ${clientsSection}
 
-הואיל ועורך הדין הוא עורך דין בעל רישיון תקף לעריכת דין בישראל;
+${preambleText}
 
-והואיל ${agreementData.clients.length > 1 ? 'והלקוחות מעוניינים' : 'והלקוח מעוניין'} לקבל שירותים משפטיים מעורך הדין;
-
-והואיל והצדדים מעוניינים לקבוע את תנאי ההתקשרות ביניהם;
-
-לפיכך הוסכם, הותנה והוצהר בין הצדדים כדלקמן:
+${thereforeText}
 
 1. תיאור השירות
 
-${agreementData.case.subject || '[תיאור השירות המשפטי]'}
+${firstSectionText}
 `;
 
     if (customSections.length > 0) {
-      baseAgreement += '\n2. סעיפים ותנאים\n\n';
-      customSections.forEach((section, index) => {
-        baseAgreement += `2.${index + 1}. ${section.title}\n\n${section.content}\n\n`;
-      });
+      // הסעיף הראשון הוא תמיד "תיאור השירות" (1), אז הסעיפים מ-customSections מתחילים מ-2
+      const sortedCustomSections = [...customSections].sort((a, b) => a.order - b.order);
+      const mainSections = sortedCustomSections.filter(s => s.level === 'main');
+      
+      // אם יש סעיפים ראשיים, השתמש בכותרות שלהם
+      if (mainSections.length > 0) {
+        mainSections.forEach((section, mainIndex) => {
+          const sectionNumber = mainIndex + 2; // מתחיל מ-2 כי 1 הוא תיאור השירות
+          baseAgreement += `\n${sectionNumber}. ${section.title}\n\n${section.content}\n\n`;
+          
+          // הוסף תתי סעיפים
+          const subSections = sortedCustomSections
+            .filter(s => s.level === 'sub' && s.parentId === section.id)
+            .sort((a, b) => a.order - b.order);
+          
+          subSections.forEach((subSection, subIndex) => {
+            baseAgreement += `${sectionNumber}.${subIndex + 1}. ${subSection.title}\n\n${subSection.content}\n\n`;
+            
+            // הוסף תתי-תתי סעיפים
+            const subSubSections = sortedCustomSections
+              .filter(s => s.level === 'sub-sub' && s.parentId === subSection.id)
+              .sort((a, b) => a.order - b.order);
+            
+            subSubSections.forEach((subSubSection, subSubIndex) => {
+              baseAgreement += `${sectionNumber}.${subIndex + 1}.${subSubIndex + 1}. ${subSubSection.title}\n\n${subSubSection.content}\n\n`;
+            });
+          });
+        });
+      } else {
+        // אם אין סעיפים ראשיים, הוסף כותרת כללית
+        baseAgreement += '\n2. סעיפים ותנאים\n\n';
+        sortedCustomSections.forEach((section, index) => {
+          baseAgreement += `2.${index + 1}. ${section.title}\n\n${section.content}\n\n`;
+        });
+      }
       baseAgreement += '\n';
     }
 
+    // חשב את מספר הסעיף הבא (אחרי הסעיף הראשון ותוכן customSections)
+    const sortedCustomSections = [...customSections].sort((a, b) => a.order - b.order);
+    const mainSections = sortedCustomSections.filter(s => s.level === 'main');
+    const nextSectionNumber = mainSections.length > 0 ? mainSections.length + 2 : 2;
+    
     baseAgreement += `
-${customSections.length > 0 ? customSections.length + 2 : '2'}. תוקף ההסכם
+${nextSectionNumber}. תוקף ההסכם
 
 הסכם זה ייכנס לתוקף עם חתימת שני הצדדים ויהיה בתוקף עד לסיום הטיפול בתיק או עד לסיום ההתקשרות.
 
@@ -1781,11 +2153,36 @@ ________________________           ${agreementData.clients.map((_, i) => '______
           
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-2">תיאור השירות</label>
+            <select
+              value={agreementData.case.subject}
+              onChange={(e) => {
+                updateCase('subject', e.target.value);
+                // עדכן גם את היקף השירותים האוטומטי
+                const serviceScopeMapping = (feeAgreementTemplates.preamble?.serviceScopeMapping || {}) as Record<string, string>;
+                const serviceScope = (serviceScopeMapping[e.target.value] || 'שירות משפטי לפי הצורך') as string;
+              }}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-purple-500 focus:border-purple-500 mb-2"
+              dir="rtl"
+            >
+              <option value="">בחר סוג שירות...</option>
+              {Object.values(feeAgreementTemplates.serviceCategories).map((service) => (
+                <option key={service.serviceName} value={service.serviceName}>
+                  {service.serviceName}
+                </option>
+              ))}
+              {Object.keys(feeAgreementTemplates.preamble?.serviceScopeMapping || {}).filter(
+                service => !Object.values(feeAgreementTemplates.serviceCategories).some(s => s.serviceName === service)
+              ).map(service => (
+                <option key={service} value={service}>
+                  {service}
+                </option>
+              ))}
+            </select>
             <input
               type="text"
               value={agreementData.case.subject}
               onChange={(e) => updateCase('subject', e.target.value)}
-              placeholder="תיאור השירות המשפטי (תביעה, הסכם, ייעוץ...)"
+              placeholder="או הקלד תיאור שירות מותאם אישית"
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-purple-500 focus:border-purple-500"
               dir="rtl"
             />
