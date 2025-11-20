@@ -235,19 +235,17 @@ export default function LawyerFeeAgreement() {
       const existingSection = withoutOldFee.find(s => s.title === 'שכר טרחה עבור השירות');
       const mainSectionId = existingSection?.id || generateSectionId();
       
-      // מצא את סעיף "תיאור השירות" או "היקף השירות" - הסעיף הראשון שטעון מה-JSON
-      // נחפש סעיף ראשי (level === 'main') שאינו שכר טרחה, וסינון לפי מיקום בסדר
+      // מצא את סעיף "תיאור השירות" - הסעיף הראשון שטעון מה-JSON
+      // נחפש סעיף ראשי (level === 'main') שאינו שכר טרחה ואינו סעיף קבוע (gen_)
       const mainSections = withoutOldFee
-        .filter(s => s.level === 'main' && s.title !== 'שכר טרחה עבור השירות')
+        .filter(s => s.level === 'main' && 
+                     s.title !== 'שכר טרחה עבור השירות' && 
+                     !s.id.startsWith('gen_'))
         .sort((a, b) => a.order - b.order);
       
-      // נחפש סעיף שמתאר את השירות - בדרך כלל הראשון ברשימה (היקף השירות, תיאור השירות וכו')
-      // קודם נחפש סעיף שמתחיל ב"היקף" או "תיאור" - זה הסעיף הראשון מה-JSON
+      // נחפש את סעיף "תיאור השירות" - זה הסעיף הראשון
       let serviceDescriptionSection = mainSections.find(s => 
-        s.title.startsWith('היקף') || 
-        s.title.startsWith('תיאור') ||
-        (s.title.includes('תיאור') && s.order === 1) ||
-        (s.title.includes('היקף') && s.order === 1)
+        s.title === 'תיאור השירות' || s.id === 'first-section-fixed'
       );
       
       // אם לא נמצא, נחפש את הסעיף הראשון ברשימה
@@ -255,10 +253,16 @@ export default function LawyerFeeAgreement() {
         serviceDescriptionSection = mainSections[0];
       }
       
-      // קבע את המיקום - אחרי סעיף תיאור השירות (אם קיים) או אחרי הסעיף הראשון
+      // קבע את המיקום - שכר טרחה יופיע אחרי כל הסעיפים הרגילים (לא קבועים)
+      // מצא את כל הסעיפים הרגילים (לא gen_ ולא שכר טרחה)
+      const regularSections = withoutOldFee.filter(s => 
+        !s.id.startsWith('gen_') && 
+        s.title !== 'שכר טרחה עבור השירות'
+      );
+      
       let feeOrder = 1;
-      if (serviceDescriptionSection) {
-        // מצא את כל הסעיפים שקשורים לסעיף תיאור השירות (כולל תתי סעיפים והיררכיה מלאה)
+      if (regularSections.length > 0) {
+        // מצא את הסדר הגבוה ביותר של כל הסעיפים הרגילים כולל תתי סעיפים
         const findAllChildren = (sectionId: string, allSections: typeof withoutOldFee): string[] => {
           const children = allSections.filter(s => s.parentId === sectionId);
           let result: string[] = [sectionId];
@@ -268,23 +272,17 @@ export default function LawyerFeeAgreement() {
           return result;
         };
         
-        const serviceSectionIds = findAllChildren(serviceDescriptionSection.id, withoutOldFee);
-        const serviceSections = withoutOldFee.filter(s => serviceSectionIds.includes(s.id));
+        // מצא את הסדר הגבוה ביותר של כל הסעיפים הרגילים
+        let maxOrder = 0;
+        regularSections.forEach(section => {
+          const sectionIds = findAllChildren(section.id, withoutOldFee);
+          const sectionWithChildren = withoutOldFee.filter(s => sectionIds.includes(s.id));
+          const sectionMaxOrder = sectionWithChildren.length > 0
+            ? Math.max(...sectionWithChildren.map(s => s.order), 0)
+            : section.order;
+          maxOrder = Math.max(maxOrder, sectionMaxOrder);
+        });
         
-        // קח את הסדר הגבוה ביותר + 1
-        const maxOrder = serviceSections.length > 0 
-          ? Math.max(...serviceSections.map(s => s.order), 0)
-          : serviceDescriptionSection.order;
-        feeOrder = maxOrder + 1;
-      } else if (mainSections.length > 0) {
-        // אם יש סעיפים אחרים, שכר הטרחה יופיע אחרי הראשון
-        const firstMainSection = mainSections[0];
-        const firstSectionWithChildren = withoutOldFee.filter(s => 
-          s.id === firstMainSection.id || s.parentId === firstMainSection.id
-        );
-        const maxOrder = firstSectionWithChildren.length > 0
-          ? Math.max(...firstSectionWithChildren.map(s => s.order), 0)
-          : firstMainSection.order;
         feeOrder = maxOrder + 1;
       }
       
@@ -350,41 +348,77 @@ export default function LawyerFeeAgreement() {
           };
         });
         
-        // מיון - שכר טרחה אחרי תיאור השירות, אחריו תתי הסעיפים שלו, ואז שאר הסעיפים
-        // נוסיף את שכר הטרחה ותתי הסעיפים שלו במקום הנכון
-        const sectionsBeforeFee = withoutOldMain.filter(s => s.order < feeOrder);
-        const sectionsAfterFee = withoutOldMain.filter(s => s.order >= feeOrder);
+        // הפרד בין סעיפים רגילים לסעיפים קבועים (gen_)
+        const regularSections = withoutOldMain.filter(s => !s.id.startsWith('gen_'));
+        const generalSections = withoutOldMain.filter(s => s.id.startsWith('gen_'));
         
-        // נשמור על הסדר: סעיפים לפני שכר טרחה -> שכר טרחה ותתי סעיפים -> סעיפים אחרי שכר טרחה
+        // מצא את הסדר הגבוה ביותר של הסעיפים הרגילים (לא קבועים)
+        const maxRegularOrder = regularSections.length > 0 
+          ? Math.max(...regularSections.map(s => s.order), 0)
+          : feeOrder - 1;
+        
+        // שכר טרחה יופיע אחרי כל הסעיפים הרגילים, אבל לפני הסעיפים הקבועים
+        const feeOrderNew = maxRegularOrder + 1;
+        mainSection.order = feeOrderNew;
+        
+        // עדכן את הסדר של תתי הסעיפים
+        newSubsections.forEach((sub, index) => {
+          sub.order = feeOrderNew + index + 1;
+        });
+        
+        // נשמור על הסדר: סעיפים רגילים -> שכר טרחה ותתי סעיפים -> סעיפים קבועים
         const allSections = [
-          ...sectionsBeforeFee,
+          ...regularSections,
           mainSection,
           ...newSubsections,
-          ...sectionsAfterFee
+          ...generalSections
         ];
         
-        // עדכן את הסדר של כל הסעיפים
-        return allSections.map((section, index) => ({
+        // עדכן את הסדר של כל הסעיפים (רק סעיפים רגילים ושכר טרחה, לא קבועים)
+        let currentOrder = 1;
+        return allSections.map((section) => {
+          if (section.id.startsWith('gen_')) {
+            // שמור את הסדר המקורי של הסעיפים הקבועים
+            return section;
+          }
+          return {
           ...section,
-          order: index + 1
-        }));
+            order: currentOrder++
+          };
+        });
       } else {
         // תשלום מלא מראש - רק הסעיף הראשי
-        const sectionsBeforeFee = withoutOldMain.filter(s => s.order < feeOrder);
-        const sectionsAfterFee = withoutOldMain.filter(s => s.order >= feeOrder);
+        // הפרד בין סעיפים רגילים לסעיפים קבועים (gen_)
+        const regularSections = withoutOldMain.filter(s => !s.id.startsWith('gen_'));
+        const generalSections = withoutOldMain.filter(s => s.id.startsWith('gen_'));
         
-        // נשמור על הסדר: סעיפים לפני שכר טרחה -> שכר טרחה -> סעיפים אחרי שכר טרחה
+        // מצא את הסדר הגבוה ביותר של הסעיפים הרגילים (לא קבועים)
+        const maxRegularOrder = regularSections.length > 0 
+          ? Math.max(...regularSections.map(s => s.order), 0)
+          : feeOrder - 1;
+        
+        // שכר טרחה יופיע אחרי כל הסעיפים הרגילים, אבל לפני הסעיפים הקבועים
+        mainSection.order = maxRegularOrder + 1;
+        
+        // נשמור על הסדר: סעיפים רגילים -> שכר טרחה -> סעיפים קבועים
         const allSections = [
-          ...sectionsBeforeFee,
+          ...regularSections,
           mainSection,
-          ...sectionsAfterFee
+          ...generalSections
         ];
         
-        // עדכן את הסדר של כל הסעיפים
-        return allSections.map((section, index) => ({
+        // עדכן את הסדר של כל הסעיפים (רק סעיפים רגילים ושכר טרחה, לא קבועים)
+        let currentOrder = 1;
+        return allSections.map((section) => {
+          if (section.id.startsWith('gen_')) {
+            // שמור את הסדר המקורי של הסעיפים הקבועים
+            return section;
+          }
+          return {
           ...section,
-          order: index + 1
-        }));
+            order: currentOrder++
+          };
+        });
       }
     });
   };
@@ -513,7 +547,37 @@ export default function LawyerFeeAgreement() {
   const generateSectionId = () => `section_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   
   const getNextOrder = () => {
-    return customSections.length > 0 ? Math.max(...customSections.map(s => s.order)) + 1 : 1;
+    // מצא את הסדר הגבוה ביותר של סעיפים רגילים (לא קבועים ולא שכר טרחה)
+    const regularSections = customSections.filter(s => 
+      !s.id.startsWith('gen_') && 
+      s.title !== 'שכר טרחה עבור השירות' &&
+      s.id !== 'first-section-fixed'
+    );
+    
+    if (regularSections.length === 0) {
+      // אם אין סעיפים רגילים, התחל מ-2 (אחרי הסעיף הראשון)
+      return 2;
+    }
+    
+    // מצא את הסדר הגבוה ביותר כולל תתי סעיפים
+    let maxOrder = 0;
+    regularSections.forEach(section => {
+      // מצא את כל התתי סעיפים של הסעיף הזה
+      const findAllChildren = (sectionId: string): number => {
+        const children = customSections.filter(s => s.parentId === sectionId);
+        let maxChildOrder = section.order;
+        children.forEach(child => {
+          const childMax = findAllChildren(child.id);
+          maxChildOrder = Math.max(maxChildOrder, childMax);
+        });
+        return maxChildOrder;
+      };
+      
+      const sectionMaxOrder = findAllChildren(section.id);
+      maxOrder = Math.max(maxOrder, sectionMaxOrder);
+    });
+    
+    return maxOrder + 1;
   };
   
   const changeSectionLevel = (sectionId: string, newLevel: 'main' | 'sub' | 'sub-sub') => {
@@ -568,26 +632,72 @@ export default function LawyerFeeAgreement() {
   };
   
   const getSectionNumber = (section: any) => {
+    // מיין את כל הסעיפים לפי order
     const sortedSections = [...customSections].sort((a, b) => a.order - b.order);
-    const mainSections = sortedSections.filter(s => s.level === 'main');
-    const subSections = sortedSections.filter(s => s.level === 'sub' && s.parentId === section.parentId);
-    const subSubSections = sortedSections.filter(s => s.level === 'sub-sub' && s.parentId === section.parentId);
     
-    // הסעיף הראשון תמיד "תיאור השירות" (1), אז הסעיפים הראשיים מ-customSections מתחילים מ-2
-    const sectionOffset = 1; // הסעיף הראשון הוא תמיד תיאור השירות
+    // מצא את כל הסעיפים הראשיים (כולל gen_)
+    const allMainSections = sortedSections
+      .filter(s => s.level === 'main')
+      .sort((a, b) => a.order - b.order);
+    
+    // מצא את כל הסעיפים הראשיים (לא כולל gen_) למספור
+    const mainSections = sortedSections
+      .filter(s => s.level === 'main' && !s.id.startsWith('gen_'))
+      .sort((a, b) => a.order - b.order);
     
     if (section.level === 'main') {
+      // אם זה סעיף gen_, מצא את המספר שלו מתוך כל הסעיפים הראשיים
+      if (section.id.startsWith('gen_')) {
+        const mainIndex = allMainSections.findIndex(s => s.id === section.id);
+        if (mainIndex === -1) return '';
+        return (mainIndex + 1).toString();
+      }
       const mainIndex = mainSections.findIndex(s => s.id === section.id);
-      return (mainIndex + 1 + sectionOffset).toString();
+      if (mainIndex === -1) return '';
+      return (mainIndex + 1).toString();
     } else if (section.level === 'sub') {
-      const mainParent = sortedSections.find(s => s.id === section.parentId);
-      const mainIndex = mainSections.findIndex(s => s.id === section.parentId);
+      // מצא את הסעיף הראשי שיור (יכול להיות גם gen_)
+      const mainParent = allMainSections.find(s => s.id === section.parentId);
+      if (!mainParent) return '';
+      
+      const mainIndex = allMainSections.findIndex(s => s.id === mainParent.id);
+      const parentSectionNum = mainIndex + 1;
+      
+      // מצא את כל התתי-סעיפים של הסעיף הראשי הזה (כולל gen_)
+      const subSections = sortedSections
+        .filter(s => s.level === 'sub' && s.parentId === section.parentId)
+        .sort((a, b) => a.order - b.order);
+      
       const subIndex = subSections.findIndex(s => s.id === section.id);
-      return `${mainIndex + 1 + sectionOffset}.${subIndex + 1}`;
+      if (subIndex === -1) return '';
+      return `${parentSectionNum}.${subIndex + 1}`;
     } else if (section.level === 'sub-sub') {
-      const mainIndex = mainSections.findIndex(s => s.id === section.parentId);
-      const subSubIndex = subSubSections.findIndex(s => s.id === section.id);
-      return `${mainIndex + 1 + sectionOffset}.${subSubIndex + 1}`;
+      // מצא את הסעיף sub שיור
+      const parentSub = sortedSections.find(s => s.id === section.parentId);
+      if (!parentSub || parentSub.level !== 'sub') return '';
+      
+      // מצא את הסעיף הראשי דרך הסעיף sub (יכול להיות גם gen_)
+      const mainParent = allMainSections.find(s => s.id === parentSub.parentId);
+      if (!mainParent) return '';
+      
+      const mainIndex = allMainSections.findIndex(s => s.id === mainParent.id);
+      const parentSectionNum = mainIndex + 1;
+      
+      // מצא את כל התתי-סעיפים של הסעיף הראשי
+      const allSubSections = sortedSections
+        .filter(s => s.level === 'sub' && s.parentId === mainParent.id)
+        .sort((a, b) => a.order - b.order);
+      const subIndex = allSubSections.findIndex(s => s.id === parentSub.id);
+      if (subIndex === -1) return '';
+      
+      // מצא את כל התתי-תתי-סעיפים של הסעיף sub הזה
+      const allSubSubSections = sortedSections
+        .filter(s => s.level === 'sub-sub' && s.parentId === parentSub.id)
+        .sort((a, b) => a.order - b.order);
+      const subSubIndex = allSubSubSections.findIndex(s => s.id === section.id);
+      if (subSubIndex === -1) return '';
+      
+      return `${parentSectionNum}.${subIndex + 1}.${subSubIndex + 1}`;
     }
     
     return '';
@@ -906,17 +1016,45 @@ export default function LawyerFeeAgreement() {
       const subSubSectionsResults = await Promise.all(subSubSectionsPromises);
 
       // צור סעיפים במבנה הנכון
+      const clientsGender = getClientsGender();
       const mainSectionId = generateSectionId();
+      
+      // עיבוד תוכן הסעיף הראשי עם החלפת מגדר
+      let mainContent = selectedMainSection.content || '';
+      // הגנה על "עד" שלא ישתנה ל"עדה"
+      mainContent = mainContent.replace(/\bעד\s+(?!עד[הא]|עדי|עדות|עדים|עדה)/g, 'עד-ל ');
+      // הגנה על "עורך הדין" שלא ישתנה ל"עורך הדין תישא"
+      mainContent = mainContent.replace(/עורך הדין\s+(?=לא|תישא|יישא|ישא|אינו|יהיה)/g, '__LAWYER_VERB__');
+      // הגנה על "מינוי אפוטרופוס" שלא ישתנה ל"מינוי אפוטרופסית"
+      mainContent = mainContent.replace(/מינוי אפוטרופוס/g, '__APOTROPS__');
+      mainContent = replaceTextWithGender(mainContent, clientsGender);
+      mainContent = mainContent.replace(/עד-ל\s+/g, 'עד ');
+      mainContent = mainContent.replace(/__LAWYER_VERB__/g, 'עורך הדין ');
+      mainContent = mainContent.replace(/__APOTROPS__/g, 'מינוי אפוטרופוס');
+      // תיקונים נוספים
+      mainContent = mainContent.replace(/עדה\s+(ה'|ל|שני|סיום|יום|לקבלת|מיצוי|מועד|בין)/g, 'עד $1');
+      mainContent = mainContent.replace(/בימים א' עדה ה'/g, "בימים א' עד ה'");
+      mainContent = mainContent.replace(/בבקשה עדה/g, 'בבקשה עד');
+      mainContent = mainContent.replace(/עורך הדין תישא/g, 'עורך הדין יישא');
+      mainContent = mainContent.replace(/עורך הדין לא תישא/g, 'עורך הדין לא יישא');
+      mainContent = mainContent.replace(/עורך הדין אינו נושא ולא תישא/g, 'עורך הדין אינו נושא ולא יישא');
+      mainContent = mainContent.replace(/עורך הדין והמשרד תישא/g, 'עורך הדין והמשרד יישאו');
+      mainContent = mainContent.replace(/עורך הדין יהיה זכאית/g, 'עורך הדין יהיה זכאי');
+      mainContent = mainContent.replace(/מינוי אפוטרופסית/g, 'מינוי אפוטרופוס');
+      
+      // חשב את הסדר הנכון - אחרי הסעיף הראשון ולפני שכר טרחה
+      const nextOrder = getNextOrder();
+      
       const mainSection = {
         id: mainSectionId,
         title: selectedMainSection.title,
-        content: selectedMainSection.content || '',
+        content: mainContent,
         level: 'main' as const,
-        order: getNextOrder(),
+        order: nextOrder,
         type: 'text' as const
       };
 
-      let currentOrder = getNextOrder() + 1;
+      let currentOrder = nextOrder + 1;
       const allSections: Array<{
         id: string;
         title: string;
@@ -930,10 +1068,34 @@ export default function LawyerFeeAgreement() {
       // עבד על תתי סעיפים
       (subSections || []).forEach((sub: any, subIndex: number) => {
         const subSectionId = generateSectionId();
+        
+        // עיבוד תוכן תת-סעיף עם החלפת מגדר
+        let subContent = sub.content || '';
+        // הגנה על "עד" שלא ישתנה ל"עדה"
+        subContent = subContent.replace(/\bעד\s+(?!עד[הא]|עדי|עדות|עדים|עדה)/g, 'עד-ל ');
+        // הגנה על "עורך הדין" שלא ישתנה ל"עורך הדין תישא"
+        subContent = subContent.replace(/עורך הדין\s+(?=לא|תישא|יישא|ישא|אינו|יהיה)/g, '__LAWYER_VERB__');
+        // הגנה על "מינוי אפוטרופוס" שלא ישתנה ל"מינוי אפוטרופסית"
+        subContent = subContent.replace(/מינוי אפוטרופוס/g, '__APOTROPS__');
+        subContent = replaceTextWithGender(subContent, clientsGender);
+        subContent = subContent.replace(/עד-ל\s+/g, 'עד ');
+        subContent = subContent.replace(/__LAWYER_VERB__/g, 'עורך הדין ');
+        subContent = subContent.replace(/__APOTROPS__/g, 'מינוי אפוטרופוס');
+        // תיקונים נוספים
+        subContent = subContent.replace(/עדה\s+(ה'|ל|שני|סיום|יום|לקבלת|מיצוי|מועד|בין)/g, 'עד $1');
+        subContent = subContent.replace(/בימים א' עדה ה'/g, "בימים א' עד ה'");
+        subContent = subContent.replace(/בבקשה עדה/g, 'בבקשה עד');
+        subContent = subContent.replace(/עורך הדין תישא/g, 'עורך הדין יישא');
+        subContent = subContent.replace(/עורך הדין לא תישא/g, 'עורך הדין לא יישא');
+        subContent = subContent.replace(/עורך הדין אינו נושא ולא תישא/g, 'עורך הדין אינו נושא ולא יישא');
+        subContent = subContent.replace(/עורך הדין והמשרד תישא/g, 'עורך הדין והמשרד יישאו');
+        subContent = subContent.replace(/עורך הדין יהיה זכאית/g, 'עורך הדין יהיה זכאי');
+        subContent = subContent.replace(/מינוי אפוטרופסית/g, 'מינוי אפוטרופוס');
+        
         const subSection = {
           id: subSectionId,
           title: sub.title,
-          content: sub.content || '',
+          content: subContent,
           level: 'sub' as const,
           parentId: mainSectionId,
           order: currentOrder++,
@@ -944,10 +1106,33 @@ export default function LawyerFeeAgreement() {
         // עבד על תת-תת-סעיפים
         const subSubSections = subSubSectionsResults[subIndex] || [];
         subSubSections.forEach((subSub: any) => {
+          // עיבוד תוכן תת-תת-סעיף עם החלפת מגדר
+          let subSubContent = subSub.content || '';
+          // הגנה על "עד" שלא ישתנה ל"עדה"
+          subSubContent = subSubContent.replace(/\bעד\s+(?!עד[הא]|עדי|עדות|עדים|עדה)/g, 'עד-ל ');
+          // הגנה על "עורך הדין" שלא ישתנה ל"עורך הדין תישא"
+          subSubContent = subSubContent.replace(/עורך הדין\s+(?=לא|תישא|יישא|ישא|אינו|יהיה)/g, '__LAWYER_VERB__');
+          // הגנה על "מינוי אפוטרופוס" שלא ישתנה ל"מינוי אפוטרופסית"
+          subSubContent = subSubContent.replace(/מינוי אפוטרופוס/g, '__APOTROPS__');
+          subSubContent = replaceTextWithGender(subSubContent, clientsGender);
+          subSubContent = subSubContent.replace(/עד-ל\s+/g, 'עד ');
+          subSubContent = subSubContent.replace(/__LAWYER_VERB__/g, 'עורך הדין ');
+          subSubContent = subSubContent.replace(/__APOTROPS__/g, 'מינוי אפוטרופוס');
+          // תיקונים נוספים
+          subSubContent = subSubContent.replace(/עדה\s+(ה'|ל|שני|סיום|יום|לקבלת|מיצוי|מועד|בין)/g, 'עד $1');
+          subSubContent = subSubContent.replace(/בימים א' עדה ה'/g, "בימים א' עד ה'");
+          subSubContent = subSubContent.replace(/בבקשה עדה/g, 'בבקשה עד');
+          subSubContent = subSubContent.replace(/עורך הדין תישא/g, 'עורך הדין יישא');
+          subSubContent = subSubContent.replace(/עורך הדין לא תישא/g, 'עורך הדין לא יישא');
+          subSubContent = subSubContent.replace(/עורך הדין אינו נושא ולא תישא/g, 'עורך הדין אינו נושא ולא יישא');
+          subSubContent = subSubContent.replace(/עורך הדין והמשרד תישא/g, 'עורך הדין והמשרד יישאו');
+          subSubContent = subSubContent.replace(/עורך הדין יהיה זכאית/g, 'עורך הדין יהיה זכאי');
+          subSubContent = subSubContent.replace(/מינוי אפוטרופסית/g, 'מינוי אפוטרופוס');
+          
           const subSubSection = {
             id: generateSectionId(),
             title: subSub.title,
-            content: subSub.content || '',
+            content: subSubContent,
             level: 'sub-sub' as const,
             parentId: subSectionId,
             order: currentOrder++,
@@ -957,7 +1142,37 @@ export default function LawyerFeeAgreement() {
         });
       });
 
-      // הוסף את כל הסעיפים
+      // אסוף את כל המשתנים מכל הסעיפים (רק משתנים שלא קשורים למגדר)
+      const allVariables = new Set<string>();
+      allSections.forEach(section => {
+        const sectionVariables = extractVariablesFromContent(section.content);
+        sectionVariables.forEach(v => {
+          // הוסף רק משתנים שלא קשורים למגדר
+          if (!isGenderRelevantVariable(v)) {
+            allVariables.add(v);
+          }
+        });
+      });
+
+      // אם יש משתנים, פתח מודל למילוי משתנים
+      if (allVariables.size > 0) {
+        const variablesArray = Array.from(allVariables);
+        setVariablesModal({
+          section: {
+            id: mainSectionId,
+            title: selectedMainSection.title,
+            content: '', // לא נשתמש בתוכן כאן, נשתמש בכל הסעיפים
+            variables: variablesArray
+          },
+          values: variablesArray.reduce((acc, v) => ({ ...acc, [v]: '' }), {}),
+          genders: variablesArray.reduce((acc, v) => ({ ...acc, [v]: 'male' as 'male' | 'female' | 'plural' }), {})
+        });
+        // שמור את הסעיפים הממתינים
+        setPendingHierarchicalSections(allSections);
+        return;
+      }
+
+      // אם אין משתנים, הוסף ישירות
       setCustomSections(prev => [...prev, ...allSections]);
 
       const totalSubSections = (subSections || []).length;
@@ -1116,6 +1331,17 @@ export default function LawyerFeeAgreement() {
     genders: Record<string, 'male' | 'female' | 'plural'>;
   } | null>(null);
 
+  // State לסעיפים היררכיים ממתינים (לפני מילוי משתנים)
+  const [pendingHierarchicalSections, setPendingHierarchicalSections] = useState<Array<{
+    id: string;
+    title: string;
+    content: string;
+    level: 'main' | 'sub' | 'sub-sub';
+    parentId?: string;
+    order: number;
+    type: 'text';
+  }> | null>(null);
+
   const [variablesCompletionModal, setVariablesCompletionModal] = useState<{
     isOpen: boolean;
     variables: string[];
@@ -1210,108 +1436,835 @@ export default function LawyerFeeAgreement() {
     return updatedText;
   };
 
-  // טעינת סעיפים אוטומטית בהתאם לסוג השירות
+  // טעינת הסעיף הראשון והסעיפים הקבועים
   useEffect(() => {
-    if (selectedServiceType && feeAgreementTemplates.serviceCategories[selectedServiceType as keyof typeof feeAgreementTemplates.serviceCategories]) {
-      const service = feeAgreementTemplates.serviceCategories[selectedServiceType as keyof typeof feeAgreementTemplates.serviceCategories];
-        const autoSections = service.clauses.map((clause: any, index) => {
-          console.log('📋 Loading clause:', clause.title, 'subSections:', clause.subSections);
-          return {
-            id: generateSectionId(),
-            title: clause.title,
-            content: replaceVariablesInText(clause.text),
-            level: 'main' as const,
-            order: index + 1,
-            subSections: clause.subSections || [],
-            subSubSections: clause.subSubSections || []
-          };
-        });
-        // תמיד טען סעיפים מה-JSON
-        setCustomSections(autoSections);
-      
+    if (selectedServiceType) {
       // עדכון פרטי התיק
+      const serviceScopeMapping = (feeAgreementTemplates.preamble?.serviceScopeMapping || {}) as Record<string, string>;
+      const serviceName = Object.keys(serviceScopeMapping).find(key => 
+        key === selectedServiceType || 
+        serviceScopeMapping[key]?.includes(selectedServiceType)
+      ) || selectedServiceType;
+      
       setAgreementData(prev => ({
         ...prev,
         case: {
-          subject: service.serviceName
+          subject: serviceName
         }
       }));
 
-      // עדכון תנאי תשלום אוטומטית בהתאם לסוג השירות (ללא סכומים)
-      let defaultTerms = {
-        paymentTerms: 'חשבונית תישלח מדי חודש ותשולם תוך 30 ימים מקבלתה.',
-        expensesCoverage: 'הוצאות משפט (אגרות, עלויות מומחים, נסיעות) יחולו על הלקוח ויחויבו בנפרד.',
-        terminationClause: 'כל צד יכול לסיים את ההתקשרות בהודעה של 14 ימים מראש.'
+      // טעינת הסעיף הראשון
+      const firstSectionTemplate = feeAgreementTemplates.preamble?.firstSection?.text || '';
+      const clientsGender = getClientsGender();
+      const multipleClients = agreementData.clients.length > 1;
+      
+      let firstSectionText = firstSectionTemplate;
+      firstSectionText = firstSectionText.replace(/\{\{multipleClients:([^|]+)\|([^|]+)\|([^}]+)\}\}/g, (_match: string, pluralText: string, maleText: string, femaleText: string) => {
+        if (multipleClients) return pluralText;
+        return clientsGender === 'female' ? femaleText : maleText;
+      });
+      firstSectionText = firstSectionText.replace(/\{\{serviceType\}\}/g, serviceName);
+      
+      // החלפת מגדר
+      firstSectionText = firstSectionText.replace(/\{\{gender:([^|]+)\|([^|]+)\|([^}]+)\}\}/g, (match, male, female, plural) => {
+        switch (clientsGender) {
+          case 'male': return male;
+          case 'female': return female;
+          case 'plural': return plural;
+          default: return male;
+        }
+      });
+      
+      // הגנה על "עד" שלא ישתנה ל"עדה" - גם כשהוא לא לפני "ל"
+      firstSectionText = firstSectionText.replace(/\bעד\s+(?!עד[הא]|עדי|עדות|עדים|עדה)/g, 'עד-ל ');
+      // הגנה על "עורך הדין" שלא ישתנה ל"עורך הדין תישא"
+      firstSectionText = firstSectionText.replace(/עורך הדין\s+(?=לא|תישא|יישא|ישא|אינו|יהיה)/g, '__LAWYER_VERB__');
+      // הגנה על "מינוי אפוטרופוס" שלא ישתנה ל"מינוי אפוטרופסית"
+      firstSectionText = firstSectionText.replace(/מינוי אפוטרופוס/g, '__APOTROPS__');
+      firstSectionText = replaceTextWithGender(firstSectionText, clientsGender);
+      firstSectionText = firstSectionText.replace(/עד-ל\s+/g, 'עד ');
+      firstSectionText = firstSectionText.replace(/__LAWYER_VERB__/g, 'עורך הדין ');
+      firstSectionText = firstSectionText.replace(/__APOTROPS__/g, 'מינוי אפוטרופוס');
+      // תיקונים נוספים
+      firstSectionText = firstSectionText.replace(/עדה\s+(ה'|ל|שני|סיום|יום|לקבלת|מיצוי|מועד)/g, 'עד $1');
+      firstSectionText = firstSectionText.replace(/בימים א' עדה ה'/g, "בימים א' עד ה'");
+      firstSectionText = firstSectionText.replace(/בבקשה עדה/g, 'בבקשה עד');
+      firstSectionText = firstSectionText.replace(/עורך הדין תישא/g, 'עורך הדין יישא');
+      firstSectionText = firstSectionText.replace(/עורך הדין לא תישא/g, 'עורך הדין לא יישא');
+      firstSectionText = firstSectionText.replace(/עורך הדין אינו נושא ולא תישא/g, 'עורך הדין אינו נושא ולא יישא');
+      firstSectionText = firstSectionText.replace(/עורך הדין יהיה זכאית/g, 'עורך הדין יהיה זכאי');
+      firstSectionText = firstSectionText.replace(/עורך הדין והמשרד תישא/g, 'עורך הדין והמשרד יישאו');
+      firstSectionText = firstSectionText.replace(/מינוי אפוטרופסית/g, 'מינוי אפוטרופוס');
+      
+      // יצירת הסעיף הראשון
+      const firstSection = {
+        id: 'first-section-fixed',
+        title: 'תיאור השירות',
+        content: firstSectionText,
+        level: 'main' as const,
+        order: 1
       };
 
-      // הגדרות ספציפיות לפי סוג השירות
-      switch (selectedServiceType) {
-        case 'הסכמי_ממון':
-          defaultTerms.paymentTerms = '50% במעמד החתימה על הסכם זה, והיתרה בשיעור 50% לאחר אישור טיוטת ההסכם על ידי הלקוח ובטרם חתימתו.';
-          break;
-        
-        case 'צוואת_יחיד':
-          defaultTerms.paymentTerms = '50% במעמד החתימה על הסכם זה, והיתרה בשיעור 50% במעמד חתימת הצוואה בפני העדים.';
-          break;
-
-        case 'צוואה_הדדית':
-          defaultTerms.paymentTerms = '50% במעמד החתימה על הסכם זה, והיתרה בשיעור 50% במעמד חתימת הצוואות בפני העדים.';
-          break;
-
-        case 'ייפוי_כוח_מתמשך':
-          defaultTerms.paymentTerms = '50% במעמד החתימה על הסכם זה, והיתרה בשיעור 50% במעמד החתימה על ייפוי הכוח.';
-          break;
-
-        case 'התנגדות_לצוואה':
-          defaultTerms.paymentTerms = 'מקדמה חודשית על חשבון שכר הטרחה. בתום כל חודש תיערך התחשבנות.';
-          break;
-
-        case 'אפוטרופסות':
-          defaultTerms.paymentTerms = 'תשלום מלא עם החתימה על ההסכם.';
-          break;
-
-        case 'פירוק_שיתוף':
-          defaultTerms.paymentTerms = 'מקדמה חודשית על חשבון שכר הטרחה. בסוף כל חודש תיערך התחשבנות.';
-          break;
-
-        case 'תביעה_כספית':
-          defaultTerms.paymentTerms = 'מקדמה ראשונית עם החתימה על הסכם זה. יתרת התשלום תשולם בשלבים או בסיום ההליך.';
-          break;
-
-        case 'ייעוץ_משפטי':
-          defaultTerms.paymentTerms = 'תשלום יבוצע על בסיס חודשי לפי דו"ח שעות מפורט.';
-          break;
-      }
-
-      // עדכון הנתונים
-      setAgreementData(prev => ({
-        ...prev,
-        terms: {
-          ...prev.terms,
-          ...defaultTerms
+      // טעינת הסעיפים הקבועים מ-generalClauses
+      const generalSections: Array<{
+        id: string;
+        title: string;
+        content: string;
+        level: 'main' | 'sub' | 'sub-sub';
+        parentId?: string;
+        order: number;
+      }> = [];
+      
+      let orderCounter = 1000; // התחלה גבוהה כדי שיהיו אחרי הסעיפים ההיררכיים
+      
+      // סדר הקטגוריות
+      const categoryOrder = [
+        'ביטול_והפסקת_ייצוג',
+        'התחייבויות_הלקוח',
+        'התחייבויות_עורך_הדין',
+        'הוצאות_נוספות',
+        'תשלומים',
+        'סודיות',
+        'תקשורת',
+        'אחריות_והגבלות'
+      ];
+      
+      categoryOrder.forEach(categoryKey => {
+        const category = feeAgreementTemplates.generalClauses?.[categoryKey as keyof typeof feeAgreementTemplates.generalClauses];
+        if (category && Array.isArray(category)) {
+          category.forEach((clause: any) => {
+            // עיבוד תוכן הסעיף הראשי
+            let clauseText = clause.text || '';
+            if (clauseText) {
+              // החלפת משתנים
+              const clientLabel = clientsGender === 'female' ? 'הלקוחה' : clientsGender === 'plural' ? 'הלקוחות' : 'הלקוח';
+              clauseText = clauseText.replace(/\{\{לקוח\}\}/g, clientLabel);
+              clauseText = clauseText.replace(/\{\{multipleClients:([^|]+)\|([^|]+)\|([^}]+)\}\}/g, (_match: string, plural: string, male: string, female: string) => {
+                return clientsGender === 'plural' ? plural : clientsGender === 'female' ? female : male;
+              });
+              clauseText = clauseText.replace(/\{\{gender:([^|]+)\|([^|]+)\|([^}]+)\}\}/g, (_match: string, male: string, female: string, plural: string) => {
+                switch (clientsGender) {
+                  case 'male': return male;
+                  case 'female': return female;
+                  case 'plural': return plural;
+                  default: return male;
+                }
+              });
+              
+              // הגנה על ביטויים שצריכים להישאר ללא שינוי
+              const protectedPhrases: { [key: string]: string } = {};
+              let protectedIndex = 0;
+              
+              // הגן על "עורך הדין" וכל מה שקשור אליו
+              clauseText = clauseText.replace(/עורך הדין/g, (match: string) => {
+                const placeholder = `__LAWYER_${protectedIndex}__`;
+                protectedPhrases[placeholder] = match;
+                protectedIndex++;
+                return placeholder;
+              });
+              clauseText = clauseText.replace(/עורך דין(?! בעל)/g, (match: string) => {
+                const placeholder = `__LAWYER_NO_HEY_${protectedIndex}__`;
+                protectedPhrases[placeholder] = match;
+                protectedIndex++;
+                return placeholder;
+              });
+              
+              // הגן על "שכר טרחה" שלא ישתנה
+              clauseText = clauseText.replace(/\bשכר טרחה\b/g, (match: string) => {
+                const placeholder = `__FEE_${protectedIndex}__`;
+                protectedPhrases[placeholder] = match;
+                protectedIndex++;
+                return placeholder;
+              });
+              clauseText = clauseText.replace(/\bשכר הטרחה\b/g, (match: string) => {
+                const placeholder = `__FEE_THE_${protectedIndex}__`;
+                protectedPhrases[placeholder] = match;
+                protectedIndex++;
+                return placeholder;
+              });
+              clauseText = clauseText.replace(/\bשכר טרחת\b/g, (match: string) => {
+                const placeholder = `__FEE_OF_${protectedIndex}__`;
+                protectedPhrases[placeholder] = match;
+                protectedIndex++;
+                return placeholder;
+              });
+              
+              // הגן על "מלא" שלא ישתנה ל"מלאה"
+              clauseText = clauseText.replace(/\bמידע מלא\b/g, (match: string) => {
+                const placeholder = `__FULL_INFO_${protectedIndex}__`;
+                protectedPhrases[placeholder] = match;
+                protectedIndex++;
+                return placeholder;
+              });
+              clauseText = clauseText.replace(/\bבלתי מלא\b/g, (match: string) => {
+                const placeholder = `__NOT_FULL_${protectedIndex}__`;
+                protectedPhrases[placeholder] = match;
+                protectedIndex++;
+                return placeholder;
+              });
+              
+              // הגן על "עד" שלא ישתנה ל"עדה" - גם כשהוא לא לפני "ל"
+              clauseText = clauseText.replace(/\bעד\s+(?!עד[הא]|עדי|עדות|עדים|עדה)/g, 'עד-ל ');
+              
+              // הגן על "עורך הדין" שלא ישתנה ל"עורך הדין תישא"
+              clauseText = clauseText.replace(/עורך הדין\s+(?=לא|תישא|יישא|ישא|אינו|יהיה)/g, '__LAWYER_VERB__');
+              
+              // הגנה על "מינוי אפוטרופוס" שלא ישתנה ל"מינוי אפוטרופסית"
+              clauseText = clauseText.replace(/מינוי אפוטרופוס/g, '__APOTROPS__');
+              
+              // החלפת מגדר
+              clauseText = replaceTextWithGender(clauseText, clientsGender);
+              
+              // החזרת הביטויים המוגנים
+              clauseText = clauseText.replace(/עד-ל\s+/g, 'עד ');
+              clauseText = clauseText.replace(/__LAWYER_VERB__/g, 'עורך הדין ');
+              clauseText = clauseText.replace(/__APOTROPS__/g, 'מינוי אפוטרופוס');
+              clauseText = clauseText.replace(/עדה\s+(ה'|ל|שני|סיום|יום|לקבלת|מיצוי|מועד|בין)/g, 'עד $1');
+              clauseText = clauseText.replace(/בימים א' עדה ה'/g, "בימים א' עד ה'");
+              clauseText = clauseText.replace(/בימים א' עדה ה' בין/g, "בימים א' עד ה' בין");
+              clauseText = clauseText.replace(/בבקשה עדה/g, 'בבקשה עד');
+              clauseText = clauseText.replace(/עורך הדין אינו נושא ולא תישא/g, 'עורך הדין אינו נושא ולא יישא');
+              clauseText = clauseText.replace(/עורך הדין והמשרד תישא/g, 'עורך הדין והמשרד יישאו');
+              clauseText = clauseText.replace(/מינוי אפוטרופסית/g, 'מינוי אפוטרופוס');
+              Object.keys(protectedPhrases).forEach(placeholder => {
+                clauseText = clauseText.replace(new RegExp(placeholder, 'g'), protectedPhrases[placeholder]);
+              });
+              
+              // תיקונים נוספים
+              clauseText = clauseText.replace(/עורך דין בעלת/g, 'עורך דין בעל');
+              clauseText = clauseText.replace(/היא עורך דין/g, 'הוא עורך דין');
+              clauseText = clauseText.replace(/שירותיה של עורך הדין/g, 'שירותיו של עורך הדין');
+              clauseText = clauseText.replace(/שכרה טרחה/g, 'שכר טרחה');
+              clauseText = clauseText.replace(/שכרה הטרחה/g, 'שכר הטרחה');
+              clauseText = clauseText.replace(/שכרה טרחת/g, 'שכר טרחת');
+              clauseText = clauseText.replace(/מידע מלאה/g, 'מידע מלא');
+              clauseText = clauseText.replace(/בלתי מלאה/g, 'בלתי מלא');
+              clauseText = clauseText.replace(/עורך הדין לא תישא/g, 'עורך הדין לא יישא');
+              clauseText = clauseText.replace(/עורך הדין תישא/g, 'עורך הדין יישא');
+              clauseText = clauseText.replace(/עורך הדין יהיה זכאית/g, 'עורך הדין יהיה זכאי');
+              clauseText = clauseText.replace(/עורך הדין תישא/g, 'עורך הדין יישא');
+              clauseText = clauseText.replace(/תשלום באיחור תישא/g, 'תשלום באיחור יישא');
+              clauseText = clauseText.replace(/מלאה ומיידי/g, 'מלא ומיידי');
+              clauseText = clauseText.replace(/בעלת פה/g, 'בעל פה');
+              clauseText = clauseText.replace(/שיפוי מלאה/g, 'שיפוי מלא');
+              clauseText = clauseText.replace(/עדה\s+(ה'|ל|שני|סיום|יום|לקבלת|מיצוי)/g, 'עד $1');
+              clauseText = clauseText.replace(/בימים א' עדה ה'/g, "בימים א' עד ה'");
+              
+              const mainSectionId = `gen_${clause.id || orderCounter}`;
+              generalSections.push({
+                id: mainSectionId,
+                title: clause.title || '',
+                content: clauseText,
+                level: 'main' as const,
+                order: orderCounter++
+              });
+              
+              // עיבוד תתי-סעיפים (subSections)
+              if (clause.subSections && Array.isArray(clause.subSections)) {
+                clause.subSections.forEach((subClause: any, subIndex: number) => {
+                  let subClauseText = subClause.text || '';
+                  if (subClauseText) {
+                    const subClientLabel = clientsGender === 'female' ? 'הלקוחה' : clientsGender === 'plural' ? 'הלקוחות' : 'הלקוח';
+                    subClauseText = subClauseText.replace(/\{\{לקוח\}\}/g, subClientLabel);
+                    subClauseText = subClauseText.replace(/\{\{multipleClients:([^|]+)\|([^|]+)\|([^}]+)\}\}/g, (_match: string, plural: string, male: string, female: string) => {
+                      return clientsGender === 'plural' ? plural : clientsGender === 'female' ? female : male;
+                    });
+                    subClauseText = subClauseText.replace(/\{\{gender:([^|]+)\|([^|]+)\|([^}]+)\}\}/g, (_match: string, male: string, female: string, plural: string) => {
+                      switch (clientsGender) {
+                        case 'male': return male;
+                        case 'female': return female;
+                        case 'plural': return plural;
+                        default: return male;
+                      }
+                    });
+                    
+                    // הגנה על ביטויים שצריכים להישאר ללא שינוי (אותו קוד כמו למעלה)
+                    const subProtectedPhrases2: { [key: string]: string } = {};
+                    let subProtectedIndex2 = 0;
+                    
+                    subClauseText = subClauseText.replace(/עורך הדין/g, (match: string) => {
+                      const placeholder = `__LAWYER_${subProtectedIndex2}__`;
+                      subProtectedPhrases2[placeholder] = match;
+                      subProtectedIndex2++;
+                      return placeholder;
+                    });
+                    subClauseText = subClauseText.replace(/עורך דין(?! בעל)/g, (match: string) => {
+                      const placeholder = `__LAWYER_NO_HEY_${subProtectedIndex2}__`;
+                      subProtectedPhrases2[placeholder] = match;
+                      subProtectedIndex2++;
+                      return placeholder;
+                    });
+                    subClauseText = subClauseText.replace(/\bשכר טרחה\b/g, (match: string) => {
+                      const placeholder = `__FEE_${subProtectedIndex2}__`;
+                      subProtectedPhrases2[placeholder] = match;
+                      subProtectedIndex2++;
+                      return placeholder;
+                    });
+                    subClauseText = subClauseText.replace(/\bשכר הטרחה\b/g, (match: string) => {
+                      const placeholder = `__FEE_THE_${subProtectedIndex2}__`;
+                      subProtectedPhrases2[placeholder] = match;
+                      subProtectedIndex2++;
+                      return placeholder;
+                    });
+                    subClauseText = subClauseText.replace(/\bשכר טרחת\b/g, (match: string) => {
+                      const placeholder = `__FEE_OF_${subProtectedIndex2}__`;
+                      subProtectedPhrases2[placeholder] = match;
+                      subProtectedIndex2++;
+                      return placeholder;
+                    });
+                    subClauseText = subClauseText.replace(/\bמידע מלא\b/g, (match: string) => {
+                      const placeholder = `__FULL_INFO_${subProtectedIndex2}__`;
+                      subProtectedPhrases2[placeholder] = match;
+                      subProtectedIndex2++;
+                      return placeholder;
+                    });
+                    subClauseText = subClauseText.replace(/\bבלתי מלא\b/g, (match: string) => {
+                      const placeholder = `__NOT_FULL_${subProtectedIndex2}__`;
+                      subProtectedPhrases2[placeholder] = match;
+                      subProtectedIndex2++;
+                      return placeholder;
+                    });
+                    subClauseText = subClauseText.replace(/\bעד\s+(?!עד[הא]|עדי|עדות|עדים|עדה)/g, 'עד-ל ');
+                    subClauseText = subClauseText.replace(/עורך הדין\s+(?=לא|תישא|יישא|ישא|אינו|יהיה)/g, '__LAWYER_VERB__');
+                    subClauseText = subClauseText.replace(/מינוי אפוטרופוס/g, '__APOTROPS__');
+                    subClauseText = replaceTextWithGender(subClauseText, clientsGender);
+                    subClauseText = subClauseText.replace(/עד-ל\s+/g, 'עד ');
+                    subClauseText = subClauseText.replace(/__LAWYER_VERB__/g, 'עורך הדין ');
+                    subClauseText = subClauseText.replace(/__APOTROPS__/g, 'מינוי אפוטרופוס');
+                    Object.keys(subProtectedPhrases2).forEach(placeholder => {
+                      subClauseText = subClauseText.replace(new RegExp(placeholder, 'g'), subProtectedPhrases2[placeholder]);
+                    });
+                    subClauseText = subClauseText.replace(/עורך דין בעלת/g, 'עורך דין בעל');
+                    subClauseText = subClauseText.replace(/היא עורך דין/g, 'הוא עורך דין');
+                    subClauseText = subClauseText.replace(/שירותיה של עורך הדין/g, 'שירותיו של עורך הדין');
+                    subClauseText = subClauseText.replace(/שכרה טרחה/g, 'שכר טרחה');
+                    subClauseText = subClauseText.replace(/שכרה הטרחה/g, 'שכר הטרחה');
+                    subClauseText = subClauseText.replace(/שכרה טרחת/g, 'שכר טרחת');
+                    subClauseText = subClauseText.replace(/מידע מלאה/g, 'מידע מלא');
+                    subClauseText = subClauseText.replace(/בלתי מלאה/g, 'בלתי מלא');
+                    subClauseText = subClauseText.replace(/עורך הדין לא תישא/g, 'עורך הדין לא יישא');
+                    subClauseText = subClauseText.replace(/עורך הדין תישא/g, 'עורך הדין יישא');
+                    subClauseText = subClauseText.replace(/עורך הדין אינו נושא ולא תישא/g, 'עורך הדין אינו נושא ולא יישא');
+                    subClauseText = subClauseText.replace(/עורך הדין והמשרד תישא/g, 'עורך הדין והמשרד יישאו');
+                    subClauseText = subClauseText.replace(/עורך הדין יהיה זכאית/g, 'עורך הדין יהיה זכאי');
+                    subClauseText = subClauseText.replace(/מלאה ומיידי/g, 'מלא ומיידי');
+                    subClauseText = subClauseText.replace(/בעלת פה/g, 'בעל פה');
+                    subClauseText = subClauseText.replace(/שיפוי מלאה/g, 'שיפוי מלא');
+                    subClauseText = subClauseText.replace(/עדה\s+(ה'|ל|שני|סיום|יום|לקבלת|מיצוי|מועד|בין)/g, 'עד $1');
+                    subClauseText = subClauseText.replace(/בימים א' עדה ה'/g, "בימים א' עד ה'");
+                    subClauseText = subClauseText.replace(/בימים א' עדה ה' בין/g, "בימים א' עד ה' בין");
+                    subClauseText = subClauseText.replace(/בבקשה עדה/g, 'בבקשה עד');
+                    subClauseText = subClauseText.replace(/מינוי אפוטרופסית/g, 'מינוי אפוטרופוס');
+                    
+                    generalSections.push({
+                      id: `gen_${subClause.id || `${clause.id}_${subIndex}`}`,
+                      title: subClause.title || '',
+                      content: subClauseText,
+                      level: 'sub' as const,
+                      parentId: mainSectionId,
+                      order: orderCounter++
+                    });
+                  }
+                });
+              }
+            } else {
+              // סעיף ראשי ללא תוכן (רק עם תתי-סעיפים)
+              const mainSectionId = `gen_${clause.id || orderCounter}`;
+              generalSections.push({
+                id: mainSectionId,
+                title: clause.title || '',
+                content: '',
+                level: 'main' as const,
+                order: orderCounter++
+              });
+              
+              // עיבוד תתי-סעיפים
+              if (clause.subSections && Array.isArray(clause.subSections)) {
+                clause.subSections.forEach((subClause: any, subIndex: number) => {
+                  let subClauseText = subClause.text || '';
+                  if (subClauseText) {
+                    const subClientLabel = clientsGender === 'female' ? 'הלקוחה' : clientsGender === 'plural' ? 'הלקוחות' : 'הלקוח';
+                    subClauseText = subClauseText.replace(/\{\{לקוח\}\}/g, subClientLabel);
+                    subClauseText = subClauseText.replace(/\{\{multipleClients:([^|]+)\|([^|]+)\|([^}]+)\}\}/g, (_match: string, plural: string, male: string, female: string) => {
+                      return clientsGender === 'plural' ? plural : clientsGender === 'female' ? female : male;
+                    });
+                    subClauseText = subClauseText.replace(/\{\{gender:([^|]+)\|([^|]+)\|([^}]+)\}\}/g, (_match: string, male: string, female: string, plural: string) => {
+                      switch (clientsGender) {
+                        case 'male': return male;
+                        case 'female': return female;
+                        case 'plural': return plural;
+                        default: return male;
+                      }
+                    });
+                    
+                    // הגנה על ביטויים שצריכים להישאר ללא שינוי (אותו קוד כמו למעלה)
+                    const subProtectedPhrases3: { [key: string]: string } = {};
+                    let subProtectedIndex3 = 0;
+                    
+                    subClauseText = subClauseText.replace(/עורך הדין/g, (match: string) => {
+                      const placeholder = `__LAWYER_${subProtectedIndex3}__`;
+                      subProtectedPhrases3[placeholder] = match;
+                      subProtectedIndex3++;
+                      return placeholder;
+                    });
+                    subClauseText = subClauseText.replace(/עורך דין(?! בעל)/g, (match: string) => {
+                      const placeholder = `__LAWYER_NO_HEY_${subProtectedIndex3}__`;
+                      subProtectedPhrases3[placeholder] = match;
+                      subProtectedIndex3++;
+                      return placeholder;
+                    });
+                    subClauseText = subClauseText.replace(/\bשכר טרחה\b/g, (match: string) => {
+                      const placeholder = `__FEE_${subProtectedIndex3}__`;
+                      subProtectedPhrases3[placeholder] = match;
+                      subProtectedIndex3++;
+                      return placeholder;
+                    });
+                    subClauseText = subClauseText.replace(/\bשכר הטרחה\b/g, (match: string) => {
+                      const placeholder = `__FEE_THE_${subProtectedIndex3}__`;
+                      subProtectedPhrases3[placeholder] = match;
+                      subProtectedIndex3++;
+                      return placeholder;
+                    });
+                    subClauseText = subClauseText.replace(/\bשכר טרחת\b/g, (match: string) => {
+                      const placeholder = `__FEE_OF_${subProtectedIndex3}__`;
+                      subProtectedPhrases3[placeholder] = match;
+                      subProtectedIndex3++;
+                      return placeholder;
+                    });
+                    subClauseText = subClauseText.replace(/\bמידע מלא\b/g, (match: string) => {
+                      const placeholder = `__FULL_INFO_${subProtectedIndex3}__`;
+                      subProtectedPhrases3[placeholder] = match;
+                      subProtectedIndex3++;
+                      return placeholder;
+                    });
+                    subClauseText = subClauseText.replace(/\bבלתי מלא\b/g, (match: string) => {
+                      const placeholder = `__NOT_FULL_${subProtectedIndex3}__`;
+                      subProtectedPhrases3[placeholder] = match;
+                      subProtectedIndex3++;
+                      return placeholder;
+                    });
+                    subClauseText = subClauseText.replace(/\bעד\s+(?!עד[הא]|עדי|עדות|עדים|עדה)/g, 'עד-ל ');
+                    subClauseText = subClauseText.replace(/עורך הדין\s+(?=לא|תישא|יישא|ישא)/g, '__LAWYER_VERB__');
+                    subClauseText = replaceTextWithGender(subClauseText, clientsGender);
+                    subClauseText = subClauseText.replace(/עד-ל\s+/g, 'עד ');
+                    subClauseText = subClauseText.replace(/__LAWYER_VERB__/g, 'עורך הדין ');
+                    subClauseText = subClauseText.replace(/עדה\s+(ה'|ל|שני|סיום|יום|לקבלת|מיצוי)/g, 'עד $1');
+                    subClauseText = subClauseText.replace(/בימים א' עדה ה'/g, "בימים א' עד ה'");
+                    Object.keys(subProtectedPhrases3).forEach(placeholder => {
+                      subClauseText = subClauseText.replace(new RegExp(placeholder, 'g'), subProtectedPhrases3[placeholder]);
+                    });
+                    subClauseText = subClauseText.replace(/עורך דין בעלת/g, 'עורך דין בעל');
+                    subClauseText = subClauseText.replace(/היא עורך דין/g, 'הוא עורך דין');
+                    subClauseText = subClauseText.replace(/שירותיה של עורך הדין/g, 'שירותיו של עורך הדין');
+                    subClauseText = subClauseText.replace(/שכרה טרחה/g, 'שכר טרחה');
+                    subClauseText = subClauseText.replace(/שכרה הטרחה/g, 'שכר הטרחה');
+                    subClauseText = subClauseText.replace(/שכרה טרחת/g, 'שכר טרחת');
+                    subClauseText = subClauseText.replace(/מידע מלאה/g, 'מידע מלא');
+                    subClauseText = subClauseText.replace(/בלתי מלאה/g, 'בלתי מלא');
+                    subClauseText = subClauseText.replace(/עורך הדין לא תישא/g, 'עורך הדין לא יישא');
+                    subClauseText = subClauseText.replace(/עורך הדין תישא/g, 'עורך הדין יישא');
+                    subClauseText = subClauseText.replace(/עורך הדין יהיה זכאית/g, 'עורך הדין יהיה זכאי');
+                    subClauseText = subClauseText.replace(/מלאה ומיידי/g, 'מלא ומיידי');
+                    subClauseText = subClauseText.replace(/בעלת פה/g, 'בעל פה');
+                    subClauseText = subClauseText.replace(/שיפוי מלאה/g, 'שיפוי מלא');
+                    subClauseText = subClauseText.replace(/עדה\s+(ה'|ל|שני|סיום|יום|לקבלת|מיצוי)/g, 'עד $1');
+                    subClauseText = subClauseText.replace(/בימים א' עדה ה'/g, "בימים א' עד ה'");
+                    
+                    generalSections.push({
+                      id: `gen_${subClause.id || `${clause.id}_${subIndex}`}`,
+                      title: subClause.title || '',
+                      content: subClauseText,
+                      level: 'sub' as const,
+                      parentId: mainSectionId,
+                      order: orderCounter++
+                    });
+                  }
+                });
+              }
+            }
+          });
         }
-      }));
-    }
-  }, [selectedServiceType]);
+      });
 
-  // עדכון הסעיפים כאשר הסכומים משתנים
-  useEffect(() => {
-    if (selectedServiceType && customSections.length > 0) {
-      const service = feeAgreementTemplates.serviceCategories[selectedServiceType as keyof typeof feeAgreementTemplates.serviceCategories];
-      if (service) {
-        const updatedSections = service.clauses.map((clause: any, index) => ({
-          id: generateSectionId(),
-          title: clause.title,
-          content: replaceVariablesInText(clause.text),
-          level: 'main' as const,
-          order: index + 1,
-          subSections: clause.subSections || [],
-          subSubSections: clause.subSubSections || []
-        }));
-        setCustomSections(updatedSections);
-      }
+      // עדכון הסעיפים - רק הסעיף הראשון
+      // הסעיפים ההיררכיים יגיעו מ-Supabase (בחירה ידנית)
+      // סעיף שכר הטרחה יגיע אוטומטית (כמו עכשיו)
+      // הסעיפים הקבועים יטענו בסוף (בפונקציה נפרדת)
+      setCustomSections([firstSection]);
     }
-  }, [agreementData.fees.totalAmount]);
+  }, [selectedServiceType, agreementData.clients.length]);
+
+  // טעינת הסעיפים הקבועים בסוף (אחרי שכר הטרחה) - מתעדכן כשמשנים מגדר
+  useEffect(() => {
+    if (customSections.length > 0) {
+      const clientsGender = getClientsGender();
+      const generalSections: Array<{
+        id: string;
+        title: string;
+        content: string;
+        level: 'main' | 'sub' | 'sub-sub';
+        parentId?: string;
+        order: number;
+      }> = [];
+      
+      let orderCounter = 10000; // התחלה גבוהה מאוד כדי שיהיו אחרי כל הסעיפים
+      
+      // סדר הקטגוריות
+      const categoryOrder = [
+        'ביטול_והפסקת_ייצוג',
+        'התחייבויות_הלקוח',
+        'התחייבויות_עורך_הדין',
+        'הוצאות_נוספות',
+        'תשלומים',
+        'סודיות',
+        'תקשורת',
+        'אחריות_והגבלות'
+      ];
+      
+      categoryOrder.forEach(categoryKey => {
+        const category = feeAgreementTemplates.generalClauses?.[categoryKey as keyof typeof feeAgreementTemplates.generalClauses];
+        if (category && Array.isArray(category)) {
+          category.forEach((clause: any) => {
+            // עיבוד תוכן הסעיף הראשי
+            let clauseText = clause.text || '';
+            if (clauseText) {
+              // החלפת משתנים
+              const clientLabel = clientsGender === 'female' ? 'הלקוחה' : clientsGender === 'plural' ? 'הלקוחות' : 'הלקוח';
+              clauseText = clauseText.replace(/\{\{לקוח\}\}/g, clientLabel);
+              clauseText = clauseText.replace(/\{\{multipleClients:([^|]+)\|([^|]+)\|([^}]+)\}\}/g, (_match: string, plural: string, male: string, female: string) => {
+                return clientsGender === 'plural' ? plural : clientsGender === 'female' ? female : male;
+              });
+              clauseText = clauseText.replace(/\{\{gender:([^|]+)\|([^|]+)\|([^}]+)\}\}/g, (_match: string, male: string, female: string, plural: string) => {
+                switch (clientsGender) {
+                  case 'male': return male;
+                  case 'female': return female;
+                  case 'plural': return plural;
+                  default: return male;
+                }
+              });
+              
+              // הגנה על ביטויים שצריכים להישאר ללא שינוי
+              const protectedPhrases: { [key: string]: string } = {};
+              let protectedIndex = 0;
+              
+              clauseText = clauseText.replace(/עורך הדין/g, (match: string) => {
+                const placeholder = `__LAWYER_${protectedIndex}__`;
+                protectedPhrases[placeholder] = match;
+                protectedIndex++;
+                return placeholder;
+              });
+              clauseText = clauseText.replace(/עורך דין(?! בעל)/g, (match: string) => {
+                const placeholder = `__LAWYER_NO_HEY_${protectedIndex}__`;
+                protectedPhrases[placeholder] = match;
+                protectedIndex++;
+                return placeholder;
+              });
+              clauseText = clauseText.replace(/\bשכר טרחה\b/g, (match: string) => {
+                const placeholder = `__FEE_${protectedIndex}__`;
+                protectedPhrases[placeholder] = match;
+                protectedIndex++;
+                return placeholder;
+              });
+              clauseText = clauseText.replace(/\bשכר הטרחה\b/g, (match: string) => {
+                const placeholder = `__FEE_THE_${protectedIndex}__`;
+                protectedPhrases[placeholder] = match;
+                protectedIndex++;
+                return placeholder;
+              });
+              clauseText = clauseText.replace(/\bשכר טרחת\b/g, (match: string) => {
+                const placeholder = `__FEE_OF_${protectedIndex}__`;
+                protectedPhrases[placeholder] = match;
+                protectedIndex++;
+                return placeholder;
+              });
+              clauseText = clauseText.replace(/\bמידע מלא\b/g, (match: string) => {
+                const placeholder = `__FULL_INFO_${protectedIndex}__`;
+                protectedPhrases[placeholder] = match;
+                protectedIndex++;
+                return placeholder;
+              });
+              clauseText = clauseText.replace(/\bבלתי מלא\b/g, (match: string) => {
+                const placeholder = `__NOT_FULL_${protectedIndex}__`;
+                protectedPhrases[placeholder] = match;
+                protectedIndex++;
+                return placeholder;
+              });
+              clauseText = clauseText.replace(/\bעד\s+(?!עד[הא]|עדי|עדות|עדים|עדה)/g, 'עד-ל ');
+              clauseText = clauseText.replace(/עורך הדין\s+(?=לא|תישא|יישא|ישא|אינו|יהיה)/g, '__LAWYER_VERB__');
+              clauseText = clauseText.replace(/מינוי אפוטרופוס/g, '__APOTROPS__');
+              clauseText = replaceTextWithGender(clauseText, clientsGender);
+              clauseText = clauseText.replace(/עד-ל\s+/g, 'עד ');
+              clauseText = clauseText.replace(/__LAWYER_VERB__/g, 'עורך הדין ');
+              clauseText = clauseText.replace(/__APOTROPS__/g, 'מינוי אפוטרופוס');
+              clauseText = clauseText.replace(/עדה\s+(ה'|ל|שני|סיום|יום|לקבלת|מיצוי|מועד|בין)/g, 'עד $1');
+              clauseText = clauseText.replace(/בימים א' עדה ה'/g, "בימים א' עד ה'");
+              clauseText = clauseText.replace(/בימים א' עדה ה' בין/g, "בימים א' עד ה' בין");
+              clauseText = clauseText.replace(/בבקשה עדה/g, 'בבקשה עד');
+              clauseText = clauseText.replace(/עורך הדין אינו נושא ולא תישא/g, 'עורך הדין אינו נושא ולא יישא');
+              clauseText = clauseText.replace(/עורך הדין והמשרד תישא/g, 'עורך הדין והמשרד יישאו');
+              clauseText = clauseText.replace(/מינוי אפוטרופסית/g, 'מינוי אפוטרופוס');
+              Object.keys(protectedPhrases).forEach(placeholder => {
+                clauseText = clauseText.replace(new RegExp(placeholder, 'g'), protectedPhrases[placeholder]);
+              });
+              clauseText = clauseText.replace(/עורך דין בעלת/g, 'עורך דין בעל');
+              clauseText = clauseText.replace(/היא עורך דין/g, 'הוא עורך דין');
+              clauseText = clauseText.replace(/שירותיה של עורך הדין/g, 'שירותיו של עורך הדין');
+              clauseText = clauseText.replace(/שכרה טרחה/g, 'שכר טרחה');
+              clauseText = clauseText.replace(/שכרה הטרחה/g, 'שכר הטרחה');
+              clauseText = clauseText.replace(/שכרה טרחת/g, 'שכר טרחת');
+              clauseText = clauseText.replace(/מידע מלאה/g, 'מידע מלא');
+              clauseText = clauseText.replace(/בלתי מלאה/g, 'בלתי מלא');
+              clauseText = clauseText.replace(/עורך הדין לא תישא/g, 'עורך הדין לא יישא');
+              clauseText = clauseText.replace(/עורך הדין תישא/g, 'עורך הדין יישא');
+              clauseText = clauseText.replace(/עורך הדין יהיה זכאית/g, 'עורך הדין יהיה זכאי');
+              clauseText = clauseText.replace(/תשלום באיחור תישא/g, 'תשלום באיחור יישא');
+              clauseText = clauseText.replace(/מלאה ומיידי/g, 'מלא ומיידי');
+              clauseText = clauseText.replace(/בעלת פה/g, 'בעל פה');
+              clauseText = clauseText.replace(/שיפוי מלאה/g, 'שיפוי מלא');
+              
+              const mainSectionId = `gen_${clause.id || orderCounter}`;
+              generalSections.push({
+                id: mainSectionId,
+                title: clause.title || '',
+                content: clauseText,
+          level: 'main' as const,
+                order: orderCounter++
+              });
+              
+              // עיבוד תתי-סעיפים (subSections)
+              if (clause.subSections && Array.isArray(clause.subSections)) {
+                clause.subSections.forEach((subClause: any, subIndex: number) => {
+                  let subClauseText = subClause.text || '';
+                  if (subClauseText) {
+                    const subClientLabel = clientsGender === 'female' ? 'הלקוחה' : clientsGender === 'plural' ? 'הלקוחות' : 'הלקוח';
+                    subClauseText = subClauseText.replace(/\{\{לקוח\}\}/g, subClientLabel);
+                    subClauseText = subClauseText.replace(/\{\{multipleClients:([^|]+)\|([^|]+)\|([^}]+)\}\}/g, (_match: string, plural: string, male: string, female: string) => {
+                      return clientsGender === 'plural' ? plural : clientsGender === 'female' ? female : male;
+                    });
+                    subClauseText = subClauseText.replace(/\{\{gender:([^|]+)\|([^|]+)\|([^}]+)\}\}/g, (_match: string, male: string, female: string, plural: string) => {
+                      switch (clientsGender) {
+                        case 'male': return male;
+                        case 'female': return female;
+                        case 'plural': return plural;
+                        default: return male;
+                      }
+                    });
+                    
+                    // הגנה על ביטויים שצריכים להישאר ללא שינוי
+                    const subProtectedPhrases: { [key: string]: string } = {};
+                    let subProtectedIndex = 0;
+                    
+                    subClauseText = subClauseText.replace(/עורך הדין/g, (match: string) => {
+                      const placeholder = `__LAWYER_${subProtectedIndex}__`;
+                      subProtectedPhrases[placeholder] = match;
+                      subProtectedIndex++;
+                      return placeholder;
+                    });
+                    subClauseText = subClauseText.replace(/עורך דין(?! בעל)/g, (match: string) => {
+                      const placeholder = `__LAWYER_NO_HEY_${subProtectedIndex}__`;
+                      subProtectedPhrases[placeholder] = match;
+                      subProtectedIndex++;
+                      return placeholder;
+                    });
+                    subClauseText = subClauseText.replace(/\bשכר טרחה\b/g, (match: string) => {
+                      const placeholder = `__FEE_${subProtectedIndex}__`;
+                      subProtectedPhrases[placeholder] = match;
+                      subProtectedIndex++;
+                      return placeholder;
+                    });
+                    subClauseText = subClauseText.replace(/\bשכר הטרחה\b/g, (match: string) => {
+                      const placeholder = `__FEE_THE_${subProtectedIndex}__`;
+                      subProtectedPhrases[placeholder] = match;
+                      subProtectedIndex++;
+                      return placeholder;
+                    });
+                    subClauseText = subClauseText.replace(/\bשכר טרחת\b/g, (match: string) => {
+                      const placeholder = `__FEE_OF_${subProtectedIndex}__`;
+                      subProtectedPhrases[placeholder] = match;
+                      subProtectedIndex++;
+                      return placeholder;
+                    });
+                    subClauseText = subClauseText.replace(/\bמידע מלא\b/g, (match: string) => {
+                      const placeholder = `__FULL_INFO_${subProtectedIndex}__`;
+                      subProtectedPhrases[placeholder] = match;
+                      subProtectedIndex++;
+                      return placeholder;
+                    });
+                    subClauseText = subClauseText.replace(/\bבלתי מלא\b/g, (match: string) => {
+                      const placeholder = `__NOT_FULL_${subProtectedIndex}__`;
+                      subProtectedPhrases[placeholder] = match;
+                      subProtectedIndex++;
+                      return placeholder;
+                    });
+                    subClauseText = subClauseText.replace(/\bעד\s+(?!עד[הא]|עדי|עדות|עדים|עדה)/g, 'עד-ל ');
+                    subClauseText = subClauseText.replace(/עורך הדין\s+(?=לא|תישא|יישא|ישא)/g, '__LAWYER_VERB__');
+                    subClauseText = replaceTextWithGender(subClauseText, clientsGender);
+                    subClauseText = subClauseText.replace(/עד-ל\s+/g, 'עד ');
+                    subClauseText = subClauseText.replace(/__LAWYER_VERB__/g, 'עורך הדין ');
+                    subClauseText = subClauseText.replace(/עדה\s+(ה'|ל|שני|סיום|יום|לקבלת|מיצוי)/g, 'עד $1');
+                    subClauseText = subClauseText.replace(/בימים א' עדה ה'/g, "בימים א' עד ה'");
+                    Object.keys(subProtectedPhrases).forEach(placeholder => {
+                      subClauseText = subClauseText.replace(new RegExp(placeholder, 'g'), subProtectedPhrases[placeholder]);
+                    });
+                    subClauseText = subClauseText.replace(/עורך דין בעלת/g, 'עורך דין בעל');
+                    subClauseText = subClauseText.replace(/היא עורך דין/g, 'הוא עורך דין');
+                    subClauseText = subClauseText.replace(/שירותיה של עורך הדין/g, 'שירותיו של עורך הדין');
+                    subClauseText = subClauseText.replace(/שכרה טרחה/g, 'שכר טרחה');
+                    subClauseText = subClauseText.replace(/שכרה הטרחה/g, 'שכר הטרחה');
+                    subClauseText = subClauseText.replace(/שכרה טרחת/g, 'שכר טרחת');
+                    subClauseText = subClauseText.replace(/מידע מלאה/g, 'מידע מלא');
+                    subClauseText = subClauseText.replace(/בלתי מלאה/g, 'בלתי מלא');
+                    subClauseText = subClauseText.replace(/עורך הדין לא תישא/g, 'עורך הדין לא יישא');
+                    subClauseText = subClauseText.replace(/עורך הדין תישא/g, 'עורך הדין יישא');
+                    subClauseText = subClauseText.replace(/עורך הדין יהיה זכאית/g, 'עורך הדין יהיה זכאי');
+                    subClauseText = subClauseText.replace(/מלאה ומיידי/g, 'מלא ומיידי');
+                    subClauseText = subClauseText.replace(/בעלת פה/g, 'בעל פה');
+                    subClauseText = subClauseText.replace(/שיפוי מלאה/g, 'שיפוי מלא');
+                    subClauseText = subClauseText.replace(/עדה\s+(ה'|ל|שני|סיום|יום|לקבלת|מיצוי)/g, 'עד $1');
+                    subClauseText = subClauseText.replace(/בימים א' עדה ה'/g, "בימים א' עד ה'");
+                    
+                    generalSections.push({
+                      id: `gen_${subClause.id || `${clause.id}_${subIndex}`}`,
+                      title: subClause.title || '',
+                      content: subClauseText,
+                      level: 'sub' as const,
+                      parentId: mainSectionId,
+                      order: orderCounter++
+                    });
+                  }
+                });
+              }
+            } else {
+              // סעיף ראשי ללא תוכן (רק עם תתי-סעיפים)
+              const mainSectionId = `gen_${clause.id || orderCounter}`;
+              generalSections.push({
+                id: mainSectionId,
+                title: clause.title || '',
+                content: '',
+                level: 'main' as const,
+                order: orderCounter++
+              });
+              
+              // עיבוד תתי-סעיפים
+              if (clause.subSections && Array.isArray(clause.subSections)) {
+                clause.subSections.forEach((subClause: any, subIndex: number) => {
+                  let subClauseText = subClause.text || '';
+                  if (subClauseText) {
+                    const subClientLabel = clientsGender === 'female' ? 'הלקוחה' : clientsGender === 'plural' ? 'הלקוחות' : 'הלקוח';
+                    subClauseText = subClauseText.replace(/\{\{לקוח\}\}/g, subClientLabel);
+                    subClauseText = subClauseText.replace(/\{\{multipleClients:([^|]+)\|([^|]+)\|([^}]+)\}\}/g, (_match: string, plural: string, male: string, female: string) => {
+                      return clientsGender === 'plural' ? plural : clientsGender === 'female' ? female : male;
+                    });
+                    subClauseText = subClauseText.replace(/\{\{gender:([^|]+)\|([^|]+)\|([^}]+)\}\}/g, (_match: string, male: string, female: string, plural: string) => {
+                      switch (clientsGender) {
+                        case 'male': return male;
+                        case 'female': return female;
+                        case 'plural': return plural;
+                        default: return male;
+                      }
+                    });
+                    
+                    // הגנה על ביטויים שצריכים להישאר ללא שינוי
+                    const subProtectedPhrases2: { [key: string]: string } = {};
+                    let subProtectedIndex2 = 0;
+                    
+                    subClauseText = subClauseText.replace(/עורך הדין/g, (match: string) => {
+                      const placeholder = `__LAWYER_${subProtectedIndex2}__`;
+                      subProtectedPhrases2[placeholder] = match;
+                      subProtectedIndex2++;
+                      return placeholder;
+                    });
+                    subClauseText = subClauseText.replace(/עורך דין(?! בעל)/g, (match: string) => {
+                      const placeholder = `__LAWYER_NO_HEY_${subProtectedIndex2}__`;
+                      subProtectedPhrases2[placeholder] = match;
+                      subProtectedIndex2++;
+                      return placeholder;
+                    });
+                    subClauseText = subClauseText.replace(/\bשכר טרחה\b/g, (match: string) => {
+                      const placeholder = `__FEE_${subProtectedIndex2}__`;
+                      subProtectedPhrases2[placeholder] = match;
+                      subProtectedIndex2++;
+                      return placeholder;
+                    });
+                    subClauseText = subClauseText.replace(/\bשכר הטרחה\b/g, (match: string) => {
+                      const placeholder = `__FEE_THE_${subProtectedIndex2}__`;
+                      subProtectedPhrases2[placeholder] = match;
+                      subProtectedIndex2++;
+                      return placeholder;
+                    });
+                    subClauseText = subClauseText.replace(/\bשכר טרחת\b/g, (match: string) => {
+                      const placeholder = `__FEE_OF_${subProtectedIndex2}__`;
+                      subProtectedPhrases2[placeholder] = match;
+                      subProtectedIndex2++;
+                      return placeholder;
+                    });
+                    subClauseText = subClauseText.replace(/\bמידע מלא\b/g, (match: string) => {
+                      const placeholder = `__FULL_INFO_${subProtectedIndex2}__`;
+                      subProtectedPhrases2[placeholder] = match;
+                      subProtectedIndex2++;
+                      return placeholder;
+                    });
+                    subClauseText = subClauseText.replace(/\bבלתי מלא\b/g, (match: string) => {
+                      const placeholder = `__NOT_FULL_${subProtectedIndex2}__`;
+                      subProtectedPhrases2[placeholder] = match;
+                      subProtectedIndex2++;
+                      return placeholder;
+                    });
+                    subClauseText = subClauseText.replace(/\bעד\s+(?!עד[הא]|עדי|עדות|עדים|עדה)/g, 'עד-ל ');
+                    subClauseText = subClauseText.replace(/עורך הדין\s+(?=לא|תישא|יישא|ישא|אינו|יהיה)/g, '__LAWYER_VERB__');
+                    subClauseText = subClauseText.replace(/מינוי אפוטרופוס/g, '__APOTROPS__');
+                    subClauseText = replaceTextWithGender(subClauseText, clientsGender);
+                    subClauseText = subClauseText.replace(/עד-ל\s+/g, 'עד ');
+                    subClauseText = subClauseText.replace(/__LAWYER_VERB__/g, 'עורך הדין ');
+                    subClauseText = subClauseText.replace(/__APOTROPS__/g, 'מינוי אפוטרופוס');
+                    Object.keys(subProtectedPhrases2).forEach(placeholder => {
+                      subClauseText = subClauseText.replace(new RegExp(placeholder, 'g'), subProtectedPhrases2[placeholder]);
+                    });
+                    subClauseText = subClauseText.replace(/עורך דין בעלת/g, 'עורך דין בעל');
+                    subClauseText = subClauseText.replace(/היא עורך דין/g, 'הוא עורך דין');
+                    subClauseText = subClauseText.replace(/שירותיה של עורך הדין/g, 'שירותיו של עורך הדין');
+                    subClauseText = subClauseText.replace(/שכרה טרחה/g, 'שכר טרחה');
+                    subClauseText = subClauseText.replace(/שכרה הטרחה/g, 'שכר הטרחה');
+                    subClauseText = subClauseText.replace(/שכרה טרחת/g, 'שכר טרחת');
+                    subClauseText = subClauseText.replace(/מידע מלאה/g, 'מידע מלא');
+                    subClauseText = subClauseText.replace(/בלתי מלאה/g, 'בלתי מלא');
+                    subClauseText = subClauseText.replace(/עורך הדין לא תישא/g, 'עורך הדין לא יישא');
+                    subClauseText = subClauseText.replace(/עורך הדין תישא/g, 'עורך הדין יישא');
+                    subClauseText = subClauseText.replace(/עורך הדין אינו נושא ולא תישא/g, 'עורך הדין אינו נושא ולא יישא');
+                    subClauseText = subClauseText.replace(/עורך הדין והמשרד תישא/g, 'עורך הדין והמשרד יישאו');
+                    subClauseText = subClauseText.replace(/עורך הדין יהיה זכאית/g, 'עורך הדין יהיה זכאי');
+                    subClauseText = subClauseText.replace(/מלאה ומיידי/g, 'מלא ומיידי');
+                    subClauseText = subClauseText.replace(/בעלת פה/g, 'בעל פה');
+                    subClauseText = subClauseText.replace(/שיפוי מלאה/g, 'שיפוי מלא');
+                    subClauseText = subClauseText.replace(/עדה\s+(ה'|ל|שני|סיום|יום|לקבלת|מיצוי|מועד|בין)/g, 'עד $1');
+                    subClauseText = subClauseText.replace(/בימים א' עדה ה'/g, "בימים א' עד ה'");
+                    subClauseText = subClauseText.replace(/בימים א' עדה ה' בין/g, "בימים א' עד ה' בין");
+                    subClauseText = subClauseText.replace(/בבקשה עדה/g, 'בבקשה עד');
+                    subClauseText = subClauseText.replace(/מינוי אפוטרופסית/g, 'מינוי אפוטרופוס');
+                    
+                    generalSections.push({
+                      id: `gen_${subClause.id || `${clause.id}_${subIndex}`}`,
+                      title: subClause.title || '',
+                      content: subClauseText,
+                      level: 'sub' as const,
+                      parentId: mainSectionId,
+                      order: orderCounter++
+                    });
+                  }
+                });
+              }
+            }
+          });
+        }
+      });
+
+      // עדכן את הסעיפים הקבועים (הסר את הישנים והוסף את החדשים)
+      setCustomSections(prev => {
+        const withoutGeneral = prev.filter(s => !s.id.startsWith('gen_'));
+        return [...withoutGeneral, ...generalSections];
+      });
+    }
+  }, [customSections.length, agreementData.clients[0]?.gender, agreementData.clients.length]);
 
   const updateLawyer = (field: keyof typeof agreementData.lawyer, value: string | 'male' | 'female') => {
     setAgreementData(prev => ({
@@ -1458,13 +2411,27 @@ export default function LawyerFeeAgreement() {
 
   const extractVariablesFromContent = (content: string): string[] => {
     const matches = content.match(/\{\{([^}]+)\}\}/g);
-    return matches ? [...new Set(matches.map(match => match.replace(/\{\{|\}\}/g, '')))] : [];
+    if (!matches) return [];
+    
+    // חלץ משתנים ייחודיים, אבל דלג על משתנים מורכבים (multipleClients, gender)
+    const variables = matches
+      .map(match => match.replace(/\{\{|\}\}/g, ''))
+      .filter(v => {
+        // דלג על משתנים מורכבים שכבר מטופלים אוטומטית
+        if (v.startsWith('multipleClients:') || v.startsWith('gender:')) {
+          return false;
+        }
+        return true;
+      });
+    
+    return [...new Set(variables)];
   };
 
   const handleSelectFromWarehouse = async (warehouseSection: any) => {
     
-    // זיהוי משתנים לפני החלפת מגדר
-    const variables = extractVariablesFromContent(warehouseSection.content);
+    // זיהוי משתנים (רק משתנים שלא קשורים למגדר)
+    const allVariables = extractVariablesFromContent(warehouseSection.content);
+    const variables = allVariables.filter(v => !isGenderRelevantVariable(v));
     
     // קביעת מגדר הלקוח/לקוחה
     const clientGender = agreementData.clients.length === 1 ? 
@@ -1518,9 +2485,18 @@ export default function LawyerFeeAgreement() {
       'lawyer_name', 'client_name', 'attorney_name', 'witness_name',
       'court_name', 'judge_name', 'expert_name',
       'מיופה_כוח', 'רשאי', 'אחראי', 'מחויב', 'יכול', 'צריך', 'חייב',
-      'זכאי', 'מתחייב', 'מסכים', 'מבקש', 'מצהיר', 'מאשר'
+      'זכאי', 'מתחייב', 'מסכים', 'מבקש', 'מצהיר', 'מאשר',
+      'לקוח', 'לקוחה', 'לקוחות' // משתנים הקשורים ללקוח - מטופלים אוטומטית
     ];
-    return genderRelevantVariables.includes(variable);
+    
+    // כל משתנה שמכיל | (pipe) נחשב כקשור למגדר - זה הדפוס שהמערכת משתמשת בו למגדר
+    const hasGenderPattern = /\|/.test(variable);
+    
+    // בדיקה אם המשתנה מכיל מילים רגישות למגדר
+    const genderKeywords = ['ילד', 'אפוטרופוס', 'בן', 'בת', 'הוא', 'היא', 'רשאי', 'אחראי', 'מחויב', 'יכול', 'צריך', 'חייב', 'זכאי', 'מתחייב', 'מסכים', 'מבקש', 'מצהיר', 'מאשר', 'אליה', 'אליו', 'אליהם', 'אליהן', 'בעניינה', 'בעניינו', 'בעניינם', 'בעניינן', 'לקוח'];
+    const containsGenderKeyword = genderKeywords.some(keyword => variable.includes(keyword));
+    
+    return genderRelevantVariables.includes(variable) || hasGenderPattern || containsGenderKeyword;
   };
 
   const getVariableLabel = (variable: string): string => {
@@ -1594,8 +2570,10 @@ export default function LawyerFeeAgreement() {
       
       let text = defaultText;
       const multipleClients = agreementData.clients.length > 1;
-      text = text.replace(/\{\{multipleClients:([^|]+)\|([^}]+)\}\}/g, 
-        multipleClients ? '$1' : '$2');
+      text = text.replace(/\{\{multipleClients:([^|]+)\|([^|]+)\|([^}]+)\}\}/g, (_match: string, pluralText: string, maleText: string, femaleText: string) => {
+        if (multipleClients) return pluralText;
+        return clientsGender === 'female' ? femaleText : maleText;
+      });
       return replaceTextWithGender(text, clientsGender);
     }
 
@@ -1603,12 +2581,10 @@ export default function LawyerFeeAgreement() {
     return preamble.whereas.map(w => {
       let text = w.text;
       
-      // קודם החלף את משתני multipleClients (כולל אם יש בתוכם gender)
-      // נטפל בתבנית {{multipleClients:ערך|ערך {{gender:...}}}}
-      text = text.replace(/\{\{multipleClients:([^|]+)\|([^}]+)\}\}/g, (match, pluralText, singularText) => {
-        const chosenText = multipleClients ? pluralText : singularText;
-        // אם הטקסט הנבחר מכיל {{gender:...}}, נטפל בו
-        return chosenText;
+      // קודם החלף את משתני multipleClients (3 חלקים: plural|male|female)
+      text = text.replace(/\{\{multipleClients:([^|]+)\|([^|]+)\|([^}]+)\}\}/g, (_match: string, pluralText: string, maleText: string, femaleText: string) => {
+        if (multipleClients) return pluralText;
+        return clientsGender === 'female' ? femaleText : maleText;
       });
       
       text = text.replace(/\{\{serviceDescription\}\}/g, agreementData.case.subject || '[תיאור השירות המשפטי]');
@@ -1671,8 +2647,8 @@ export default function LawyerFeeAgreement() {
       });
       
       // הגנה מיוחדת על המילה "עד" כשהיא לא חלק מ"עדה" או "עדים" או "עדות"
-      // נשמור "עד" כשהיא מופיעה לפני מילות יחס או מספרים
-      text = text.replace(/\bעד\s+(?!עד[הא]|עדי|עדות|עדים)/g, '__UNTIL_PLACEHOLDER__');
+      // נשמור "עד" כשהיא מופיעה לפני מילות יחס או מספרים או ימים
+      text = text.replace(/\bעד\s+(?!עד[הא]|עדי|עדות|עדים|עדה)/g, '__UNTIL_PLACEHOLDER__');
       
       // החלפת מגדר - תבנית {{gender:זכר|נקבה|רבים}}
       text = text.replace(/\{\{gender:([^|]+)\|([^|]+)\|([^}]+)\}\}/g, (match, male, female, plural) => {
@@ -1717,7 +2693,10 @@ export default function LawyerFeeAgreement() {
       result = result.replace(/באופן מלאה/g, 'במלואו');
       result = result.replace(/במלואה/g, 'במלואו');
       result = result.replace(/עדה למיצוי/g, 'עד למיצוי');
-      result = result.replace(/עדה\s+(?:ל|שני|סיום|יום|לקבלת)/g, (match) => match.replace(/עדה/g, 'עד'));
+      result = result.replace(/עדה\s+(?:ל|שני|סיום|יום|לקבלת|ה')/g, (match) => match.replace(/עדה/g, 'עד'));
+      result = result.replace(/בימים א' עדה ה'/g, "בימים א' עד ה'");
+      result = result.replace(/עורך הדין תישא/g, 'עורך הדין יישא');
+      result = result.replace(/עורך הדין לא תישא/g, 'עורך הדין לא יישא');
       
       return result;
     }).join('\n\n');
@@ -1856,7 +2835,12 @@ export default function LawyerFeeAgreement() {
     firstSectionText = firstSectionText.replace(/באופן מלאה/g, 'במלואו');
     firstSectionText = firstSectionText.replace(/במלואה/g, 'במלואו');
     firstSectionText = firstSectionText.replace(/עדה למיצוי/g, 'עד למיצוי');
-    firstSectionText = firstSectionText.replace(/עדה\s+(?:ל|שני|סיום|יום|לקבלת)/g, (match) => match.replace(/עדה/g, 'עד'));
+    firstSectionText = firstSectionText.replace(/עדה\s+(?:ל|שני|סיום|יום|לקבלת|ה'|מועד)/g, (match) => match.replace(/עדה/g, 'עד'));
+    firstSectionText = firstSectionText.replace(/בימים א' עדה ה'/g, "בימים א' עד ה'");
+    firstSectionText = firstSectionText.replace(/בבקשה עדה/g, 'בבקשה עד');
+    firstSectionText = firstSectionText.replace(/עורך הדין אינו נושא ולא תישא/g, 'עורך הדין אינו נושא ולא יישא');
+    firstSectionText = firstSectionText.replace(/עורך הדין והמשרד תישא/g, 'עורך הדין והמשרד יישאו');
+    firstSectionText = firstSectionText.replace(/מינוי אפוטרופסית/g, 'מינוי אפוטרופוס');
 
     let baseAgreement = `הסכם שכר טרחה
 
@@ -2136,16 +3120,16 @@ ________________________           ${agreementData.clients.map((_, i) => '______
               dir="rtl"
             >
               <option value="">בחר סוג שירות...</option>
-              {Object.entries(feeAgreementTemplates.serviceCategories).map(([key, service]) => (
-                <option key={key} value={key}>
-                  {service.serviceName}
+              {Object.keys(feeAgreementTemplates.preamble?.serviceScopeMapping || {}).map((serviceName) => (
+                <option key={serviceName} value={serviceName}>
+                  {serviceName}
                 </option>
               ))}
             </select>
             {selectedServiceType && (
-              <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-lg">
-                <p className="text-sm text-green-700">
-                  ✅ נטענו אוטומטית {feeAgreementTemplates.serviceCategories[selectedServiceType as keyof typeof feeAgreementTemplates.serviceCategories]?.clauses.length} סעיפים מותאמים אישית
+              <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-sm text-blue-700">
+                  ℹ️ הסעיף הראשון והסעיפים הקבועים נטענו. ניתן להוסיף סעיפים היררכיים מ-Supabase.
                 </p>
               </div>
             )}
@@ -2165,16 +3149,9 @@ ________________________           ${agreementData.clients.map((_, i) => '______
               dir="rtl"
             >
               <option value="">בחר סוג שירות...</option>
-              {Object.values(feeAgreementTemplates.serviceCategories).map((service) => (
-                <option key={service.serviceName} value={service.serviceName}>
-                  {service.serviceName}
-                </option>
-              ))}
-              {Object.keys(feeAgreementTemplates.preamble?.serviceScopeMapping || {}).filter(
-                service => !Object.values(feeAgreementTemplates.serviceCategories).some(s => s.serviceName === service)
-              ).map(service => (
-                <option key={service} value={service}>
-                  {service}
+              {Object.keys(feeAgreementTemplates.preamble?.serviceScopeMapping || {}).map((serviceName) => (
+                <option key={serviceName} value={serviceName}>
+                  {serviceName}
                 </option>
               ))}
             </select>
@@ -2558,7 +3535,7 @@ ________________________           ${agreementData.clients.map((_, i) => '______
           agreementData={{
             ...agreementData,
             customSections: customSections,
-            serviceCategories: feeAgreementTemplates.serviceCategories,
+            serviceScopeMapping: feeAgreementTemplates.preamble?.serviceScopeMapping,
             generalClauses: feeAgreementTemplates.generalClauses,
             selectedServiceType: selectedServiceType
           }}
@@ -2601,18 +3578,22 @@ ________________________           ${agreementData.clients.map((_, i) => '______
             <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
               <h3 className="text-xl font-bold text-gray-900 mb-4">
                 השלמת פרטים לסעיף: {variablesModal.section.title}
+                {pendingHierarchicalSections && (
+                  <span className="block text-sm font-normal text-gray-600 mt-1">
+                    (כולל {pendingHierarchicalSections.filter(s => s.level === 'sub').length} תתי סעיפים ו-{pendingHierarchicalSections.filter(s => s.level === 'sub-sub').length} תת-תת-סעיפים)
+                  </span>
+                )}
               </h3>
               
               <div className="mb-4 p-3 bg-blue-50 rounded-lg text-sm text-blue-800">
                 <p className="font-semibold mb-1">💡 טיפ:</p>
-                <p>למשתנים של אנשים (שמות) ופעלים יש אפשרות לבחור מגדר. זה יעזור להציג את הטקסט הנכון (זכר/נקבה/רבים) במסמך.</p>
-                <p className="mt-1">דוגמה: "רשאי" יכול להיות "רשאי" (זכר), "רשאית" (נקבה), או "רשאים" (רבים).</p>
+                <p>הזן את הערכים למשתנים (כמו ערכאות, נכסים, כתובות וכו'). המערכת תטפל במגדר אוטומטית.</p>
               </div>
               
               <div className="space-y-4 mb-6">
                 {variablesModal.section.variables.map((variable) => (
-                  <div key={variable} className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-700">
+                  <div key={variable}>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
                       {getVariableLabel(variable)}:
                     </label>
                     <input
@@ -2631,94 +3612,57 @@ ________________________           ${agreementData.clients.map((_, i) => '______
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500"
                       dir="rtl"
                     />
-                    
-                    {isGenderRelevantVariable(variable) && (
-                      <div className="flex gap-4 items-center">
-                        <label className="text-sm text-gray-600">מגדר:</label>
-                        <div className="flex gap-2">
-                          <label className="flex items-center gap-2">
-                            <input
-                              type="radio"
-                              name={`gender_${variable}`}
-                              value="male"
-                              checked={variablesModal.genders[variable] === 'male'}
-                              onChange={(e) => {
-                                setVariablesModal(prev => ({
-                                  ...prev!,
-                                  genders: {
-                                    ...prev!.genders,
-                                    [variable]: e.target.value as 'male' | 'female'
-                                  }
-                                }));
-                              }}
-                              className="text-orange-600 focus:ring-orange-500"
-                            />
-                            <span className="text-sm">זכר</span>
-                          </label>
-                          <label className="flex items-center gap-2">
-                            <input
-                              type="radio"
-                              name={`gender_${variable}`}
-                              value="female"
-                              checked={variablesModal.genders[variable] === 'female'}
-                              onChange={(e) => {
-                                setVariablesModal(prev => ({
-                                  ...prev!,
-                                  genders: {
-                                    ...prev!.genders,
-                                    [variable]: e.target.value as 'male' | 'female' | 'plural'
-                                  }
-                                }));
-                              }}
-                              className="text-orange-600 focus:ring-orange-500"
-                            />
-                            <span className="text-sm">נקבה</span>
-                          </label>
-                          <label className="flex items-center gap-2">
-                            <input
-                              type="radio"
-                              name={`gender_${variable}`}
-                              value="plural"
-                              checked={variablesModal.genders[variable] === 'plural'}
-                              onChange={(e) => {
-                                setVariablesModal(prev => ({
-                                  ...prev!,
-                                  genders: {
-                                    ...prev!.genders,
-                                    [variable]: e.target.value as 'male' | 'female' | 'plural'
-                                  }
-                                }));
-                              }}
-                              className="text-orange-600 focus:ring-orange-500"
-                            />
-                            <span className="text-sm">רבים</span>
-                          </label>
-                        </div>
-                      </div>
-                    )}
                   </div>
                 ))}
               </div>
 
               <div className="flex gap-3">
                 <button
-                  onClick={() => setVariablesModal(null)}
+                  onClick={() => {
+                    setVariablesModal(null);
+                    setPendingHierarchicalSections(null);
+                  }}
                   className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
                 >
                   ביטול
                 </button>
                 <button
                   onClick={() => {
-                    let finalContent = variablesModal.section.content;
+                    // אם יש סעיפים היררכיים ממתינים, החלף משתנים בכל הסעיפים
+                    if (pendingHierarchicalSections && pendingHierarchicalSections.length > 0) {
+                      const processedSections = pendingHierarchicalSections.map(section => {
+                        let finalContent = section.content;
                     Object.keys(variablesModal.values).forEach(key => {
                       const value = variablesModal.values[key];
-                      let replacedValue = value;
+                          if (!value.trim()) return; // דלג על משתנים ריקים
+                          
+                          // החלף רק את הערך - המערכת תטפל במגדר אוטומטית
+                          finalContent = finalContent.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'g'), value);
+                        });
+                        
+                        return {
+                          ...section,
+                          content: finalContent
+                        };
+                      });
+
+                      // הוסף את כל הסעיפים המעובדים
+                      setCustomSections(prev => [...prev, ...processedSections]);
                       
-                      if (isGenderRelevantVariable(key) && variablesModal.genders[key]) {
-                        replacedValue = replaceTextWithGender(value, variablesModal.genders[key]);
-                      }
+                      const totalSubSections = processedSections.filter(s => s.level === 'sub').length;
+                      const totalSubSubSections = processedSections.filter(s => s.level === 'sub-sub').length;
                       
-                      finalContent = finalContent.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'g'), replacedValue);
+                      setPendingHierarchicalSections(null);
+                      setVariablesModal(null);
+                      
+                      alert(`✅ נטען סעיף "${variablesModal.section.title}" עם ${totalSubSections} תתי סעיפים ו-${totalSubSubSections} תת-תת-סעיפים!`);
+                    } else {
+                      // התנהגות רגילה לסעיף יחיד
+                      let finalContent = variablesModal.section.content;
+                      Object.keys(variablesModal.values).forEach(key => {
+                        const value = variablesModal.values[key];
+                        // החלף רק את הערך - המערכת תטפל במגדר אוטומטית
+                        finalContent = finalContent.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'g'), value);
                     });
 
                     setCustomSections(prev => [...prev, {
@@ -2730,11 +3674,12 @@ ________________________           ${agreementData.clients.map((_, i) => '______
                     }]);
 
                     setVariablesModal(null);
+                    }
                   }}
                   disabled={!Object.values(variablesModal.values).every(v => v.trim() !== '')}
                   className="flex-1 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition disabled:bg-gray-300 disabled:cursor-not-allowed"
                 >
-                  הוסף סעיף
+                  {pendingHierarchicalSections ? 'הוסף סעיפים היררכיים' : 'הוסף סעיף'}
                 </button>
               </div>
             </div>

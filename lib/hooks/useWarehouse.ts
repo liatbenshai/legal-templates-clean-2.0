@@ -44,27 +44,43 @@ export function useWarehouse(userId: string, options: UseWarehouseOptions = {}) 
       setLoading(true);
       setError(null);
 
-      let query = supabase
-        .from('warehouse_sections')
-        .select('*')
-        .eq('user_id', userId);
-
-      // סינון לפי קטגוריה
-      if (options.category && options.category !== 'all') {
-        query = query.eq('category', options.category);
+      // בדיקה ש-userId תקין - עבור anonymous users, נטען רק תבניות ציבוריות
+      if (!userId || userId === '') {
+        console.warn('useWarehouse: userId is missing, skipping user sections');
+        setSections([]);
+        setLoading(false);
+        return;
       }
+      
+      const isAnonymous = userId === 'anonymous';
 
-      // סינון סעיפים מוסתרים
-      if (!options.includeHidden) {
-        query = query.eq('is_hidden', false);
+      // עבור anonymous users, נדלג על טעינת סעיפים אישיים
+      let data: any[] | null = null;
+      
+      if (!isAnonymous) {
+        let query = supabase
+          .from('warehouse_sections')
+          .select('*')
+          .eq('user_id', userId);
+
+        // סינון לפי קטגוריה
+        if (options.category && options.category !== 'all') {
+          query = query.eq('category', options.category);
+        }
+
+        // סינון סעיפים מוסתרים
+        if (!options.includeHidden) {
+          query = query.eq('is_hidden', false);
+        }
+
+        // מיון לפי שימוש אחרון
+        query = query.order('last_used', { ascending: false });
+
+        const { data: userData, error: fetchError } = await query;
+
+        if (fetchError) throw fetchError;
+        data = userData;
       }
-
-      // מיון לפי שימוש אחרון
-      query = query.order('last_used', { ascending: false });
-
-      const { data, error: fetchError } = await query;
-
-      if (fetchError) throw fetchError;
 
       // טעינת תבניות מ-section_templates
       const { data: templatesData, error: templatesError } = await supabase
@@ -107,13 +123,20 @@ export function useWarehouse(userId: string, options: UseWarehouseOptions = {}) 
 
       // אם מבוקש, הוסף גם סעיפים ציבוריים
       if (options.includePublic) {
-        const { data: publicData, error: publicError } = await supabase
+        let publicQuery = supabase
           .from('warehouse_sections')
           .select('*')
-          .eq('is_public', true)
-          .neq('user_id', userId)
-          .order('usage_count', { ascending: false })
+          .eq('is_public', true);
+        
+        // עבור anonymous, נטען את כל הסעיפים הציבוריים
+        if (!isAnonymous) {
+          publicQuery = publicQuery.neq('user_id', userId);
+        }
+        
+        publicQuery = publicQuery.order('usage_count', { ascending: false })
           .limit(50);
+
+        const { data: publicData, error: publicError } = await publicQuery;
 
         if (!publicError && publicData) {
           setSections([...(data || []), ...publicData, ...templateSections]);
@@ -124,8 +147,31 @@ export function useWarehouse(userId: string, options: UseWarehouseOptions = {}) 
         setSections([...(data || []), ...templateSections]);
       }
     } catch (err) {
-      console.error('Error loading sections:', err);
-      setError(err instanceof Error ? err.message : 'שגיאה בטעינת סעיפים');
+      // טיפול משופר בשגיאות
+      let errorMessage = 'שגיאה בטעינת סעיפים';
+      
+      if (err instanceof Error) {
+        errorMessage = err.message;
+        console.error('Error loading sections:', {
+          message: err.message,
+          stack: err.stack,
+          name: err.name
+        });
+      } else if (err && typeof err === 'object') {
+        // נסה לחלץ מידע מהשגיאה
+        const errorObj = err as any;
+        errorMessage = errorObj.message || errorObj.error || errorObj.code || JSON.stringify(err);
+        console.error('Error loading sections (object):', {
+          error: errorObj,
+          message: errorObj.message,
+          code: errorObj.code,
+          details: errorObj.details
+        });
+      } else {
+        console.error('Error loading sections (unknown):', err);
+      }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

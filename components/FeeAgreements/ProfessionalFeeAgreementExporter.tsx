@@ -45,30 +45,16 @@ interface ProfessionalFeeAgreementExporterProps {
       title: string;
       content: string;
     }>;
-    serviceCategories?: {
-      [key: string]: {
-        serviceName: string;
-        clauses: Array<{
-          id: string;
-          title: string;
-          text: string;
-          subSections?: Array<{
-            title: string;
-            text: string;
-            subSubSections?: Array<{
-              title: string;
-              text: string;
-            }>;
-          }>;
-        }>;
-      };
+    serviceScopeMapping?: {
+      [key: string]: string;
     };
     generalClauses?: {
       [key: string]: Array<{
         id: string;
         title: string;
-        text: string;
+        text?: string;
         subSections?: Array<{
+          id?: string;
           title: string;
           text: string;
         }>;
@@ -136,10 +122,10 @@ export default function ProfessionalFeeAgreementExporter({
     let result = text.replace(/\{\{gender:([^|]+)\|([^|]+)\|([^}]+)\}\}/g, (match, male, female, plural) => {
       if (male.includes('מצווה') || female.includes('מצווה') || plural.includes('מצווים')) {
         switch (clientsGender) {
-          case 'male': return 'הלקוח';
-          case 'female': return 'הלקוחה';
-          case 'plural': return 'הלקוחות';
-          default: return 'הלקוח';
+          case 'male': return 'לקוח';
+          case 'female': return 'לקוחה';
+          case 'plural': return 'לקוחות';
+          default: return 'לקוח';
         }
       }
       switch (clientsGender) {
@@ -188,18 +174,22 @@ export default function ProfessionalFeeAgreementExporter({
     
     // בנה מבנה היררכי
     return mainSections.map(mainSection => {
-      const result: any = {
-        id: mainSection.id,
-        title: mainSection.title,
-        text: mainSection.content || mainSection.title,
-        content: mainSection.content || mainSection.title,
-        subSections: []
-      };
-      
       // מצא את כל התתי סעיפים של הסעיף הראשי הזה ומיין לפי order
       const subSections = sortedSections
         .filter(s => s.level === 'sub' && (s.parentId === mainSection.id || s.parent_id === mainSection.id))
         .sort((a, b) => getOrder(a) - getOrder(b));
+      
+      // אם יש תתי-סעיפים ואין תוכן, אל תשתמש בכותרת כתוכן
+      const hasSubSections = subSections.length > 0;
+      const sectionContent = mainSection.content || (hasSubSections ? '' : mainSection.title);
+      
+      const result: any = {
+        id: mainSection.id,
+        title: mainSection.title,
+        text: sectionContent,
+        content: sectionContent,
+        subSections: []
+      };
       
       // בנה את התתי סעיפים עם תתי תתי סעיפים
       result.subSections = subSections.map(subSection => {
@@ -300,8 +290,10 @@ export default function ProfessionalFeeAgreementExporter({
         '{{multipleClients:הלקוחות|הלקוח}} שכרו את שירותיו של עורך הדין לצורך ייעוץ משפטי וטיפול משפטי בעניין {{serviceType}}. השירותים המשפטיים יכללו, בין היתר, את הפעולות המפורטות להלן: {{serviceScope}}. מובהר ומוסכם כי כל שירות משפטי אחר, שאינו נכלל במפורש בהגדרה זו, יחייב הסכם נפרד בכתב ותשלום שכר טרחה נוסף.';
       
       let firstSectionText = firstSectionTemplate;
-      firstSectionText = firstSectionText.replace(/\{\{multipleClients:([^|]+)\|([^}]+)\}\}/g, 
-        multipleClients ? '$1' : '$2');
+      firstSectionText = firstSectionText.replace(/\{\{multipleClients:([^|]+)\|([^|]+)\|([^}]+)\}\}/g, (_match: string, pluralText: string, maleText: string, femaleText: string) => {
+        if (multipleClients) return pluralText;
+        return clientsGender === 'female' ? femaleText : maleText;
+      });
       firstSectionText = firstSectionText.replace(/\{\{serviceType\}\}/g, serviceName || '[תיאור השירות המשפטי]');
       firstSectionText = firstSectionText.replace(/\{\{serviceScope\}\}/g, serviceScope);
       
@@ -404,7 +396,13 @@ export default function ProfessionalFeeAgreementExporter({
       firstSectionText = firstSectionText.replace(/באופן מלאה/g, 'במלואו');
       firstSectionText = firstSectionText.replace(/במלואה/g, 'במלואו');
       firstSectionText = firstSectionText.replace(/עדה למיצוי/g, 'עד למיצוי');
-      firstSectionText = firstSectionText.replace(/עדה\s+(?:ל|שני|סיום|יום|לקבלת)/g, (match: string) => match.replace(/עדה/g, 'עד'));
+      firstSectionText = firstSectionText.replace(/עדה\s+(?:ל|שני|סיום|יום|לקבלת|ה'|מועד|בין)/g, (match: string) => match.replace(/עדה/g, 'עד'));
+      firstSectionText = firstSectionText.replace(/בימים א' עדה ה'/g, "בימים א' עד ה'");
+      firstSectionText = firstSectionText.replace(/בימים א' עדה ה' בין/g, "בימים א' עד ה' בין");
+      firstSectionText = firstSectionText.replace(/בבקשה עדה/g, 'בבקשה עד');
+      firstSectionText = firstSectionText.replace(/עורך הדין אינו נושא ולא תישא/g, 'עורך הדין אינו נושא ולא יישא');
+      firstSectionText = firstSectionText.replace(/עורך הדין והמשרד תישא/g, 'עורך הדין והמשרד יישאו');
+      firstSectionText = firstSectionText.replace(/מינוי אפוטרופסית/g, 'מינוי אפוטרופוס');
       
       // פונקציה ליצירת פסקאות מסעיף עם המספור הנכון
       // הסעיף הראשון הוא תמיד "תיאור השירות" (1), אז הסעיפים מ-customSections מתחילים מ-2
@@ -424,17 +422,20 @@ export default function ProfessionalFeeAgreementExporter({
           return text;
         };
         
-        // כותרת הסעיף (אם קיימת) - הוסף את המספר המתחיל מ-2
+        // כותרת הסעיף (אם קיימת) - השתמש ב-numbering של Word
         if (section.title && level === 0) {
-          const sectionNumber = sectionIndex + 2; // מתחיל מ-2 כי 1 הוא תיאור השירות
           paragraphs.push(
             new Paragraph({
+              numbering: { 
+                reference: "main-numbering", 
+                level: 0
+              },
               alignment: AlignmentType.RIGHT,
               bidirectional: true,
               spacing: { before: SPACING.beforeHeading, after: SPACING.afterHeading },
               children: [
                 new TextRun({
-                  text: `${sectionNumber}. ${section.title}`,
+                  text: section.title,
                   bold: true,
                   font: 'David',
                   rightToLeft: true,
@@ -445,15 +446,34 @@ export default function ProfessionalFeeAgreementExporter({
           );
         }
         
-        // תוכן הסעיף בלבד (ללא כותרת)
-        if (section.text || section.content) {
-          const content = section.text || section.content || '';
+        // תוכן הסעיף בלבד (ללא כותרת) - רק אם יש תוכן אמיתי
+        const content = section.text || section.content || '';
+        if (content && content.trim() !== '') {
           // שלב 1: החלפת משתני מגדר מיוחדים {{gender:זכר|נקבה|רבים}} ו-{{לקוח}}
           const withGenderVars = applyGenderToText(content);
+          // הגנה על "עד" שלא ישתנה ל"עדה"
+          let protectedContent = withGenderVars.replace(/\bעד\s+(?!עד[הא]|עדי|עדות|עדים|עדה)/g, 'עד-ל ');
+          // הגנה על "עורך הדין" שלא ישתנה ל"עורך הדין תישא"
+          protectedContent = protectedContent.replace(/עורך הדין\s+(?=לא|תישא|יישא|ישא|אינו|יהיה)/g, '__LAWYER_VERB__');
+          // הגנה על "מינוי אפוטרופוס" שלא ישתנה ל"מינוי אפוטרופסית"
+          protectedContent = protectedContent.replace(/מינוי אפוטרופוס/g, '__APOTROPS__');
           // שלב 2: החלפת כל הטקסט לפי מגדר (פעלים, תארים וכו')
-          let withFullGender = replaceTextWithGender(withGenderVars, clientsGender);
-          // שלב 3: הסרת "-ל" שהוספנו כדי למנוע החלפת "עד" למגדר
+          let withFullGender = replaceTextWithGender(protectedContent, clientsGender);
+          // שלב 3: החזרת הביטויים המוגנים
           withFullGender = withFullGender.replace(/עד-ל\s+/g, 'עד ');
+          withFullGender = withFullGender.replace(/__LAWYER_VERB__/g, 'עורך הדין ');
+          withFullGender = withFullGender.replace(/__APOTROPS__/g, 'מינוי אפוטרופוס');
+          // תיקונים נוספים
+          withFullGender = withFullGender.replace(/עדה\s+(ה'|ל|שני|סיום|יום|לקבלת|מיצוי|מועד|בין)/g, 'עד $1');
+          withFullGender = withFullGender.replace(/בימים א' עדה ה'/g, "בימים א' עד ה'");
+          withFullGender = withFullGender.replace(/בימים א' עדה ה' בין/g, "בימים א' עד ה' בין");
+          withFullGender = withFullGender.replace(/בבקשה עדה/g, 'בבקשה עד');
+          withFullGender = withFullGender.replace(/עורך הדין תישא/g, 'עורך הדין יישא');
+          withFullGender = withFullGender.replace(/עורך הדין לא תישא/g, 'עורך הדין לא יישא');
+          withFullGender = withFullGender.replace(/עורך הדין אינו נושא ולא תישא/g, 'עורך הדין אינו נושא ולא יישא');
+          withFullGender = withFullGender.replace(/עורך הדין והמשרד תישא/g, 'עורך הדין והמשרד יישאו');
+          withFullGender = withFullGender.replace(/עורך הדין יהיה זכאית/g, 'עורך הדין יהיה זכאי');
+          withFullGender = withFullGender.replace(/מינוי אפוטרופסית/g, 'מינוי אפוטרופוס');
           
           paragraphs.push(
             new Paragraph({
@@ -479,20 +499,43 @@ export default function ProfessionalFeeAgreementExporter({
         
         // תתי-סעיפים (subSections) - עובר על כל תת-סעיף ומטפל גם ב-subSubSections שלו
         if (section.subSections && Array.isArray(section.subSections)) {
-          section.subSections.forEach((subSection: any) => {
+          section.subSections.forEach((subSection: any, subIndex: number) => {
             // תוכן תת-הסעיף
             if (subSection.text || subSection.content) {
               const subContent = subSection.text || subSection.content || '';
               // שלב 1: החלפת משתני מגדר מיוחדים
               const withGenderVars = applyGenderToText(subContent);
+              // הגנה על "עד" שלא ישתנה ל"עדה"
+              let protectedSubContent = withGenderVars.replace(/\bעד\s+(?!עד[הא]|עדי|עדות|עדים|עדה)/g, 'עד-ל ');
+              // הגנה על "עורך הדין" שלא ישתנה ל"עורך הדין תישא"
+              protectedSubContent = protectedSubContent.replace(/עורך הדין\s+(?=לא|תישא|יישא|ישא|אינו|יהיה)/g, '__LAWYER_VERB__');
+              // הגנה על "מינוי אפוטרופוס" שלא ישתנה ל"מינוי אפוטרופסית"
+              protectedSubContent = protectedSubContent.replace(/מינוי אפוטרופוס/g, '__APOTROPS__');
               // שלב 2: החלפת כל הטקסט לפי מגדר
-              let withFullGender = replaceTextWithGender(withGenderVars, clientsGender);
-              // שלב 3: הסרת "-ל" שהוספנו כדי למנוע החלפת "עד" למגדר
+              let withFullGender = replaceTextWithGender(protectedSubContent, clientsGender);
+              // שלב 3: החזרת הביטויים המוגנים
               withFullGender = withFullGender.replace(/עד-ל\s+/g, 'עד ');
+              withFullGender = withFullGender.replace(/__LAWYER_VERB__/g, 'עורך הדין ');
+              withFullGender = withFullGender.replace(/__APOTROPS__/g, 'מינוי אפוטרופוס');
+              // תיקונים נוספים
+              withFullGender = withFullGender.replace(/עדה\s+(ה'|ל|שני|סיום|יום|לקבלת|מיצוי|מועד|בין)/g, 'עד $1');
+              withFullGender = withFullGender.replace(/בימים א' עדה ה'/g, "בימים א' עד ה'");
+              withFullGender = withFullGender.replace(/בימים א' עדה ה' בין/g, "בימים א' עד ה' בין");
+              withFullGender = withFullGender.replace(/בבקשה עדה/g, 'בבקשה עד');
+              withFullGender = withFullGender.replace(/עורך הדין תישא/g, 'עורך הדין יישא');
+              withFullGender = withFullGender.replace(/עורך הדין לא תישא/g, 'עורך הדין לא יישא');
+              withFullGender = withFullGender.replace(/עורך הדין אינו נושא ולא תישא/g, 'עורך הדין אינו נושא ולא יישא');
+              withFullGender = withFullGender.replace(/עורך הדין והמשרד תישא/g, 'עורך הדין והמשרד יישאו');
+              withFullGender = withFullGender.replace(/עורך הדין יהיה זכאית/g, 'עורך הדין יהיה זכאי');
+              withFullGender = withFullGender.replace(/מינוי אפוטרופסית/g, 'מינוי אפוטרופוס');
               
+              // השתמש ב-numbering של Word לתתי-סעיפים
               paragraphs.push(
                 new Paragraph({
-                  numbering: { reference: "main-numbering", level: level + 1 },
+                  numbering: { 
+                    reference: "main-numbering", 
+                    level: level + 1
+                  },
                   alignment: AlignmentType.BOTH,
                   bidirectional: true,
                   spacing: { 
@@ -514,21 +557,44 @@ export default function ProfessionalFeeAgreementExporter({
             
             // תתי-תתי-סעיפים (subSubSections) של תת-הסעיף הזה
             if (subSection.subSubSections && Array.isArray(subSection.subSubSections)) {
-              subSection.subSubSections.forEach((subSubSection: any) => {
+              subSection.subSubSections.forEach((subSubSection: any, subSubIndex: number) => {
                 if (subSubSection.text || subSubSection.content) {
                   const subSubContent = subSubSection.text || subSubSection.content || '';
                   // הסרת הכותרת אם היא מופיעה בתחילת הטקסט
                   const contentWithoutTitle = removeTitle(subSubContent, subSubSection.title);
                   // שלב 1: החלפת משתני מגדר מיוחדים
                   const withGenderVars = applyGenderToText(contentWithoutTitle);
+                  // הגנה על "עד" שלא ישתנה ל"עדה"
+                  let protectedSubSubContent = withGenderVars.replace(/\bעד\s+(?!עד[הא]|עדי|עדות|עדים|עדה)/g, 'עד-ל ');
+                  // הגנה על "עורך הדין" שלא ישתנה ל"עורך הדין תישא"
+                  protectedSubSubContent = protectedSubSubContent.replace(/עורך הדין\s+(?=לא|תישא|יישא|ישא|אינו|יהיה)/g, '__LAWYER_VERB__');
+                  // הגנה על "מינוי אפוטרופוס" שלא ישתנה ל"מינוי אפוטרופסית"
+                  protectedSubSubContent = protectedSubSubContent.replace(/מינוי אפוטרופוס/g, '__APOTROPS__');
                   // שלב 2: החלפת כל הטקסט לפי מגדר
-                  let withFullGender = replaceTextWithGender(withGenderVars, clientsGender);
-                  // שלב 3: הסרת "-ל" שהוספנו כדי למנוע החלפת "עד" למגדר
+                  let withFullGender = replaceTextWithGender(protectedSubSubContent, clientsGender);
+                  // שלב 3: החזרת הביטויים המוגנים
                   withFullGender = withFullGender.replace(/עד-ל\s+/g, 'עד ');
+                  withFullGender = withFullGender.replace(/__LAWYER_VERB__/g, 'עורך הדין ');
+                  withFullGender = withFullGender.replace(/__APOTROPS__/g, 'מינוי אפוטרופוס');
+                  // תיקונים נוספים
+                  withFullGender = withFullGender.replace(/עדה\s+(ה'|ל|שני|סיום|יום|לקבלת|מיצוי|מועד|בין)/g, 'עד $1');
+                  withFullGender = withFullGender.replace(/בימים א' עדה ה'/g, "בימים א' עד ה'");
+                  withFullGender = withFullGender.replace(/בימים א' עדה ה' בין/g, "בימים א' עד ה' בין");
+                  withFullGender = withFullGender.replace(/בבקשה עדה/g, 'בבקשה עד');
+                  withFullGender = withFullGender.replace(/עורך הדין תישא/g, 'עורך הדין יישא');
+                  withFullGender = withFullGender.replace(/עורך הדין לא תישא/g, 'עורך הדין לא יישא');
+                  withFullGender = withFullGender.replace(/עורך הדין אינו נושא ולא תישא/g, 'עורך הדין אינו נושא ולא יישא');
+                  withFullGender = withFullGender.replace(/עורך הדין והמשרד תישא/g, 'עורך הדין והמשרד יישאו');
+                  withFullGender = withFullGender.replace(/עורך הדין יהיה זכאית/g, 'עורך הדין יהיה זכאי');
+                  withFullGender = withFullGender.replace(/מינוי אפוטרופסית/g, 'מינוי אפוטרופוס');
                   
+                  // השתמש ב-numbering של Word לתתי-תתי-סעיפים
                   paragraphs.push(
                     new Paragraph({
-                      numbering: { reference: "main-numbering", level: level + 2 },
+                      numbering: { 
+                        reference: "main-numbering", 
+                        level: level + 2
+                      },
                       alignment: AlignmentType.BOTH,
                       bidirectional: true,
                       spacing: { 
@@ -560,7 +626,7 @@ export default function ProfessionalFeeAgreementExporter({
       const serviceDescription = agreementData.case?.subject || 'שירות משפטי';
       
       // נסה לטעון מה-JSON
-      const preamble = (agreementData as any).serviceCategories?.preamble || feeAgreementTemplates.preamble;
+      const preamble = feeAgreementTemplates.preamble;
       let whereas: string[] = [];
       
       if (preamble && preamble.whereas && Array.isArray(preamble.whereas)) {
@@ -568,9 +634,11 @@ export default function ProfessionalFeeAgreementExporter({
         whereas = preamble.whereas.map((w: any) => {
           let text = w.text;
           
-          // קודם החלף את משתני multipleClients (כולל אם יש בתוכם gender)
-          text = text.replace(/\{\{multipleClients:([^|]+)\|([^}]+)\}\}/g, 
-            multipleClients ? '$1' : '$2');
+          // קודם החלף את משתני multipleClients (3 חלקים: plural|male|female)
+          text = text.replace(/\{\{multipleClients:([^|]+)\|([^|]+)\|([^}]+)\}\}/g, (_match: string, pluralText: string, maleText: string, femaleText: string) => {
+            if (multipleClients) return pluralText;
+            return clientsGender === 'female' ? femaleText : maleText;
+          });
           text = text.replace(/\{\{serviceDescription\}\}/g, serviceDescription);
           
           // הגנה על "עורך הדין" וכל מה שקשור אליו - נשמור אותו כזכר תמיד
@@ -631,8 +699,8 @@ export default function ProfessionalFeeAgreementExporter({
           });
           
           // הגנה מיוחדת על המילה "עד" כשהיא לא חלק מ"עדה" או "עדים" או "עדות"
-          // נשמור "עד" כשהיא מופיעה לפני מילות יחס או מספרים
-          text = text.replace(/\bעד\s+(?!עד[הא]|עדי|עדות|עדים)/g, '__UNTIL_PLACEHOLDER__');
+          // נשמור "עד" כשהיא מופיעה לפני מילות יחס או מספרים או ימים
+          text = text.replace(/\bעד\s+(?!עד[הא]|עדי|עדות|עדים|עדה)/g, '__UNTIL_PLACEHOLDER__');
           
           // החלפת מגדר - תבנית {{gender:זכר|נקבה|רבים}}
           text = text.replace(/\{\{gender:([^|]+)\|([^|]+)\|([^}]+)\}\}/g, (_match: string, male: string, female: string, plural: string) => {
@@ -677,7 +745,10 @@ export default function ProfessionalFeeAgreementExporter({
           result = result.replace(/באופן מלאה/g, 'במלואו');
           result = result.replace(/במלואה/g, 'במלואו');
           result = result.replace(/עדה למיצוי/g, 'עד למיצוי');
-          result = result.replace(/עדה\s+(?:ל|שני|סיום|יום|לקבלת)/g, (match: string) => match.replace(/עדה/g, 'עד'));
+          result = result.replace(/עדה\s+(?:ל|שני|סיום|יום|לקבלת|ה')/g, (match: string) => match.replace(/עדה/g, 'עד'));
+          result = result.replace(/בימים א' עדה ה'/g, "בימים א' עד ה'");
+          result = result.replace(/עורך הדין תישא/g, 'עורך הדין יישא');
+          result = result.replace(/עורך הדין לא תישא/g, 'עורך הדין לא יישא');
           
           return result;
         });
@@ -1158,14 +1229,18 @@ export default function ProfessionalFeeAgreementExporter({
             }),
             
             // ✅ הסעיף הראשון - תיאור השירות עם היקף השירותים האוטומטי
-            // סעיף ראשון - תיאור השירות
+            // סעיף ראשון - תיאור השירות (משתמש ב-numbering כדי שהמספור ימשיך)
             new Paragraph({
+              numbering: { 
+                reference: "main-numbering", 
+                level: 0
+              },
               alignment: AlignmentType.RIGHT,
               bidirectional: true,
               spacing: { before: SPACING.beforeHeading, after: SPACING.afterHeading },
               children: [
                 new TextRun({
-                  text: "1. תיאור השירות",
+                  text: "תיאור השירות",
                   bold: true,
                   font: 'David',
                   rightToLeft: true,
@@ -1191,22 +1266,23 @@ export default function ProfessionalFeeAgreementExporter({
             // ✅ הסעיפים עם מספור נכון
             // סעיפים מותאמים אישית - בניית מבנה היררכי
             // הסעיף הראשון הוא תמיד "תיאור השירות" (1), אז הסעיפים מ-customSections מתחילים מ-2
-            ...buildHierarchicalSections(agreementData.customSections || []).map((section: any, index: number) => 
-              createSectionParagraphs(section, 0, index)
-            ).flat(),
+            // צריך לקחת בחשבון רק את הסעיפים הראשיים (level === 'main') כדי לקבל את המספור הנכון
+            ...((): any[] => {
+              const hierarchicalSections = buildHierarchicalSections(agreementData.customSections || []);
+              // מצא את כל הסעיפים הראשיים (כולל gen_) ומיין אותם לפי order
+              const allMainSections = (agreementData.customSections || [])
+                .filter((s: any) => s.level === 'main')
+                .sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
+              
+              return hierarchicalSections.map((section: any) => {
+                // מצא את המספר הנכון של הסעיף הראשי מתוך כל הסעיפים הראשיים
+                const mainIndex = allMainSections.findIndex((s: any) => s.id === section.id);
+                const sectionIndex = mainIndex >= 0 ? mainIndex : 0;
+                return createSectionParagraphs(section, 0, sectionIndex);
+              }).flat();
+            })(),
             
-            // סעיפים מקטגוריות השירותים
-            ...(agreementData.serviceCategories && agreementData.selectedServiceType && (!agreementData.customSections || agreementData.customSections.length === 0) ? 
-              (agreementData.serviceCategories[agreementData.selectedServiceType]?.clauses || [])
-                .filter(clause => !clause.id.includes('_002') && !clause.id.includes('_003'))
-                .flatMap(clause => createSectionParagraphs(clause, 0))
-              : []),
-            
-            // סעיפים כלליים
-            ...(agreementData.generalClauses && (!agreementData.customSections || agreementData.customSections.length === 0) ? 
-              Object.values(agreementData.generalClauses).flatMap(categoryClauses => 
-                categoryClauses.flatMap(clause => createSectionParagraphs(clause, 0))
-              ) : []),
+            // הסעיפים הקבועים כבר כלולים ב-customSections
             
             // רווח לפני חתימות
             new Paragraph({

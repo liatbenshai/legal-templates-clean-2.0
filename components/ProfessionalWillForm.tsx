@@ -1278,20 +1278,31 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
       const subIndex = subSections.findIndex(s => s.id === section.id);
       return `${parentSectionNum}.${subIndex + 1}`;
     } else if (section.level === 'sub-sub') {
-      // מצא את הסעיף הראשי שיור
-      const parentMain = allMainSections.find(s => s.id === section.parentId);
+      // מצא את הסעיף sub שיור
+      const parentSub = customSections.find(s => s.id === section.parentId);
+      if (!parentSub || parentSub.level !== 'sub') return '';
+      
+      // מצא את הסעיף הראשי דרך הסעיף sub
+      const parentMain = allMainSections.find(s => s.id === parentSub.parentId);
       if (!parentMain) return '';
       
-      const parentMainIndex = allMainSections.findIndex(s => s.id === section.parentId);
+      const parentMainIndex = allMainSections.findIndex(s => s.id === parentMain.id);
       const parentSectionNum = fixedSectionsCount + parentMainIndex + 1;
       
-      // מצא את כל התתי-תתי-סעיפים
+      // מצא את כל התתי-סעיפים של הסעיף הראשי
+      const subSections = [...customSections]
+        .filter(s => s.level === 'sub' && s.parentId === parentMain.id)
+        .sort((a, b) => a.order - b.order);
+      
+      const subIndex = subSections.findIndex(s => s.id === parentSub.id);
+      
+      // מצא את כל התתי-תתי-סעיפים של הסעיף sub הזה
       const subSubSections = [...customSections]
-        .filter(s => s.level === 'sub-sub' && s.parentId === section.parentId)
+        .filter(s => s.level === 'sub-sub' && s.parentId === parentSub.id)
         .sort((a, b) => a.order - b.order);
       
       const subSubIndex = subSubSections.findIndex(s => s.id === section.id);
-      return `${parentSectionNum}.${subSubIndex + 1}`;
+      return `${parentSectionNum}.${subIndex + 1}.${subSubIndex + 1}`;
     }
     
     return '';
