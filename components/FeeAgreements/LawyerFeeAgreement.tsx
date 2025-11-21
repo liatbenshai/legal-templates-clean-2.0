@@ -2682,22 +2682,23 @@ export default function LawyerFeeAgreement() {
 
   const handleSaveToWarehouse = async (section: EditableSectionType) => {
     try {
+      // user_id לא צריך להישלח - ה-hook מוסיף אותו בפנים
       await addSection({
-        user_id: currentUser?.id || 'anonymous',
-        title: section.title,
-        content: section.content,
+        title: section.title || 'סעיף ללא כותרת',
+        content: section.content || '',
         category: section.category || 'custom',
         tags: ['הסכם שכר טרחה', 'סעיף מותאם אישית'],
         usage_count: 0,
-        average_rating: 5,
+        average_rating: 5.0,
         is_public: false,
         is_hidden: false,
         created_by: currentUser?.id || 'anonymous'
       });
       alert('✅ סעיף נשמר למחסן האישי!');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving to warehouse:', error);
-      alert('❌ שגיאה בשמירה למחסן');
+      const errorMessage = error?.message || error?.details || 'שגיאה לא ידועה';
+      alert(`❌ שגיאה בשמירה למחסן: ${errorMessage}`);
     }
   };
 
