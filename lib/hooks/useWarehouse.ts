@@ -178,7 +178,7 @@ export function useWarehouse(userId: string, options: UseWarehouseOptions = {}) 
   };
 
   // הוספת סעיף חדש
-  const addSection = async (section: Omit<WarehouseSection, 'id' | 'created_at' | 'updated_at' | 'last_used'>) => {
+  const addSection = async (section: Omit<WarehouseSection, 'id' | 'created_at' | 'updated_at' | 'last_used' | 'user_id'>) => {
     try {
       const { data, error: insertError } = await supabase
         .from('warehouse_sections')
