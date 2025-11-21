@@ -311,6 +311,7 @@ export default function AdvanceDirectivesForm() {
         title: section.title || 'סעיף ללא כותרת',
         content: section.content || '',
         category: section.category || 'custom',
+        service_type: section.serviceType || 'advance_directive',
         tags: ['הנחיות מקדימות', 'סעיף מותאם אישית'],
         usage_count: 0,
         average_rating: 5.0,

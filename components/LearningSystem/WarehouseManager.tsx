@@ -57,6 +57,7 @@ export default function WarehouseManager({ userId, onSectionSelect }: WarehouseM
         title: newSection.title,
         content: newSection.content,
         category: newSection.category,
+        service_type: 'general',
         tags: newSection.tags.split(',').map(tag => tag.trim()).filter(Boolean),
         usage_count: 0,
         average_rating: 5.0,

@@ -9,6 +9,7 @@ export interface WarehouseSection {
   title: string;
   content: string;
   category: string;
+  service_type?: string;
   tags: string[];
   usage_count: number;
   average_rating: number;
