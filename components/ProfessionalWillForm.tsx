@@ -2078,22 +2078,23 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
 
   const handleSaveToWarehouse = async (section: EditableSectionType) => {
     try {
+      // user_id לא צריך להישלח - ה-hook מוסיף אותו בפנים
       await addSection({
-        user_id: testator.fullName || 'anonymous',
-        title: section.title,
-        content: section.content,
+        title: section.title || 'סעיף ללא כותרת',
+        content: section.content || '',
         category: section.category || 'custom',
         tags: ['צוואה', 'סעיף מותאם אישית'],
         usage_count: 0,
-        average_rating: 5,
+        average_rating: 5.0,
         is_public: false,
         is_hidden: false,
         created_by: testator.fullName || 'anonymous'
       });
       alert('✅ סעיף נשמר למחסן האישי!');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving to warehouse:', error);
-      alert('❌ שגיאה בשמירה למחסן');
+      const errorMessage = error?.message || error?.details || 'שגיאה לא ידועה';
+      alert(`❌ שגיאה בשמירה למחסן: ${errorMessage}`);
     }
   };
   
@@ -2111,14 +2112,14 @@ export default function ProfessionalWillForm({ defaultWillType = 'individual' }:
   
   const handleAddSectionToWarehouse = async (title: string, content: string, category: string = 'custom') => {
     try {
+      // user_id לא צריך להישלח - ה-hook מוסיף אותו בפנים
       await addSection({
-        user_id: testator.fullName || 'anonymous',
-        title,
-        content,
+        title: title || 'סעיף ללא כותרת',
+        content: content || '',
         category,
         tags: ['צוואה', 'סעיף מותאם אישית'],
         usage_count: 0,
-        average_rating: 5,
+        average_rating: 5.0,
         is_public: false,
         is_hidden: false,
         created_by: testator.fullName || 'anonymous'

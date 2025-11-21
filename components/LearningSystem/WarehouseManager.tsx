@@ -52,14 +52,14 @@ export default function WarehouseManager({ userId, onSectionSelect }: WarehouseM
 
   const handleAddSection = async () => {
     try {
+      // user_id לא צריך להישלח - ה-hook מוסיף אותו בפנים
       await addSection({
-        user_id: userId,
         title: newSection.title,
         content: newSection.content,
         category: newSection.category,
         tags: newSection.tags.split(',').map(tag => tag.trim()).filter(Boolean),
         usage_count: 0,
-        average_rating: 5,
+        average_rating: 5.0,
         is_public: newSection.isPublic,
         is_hidden: false,
         created_by: userId
