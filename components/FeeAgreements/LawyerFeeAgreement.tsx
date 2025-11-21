@@ -1663,6 +1663,11 @@ export default function LawyerFeeAgreement() {
               clauseText = clauseText.replace(/מלאה ומיידי/g, 'מלא ומיידי');
               clauseText = clauseText.replace(/בעלת פה/g, 'בעל פה');
               clauseText = clauseText.replace(/שיפוי מלאה/g, 'שיפוי מלא');
+              clauseText = clauseText.replace(/מלאה, שלמה/g, 'מלא, שלם');
+              clauseText = clauseText.replace(/מלאה.*שלמה/g, 'מלא, שלם');
+              clauseText = clauseText.replace(/באופן מלאה/g, 'באופן מלא');
+              clauseText = clauseText.replace(/הלקוחה.*יספק/g, (match: string) => match.replace(/יספק/g, 'תספק'));
+              clauseText = clauseText.replace(/עדה שתי/g, 'עד שתי');
               clauseText = clauseText.replace(/עדה\s+(ה'|ל|שני|סיום|יום|לקבלת|מיצוי)/g, 'עד $1');
               clauseText = clauseText.replace(/בימים א' עדה ה'/g, "בימים א' עד ה'");
               
@@ -1778,6 +1783,11 @@ export default function LawyerFeeAgreement() {
                     subClauseText = subClauseText.replace(/מלאה ומיידי/g, 'מלא ומיידי');
                     subClauseText = subClauseText.replace(/בעלת פה/g, 'בעל פה');
                     subClauseText = subClauseText.replace(/שיפוי מלאה/g, 'שיפוי מלא');
+                    subClauseText = subClauseText.replace(/מלאה, שלמה/g, 'מלא, שלם');
+                    subClauseText = subClauseText.replace(/מלאה.*שלמה/g, 'מלא, שלם');
+                    subClauseText = subClauseText.replace(/באופן מלאה/g, 'באופן מלא');
+                    subClauseText = subClauseText.replace(/הלקוחה.*יספק/g, (match: string) => match.replace(/יספק/g, 'תספק'));
+                    subClauseText = subClauseText.replace(/עדה שתי/g, 'עד שתי');
                     subClauseText = subClauseText.replace(/עדה\s+(ה'|ל|שני|סיום|יום|לקבלת|מיצוי|מועד|בין)/g, 'עד $1');
                     subClauseText = subClauseText.replace(/בימים א' עדה ה'/g, "בימים א' עד ה'");
                     subClauseText = subClauseText.replace(/בימים א' עדה ה' בין/g, "בימים א' עד ה' בין");
@@ -1897,6 +1907,11 @@ export default function LawyerFeeAgreement() {
                           subSubClauseText = subSubClauseText.replace(/מלאה ומיידי/g, 'מלא ומיידי');
                           subSubClauseText = subSubClauseText.replace(/בעלת פה/g, 'בעל פה');
                           subSubClauseText = subSubClauseText.replace(/שיפוי מלאה/g, 'שיפוי מלא');
+                          subSubClauseText = subSubClauseText.replace(/מלאה, שלמה/g, 'מלא, שלם');
+                          subSubClauseText = subSubClauseText.replace(/מלאה.*שלמה/g, 'מלא, שלם');
+                          subSubClauseText = subSubClauseText.replace(/באופן מלאה/g, 'באופן מלא');
+                          subSubClauseText = subSubClauseText.replace(/הלקוחה.*יספק/g, (match: string) => match.replace(/יספק/g, 'תספק'));
+                          subSubClauseText = subSubClauseText.replace(/עדה שתי/g, 'עד שתי');
                           subSubClauseText = subSubClauseText.replace(/עדה\s+(ה'|ל|שני|סיום|יום|לקבלת|מיצוי|מועד|בין)/g, 'עד $1');
                           subSubClauseText = subSubClauseText.replace(/בימים א' עדה ה'/g, "בימים א' עד ה'");
                           subSubClauseText = subSubClauseText.replace(/בימים א' עדה ה' בין/g, "בימים א' עד ה' בין");
@@ -2183,7 +2198,11 @@ export default function LawyerFeeAgreement() {
               clauseText = clauseText.replace(/מלאה ומיידי/g, 'מלא ומיידי');
               clauseText = clauseText.replace(/בעלת פה/g, 'בעל פה');
               clauseText = clauseText.replace(/שיפוי מלאה/g, 'שיפוי מלא');
-              clauseText = clauseText.replace(/בימים א' עדים ה'/g, "בימים א' עד ה'");
+              clauseText = clauseText.replace(/מלאה, שלמה/g, 'מלא, שלם');
+              clauseText = clauseText.replace(/מלאה.*שלמה/g, 'מלא, שלם');
+              clauseText = clauseText.replace(/באופן מלאה/g, 'באופן מלא');
+              clauseText = clauseText.replace(/הלקוחה.*יספק/g, (match: string) => match.replace(/יספק/g, 'תספק'));
+              clauseText = clauseText.replace(/עדה שתי/g, 'עד שתי');
               
               const mainSectionId = `gen_${clause.id || orderCounter}`;
               generalSections.push({
@@ -2411,6 +2430,11 @@ export default function LawyerFeeAgreement() {
                     subClauseText = subClauseText.replace(/מלאה ומיידי/g, 'מלא ומיידי');
                     subClauseText = subClauseText.replace(/בעלת פה/g, 'בעל פה');
                     subClauseText = subClauseText.replace(/שיפוי מלאה/g, 'שיפוי מלא');
+                    subClauseText = subClauseText.replace(/מלאה, שלמה/g, 'מלא, שלם');
+                    subClauseText = subClauseText.replace(/מלאה.*שלמה/g, 'מלא, שלם');
+                    subClauseText = subClauseText.replace(/באופן מלאה/g, 'באופן מלא');
+                    subClauseText = subClauseText.replace(/הלקוחה.*יספק/g, (match: string) => match.replace(/יספק/g, 'תספק'));
+                    subClauseText = subClauseText.replace(/עדה שתי/g, 'עד שתי');
                     subClauseText = subClauseText.replace(/עדה\s+(ה'|ל|שני|סיום|יום|לקבלת|מיצוי|מועד|בין)/g, 'עד $1');
                     subClauseText = subClauseText.replace(/בימים א' עדה ה'/g, "בימים א' עד ה'");
                     subClauseText = subClauseText.replace(/בימים א' עדה ה' בין/g, "בימים א' עד ה' בין");
@@ -2876,8 +2900,10 @@ export default function LawyerFeeAgreement() {
       result = result.replace(/שכרה טרחה/g, 'שכר טרחה');
       result = result.replace(/שכרה הטרחה/g, 'שכר הטרחה');
       result = result.replace(/מינוי אפוטרופסית/g, 'מינוי אפוטרופוס');
-      result = result.replace(/באופן מלאה/g, 'במלואו');
+      result = result.replace(/באופן מלאה/g, 'באופן מלא');
       result = result.replace(/במלואה/g, 'במלואו');
+      result = result.replace(/מלאה, שלמה/g, 'מלא, שלם');
+      result = result.replace(/מלאה.*שלמה/g, 'מלא, שלם');
       result = result.replace(/מלאים\b/g, 'מלא');
       result = result.replace(/בלתי מלאים\b/g, 'בלתי מלא');
       result = result.replace(/שיפוי מלאים\b/g, 'שיפוי מלא');

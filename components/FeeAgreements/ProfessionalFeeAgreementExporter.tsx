@@ -337,6 +337,8 @@ export default function ProfessionalFeeAgreementExporter({
         /\bשאינו נכלל\b/g,  // שאינו נכלל (לא שאינו נכללה)
         /\bשכר טרחה\b/g,  // שכר טרחה (לא שכרה טרחה)
         /\bשכר הטרחה\b/g,  // שכר הטרחה (לא שכרה הטרחה)
+        /\bשכר הטרחה\b/g,  // שכר הטרחה (לא שכרו הטרחה)
+        /\bשכר הטרחה\b/g,  // שכר טרחה (לא שכרו טרחה)
         /\bמינוי אפוטרופוס\b/g,  // מינוי אפוטרופוס
         /\bבמלואו\b/g,  // במלואו (לא באופן מלאה)
         /\bמלאים\b/g,  // מלאים (תמיד "מלא")
@@ -404,8 +406,10 @@ export default function ProfessionalFeeAgreementExporter({
       firstSectionText = firstSectionText.replace(/שכרה טרחה/g, 'שכר טרחה');
       firstSectionText = firstSectionText.replace(/שכרה הטרחה/g, 'שכר הטרחה');
       firstSectionText = firstSectionText.replace(/מינוי אפוטרופסית/g, 'מינוי אפוטרופוס');
-      firstSectionText = firstSectionText.replace(/באופן מלאה/g, 'במלואו');
+      firstSectionText = firstSectionText.replace(/באופן מלאה/g, 'באופן מלא');
       firstSectionText = firstSectionText.replace(/במלואה/g, 'במלואו');
+      firstSectionText = firstSectionText.replace(/מלאה, שלמה/g, 'מלא, שלם');
+      firstSectionText = firstSectionText.replace(/מלאה.*שלמה/g, 'מלא, שלם');
       firstSectionText = firstSectionText.replace(/מלאים\b/g, 'מלא');
       firstSectionText = firstSectionText.replace(/בלתי מלאים\b/g, 'בלתי מלא');
       firstSectionText = firstSectionText.replace(/שיפוי מלאים\b/g, 'שיפוי מלא');
@@ -499,6 +503,16 @@ export default function ProfessionalFeeAgreementExporter({
           withFullGender = withFullGender.replace(/עורך הדין יישאו/g, 'עורך הדין יישא');
           withFullGender = withFullGender.replace(/עורך הדין יהיה זכאית/g, 'עורך הדין יהיה זכאי');
           withFullGender = withFullGender.replace(/מינוי אפוטרופסית/g, 'מינוי אפוטרופוס');
+          withFullGender = withFullGender.replace(/מלאה, שלמה/g, 'מלא, שלם');
+          withFullGender = withFullGender.replace(/מלאה.*שלמה/g, 'מלא, שלם');
+          withFullGender = withFullGender.replace(/באופן מלאה/g, 'באופן מלא');
+          withFullGender = withFullGender.replace(/הלקוחה.*יספק/g, (match: string) => match.replace(/יספק/g, 'תספק'));
+          withFullGender = withFullGender.replace(/עדה שתי/g, 'עד שתי');
+          withFullGender = withFullGender.replace(/מלאה, שלמה/g, 'מלא, שלם');
+          withFullGender = withFullGender.replace(/מלאה.*שלמה/g, 'מלא, שלם');
+          withFullGender = withFullGender.replace(/באופן מלאה/g, 'באופן מלא');
+          withFullGender = withFullGender.replace(/הלקוחה.*יספק/g, (match: string) => match.replace(/יספק/g, 'תספק'));
+          withFullGender = withFullGender.replace(/עדה שתי/g, 'עד שתי');
           
           paragraphs.push(
             new Paragraph({
@@ -553,6 +567,11 @@ export default function ProfessionalFeeAgreementExporter({
               withFullGender = withFullGender.replace(/עורך הדין והמשרד תישא/g, 'עורך הדין והמשרד יישאו');
               withFullGender = withFullGender.replace(/עורך הדין יהיה זכאית/g, 'עורך הדין יהיה זכאי');
               withFullGender = withFullGender.replace(/מינוי אפוטרופסית/g, 'מינוי אפוטרופוס');
+              withFullGender = withFullGender.replace(/מלאה, שלמה/g, 'מלא, שלם');
+              withFullGender = withFullGender.replace(/מלאה.*שלמה/g, 'מלא, שלם');
+              withFullGender = withFullGender.replace(/באופן מלאה/g, 'באופן מלא');
+              withFullGender = withFullGender.replace(/הלקוחה.*יספק/g, (match: string) => match.replace(/יספק/g, 'תספק'));
+              withFullGender = withFullGender.replace(/עדה שתי/g, 'עד שתי');
               
               // השתמש ב-numbering של Word לתתי-סעיפים
               paragraphs.push(
@@ -589,10 +608,14 @@ export default function ProfessionalFeeAgreementExporter({
                   const contentWithoutTitle = removeTitle(subSubContent, subSubSection.title);
                   // שלב 1: החלפת משתני מגדר מיוחדים
                   const withGenderVars = applyGenderToText(contentWithoutTitle);
+                  // הגנה על "מלאים" שלא ישתנה
+                  let protectedSubSubContent = withGenderVars.replace(/\bמלאים\b/g, '__FULL_MAS_PLURAL__');
                   // הגנה על "עד" שלא ישתנה ל"עדה"
-                  let protectedSubSubContent = withGenderVars.replace(/\bעד\s+(?!עד[הא]|עדי|עדות|עדים|עדה)/g, 'עד-ל ');
-                  // הגנה על "עורך הדין" שלא ישתנה ל"עורך הדין תישא"
-                  protectedSubSubContent = protectedSubSubContent.replace(/עורך הדין\s+(?=לא|תישא|יישא|ישא|אינו|יהיה)/g, '__LAWYER_VERB__');
+                  protectedSubSubContent = protectedSubSubContent.replace(/\bעד\s+(?!עד[הא]|עדי|עדות|עדים|עדה)/g, 'עד-ל ');
+                  // הגנה על "בימים א' עד ה'" שלא ישתנה
+                  protectedSubSubContent = protectedSubSubContent.replace(/בימים א' עד ה'/g, '__DAYS_UNTIL__');
+                  // הגנה על "עורך הדין" שלא ישתנה ל"עורך הדין תישא" או "יישאו"
+                  protectedSubSubContent = protectedSubSubContent.replace(/עורך הדין\s+(?=לא|תישא|יישא|ישא|יישאו|אינו|יהיה)/g, '__LAWYER_VERB__');
                   // הגנה על "מינוי אפוטרופוס" שלא ישתנה ל"מינוי אפוטרופסית"
                   protectedSubSubContent = protectedSubSubContent.replace(/מינוי אפוטרופוס/g, '__APOTROPS__');
                   // שלב 2: החלפת כל הטקסט לפי מגדר
@@ -601,17 +624,28 @@ export default function ProfessionalFeeAgreementExporter({
                   withFullGender = withFullGender.replace(/עד-ל\s+/g, 'עד ');
                   withFullGender = withFullGender.replace(/__LAWYER_VERB__/g, 'עורך הדין ');
                   withFullGender = withFullGender.replace(/__APOTROPS__/g, 'מינוי אפוטרופוס');
+                  withFullGender = withFullGender.replace(/__DAYS_UNTIL__/g, "בימים א' עד ה'");
+                  withFullGender = withFullGender.replace(/__FULL_MAS_PLURAL__/g, 'מלא');
                   // תיקונים נוספים
                   withFullGender = withFullGender.replace(/עדה\s+(ה'|ל|שני|סיום|יום|לקבלת|מיצוי|מועד|בין)/g, 'עד $1');
                   withFullGender = withFullGender.replace(/בימים א' עדה ה'/g, "בימים א' עד ה'");
                   withFullGender = withFullGender.replace(/בימים א' עדה ה' בין/g, "בימים א' עד ה' בין");
                   withFullGender = withFullGender.replace(/בבקשה עדה/g, 'בבקשה עד');
+                  withFullGender = withFullGender.replace(/מלאים\b/g, 'מלא');
+                  withFullGender = withFullGender.replace(/בלתי מלאים\b/g, 'בלתי מלא');
+                  withFullGender = withFullGender.replace(/שיפוי מלאים\b/g, 'שיפוי מלא');
                   withFullGender = withFullGender.replace(/עורך הדין תישא/g, 'עורך הדין יישא');
                   withFullGender = withFullGender.replace(/עורך הדין לא תישא/g, 'עורך הדין לא יישא');
                   withFullGender = withFullGender.replace(/עורך הדין אינו נושא ולא תישא/g, 'עורך הדין אינו נושא ולא יישא');
                   withFullGender = withFullGender.replace(/עורך הדין והמשרד תישא/g, 'עורך הדין והמשרד יישאו');
+                  withFullGender = withFullGender.replace(/עורך הדין יישאו/g, 'עורך הדין יישא');
                   withFullGender = withFullGender.replace(/עורך הדין יהיה זכאית/g, 'עורך הדין יהיה זכאי');
                   withFullGender = withFullGender.replace(/מינוי אפוטרופסית/g, 'מינוי אפוטרופוס');
+                  withFullGender = withFullGender.replace(/מלאה, שלמה/g, 'מלא, שלם');
+                  withFullGender = withFullGender.replace(/מלאה.*שלמה/g, 'מלא, שלם');
+                  withFullGender = withFullGender.replace(/באופן מלאה/g, 'באופן מלא');
+                  withFullGender = withFullGender.replace(/הלקוחה.*יספק/g, (match: string) => match.replace(/יספק/g, 'תספק'));
+                  withFullGender = withFullGender.replace(/עדה שתי/g, 'עד שתי');
                   
                   // השתמש ב-numbering של Word לתתי-תתי-סעיפים
                   paragraphs.push(
@@ -778,8 +812,10 @@ export default function ProfessionalFeeAgreementExporter({
           result = result.replace(/שכרה טרחה/g, 'שכר טרחה');
           result = result.replace(/שכרה הטרחה/g, 'שכר הטרחה');
           result = result.replace(/מינוי אפוטרופסית/g, 'מינוי אפוטרופוס');
-          result = result.replace(/באופן מלאה/g, 'במלואו');
+          result = result.replace(/באופן מלאה/g, 'באופן מלא');
           result = result.replace(/במלואה/g, 'במלואו');
+          result = result.replace(/מלאה, שלמה/g, 'מלא, שלם');
+          result = result.replace(/מלאה.*שלמה/g, 'מלא, שלם');
           result = result.replace(/מלאים\b/g, 'מלא');
           result = result.replace(/בלתי מלאים\b/g, 'בלתי מלא');
           result = result.replace(/שיפוי מלאים\b/g, 'שיפוי מלא');
