@@ -2441,14 +2441,141 @@ export default function LawyerFeeAgreement() {
                     subClauseText = subClauseText.replace(/בבקשה עדה/g, 'בבקשה עד');
                     subClauseText = subClauseText.replace(/מינוי אפוטרופסית/g, 'מינוי אפוטרופוס');
                     
+                    const subSectionId = `gen_${subClause.id || `${clause.id}_${subIndex}`}`;
                     generalSections.push({
-                      id: `gen_${subClause.id || `${clause.id}_${subIndex}`}`,
+                      id: subSectionId,
                       title: subClause.title || '',
                       content: subClauseText,
                       level: 'sub' as const,
                       parentId: mainSectionId,
                       order: orderCounter++
                     });
+                    
+                    // עיבוד תתי-תתי-סעיפים (subSubSections)
+                    if (subClause.subSubSections && Array.isArray(subClause.subSubSections)) {
+                      subClause.subSubSections.forEach((subSubClause: any, subSubIndex: number) => {
+                        let subSubClauseText = subSubClause.text || '';
+                        if (subSubClauseText) {
+                          const subSubClientLabel = clientsGender === 'female' ? 'הלקוחה' : clientsGender === 'plural' ? 'הלקוחות' : 'הלקוח';
+                          subSubClauseText = subSubClauseText.replace(/\{\{לקוח\}\}/g, subSubClientLabel);
+                          subSubClauseText = subSubClauseText.replace(/\{\{multipleClients:([^|]+)\|([^|]+)\|([^}]+)\}\}/g, (_match: string, plural: string, male: string, female: string) => {
+                            return clientsGender === 'plural' ? plural : clientsGender === 'female' ? female : male;
+                          });
+                          subSubClauseText = subSubClauseText.replace(/\{\{gender:([^|]+)\|([^|]+)\|([^}]+)\}\}/g, (_match: string, male: string, female: string, plural: string) => {
+                            switch (clientsGender) {
+                              case 'male': return male;
+                              case 'female': return female;
+                              case 'plural': return plural;
+                              default: return male;
+                            }
+                          });
+                          
+                          // הגנה על ביטויים שצריכים להישאר ללא שינוי
+                          const subSubProtectedPhrases: { [key: string]: string } = {};
+                          let subSubProtectedIndex = 0;
+                          
+                          subSubClauseText = subSubClauseText.replace(/עורך הדין/g, (match: string) => {
+                            const placeholder = `__LAWYER_${subSubProtectedIndex}__`;
+                            subSubProtectedPhrases[placeholder] = match;
+                            subSubProtectedIndex++;
+                            return placeholder;
+                          });
+                          subSubClauseText = subSubClauseText.replace(/עורך דין(?! בעל)/g, (match: string) => {
+                            const placeholder = `__LAWYER_NO_HEY_${subSubProtectedIndex}__`;
+                            subSubProtectedPhrases[placeholder] = match;
+                            subSubProtectedIndex++;
+                            return placeholder;
+                          });
+                          subSubClauseText = subSubClauseText.replace(/\bשכר טרחה\b/g, (match: string) => {
+                            const placeholder = `__FEE_${subSubProtectedIndex}__`;
+                            subSubProtectedPhrases[placeholder] = match;
+                            subSubProtectedIndex++;
+                            return placeholder;
+                          });
+                          subSubClauseText = subSubClauseText.replace(/\bשכר הטרחה\b/g, (match: string) => {
+                            const placeholder = `__FEE_THE_${subSubProtectedIndex}__`;
+                            subSubProtectedPhrases[placeholder] = match;
+                            subSubProtectedIndex++;
+                            return placeholder;
+                          });
+                          subSubClauseText = subSubClauseText.replace(/\bשכר טרחת\b/g, (match: string) => {
+                            const placeholder = `__FEE_OF_${subSubProtectedIndex}__`;
+                            subSubProtectedPhrases[placeholder] = match;
+                            subSubProtectedIndex++;
+                            return placeholder;
+                          });
+                          subSubClauseText = subSubClauseText.replace(/\bמידע מלא\b/g, (match: string) => {
+                            const placeholder = `__FULL_INFO_${subSubProtectedIndex}__`;
+                            subSubProtectedPhrases[placeholder] = match;
+                            subSubProtectedIndex++;
+                            return placeholder;
+                          });
+                          subSubClauseText = subSubClauseText.replace(/\bבלתי מלא\b/g, (match: string) => {
+                            const placeholder = `__NOT_FULL_${subSubProtectedIndex}__`;
+                            subSubProtectedPhrases[placeholder] = match;
+                            subSubProtectedIndex++;
+                            return placeholder;
+                          });
+                          subSubClauseText = subSubClauseText.replace(/\bמלאים\b/g, (match: string) => {
+                            const placeholder = `__FULL_MAS_PLURAL_${subSubProtectedIndex}__`;
+                            subSubProtectedPhrases[placeholder] = match;
+                            subSubProtectedIndex++;
+                            return placeholder;
+                          });
+                          subSubClauseText = subSubClauseText.replace(/\bעד\s+(?!עד[הא]|עדי|עדות|עדים|עדה)/g, 'עד-ל ');
+                          subSubClauseText = subSubClauseText.replace(/בימים א' עד ה'/g, '__DAYS_UNTIL__');
+                          subSubClauseText = subSubClauseText.replace(/עורך הדין\s+(?=לא|תישא|יישא|ישא|יישאו|אינו|יהיה)/g, '__LAWYER_VERB__');
+                          subSubClauseText = subSubClauseText.replace(/מינוי אפוטרופוס/g, '__APOTROPS__');
+                          subSubClauseText = replaceTextWithGender(subSubClauseText, clientsGender);
+                          subSubClauseText = subSubClauseText.replace(/עד-ל\s+/g, 'עד ');
+                          subSubClauseText = subSubClauseText.replace(/__LAWYER_VERB__/g, 'עורך הדין ');
+                          subSubClauseText = subSubClauseText.replace(/__APOTROPS__/g, 'מינוי אפוטרופוס');
+                          subSubClauseText = subSubClauseText.replace(/__DAYS_UNTIL__/g, "בימים א' עד ה'");
+                          Object.keys(subSubProtectedPhrases).forEach(placeholder => {
+                            subSubClauseText = subSubClauseText.replace(new RegExp(placeholder, 'g'), subSubProtectedPhrases[placeholder]);
+                          });
+                          subSubClauseText = subSubClauseText.replace(/עורך דין בעלת/g, 'עורך דין בעל');
+                          subSubClauseText = subSubClauseText.replace(/היא עורך דין/g, 'הוא עורך דין');
+                          subSubClauseText = subSubClauseText.replace(/שירותיה של עורך הדין/g, 'שירותיו של עורך הדין');
+                          subSubClauseText = subSubClauseText.replace(/שכרה טרחה/g, 'שכר טרחה');
+                          subSubClauseText = subSubClauseText.replace(/שכרה הטרחה/g, 'שכר הטרחה');
+                          subSubClauseText = subSubClauseText.replace(/שכרה טרחת/g, 'שכר טרחת');
+                          subSubClauseText = subSubClauseText.replace(/מידע מלאה/g, 'מידע מלא');
+                          subSubClauseText = subSubClauseText.replace(/בלתי מלאה/g, 'בלתי מלא');
+                          subSubClauseText = subSubClauseText.replace(/מלאים\b/g, 'מלא');
+                          subSubClauseText = subSubClauseText.replace(/בלתי מלאים\b/g, 'בלתי מלא');
+                          subSubClauseText = subSubClauseText.replace(/שיפוי מלאים\b/g, 'שיפוי מלא');
+                          subSubClauseText = subSubClauseText.replace(/עורך הדין לא תישא/g, 'עורך הדין לא יישא');
+                          subSubClauseText = subSubClauseText.replace(/עורך הדין תישא/g, 'עורך הדין יישא');
+                          subSubClauseText = subSubClauseText.replace(/עורך הדין אינו נושא ולא תישא/g, 'עורך הדין אינו נושא ולא יישא');
+                          subSubClauseText = subSubClauseText.replace(/עורך הדין והמשרד תישא/g, 'עורך הדין והמשרד יישאו');
+                          subSubClauseText = subSubClauseText.replace(/עורך הדין יישאו/g, 'עורך הדין יישא');
+                          subSubClauseText = subSubClauseText.replace(/עורך הדין יהיה זכאית/g, 'עורך הדין יהיה זכאי');
+                          subSubClauseText = subSubClauseText.replace(/מלאה ומיידי/g, 'מלא ומיידי');
+                          subSubClauseText = subSubClauseText.replace(/בעלת פה/g, 'בעל פה');
+                          subSubClauseText = subSubClauseText.replace(/שיפוי מלאה/g, 'שיפוי מלא');
+                          subSubClauseText = subSubClauseText.replace(/מלאה, שלמה/g, 'מלא, שלם');
+                          subSubClauseText = subSubClauseText.replace(/מלאה.*שלמה/g, 'מלא, שלם');
+                          subSubClauseText = subSubClauseText.replace(/באופן מלאה/g, 'באופן מלא');
+                          subSubClauseText = subSubClauseText.replace(/הלקוחה.*יספק/g, (match: string) => match.replace(/יספק/g, 'תספק'));
+                          subSubClauseText = subSubClauseText.replace(/עדה שתי/g, 'עד שתי');
+                          subSubClauseText = subSubClauseText.replace(/עדה\s+(ה'|ל|שני|סיום|יום|לקבלת|מיצוי|מועד|בין)/g, 'עד $1');
+                          subSubClauseText = subSubClauseText.replace(/בימים א' עדה ה'/g, "בימים א' עד ה'");
+                          subSubClauseText = subSubClauseText.replace(/בימים א' עדה ה' בין/g, "בימים א' עד ה' בין");
+                          subSubClauseText = subSubClauseText.replace(/בבקשה עדה/g, 'בבקשה עד');
+                          subSubClauseText = subSubClauseText.replace(/מינוי אפוטרופסית/g, 'מינוי אפוטרופוס');
+                          
+                          generalSections.push({
+                            id: `gen_${subSubClause.id || `${subClause.id}_${subSubIndex}`}`,
+                            title: subSubClause.title || '',
+                            content: subSubClauseText,
+                            level: 'sub-sub' as const,
+                            parentId: subSectionId,
+                            order: orderCounter++
+                          });
+                        }
+                      });
+                    }
                   }
                 });
               }
