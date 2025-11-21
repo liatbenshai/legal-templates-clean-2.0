@@ -2216,8 +2216,8 @@ export default function LawyerFeeAgreement() {
               // עיבוד תתי-סעיפים (subSections)
               if (clause.subSections && Array.isArray(clause.subSections)) {
                 clause.subSections.forEach((subClause: any, subIndex: number) => {
-                  let subClauseText = subClause.text || '';
-                  if (subClauseText) {
+                  let subClauseText = subClause.text || subClause.content || '';
+                  if (subClauseText && subClauseText.trim() !== '') {
                     const subClientLabel = clientsGender === 'female' ? 'הלקוחה' : clientsGender === 'plural' ? 'הלקוחות' : 'הלקוח';
                     subClauseText = subClauseText.replace(/\{\{לקוח\}\}/g, subClientLabel);
                     subClauseText = subClauseText.replace(/\{\{multipleClients:([^|]+)\|([^|]+)\|([^}]+)\}\}/g, (_match: string, plural: string, male: string, female: string) => {
@@ -2330,8 +2330,8 @@ export default function LawyerFeeAgreement() {
               // עיבוד תתי-סעיפים
               if (clause.subSections && Array.isArray(clause.subSections)) {
                 clause.subSections.forEach((subClause: any, subIndex: number) => {
-                  let subClauseText = subClause.text || '';
-                  if (subClauseText) {
+                  let subClauseText = subClause.text || subClause.content || '';
+                  if (subClauseText && subClauseText.trim() !== '') {
                     const subClientLabel = clientsGender === 'female' ? 'הלקוחה' : clientsGender === 'plural' ? 'הלקוחות' : 'הלקוח';
                     subClauseText = subClauseText.replace(/\{\{לקוח\}\}/g, subClientLabel);
                     subClauseText = subClauseText.replace(/\{\{multipleClients:([^|]+)\|([^|]+)\|([^}]+)\}\}/g, (_match: string, plural: string, male: string, female: string) => {
