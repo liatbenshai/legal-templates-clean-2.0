@@ -2637,6 +2637,7 @@ export default function LawyerFeeAgreement() {
       let firstSectionText = firstSectionTemplate;
       
       // החלפת משתנים - קודם כל המשתנים הספציפיים
+      // משתמשים ב-case.subject (שזה התיאור המלא מ-serviceScopeMapping)
       firstSectionText = firstSectionText.replace(/\{\{תיאור העניין\}\}/g, agreementData.case.subject);
       firstSectionText = firstSectionText.replace(/\{\{תיאור השירותים\}\}/g, agreementData.case.subject);
       const serviceScopeMapping = (feeAgreementTemplates.preamble?.serviceScopeMapping || {}) as Record<string, string>;
