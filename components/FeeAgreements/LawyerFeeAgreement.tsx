@@ -12,6 +12,7 @@ import { learningEngine } from '@/lib/learning-system/learning-engine';
 import feeAgreementTemplates from '@/lib/fee-agreement-templates.json';
 import { replaceTextWithGender } from '@/lib/hebrew-gender';
 import { useWarehouse } from '@/lib/hooks/useWarehouse';
+import { replaceFeeAgreementTemplateTextWithGender, type Gender } from '@/lib/fee-agreement-template-utils';
 
 // פונקציה לעיצוב מספרים עם פסיקים
 const formatNumber = (value: string): string => {
@@ -1540,20 +1541,8 @@ export default function LawyerFeeAgreement() {
             // עיבוד תוכן הסעיף הראשי
             let clauseText = clause.text || '';
             if (clauseText) {
-              // החלפת משתנים
-              const clientLabel = clientsGender === 'female' ? 'הלקוחה' : clientsGender === 'plural' ? 'הלקוחות' : 'הלקוח';
-              clauseText = clauseText.replace(/\{\{לקוח\}\}/g, clientLabel);
-              clauseText = clauseText.replace(/\{\{multipleClients:([^|]+)\|([^|]+)\|([^}]+)\}\}/g, (_match: string, plural: string, male: string, female: string) => {
-                return clientsGender === 'plural' ? plural : clientsGender === 'female' ? female : male;
-              });
-              clauseText = clauseText.replace(/\{\{gender:([^|]+)\|([^|]+)\|([^}]+)\}\}/g, (_match: string, male: string, female: string, plural: string) => {
-                switch (clientsGender) {
-                  case 'male': return male;
-                  case 'female': return female;
-                  case 'plural': return plural;
-                  default: return male;
-                }
-              });
+              // החלפת משתנים באמצעות הפונקציות החדשות (מטפלת בכפילות ה')
+              clauseText = replaceFeeAgreementTemplateTextWithGender(clauseText, clientsGender);
               
               // הגנה על ביטויים שצריכים להישאר ללא שינוי
               const protectedPhrases: { [key: string]: string } = {};
@@ -1689,19 +1678,8 @@ export default function LawyerFeeAgreement() {
                 clause.subSections.forEach((subClause: any, subIndex: number) => {
                   let subClauseText = subClause.text || '';
                   if (subClauseText) {
-                    const subClientLabel = clientsGender === 'female' ? 'הלקוחה' : clientsGender === 'plural' ? 'הלקוחות' : 'הלקוח';
-                    subClauseText = subClauseText.replace(/\{\{לקוח\}\}/g, subClientLabel);
-                    subClauseText = subClauseText.replace(/\{\{multipleClients:([^|]+)\|([^|]+)\|([^}]+)\}\}/g, (_match: string, plural: string, male: string, female: string) => {
-                      return clientsGender === 'plural' ? plural : clientsGender === 'female' ? female : male;
-                    });
-                    subClauseText = subClauseText.replace(/\{\{gender:([^|]+)\|([^|]+)\|([^}]+)\}\}/g, (_match: string, male: string, female: string, plural: string) => {
-                      switch (clientsGender) {
-                        case 'male': return male;
-                        case 'female': return female;
-                        case 'plural': return plural;
-                        default: return male;
-                      }
-                    });
+                    // החלפת משתנים באמצעות הפונקציות החדשות (מטפלת בכפילות ה')
+                    subClauseText = replaceFeeAgreementTemplateTextWithGender(subClauseText, clientsGender);
                     
                     // הגנה על ביטויים שצריכים להישאר ללא שינוי (אותו קוד כמו למעלה)
                     const subProtectedPhrases2: { [key: string]: string } = {};
@@ -1813,19 +1791,8 @@ export default function LawyerFeeAgreement() {
                       subClause.subSubSections.forEach((subSubClause: any, subSubIndex: number) => {
                         let subSubClauseText = subSubClause.text || '';
                         if (subSubClauseText) {
-                          const subSubClientLabel = clientsGender === 'female' ? 'הלקוחה' : clientsGender === 'plural' ? 'הלקוחות' : 'הלקוח';
-                          subSubClauseText = subSubClauseText.replace(/\{\{לקוח\}\}/g, subSubClientLabel);
-                          subSubClauseText = subSubClauseText.replace(/\{\{multipleClients:([^|]+)\|([^|]+)\|([^}]+)\}\}/g, (_match: string, plural: string, male: string, female: string) => {
-                            return clientsGender === 'plural' ? plural : clientsGender === 'female' ? female : male;
-                          });
-                          subSubClauseText = subSubClauseText.replace(/\{\{gender:([^|]+)\|([^|]+)\|([^}]+)\}\}/g, (_match: string, male: string, female: string, plural: string) => {
-                            switch (clientsGender) {
-                              case 'male': return male;
-                              case 'female': return female;
-                              case 'plural': return plural;
-                              default: return male;
-                            }
-                          });
+                          // החלפת משתנים באמצעות הפונקציות החדשות (מטפלת בכפילות ה')
+                          subSubClauseText = replaceFeeAgreementTemplateTextWithGender(subSubClauseText, clientsGender);
                           
                           // הגנה על ביטויים שצריכים להישאר ללא שינוי
                           const subSubProtectedPhrases: { [key: string]: string } = {};
@@ -1952,19 +1919,8 @@ export default function LawyerFeeAgreement() {
                 clause.subSections.forEach((subClause: any, subIndex: number) => {
                   let subClauseText = subClause.text || '';
                   if (subClauseText) {
-                    const subClientLabel = clientsGender === 'female' ? 'הלקוחה' : clientsGender === 'plural' ? 'הלקוחות' : 'הלקוח';
-                    subClauseText = subClauseText.replace(/\{\{לקוח\}\}/g, subClientLabel);
-                    subClauseText = subClauseText.replace(/\{\{multipleClients:([^|]+)\|([^|]+)\|([^}]+)\}\}/g, (_match: string, plural: string, male: string, female: string) => {
-                      return clientsGender === 'plural' ? plural : clientsGender === 'female' ? female : male;
-                    });
-                    subClauseText = subClauseText.replace(/\{\{gender:([^|]+)\|([^|]+)\|([^}]+)\}\}/g, (_match: string, male: string, female: string, plural: string) => {
-                      switch (clientsGender) {
-                        case 'male': return male;
-                        case 'female': return female;
-                        case 'plural': return plural;
-                        default: return male;
-                      }
-                    });
+                    // החלפת משתנים באמצעות הפונקציות החדשות (מטפלת בכפילות ה')
+                    subClauseText = replaceFeeAgreementTemplateTextWithGender(subClauseText, clientsGender);
                     
                     // הגנה על ביטויים שצריכים להישאר ללא שינוי (אותו קוד כמו למעלה)
                     const subProtectedPhrases3: { [key: string]: string } = {};
@@ -2101,20 +2057,8 @@ export default function LawyerFeeAgreement() {
             // עיבוד תוכן הסעיף הראשי
             let clauseText = clause.text || '';
             if (clauseText) {
-              // החלפת משתנים
-              const clientLabel = clientsGender === 'female' ? 'הלקוחה' : clientsGender === 'plural' ? 'הלקוחות' : 'הלקוח';
-              clauseText = clauseText.replace(/\{\{לקוח\}\}/g, clientLabel);
-              clauseText = clauseText.replace(/\{\{multipleClients:([^|]+)\|([^|]+)\|([^}]+)\}\}/g, (_match: string, plural: string, male: string, female: string) => {
-                return clientsGender === 'plural' ? plural : clientsGender === 'female' ? female : male;
-              });
-              clauseText = clauseText.replace(/\{\{gender:([^|]+)\|([^|]+)\|([^}]+)\}\}/g, (_match: string, male: string, female: string, plural: string) => {
-                switch (clientsGender) {
-                  case 'male': return male;
-                  case 'female': return female;
-                  case 'plural': return plural;
-                  default: return male;
-                }
-              });
+              // החלפת משתנים באמצעות הפונקציות החדשות (מטפלת בכפילות ה')
+              clauseText = replaceFeeAgreementTemplateTextWithGender(clauseText, clientsGender);
               
               // הגנה על ביטויים שצריכים להישאר ללא שינוי
               const protectedPhrases: { [key: string]: string } = {};
@@ -2226,19 +2170,8 @@ export default function LawyerFeeAgreement() {
                 clause.subSections.forEach((subClause: any, subIndex: number) => {
                   let subClauseText = subClause.text || subClause.content || '';
                   if (subClauseText && subClauseText.trim() !== '') {
-                    const subClientLabel = clientsGender === 'female' ? 'הלקוחה' : clientsGender === 'plural' ? 'הלקוחות' : 'הלקוח';
-                    subClauseText = subClauseText.replace(/\{\{לקוח\}\}/g, subClientLabel);
-                    subClauseText = subClauseText.replace(/\{\{multipleClients:([^|]+)\|([^|]+)\|([^}]+)\}\}/g, (_match: string, plural: string, male: string, female: string) => {
-                      return clientsGender === 'plural' ? plural : clientsGender === 'female' ? female : male;
-                    });
-                    subClauseText = subClauseText.replace(/\{\{gender:([^|]+)\|([^|]+)\|([^}]+)\}\}/g, (_match: string, male: string, female: string, plural: string) => {
-                      switch (clientsGender) {
-                        case 'male': return male;
-                        case 'female': return female;
-                        case 'plural': return plural;
-                        default: return male;
-                      }
-                    });
+                    // החלפת משתנים באמצעות הפונקציות החדשות (מטפלת בכפילות ה')
+                    subClauseText = replaceFeeAgreementTemplateTextWithGender(subClauseText, clientsGender);
                     
                     // הגנה על ביטויים שצריכים להישאר ללא שינוי
                     const subProtectedPhrases: { [key: string]: string } = {};
@@ -2340,19 +2273,8 @@ export default function LawyerFeeAgreement() {
                 clause.subSections.forEach((subClause: any, subIndex: number) => {
                   let subClauseText = subClause.text || subClause.content || '';
                   if (subClauseText && subClauseText.trim() !== '') {
-                    const subClientLabel = clientsGender === 'female' ? 'הלקוחה' : clientsGender === 'plural' ? 'הלקוחות' : 'הלקוח';
-                    subClauseText = subClauseText.replace(/\{\{לקוח\}\}/g, subClientLabel);
-                    subClauseText = subClauseText.replace(/\{\{multipleClients:([^|]+)\|([^|]+)\|([^}]+)\}\}/g, (_match: string, plural: string, male: string, female: string) => {
-                      return clientsGender === 'plural' ? plural : clientsGender === 'female' ? female : male;
-                    });
-                    subClauseText = subClauseText.replace(/\{\{gender:([^|]+)\|([^|]+)\|([^}]+)\}\}/g, (_match: string, male: string, female: string, plural: string) => {
-                      switch (clientsGender) {
-                        case 'male': return male;
-                        case 'female': return female;
-                        case 'plural': return plural;
-                        default: return male;
-                      }
-                    });
+                    // החלפת משתנים באמצעות הפונקציות החדשות (מטפלת בכפילות ה')
+                    subClauseText = replaceFeeAgreementTemplateTextWithGender(subClauseText, clientsGender);
                     
                     // הגנה על ביטויים שצריכים להישאר ללא שינוי
                     const subProtectedPhrases2: { [key: string]: string } = {};
@@ -2464,19 +2386,8 @@ export default function LawyerFeeAgreement() {
                       subClause.subSubSections.forEach((subSubClause: any, subSubIndex: number) => {
                         let subSubClauseText = subSubClause.text || '';
                         if (subSubClauseText) {
-                          const subSubClientLabel = clientsGender === 'female' ? 'הלקוחה' : clientsGender === 'plural' ? 'הלקוחות' : 'הלקוח';
-                          subSubClauseText = subSubClauseText.replace(/\{\{לקוח\}\}/g, subSubClientLabel);
-                          subSubClauseText = subSubClauseText.replace(/\{\{multipleClients:([^|]+)\|([^|]+)\|([^}]+)\}\}/g, (_match: string, plural: string, male: string, female: string) => {
-                            return clientsGender === 'plural' ? plural : clientsGender === 'female' ? female : male;
-                          });
-                          subSubClauseText = subSubClauseText.replace(/\{\{gender:([^|]+)\|([^|]+)\|([^}]+)\}\}/g, (_match: string, male: string, female: string, plural: string) => {
-                            switch (clientsGender) {
-                              case 'male': return male;
-                              case 'female': return female;
-                              case 'plural': return plural;
-                              default: return male;
-                            }
-                          });
+                          // החלפת משתנים באמצעות הפונקציות החדשות (מטפלת בכפילות ה')
+                          subSubClauseText = replaceFeeAgreementTemplateTextWithGender(subSubClauseText, clientsGender);
                           
                           // הגנה על ביטויים שצריכים להישאר ללא שינוי
                           const subSubProtectedPhrases: { [key: string]: string } = {};
