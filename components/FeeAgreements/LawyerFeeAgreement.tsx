@@ -1506,6 +1506,12 @@ export default function LawyerFeeAgreement() {
       firstSectionText = firstSectionText.replace(/עורך הדין יהיה זכאית/g, 'עורך הדין יהיה זכאי');
       firstSectionText = firstSectionText.replace(/עורך הדין והמשרד תישא/g, 'עורך הדין והמשרד יישאו');
       firstSectionText = firstSectionText.replace(/מינוי אפוטרופסית/g, 'מינוי אפוטרופוס');
+      firstSectionText = firstSectionText.replace(/עורך הדין רשאית/g, 'עורך הדין רשאי');
+      firstSectionText = firstSectionText.replace(/שכרה הטרחה/g, 'שכר הטרחה');
+      firstSectionText = firstSectionText.replace(/שכרה טרחה/g, 'שכר טרחה');
+      firstSectionText = firstSectionText.replace(/שכרה טרחת/g, 'שכר טרחת');
+      firstSectionText = firstSectionText.replace(/שנייה הצדדים/g, 'הצדדים');
+      firstSectionText = firstSectionText.replace(/הצד המקבלת/g, 'הצד המקבל');
       
       // יצירת הסעיף הראשון
       const firstSection = {
@@ -1577,6 +1583,14 @@ export default function LawyerFeeAgreement() {
                 return placeholder;
               });
               
+              // הגן על "עורך הדין רשאי" שלא ישתנה ל"עורך הדין רשאית"
+              clauseText = clauseText.replace(/__LAWYER_\d+__\s+רשאי/g, (match: string) => {
+                const placeholder = `__LAWYER_CAN_${protectedIndex}__`;
+                protectedPhrases[placeholder] = match.replace(/__LAWYER_\d+__/, 'עורך הדין');
+                protectedIndex++;
+                return placeholder;
+              });
+              
               // הגן על "שכר טרחה" שלא ישתנה
               clauseText = clauseText.replace(/\bשכר טרחה\b/g, (match: string) => {
                 const placeholder = `__FEE_${protectedIndex}__`;
@@ -1592,6 +1606,38 @@ export default function LawyerFeeAgreement() {
               });
               clauseText = clauseText.replace(/\bשכר טרחת\b/g, (match: string) => {
                 const placeholder = `__FEE_OF_${protectedIndex}__`;
+                protectedPhrases[placeholder] = match;
+                protectedIndex++;
+                return placeholder;
+              });
+              
+              // הגן על "שני הצדדים" שלא ישתנה ל"שנייה הצדדים"
+              clauseText = clauseText.replace(/\bשני הצדדים\b/g, (match: string) => {
+                const placeholder = `__TWO_PARTIES_${protectedIndex}__`;
+                protectedPhrases[placeholder] = 'הצדדים';
+                protectedIndex++;
+                return placeholder;
+              });
+              
+              // הגן על "בחתימת שני הצדדים" שלא ישתנה
+              clauseText = clauseText.replace(/בחתימת שני הצדדים/g, (match: string) => {
+                const placeholder = `__SIGNED_BY_${protectedIndex}__`;
+                protectedPhrases[placeholder] = 'בחתימת הצדדים';
+                protectedIndex++;
+                return placeholder;
+              });
+              
+              // הגן על "על ידי שני הצדדים" שלא ישתנה
+              clauseText = clauseText.replace(/על ידי שני הצדדים/g, (match: string) => {
+                const placeholder = `__BY_PARTIES_${protectedIndex}__`;
+                protectedPhrases[placeholder] = 'על ידי הצדדים';
+                protectedIndex++;
+                return placeholder;
+              });
+              
+              // הגן על "הצד המקבל" שלא ישתנה ל"הצד המקבלת"
+              clauseText = clauseText.replace(/הצד המקבל/g, (match: string) => {
+                const placeholder = `__RECEIVING_PARTY_${protectedIndex}__`;
                 protectedPhrases[placeholder] = match;
                 protectedIndex++;
                 return placeholder;
@@ -1658,6 +1704,11 @@ export default function LawyerFeeAgreement() {
               clauseText = clauseText.replace(/שכרה טרחה/g, 'שכר טרחה');
               clauseText = clauseText.replace(/שכרה הטרחה/g, 'שכר הטרחה');
               clauseText = clauseText.replace(/שכרה טרחת/g, 'שכר טרחת');
+              clauseText = clauseText.replace(/עורך הדין רשאית/g, 'עורך הדין רשאי');
+              clauseText = clauseText.replace(/שנייה הצדדים/g, 'הצדדים');
+              clauseText = clauseText.replace(/בחתימת שנייה הצדדים/g, 'בחתימת הצדדים');
+              clauseText = clauseText.replace(/על ידי שנייה הצדדים/g, 'על ידי הצדדים');
+              clauseText = clauseText.replace(/הצד המקבלת/g, 'הצד המקבל');
               clauseText = clauseText.replace(/מידע מלאה/g, 'מידע מלא');
               clauseText = clauseText.replace(/בלתי מלאה/g, 'בלתי מלא');
               clauseText = clauseText.replace(/מלאים\b/g, 'מלא');
@@ -1683,6 +1734,19 @@ export default function LawyerFeeAgreement() {
               let clauseTitle = clause.title || '';
               if (clauseTitle) {
                 clauseTitle = replaceFeeAgreementTemplateTextWithGender(clauseTitle, clientsGender);
+                // תיקון נוסף לוודא שהכותרת מתעדכנת נכון
+                clauseTitle = clauseTitle.replace(/ה\{\{לקוח\}\}/g, (match: string) => {
+                  switch (clientsGender) {
+                    case 'male':
+                      return 'הלקוח';
+                    case 'female':
+                      return 'הלקוחה';
+                    case 'plural':
+                      return 'הלקוחות';
+                    default:
+                      return 'הלקוח';
+                  }
+                });
               }
               
               const mainSectionId = `gen_${clause.id || orderCounter}`;
@@ -2036,7 +2100,14 @@ export default function LawyerFeeAgreement() {
       // הסעיפים ההיררכיים יגיעו מ-Supabase (בחירה ידנית)
       // סעיף שכר הטרחה יגיע אוטומטית (כמו עכשיו)
       // הסעיפים הקבועים יטענו בסוף (בפונקציה נפרדת)
-      setCustomSections([firstSection]);
+      // עדכון הסעיף הראשון אם הוא כבר קיים, אחרת הוסף אותו
+      setCustomSections(prev => {
+        const existingFirstSection = prev.find(s => s.id === 'first-section-fixed');
+        if (existingFirstSection) {
+          return prev.map(s => s.id === 'first-section-fixed' ? firstSection : s);
+        }
+        return [firstSection, ...prev.filter(s => s.id !== 'first-section-fixed')];
+      });
     }
   }, [selectedServiceType, agreementData.clients.length]);
 
@@ -2550,6 +2621,75 @@ export default function LawyerFeeAgreement() {
       case: { ...prev.case, [field]: value }
     }));
   };
+  
+  // עדכון הסעיף הראשון כש-case.subject משתנה
+  useEffect(() => {
+    if (agreementData.case?.subject && selectedServiceType) {
+      const firstSectionTemplate = feeAgreementTemplates.preamble?.firstSection?.text || '';
+      const clientsGender = getClientsGender();
+      
+      let firstSectionText = firstSectionTemplate;
+      
+      // החלפת משתנים - קודם כל המשתנים הספציפיים
+      firstSectionText = firstSectionText.replace(/\{\{תיאור העניין\}\}/g, agreementData.case.subject);
+      firstSectionText = firstSectionText.replace(/\{\{תיאור השירותים\}\}/g, agreementData.case.subject);
+      const serviceScopeMapping = (feeAgreementTemplates.preamble?.serviceScopeMapping || {}) as Record<string, string>;
+      const serviceName = Object.keys(serviceScopeMapping).find(key => 
+        key === selectedServiceType || 
+        serviceScopeMapping[key]?.includes(selectedServiceType)
+      ) || selectedServiceType;
+      firstSectionText = firstSectionText.replace(/\{\{serviceType\}\}/g, serviceName);
+      
+      // החלפת דפוסים באמצעות הפונקציות החדשות
+      firstSectionText = replaceFeeAgreementTemplateTextWithGender(firstSectionText, clientsGender);
+      
+      // הגנה על ביטויים
+      firstSectionText = firstSectionText.replace(/\bעד\s+(?!עד[הא]|עדי|עדות|עדים|עדה)/g, 'עד-ל ');
+      firstSectionText = firstSectionText.replace(/עורך הדין\s+(?=לא|תישא|יישא|ישא|אינו|יהיה)/g, '__LAWYER_VERB__');
+      firstSectionText = firstSectionText.replace(/מינוי אפוטרופוס/g, '__APOTROPS__');
+      
+      const lawyerPlaceholders: { [key: string]: string } = {};
+      let lawyerPlaceholderIndex = 0;
+      firstSectionText = firstSectionText.replace(/עורך הדין/g, (match: string) => {
+        const placeholder = `__LAWYER_${lawyerPlaceholderIndex}__`;
+        lawyerPlaceholders[placeholder] = match;
+        lawyerPlaceholderIndex++;
+        return placeholder;
+      });
+      
+      firstSectionText = replaceTextWithGender(firstSectionText, clientsGender);
+      
+      Object.keys(lawyerPlaceholders).forEach(placeholder => {
+        firstSectionText = firstSectionText.replace(new RegExp(placeholder, 'g'), lawyerPlaceholders[placeholder]);
+      });
+      
+      firstSectionText = firstSectionText.replace(/עד-ל\s+/g, 'עד ');
+      firstSectionText = firstSectionText.replace(/__LAWYER_VERB__/g, 'עורך הדין ');
+      firstSectionText = firstSectionText.replace(/__APOTROPS__/g, 'מינוי אפוטרופוס');
+      firstSectionText = firstSectionText.replace(/עדה\s+(ה'|ל|שני|סיום|יום|לקבלת|מיצוי|מועד)/g, 'עד $1');
+      firstSectionText = firstSectionText.replace(/בימים א' עדה ה'/g, "בימים א' עד ה'");
+      firstSectionText = firstSectionText.replace(/בבקשה עדה/g, 'בבקשה עד');
+      firstSectionText = firstSectionText.replace(/עורך הדין תישא/g, 'עורך הדין יישא');
+      firstSectionText = firstSectionText.replace(/עורך הדין לא תישא/g, 'עורך הדין לא יישא');
+      firstSectionText = firstSectionText.replace(/עורך הדין אינו נושא ולא תישא/g, 'עורך הדין אינו נושא ולא יישא');
+      firstSectionText = firstSectionText.replace(/עורך הדין יהיה זכאית/g, 'עורך הדין יהיה זכאי');
+      firstSectionText = firstSectionText.replace(/עורך הדין והמשרד תישא/g, 'עורך הדין והמשרד יישאו');
+      firstSectionText = firstSectionText.replace(/מינוי אפוטרופסית/g, 'מינוי אפוטרופוס');
+      firstSectionText = firstSectionText.replace(/עורך הדין רשאית/g, 'עורך הדין רשאי');
+      firstSectionText = firstSectionText.replace(/שכרה הטרחה/g, 'שכר הטרחה');
+      firstSectionText = firstSectionText.replace(/שכרה טרחה/g, 'שכר טרחה');
+      firstSectionText = firstSectionText.replace(/שכרה טרחת/g, 'שכר טרחת');
+      firstSectionText = firstSectionText.replace(/שנייה הצדדים/g, 'הצדדים');
+      firstSectionText = firstSectionText.replace(/הצד המקבלת/g, 'הצד המקבל');
+      
+      // עדכון הסעיף הראשון
+      setCustomSections(prev => prev.map(s => 
+        s.id === 'first-section-fixed' 
+          ? { ...s, content: firstSectionText }
+          : s
+      ));
+    }
+  }, [agreementData.case?.subject, selectedServiceType, agreementData.clients]);
 
 
   const updateTerms = (field: keyof typeof agreementData.terms, value: string) => {
