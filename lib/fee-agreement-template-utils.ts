@@ -98,14 +98,23 @@ export function replaceClientPrefixes(text: string, gender: Gender): string {
   }
   
   // החלפת כל השילובים עם תחיליות
-  const prefixes = ['ה', 'ל', 'של ה', 'את ה', 'עם ה', 'על ה', 'מ', 'ב', 'כ'];
+  // נשתמש ב-regex literal במקום RegExp constructor כדי להימנע מבעיות escape
+  const patterns = [
+    { pattern: /ה\{\{לקוח\}\}/g, replacement: `ה${clientWord}` },
+    { pattern: /ל\{\{לקוח\}\}/g, replacement: `ל${clientWord}` },
+    { pattern: /של ה\{\{לקוח\}\}/g, replacement: `של ה${clientWord}` },
+    { pattern: /את ה\{\{לקוח\}\}/g, replacement: `את ה${clientWord}` },
+    { pattern: /עם ה\{\{לקוח\}\}/g, replacement: `עם ה${clientWord}` },
+    { pattern: /על ה\{\{לקוח\}\}/g, replacement: `על ה${clientWord}` },
+    { pattern: /מ\{\{לקוח\}\}/g, replacement: `מ${clientWord}` },
+    { pattern: /ב\{\{לקוח\}\}/g, replacement: `ב${clientWord}` },
+    { pattern: /כ\{\{לקוח\}\}/g, replacement: `כ${clientWord}` }
+  ];
   
   let result = text;
   
-  prefixes.forEach(prefix => {
-    // יצירת regex שמחפש את התבנית עם התחילית
-    const pattern = new RegExp(`${prefix}\\{\\{לקוח\\}\\}`, 'g');
-    result = result.replace(pattern, `${prefix}${clientWord}`);
+  patterns.forEach(({ pattern, replacement }) => {
+    result = result.replace(pattern, replacement);
   });
   
   return result;

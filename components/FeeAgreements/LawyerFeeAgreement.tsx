@@ -1734,19 +1734,6 @@ export default function LawyerFeeAgreement() {
               let clauseTitle = clause.title || '';
               if (clauseTitle) {
                 clauseTitle = replaceFeeAgreementTemplateTextWithGender(clauseTitle, clientsGender);
-                // תיקון נוסף לוודא שהכותרת מתעדכנת נכון
-                clauseTitle = clauseTitle.replace(/ה\{\{לקוח\}\}/g, (match: string) => {
-                  switch (clientsGender) {
-                    case 'male':
-                      return 'הלקוח';
-                    case 'female':
-                      return 'הלקוחה';
-                    case 'plural':
-                      return 'הלקוחות';
-                    default:
-                      return 'הלקוח';
-                  }
-                });
               }
               
               const mainSectionId = `gen_${clause.id || orderCounter}`;
