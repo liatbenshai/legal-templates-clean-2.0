@@ -1447,10 +1447,13 @@ export default function LawyerFeeAgreement() {
         serviceScopeMapping[key]?.includes(selectedServiceType)
       ) || selectedServiceType;
       
+      // קבלת תיאור השירות המלא מ-serviceScopeMapping
+      const serviceDescription = serviceScopeMapping[serviceName] || serviceName;
+      
       setAgreementData(prev => ({
         ...prev,
         case: {
-          subject: serviceName
+          subject: serviceDescription
         }
       }));
 
@@ -1462,8 +1465,9 @@ export default function LawyerFeeAgreement() {
       let firstSectionText = firstSectionTemplate;
       
       // החלפת משתנים - קודם כל המשתנים הספציפיים
-      firstSectionText = firstSectionText.replace(/\{\{תיאור העניין\}\}/g, agreementData.case?.subject || serviceName || '[תיאור העניין]');
-      firstSectionText = firstSectionText.replace(/\{\{תיאור השירותים\}\}/g, agreementData.case?.subject || serviceName || '[תיאור השירותים]');
+      // משתמשים ב-serviceDescription (התיאור המלא) במקום serviceName (המפתח)
+      firstSectionText = firstSectionText.replace(/\{\{תיאור העניין\}\}/g, agreementData.case?.subject || serviceDescription || '[תיאור העניין]');
+      firstSectionText = firstSectionText.replace(/\{\{תיאור השירותים\}\}/g, agreementData.case?.subject || serviceDescription || '[תיאור השירותים]');
       firstSectionText = firstSectionText.replace(/\{\{serviceType\}\}/g, serviceName);
       
       // החלפת דפוסים באמצעות הפונקציות החדשות (מטפלת בכפילות ה')
@@ -1486,8 +1490,15 @@ export default function LawyerFeeAgreement() {
         return placeholder;
       });
       
+      // הגנה על "שני" בביטוי "שני הצדדים" - לפני החלפת מגדר
+      // כי replaceTextWithGender מחליף "שני" ל"שנייה" במגדר נקבה
+      firstSectionText = firstSectionText.replace(/שני הצדדים/g, '__TWO_PARTIES_BEFORE__');
+      
       // החלפת מגדר (רק על הטקסט שלא מוגן)
       firstSectionText = replaceTextWithGender(firstSectionText, clientsGender);
+      
+      // החזרת "שני הצדדים" אחרי החלפת מגדר
+      firstSectionText = firstSectionText.replace(/__TWO_PARTIES_BEFORE__/g, 'הצדדים');
       
       // החזרת "עורך הדין"
       Object.keys(lawyerPlaceholders).forEach(placeholder => {
@@ -1612,7 +1623,8 @@ export default function LawyerFeeAgreement() {
               });
               
               // הגן על "שני הצדדים" שלא ישתנה ל"שנייה הצדדים"
-              clauseText = clauseText.replace(/\bשני הצדדים\b/g, (match: string) => {
+              // צריך להגן על זה לפני החלפת מגדר כי "שני" יכול להפוך ל"שנייה"
+              clauseText = clauseText.replace(/שני הצדדים/g, (match: string) => {
                 const placeholder = `__TWO_PARTIES_${protectedIndex}__`;
                 protectedPhrases[placeholder] = 'הצדדים';
                 protectedIndex++;
@@ -1677,8 +1689,15 @@ export default function LawyerFeeAgreement() {
               // הגנה על "מינוי אפוטרופוס" שלא ישתנה ל"מינוי אפוטרופסית"
               clauseText = clauseText.replace(/מינוי אפוטרופוס/g, '__APOTROPS__');
               
+              // הגנה על "שני" בביטוי "שני הצדדים" - לפני החלפת מגדר
+              // כי replaceTextWithGender מחליף "שני" ל"שנייה" במגדר נקבה
+              clauseText = clauseText.replace(/שני הצדדים/g, '__TWO_PARTIES_BEFORE__');
+              
               // החלפת מגדר (רק על הטקסט שלא מוגן)
               clauseText = replaceTextWithGender(clauseText, clientsGender);
+              
+              // החזרת "שני הצדדים" אחרי החלפת מגדר
+              clauseText = clauseText.replace(/__TWO_PARTIES_BEFORE__/g, 'הצדדים');
               
               // החזרת הביטויים המוגנים
               clauseText = clauseText.replace(/עד-ל\s+/g, 'עד ');
