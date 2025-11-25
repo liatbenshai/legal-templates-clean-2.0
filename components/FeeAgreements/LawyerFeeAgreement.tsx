@@ -1460,21 +1460,14 @@ export default function LawyerFeeAgreement() {
       const multipleClients = agreementData.clients.length > 1;
       
       let firstSectionText = firstSectionTemplate;
-      firstSectionText = firstSectionText.replace(/\{\{multipleClients:([^|]+)\|([^|]+)\|([^}]+)\}\}/g, (_match: string, pluralText: string, maleText: string, femaleText: string) => {
-        if (multipleClients) return pluralText;
-        return clientsGender === 'female' ? femaleText : maleText;
-      });
+      
+      // החלפת משתנים - קודם כל המשתנים הספציפיים
+      firstSectionText = firstSectionText.replace(/\{\{תיאור העניין\}\}/g, agreementData.case?.subject || serviceName || '[תיאור העניין]');
+      firstSectionText = firstSectionText.replace(/\{\{תיאור השירותים\}\}/g, agreementData.case?.subject || serviceName || '[תיאור השירותים]');
       firstSectionText = firstSectionText.replace(/\{\{serviceType\}\}/g, serviceName);
       
-      // החלפת מגדר
-      firstSectionText = firstSectionText.replace(/\{\{gender:([^|]+)\|([^|]+)\|([^}]+)\}\}/g, (match, male, female, plural) => {
-        switch (clientsGender) {
-          case 'male': return male;
-          case 'female': return female;
-          case 'plural': return plural;
-          default: return male;
-        }
-      });
+      // החלפת דפוסים באמצעות הפונקציות החדשות (מטפלת בכפילות ה')
+      firstSectionText = replaceFeeAgreementTemplateTextWithGender(firstSectionText, clientsGender);
       
       // הגנה על "עד" שלא ישתנה ל"עדה" - גם כשהוא לא לפני "ל"
       firstSectionText = firstSectionText.replace(/\bעד\s+(?!עד[הא]|עדי|עדות|עדים|עדה)/g, 'עד-ל ');
@@ -1482,7 +1475,24 @@ export default function LawyerFeeAgreement() {
       firstSectionText = firstSectionText.replace(/עורך הדין\s+(?=לא|תישא|יישא|ישא|אינו|יהיה)/g, '__LAWYER_VERB__');
       // הגנה על "מינוי אפוטרופוס" שלא ישתנה ל"מינוי אפוטרופסית"
       firstSectionText = firstSectionText.replace(/מינוי אפוטרופוס/g, '__APOTROPS__');
+      
+      // הגנה על "עורך הדין" לפני החלפת מגדר
+      const lawyerPlaceholders: { [key: string]: string } = {};
+      let lawyerPlaceholderIndex = 0;
+      firstSectionText = firstSectionText.replace(/עורך הדין/g, (match: string) => {
+        const placeholder = `__LAWYER_${lawyerPlaceholderIndex}__`;
+        lawyerPlaceholders[placeholder] = match;
+        lawyerPlaceholderIndex++;
+        return placeholder;
+      });
+      
+      // החלפת מגדר (רק על הטקסט שלא מוגן)
       firstSectionText = replaceTextWithGender(firstSectionText, clientsGender);
+      
+      // החזרת "עורך הדין"
+      Object.keys(lawyerPlaceholders).forEach(placeholder => {
+        firstSectionText = firstSectionText.replace(new RegExp(placeholder, 'g'), lawyerPlaceholders[placeholder]);
+      });
       firstSectionText = firstSectionText.replace(/עד-ל\s+/g, 'עד ');
       firstSectionText = firstSectionText.replace(/__LAWYER_VERB__/g, 'עורך הדין ');
       firstSectionText = firstSectionText.replace(/__APOTROPS__/g, 'מינוי אפוטרופוס');
@@ -1518,13 +1528,13 @@ export default function LawyerFeeAgreement() {
       
       let orderCounter = 1000; // התחלה גבוהה כדי שיהיו אחרי הסעיפים ההיררכיים
       
-      // סדר הקטגוריות
+      // סדר הקטגוריות - לפי הסדר הנכון של הסעיפים
       const categoryOrder = [
-        'ביטול_והפסקת_ייצוג',
-        'התחייבויות_הלקוח',
         'התחייבויות_עורך_הדין',
+        'התחייבויות_הלקוח',
         'הוצאות_נוספות',
         'תשלומים',
+        'ביטול_והפסקת_ייצוג',
         'סודיות',
         'ניגוד_עניינים',
         'תקשורת',
@@ -1548,7 +1558,7 @@ export default function LawyerFeeAgreement() {
               const protectedPhrases: { [key: string]: string } = {};
               let protectedIndex = 0;
               
-              // הגן על "עורך הדין" וכל מה שקשור אליו
+              // הגן על "עורך הדין" וכל מה שקשור אליו - לפני החלפת מגדר
               clauseText = clauseText.replace(/עורך הדין/g, (match: string) => {
                 const placeholder = `__LAWYER_${protectedIndex}__`;
                 protectedPhrases[placeholder] = match;
@@ -1610,13 +1620,13 @@ export default function LawyerFeeAgreement() {
               // הגן על "עד" בביטוי "בימים א' עד ה'"
               clauseText = clauseText.replace(/בימים א' עד ה'/g, '__DAYS_UNTIL__');
               
-              // הגן על "עורך הדין" שלא ישתנה ל"עורך הדין תישא" או "יישאו"
-              clauseText = clauseText.replace(/עורך הדין\s+(?=לא|תישא|יישא|ישא|יישאו|אינו|יהיה)/g, '__LAWYER_VERB__');
+              // הגן על "עורך הדין" שלא ישתנה ל"עורך הדין תישא" או "יישאו" - לפני החלפת מגדר
+              // (ההגנה הזו תתבצע אחרי החזרת ה-placeholders)
               
               // הגנה על "מינוי אפוטרופוס" שלא ישתנה ל"מינוי אפוטרופסית"
               clauseText = clauseText.replace(/מינוי אפוטרופוס/g, '__APOTROPS__');
               
-              // החלפת מגדר
+              // החלפת מגדר (רק על הטקסט שלא מוגן)
               clauseText = replaceTextWithGender(clauseText, clientsGender);
               
               // החזרת הביטויים המוגנים
@@ -1664,10 +1674,16 @@ export default function LawyerFeeAgreement() {
               clauseText = clauseText.replace(/עדה\s+(ה'|ל|שני|סיום|יום|לקבלת|מיצוי)/g, 'עד $1');
               clauseText = clauseText.replace(/בימים א' עדה ה'/g, "בימים א' עד ה'");
               
+              // עיבוד הכותרת גם כן
+              let clauseTitle = clause.title || '';
+              if (clauseTitle) {
+                clauseTitle = replaceFeeAgreementTemplateTextWithGender(clauseTitle, clientsGender);
+              }
+              
               const mainSectionId = `gen_${clause.id || orderCounter}`;
               generalSections.push({
                 id: mainSectionId,
-                title: clause.title || '',
+                title: clauseTitle,
                 content: clauseText,
                 level: 'main' as const,
                 order: orderCounter++
@@ -2034,13 +2050,13 @@ export default function LawyerFeeAgreement() {
       
       let orderCounter = 10000; // התחלה גבוהה מאוד כדי שיהיו אחרי כל הסעיפים
       
-      // סדר הקטגוריות
+      // סדר הקטגוריות - לפי הסדר הנכון של הסעיפים
       const categoryOrder = [
-        'ביטול_והפסקת_ייצוג',
-        'התחייבויות_הלקוח',
         'התחייבויות_עורך_הדין',
+        'התחייבויות_הלקוח',
         'הוצאות_נוספות',
         'תשלומים',
+        'ביטול_והפסקת_ייצוג',
         'סודיות',
         'ניגוד_עניינים',
         'תקשורת',
