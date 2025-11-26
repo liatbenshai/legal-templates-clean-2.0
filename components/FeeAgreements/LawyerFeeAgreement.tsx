@@ -1022,12 +1022,15 @@ export default function LawyerFeeAgreement() {
       
       // עיבוד תוכן הסעיף הראשי עם החלפת מגדר
       let mainContent = selectedMainSection.content || '';
+      // קודם נחליף את משתני ההסכם ({{לקוח}}, {{gender:...}}) - כולל ה{{לקוח}}
+      mainContent = replaceFeeAgreementTemplateTextWithGender(mainContent, clientsGender);
       // הגנה על "עד" שלא ישתנה ל"עדה"
       mainContent = mainContent.replace(/\bעד\s+(?!עד[הא]|עדי|עדות|עדים|עדה)/g, 'עד-ל ');
       // הגנה על "עורך הדין" שלא ישתנה ל"עורך הדין תישא"
       mainContent = mainContent.replace(/עורך הדין\s+(?=לא|תישא|יישא|ישא|אינו|יהיה)/g, '__LAWYER_VERB__');
       // הגנה על "מינוי אפוטרופוס" שלא ישתנה ל"מינוי אפוטרופסית"
       mainContent = mainContent.replace(/מינוי אפוטרופוס/g, '__APOTROPS__');
+      // עכשיו נחליף גם מגדר כללי לפעלים ומילים אחרות
       mainContent = replaceTextWithGender(mainContent, clientsGender);
       mainContent = mainContent.replace(/עד-ל\s+/g, 'עד ');
       mainContent = mainContent.replace(/__LAWYER_VERB__/g, 'עורך הדין ');
@@ -1072,12 +1075,15 @@ export default function LawyerFeeAgreement() {
         
         // עיבוד תוכן תת-סעיף עם החלפת מגדר
         let subContent = sub.content || '';
+        // קודם נחליף את משתני ההסכם ({{לקוח}}, {{gender:...}}) - כולל ה{{לקוח}}
+        subContent = replaceFeeAgreementTemplateTextWithGender(subContent, clientsGender);
         // הגנה על "עד" שלא ישתנה ל"עדה"
         subContent = subContent.replace(/\bעד\s+(?!עד[הא]|עדי|עדות|עדים|עדה)/g, 'עד-ל ');
         // הגנה על "עורך הדין" שלא ישתנה ל"עורך הדין תישא"
         subContent = subContent.replace(/עורך הדין\s+(?=לא|תישא|יישא|ישא|אינו|יהיה)/g, '__LAWYER_VERB__');
         // הגנה על "מינוי אפוטרופוס" שלא ישתנה ל"מינוי אפוטרופסית"
         subContent = subContent.replace(/מינוי אפוטרופוס/g, '__APOTROPS__');
+        // עכשיו נחליף גם מגדר כללי לפעלים ומילים אחרות
         subContent = replaceTextWithGender(subContent, clientsGender);
         subContent = subContent.replace(/עד-ל\s+/g, 'עד ');
         subContent = subContent.replace(/__LAWYER_VERB__/g, 'עורך הדין ');
@@ -1109,12 +1115,15 @@ export default function LawyerFeeAgreement() {
         subSubSections.forEach((subSub: any) => {
           // עיבוד תוכן תת-תת-סעיף עם החלפת מגדר
           let subSubContent = subSub.content || '';
+          // קודם נחליף את משתני ההסכם ({{לקוח}}, {{gender:...}}) - כולל ה{{לקוח}}
+          subSubContent = replaceFeeAgreementTemplateTextWithGender(subSubContent, clientsGender);
           // הגנה על "עד" שלא ישתנה ל"עדה"
           subSubContent = subSubContent.replace(/\bעד\s+(?!עד[הא]|עדי|עדות|עדים|עדה)/g, 'עד-ל ');
           // הגנה על "עורך הדין" שלא ישתנה ל"עורך הדין תישא"
           subSubContent = subSubContent.replace(/עורך הדין\s+(?=לא|תישא|יישא|ישא|אינו|יהיה)/g, '__LAWYER_VERB__');
           // הגנה על "מינוי אפוטרופוס" שלא ישתנה ל"מינוי אפוטרופסית"
           subSubContent = subSubContent.replace(/מינוי אפוטרופוס/g, '__APOTROPS__');
+          // עכשיו נחליף גם מגדר כללי לפעלים ומילים אחרות
           subSubContent = replaceTextWithGender(subSubContent, clientsGender);
           subSubContent = subSubContent.replace(/עד-ל\s+/g, 'עד ');
           subSubContent = subSubContent.replace(/__LAWYER_VERB__/g, 'עורך הדין ');
