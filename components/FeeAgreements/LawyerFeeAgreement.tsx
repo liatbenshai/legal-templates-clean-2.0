@@ -2857,10 +2857,13 @@ export default function LawyerFeeAgreement() {
     const clientGender = agreementData.clients.length === 1 ? 
       agreementData.clients[0].gender : 'plural';
     
-    const genderedContent = replaceTextWithGender(
+    // השתמש ב-replaceFeeAgreementTemplateTextWithGender כדי להחליף גם את ה{{לקוח}}
+    let genderedContent = replaceFeeAgreementTemplateTextWithGender(
       warehouseSection.content,
       clientGender
     );
+    // עכשיו נחליף גם מגדר כללי לפעלים ומילים אחרות
+    genderedContent = replaceTextWithGender(genderedContent, clientGender);
     
     // החלפת משתנים בטקסט
     const contentWithVariables = replaceVariablesInText(genderedContent);
