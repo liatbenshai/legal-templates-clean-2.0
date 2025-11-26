@@ -757,7 +757,6 @@ export default function ProfessionalFeeAgreementExporter({
 
       // יצירת הואילים מה-JSON (אם קיים) או טקסט ברירת מחדל
       const clientGenderText = getGenderText('הלקוח', 'הלקוחה', 'הלקוחות');
-      const serviceDescription = agreementData.case?.subject || 'שירות משפטי';
       
       // נסה לטעון מה-JSON
       const preamble = feeAgreementTemplates.preamble;
