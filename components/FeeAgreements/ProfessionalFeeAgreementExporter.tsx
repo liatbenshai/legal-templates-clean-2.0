@@ -280,10 +280,24 @@ export default function ProfessionalFeeAgreementExporter({
       const clientsGender = getClientsGender();
       
       // הכנת הסעיף הראשון - תיאור השירות עם היקף השירותים האוטומטי
-      const serviceName = agreementData.case?.subject || '';
       const serviceScopeMapping = (feeAgreementTemplates.preamble?.serviceScopeMapping || {}) as Record<string, string>;
-      const serviceScope = (serviceScopeMapping[serviceName] || 'שירות משפטי לפי הצורך') as string;
+      const serviceDescription = agreementData.case?.subject || '';
       const multipleClients = (agreementData.clients?.length || 0) > 1;
+      
+      // מצא את המפתח ב-serviceScopeMapping שמתאים לערך (serviceDescription)
+      // או השתמש ב-selectedServiceType אם קיים
+      let serviceName = '';
+      if (agreementData.selectedServiceType) {
+        serviceName = agreementData.selectedServiceType;
+      } else {
+        // נסה למצוא את המפתח שמתאים לערך
+        serviceName = Object.keys(serviceScopeMapping).find(key => 
+          serviceScopeMapping[key] === serviceDescription || key === serviceDescription
+        ) || serviceDescription;
+      }
+      
+      // קבל את תיאור השירות המלא - אם serviceName הוא מפתח, קח את הערך, אחרת קח את serviceDescription
+      const serviceScope = serviceScopeMapping[serviceName] || serviceDescription || 'שירות משפטי לפי הצורך';
       
       // צור את הסעיף הראשון החדש
       const firstSectionTemplate = feeAgreementTemplates.preamble?.firstSection?.text || 
@@ -294,7 +308,10 @@ export default function ProfessionalFeeAgreementExporter({
         if (multipleClients) return pluralText;
         return clientsGender === 'female' ? femaleText : maleText;
       });
-      firstSectionText = firstSectionText.replace(/\{\{serviceType\}\}/g, serviceName || '[תיאור השירות המשפטי]');
+      // החלף את {{תיאור העניין}} ו-{{תיאור השירותים}} ב-serviceDescription
+      firstSectionText = firstSectionText.replace(/\{\{תיאור העניין\}\}/g, serviceDescription || '[תיאור העניין]');
+      firstSectionText = firstSectionText.replace(/\{\{תיאור השירותים\}\}/g, serviceDescription || '[תיאור השירותים]');
+      firstSectionText = firstSectionText.replace(/\{\{serviceType\}\}/g, serviceName || serviceDescription || '[תיאור השירות המשפטי]');
       firstSectionText = firstSectionText.replace(/\{\{serviceScope\}\}/g, serviceScope);
       
       // הגנה על "עורך הדין" וכל מה שקשור אליו - נשמור אותו כזכר תמיד
@@ -337,8 +354,8 @@ export default function ProfessionalFeeAgreementExporter({
         /\bשאינו נכלל\b/g,  // שאינו נכלל (לא שאינו נכללה)
         /\bשכר טרחה\b/g,  // שכר טרחה (לא שכרה טרחה)
         /\bשכר הטרחה\b/g,  // שכר הטרחה (לא שכרה הטרחה)
-        /\bשכר הטרחה\b/g,  // שכר הטרחה (לא שכרו הטרחה)
-        /\bשכר הטרחה\b/g,  // שכר טרחה (לא שכרו טרחה)
+        /\bהצד המקבל\b/g,  // הצד המקבל (לא הצד המקבלת)
+        /\bהבא\b/g,  // הבא (תמיד זכר, לא הבאה)
         /\bמינוי אפוטרופוס\b/g,  // מינוי אפוטרופוס
         /\bבמלואו\b/g,  // במלואו (לא באופן מלאה)
         /\bמלאים\b/g,  // מלאים (תמיד "מלא")
@@ -359,6 +376,8 @@ export default function ProfessionalFeeAgreementExporter({
       
       // הגנה על "עורך הדין" שלא ישתנה ל"יישאו" - תמיד "יישא"
       firstSectionText = firstSectionText.replace(/עורך הדין\s+(?=לא|תישא|יישא|ישא|יישאו|אינו|יהיה)/g, '__LAWYER_VERB__');
+      // הגנה על "עורך הדין רשאי" שלא ישתנה ל"רשאית"
+      firstSectionText = firstSectionText.replace(/__LAWYER_PLACEHOLDER__\s+רשאי/g, '__LAWYER_CAN__');
       
       // הגנה על "בימים א' עד ה'" שלא ישתנה
       firstSectionText = firstSectionText.replace(/בימים א' עד ה'/g, '__DAYS_UNTIL__');
@@ -384,6 +403,7 @@ export default function ProfessionalFeeAgreementExporter({
       Object.keys(lawyerPhrases).forEach(placeholder => {
         firstSectionText = firstSectionText.replace(new RegExp(placeholder, 'g'), lawyerPhrases[placeholder]);
       });
+      firstSectionText = firstSectionText.replace(/__LAWYER_CAN__/g, 'עורך הדין רשאי');
       firstSectionText = firstSectionText.replace(/__LAWYER_PLACEHOLDER__/g, 'עורך הדין');
       firstSectionText = firstSectionText.replace(/__LAWYER_NO_HEY__/g, 'עורך דין');
       
@@ -399,12 +419,16 @@ export default function ProfessionalFeeAgreementExporter({
       firstSectionText = firstSectionText.replace(/עורך דין בעלת/g, 'עורך דין בעל');
       firstSectionText = firstSectionText.replace(/היא עורך דין/g, 'הוא עורך דין');
       firstSectionText = firstSectionText.replace(/שירותיה של עורך הדין/g, 'שירותיו של עורך הדין');
+      firstSectionText = firstSectionText.replace(/עורך הדין רשאית/g, 'עורך הדין רשאי');
       
       // תיקון מילים שצריכות להישאר ללא שינוי
       firstSectionText = firstSectionText.replace(/מידע מלאה/g, 'מידע מלא');
       firstSectionText = firstSectionText.replace(/שאינו נכללה/g, 'שאינו נכלל');
       firstSectionText = firstSectionText.replace(/שכרה טרחה/g, 'שכר טרחה');
       firstSectionText = firstSectionText.replace(/שכרה הטרחה/g, 'שכר הטרחה');
+      firstSectionText = firstSectionText.replace(/הצד המקבלת/g, 'הצד המקבל');
+      firstSectionText = firstSectionText.replace(/הבאה/g, 'הבא');
+      firstSectionText = firstSectionText.replace(/שלאחר משלוחה/g, 'הבא');
       firstSectionText = firstSectionText.replace(/מינוי אפוטרופסית/g, 'מינוי אפוטרופוס');
       firstSectionText = firstSectionText.replace(/באופן מלאה/g, 'באופן מלא');
       firstSectionText = firstSectionText.replace(/במלואה/g, 'במלואו');
@@ -421,6 +445,7 @@ export default function ProfessionalFeeAgreementExporter({
       firstSectionText = firstSectionText.replace(/עורך הדין אינו נושא ולא תישא/g, 'עורך הדין אינו נושא ולא יישא');
       firstSectionText = firstSectionText.replace(/עורך הדין והמשרד תישא/g, 'עורך הדין והמשרד יישאו');
       firstSectionText = firstSectionText.replace(/עורך הדין יישאו/g, 'עורך הדין יישא');
+      firstSectionText = firstSectionText.replace(/עורך הדין רשאית/g, 'עורך הדין רשאי');
       firstSectionText = firstSectionText.replace(/מינוי אפוטרופסית/g, 'מינוי אפוטרופוס');
       
       // פונקציה ליצירת פסקאות מסעיף עם המספור הנכון
@@ -472,6 +497,13 @@ export default function ProfessionalFeeAgreementExporter({
           const withGenderVars = applyGenderToText(content);
           // הגנה על "מלאים" שלא ישתנה
           let protectedContent = withGenderVars.replace(/\bמלאים\b/g, '__FULL_MAS_PLURAL__');
+          // הגנה על "שכר טרחה" ו"שכר הטרחה" שלא ישתנו למגדר
+          protectedContent = protectedContent.replace(/\bשכר טרחה\b/g, '__FEE__');
+          protectedContent = protectedContent.replace(/\bשכר הטרחה\b/g, '__FEE_THE__');
+          // הגנה על "הצד המקבל" שלא ישתנה
+          protectedContent = protectedContent.replace(/\bהצד המקבל\b/g, '__RECEIVING_PARTY__');
+          // הגנה על "הבא" שלא ישתנה
+          protectedContent = protectedContent.replace(/\bהבא\b/g, '__NEXT__');
           // הגנה על "עד" שלא ישתנה ל"עדה"
           protectedContent = protectedContent.replace(/\bעד\s+(?!עד[הא]|עדי|עדות|עדים|עדה)/g, 'עד-ל ');
           // הגנה על "בימים א' עד ה'" שלא ישתנה
@@ -488,6 +520,10 @@ export default function ProfessionalFeeAgreementExporter({
           withFullGender = withFullGender.replace(/__APOTROPS__/g, 'מינוי אפוטרופוס');
           withFullGender = withFullGender.replace(/__DAYS_UNTIL__/g, "בימים א' עד ה'");
           withFullGender = withFullGender.replace(/__FULL_MAS_PLURAL__/g, 'מלא');
+          withFullGender = withFullGender.replace(/__FEE__/g, 'שכר טרחה');
+          withFullGender = withFullGender.replace(/__FEE_THE__/g, 'שכר הטרחה');
+          withFullGender = withFullGender.replace(/__RECEIVING_PARTY__/g, 'הצד המקבל');
+          withFullGender = withFullGender.replace(/__NEXT__/g, 'הבא');
           // תיקונים נוספים
           withFullGender = withFullGender.replace(/עדה\s+(ה'|ל|שני|סיום|יום|לקבלת|מיצוי|מועד|בין)/g, 'עד $1');
           withFullGender = withFullGender.replace(/בימים א' עדה ה'/g, "בימים א' עד ה'");
@@ -502,6 +538,11 @@ export default function ProfessionalFeeAgreementExporter({
           withFullGender = withFullGender.replace(/עורך הדין והמשרד תישא/g, 'עורך הדין והמשרד יישאו');
           withFullGender = withFullGender.replace(/עורך הדין יישאו/g, 'עורך הדין יישא');
           withFullGender = withFullGender.replace(/עורך הדין יהיה זכאית/g, 'עורך הדין יהיה זכאי');
+          withFullGender = withFullGender.replace(/עורך הדין רשאית/g, 'עורך הדין רשאי');
+          withFullGender = withFullGender.replace(/שכרה טרחה/g, 'שכר טרחה');
+          withFullGender = withFullGender.replace(/שכרה הטרחה/g, 'שכר הטרחה');
+          withFullGender = withFullGender.replace(/הצד המקבלת/g, 'הצד המקבל');
+          withFullGender = withFullGender.replace(/הבאה/g, 'הבא');
           withFullGender = withFullGender.replace(/מינוי אפוטרופסית/g, 'מינוי אפוטרופוס');
           withFullGender = withFullGender.replace(/מלאה, שלמה/g, 'מלא, שלם');
           withFullGender = withFullGender.replace(/מלאה.*שלמה/g, 'מלא, שלם');
@@ -544,8 +585,15 @@ export default function ProfessionalFeeAgreementExporter({
               const subContent = subSection.text || subSection.content || '';
               // שלב 1: החלפת משתני מגדר מיוחדים
               const withGenderVars = applyGenderToText(subContent);
+              // הגנה על "שכר טרחה" ו"שכר הטרחה" שלא ישתנו למגדר
+              let protectedSubContent = withGenderVars.replace(/\bשכר טרחה\b/g, '__FEE__');
+              protectedSubContent = protectedSubContent.replace(/\bשכר הטרחה\b/g, '__FEE_THE__');
+              // הגנה על "הצד המקבל" שלא ישתנה
+              protectedSubContent = protectedSubContent.replace(/\bהצד המקבל\b/g, '__RECEIVING_PARTY__');
+              // הגנה על "הבא" שלא ישתנה
+              protectedSubContent = protectedSubContent.replace(/\bהבא\b/g, '__NEXT__');
               // הגנה על "עד" שלא ישתנה ל"עדה"
-              let protectedSubContent = withGenderVars.replace(/\bעד\s+(?!עד[הא]|עדי|עדות|עדים|עדה)/g, 'עד-ל ');
+              protectedSubContent = protectedSubContent.replace(/\bעד\s+(?!עד[הא]|עדי|עדות|עדים|עדה)/g, 'עד-ל ');
               // הגנה על "עורך הדין" שלא ישתנה ל"עורך הדין תישא"
               protectedSubContent = protectedSubContent.replace(/עורך הדין\s+(?=לא|תישא|יישא|ישא|אינו|יהיה)/g, '__LAWYER_VERB__');
               // הגנה על "מינוי אפוטרופוס" שלא ישתנה ל"מינוי אפוטרופסית"
@@ -556,6 +604,10 @@ export default function ProfessionalFeeAgreementExporter({
               withFullGender = withFullGender.replace(/עד-ל\s+/g, 'עד ');
               withFullGender = withFullGender.replace(/__LAWYER_VERB__/g, 'עורך הדין ');
               withFullGender = withFullGender.replace(/__APOTROPS__/g, 'מינוי אפוטרופוס');
+              withFullGender = withFullGender.replace(/__FEE__/g, 'שכר טרחה');
+              withFullGender = withFullGender.replace(/__FEE_THE__/g, 'שכר הטרחה');
+              withFullGender = withFullGender.replace(/__RECEIVING_PARTY__/g, 'הצד המקבל');
+              withFullGender = withFullGender.replace(/__NEXT__/g, 'הבא');
               // תיקונים נוספים
               withFullGender = withFullGender.replace(/עדה\s+(ה'|ל|שני|סיום|יום|לקבלת|מיצוי|מועד|בין)/g, 'עד $1');
               withFullGender = withFullGender.replace(/בימים א' עדה ה'/g, "בימים א' עד ה'");
@@ -566,6 +618,12 @@ export default function ProfessionalFeeAgreementExporter({
               withFullGender = withFullGender.replace(/עורך הדין אינו נושא ולא תישא/g, 'עורך הדין אינו נושא ולא יישא');
               withFullGender = withFullGender.replace(/עורך הדין והמשרד תישא/g, 'עורך הדין והמשרד יישאו');
               withFullGender = withFullGender.replace(/עורך הדין יהיה זכאית/g, 'עורך הדין יהיה זכאי');
+              withFullGender = withFullGender.replace(/עורך הדין רשאית/g, 'עורך הדין רשאי');
+              withFullGender = withFullGender.replace(/שכרה טרחה/g, 'שכר טרחה');
+              withFullGender = withFullGender.replace(/שכרה הטרחה/g, 'שכר הטרחה');
+              withFullGender = withFullGender.replace(/הצד המקבלת/g, 'הצד המקבל');
+              withFullGender = withFullGender.replace(/הבאה/g, 'הבא');
+              withFullGender = withFullGender.replace(/שלאחר משלוחה/g, 'הבא');
               withFullGender = withFullGender.replace(/מינוי אפוטרופסית/g, 'מינוי אפוטרופוס');
               withFullGender = withFullGender.replace(/מלאה, שלמה/g, 'מלא, שלם');
               withFullGender = withFullGender.replace(/מלאה.*שלמה/g, 'מלא, שלם');
@@ -610,6 +668,13 @@ export default function ProfessionalFeeAgreementExporter({
                   const withGenderVars = applyGenderToText(contentWithoutTitle);
                   // הגנה על "מלאים" שלא ישתנה
                   let protectedSubSubContent = withGenderVars.replace(/\bמלאים\b/g, '__FULL_MAS_PLURAL__');
+                  // הגנה על "שכר טרחה" ו"שכר הטרחה" שלא ישתנו למגדר
+                  protectedSubSubContent = protectedSubSubContent.replace(/\bשכר טרחה\b/g, '__FEE__');
+                  protectedSubSubContent = protectedSubSubContent.replace(/\bשכר הטרחה\b/g, '__FEE_THE__');
+                  // הגנה על "הצד המקבל" שלא ישתנה
+                  protectedSubSubContent = protectedSubSubContent.replace(/\bהצד המקבל\b/g, '__RECEIVING_PARTY__');
+                  // הגנה על "הבא" שלא ישתנה
+                  protectedSubSubContent = protectedSubSubContent.replace(/\bהבא\b/g, '__NEXT__');
                   // הגנה על "עד" שלא ישתנה ל"עדה"
                   protectedSubSubContent = protectedSubSubContent.replace(/\bעד\s+(?!עד[הא]|עדי|עדות|עדים|עדה)/g, 'עד-ל ');
                   // הגנה על "בימים א' עד ה'" שלא ישתנה
@@ -626,6 +691,10 @@ export default function ProfessionalFeeAgreementExporter({
                   withFullGender = withFullGender.replace(/__APOTROPS__/g, 'מינוי אפוטרופוס');
                   withFullGender = withFullGender.replace(/__DAYS_UNTIL__/g, "בימים א' עד ה'");
                   withFullGender = withFullGender.replace(/__FULL_MAS_PLURAL__/g, 'מלא');
+                  withFullGender = withFullGender.replace(/__FEE__/g, 'שכר טרחה');
+                  withFullGender = withFullGender.replace(/__FEE_THE__/g, 'שכר הטרחה');
+                  withFullGender = withFullGender.replace(/__RECEIVING_PARTY__/g, 'הצד המקבל');
+                  withFullGender = withFullGender.replace(/__NEXT__/g, 'הבא');
                   // תיקונים נוספים
                   withFullGender = withFullGender.replace(/עדה\s+(ה'|ל|שני|סיום|יום|לקבלת|מיצוי|מועד|בין)/g, 'עד $1');
                   withFullGender = withFullGender.replace(/בימים א' עדה ה'/g, "בימים א' עד ה'");
@@ -640,6 +709,12 @@ export default function ProfessionalFeeAgreementExporter({
                   withFullGender = withFullGender.replace(/עורך הדין והמשרד תישא/g, 'עורך הדין והמשרד יישאו');
                   withFullGender = withFullGender.replace(/עורך הדין יישאו/g, 'עורך הדין יישא');
                   withFullGender = withFullGender.replace(/עורך הדין יהיה זכאית/g, 'עורך הדין יהיה זכאי');
+                  withFullGender = withFullGender.replace(/עורך הדין רשאית/g, 'עורך הדין רשאי');
+                  withFullGender = withFullGender.replace(/שכרה טרחה/g, 'שכר טרחה');
+                  withFullGender = withFullGender.replace(/שכרה הטרחה/g, 'שכר הטרחה');
+                  withFullGender = withFullGender.replace(/הצד המקבלת/g, 'הצד המקבל');
+                  withFullGender = withFullGender.replace(/הבאה/g, 'הבא');
+                  withFullGender = withFullGender.replace(/שלאחר משלוחה/g, 'הבא');
                   withFullGender = withFullGender.replace(/מינוי אפוטרופסית/g, 'מינוי אפוטרופוס');
                   withFullGender = withFullGender.replace(/מלאה, שלמה/g, 'מלא, שלם');
                   withFullGender = withFullGender.replace(/מלאה.*שלמה/g, 'מלא, שלם');
@@ -732,6 +807,9 @@ export default function ProfessionalFeeAgreementExporter({
           // גם נשמור "עורך דין" (בלי ה' הידיעה)
           text = text.replace(/עורך דין(?! בעל)/g, '__LAWYER_NO_HEY__');
           
+          // הגנה על "עורך הדין רשאי" שלא ישתנה ל"רשאית"
+          text = text.replace(/__LAWYER_PLACEHOLDER__\s+רשאי/g, '__LAWYER_CAN__');
+          
           // הגנה על מילים שצריכות להישאר ללא שינוי במגדר בהסכמי שכר טרחה
           const protectedPhrases: { [key: string]: string } = {};
           let protectedIndex = 0;
@@ -742,6 +820,8 @@ export default function ProfessionalFeeAgreementExporter({
             /\bשאינו נכלל\b/g,  // שאינו נכלל (לא שאינו נכללה)
             /\bשכר טרחה\b/g,  // שכר טרחה (לא שכרה טרחה)
             /\bשכר הטרחה\b/g,  // שכר הטרחה (לא שכרה הטרחה)
+            /\bהצד המקבל\b/g,  // הצד המקבל (לא הצד המקבלת)
+            /\bהבא\b/g,  // הבא (תמיד זכר, לא הבאה)
             /\bמינוי אפוטרופוס\b/g,  // מינוי אפוטרופוס
             /\bבמלואו\b/g,  // במלואו (לא באופן מלאה)
             /\bמלאים\b/g,  // מלאים (תמיד "מלא")
@@ -787,6 +867,7 @@ export default function ProfessionalFeeAgreementExporter({
           Object.keys(lawyerPhrases).forEach(placeholder => {
             result = result.replace(new RegExp(placeholder, 'g'), lawyerPhrases[placeholder]);
           });
+          result = result.replace(/__LAWYER_CAN__/g, 'עורך הדין רשאי');
           result = result.replace(/__LAWYER_PLACEHOLDER__/g, 'עורך הדין');
           result = result.replace(/__LAWYER_NO_HEY__/g, 'עורך דין');
           
@@ -805,12 +886,16 @@ export default function ProfessionalFeeAgreementExporter({
           result = result.replace(/היא עורך דין/g, 'הוא עורך דין');
           result = result.replace(/שירותיה של עורך הדין/g, 'שירותיו של עורך הדין');
           result = result.replace(/עורך הדין.*הסכימה/g, (match: string) => match.replace(/הסכימה/g, 'הסכים'));
+          result = result.replace(/עורך הדין רשאית/g, 'עורך הדין רשאי');
           
           // תיקון מילים שצריכות להישאר ללא שינוי
           result = result.replace(/מידע מלאה/g, 'מידע מלא');
           result = result.replace(/שאינו נכללה/g, 'שאינו נכלל');
           result = result.replace(/שכרה טרחה/g, 'שכר טרחה');
           result = result.replace(/שכרה הטרחה/g, 'שכר הטרחה');
+          result = result.replace(/הצד המקבלת/g, 'הצד המקבל');
+          result = result.replace(/הבאה/g, 'הבא');
+          result = result.replace(/שלאחר משלוחה/g, 'הבא');
           result = result.replace(/מינוי אפוטרופסית/g, 'מינוי אפוטרופוס');
           result = result.replace(/באופן מלאה/g, 'באופן מלא');
           result = result.replace(/במלואה/g, 'במלואו');
