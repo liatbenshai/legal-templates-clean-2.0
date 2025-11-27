@@ -256,13 +256,13 @@ export default function LawyerFeeAgreement() {
       
       // קבע את המיקום - שכר טרחה יופיע אחרי כל הסעיפים הרגילים (לא קבועים)
       // מצא את כל הסעיפים הרגילים (לא gen_ ולא שכר טרחה)
-      const regularSections = withoutOldFee.filter(s => 
+      const regularSectionsForFeeOrder = withoutOldFee.filter(s => 
         !s.id.startsWith('gen_') && 
         s.title !== 'שכר טרחה עבור השירות'
       );
       
       let feeOrder = 1;
-      if (regularSections.length > 0) {
+      if (regularSectionsForFeeOrder.length > 0) {
         // מצא את הסדר הגבוה ביותר של כל הסעיפים הרגילים כולל תתי סעיפים
         const findAllChildren = (sectionId: string, allSections: typeof withoutOldFee): string[] => {
           const children = allSections.filter(s => s.parentId === sectionId);
@@ -275,7 +275,7 @@ export default function LawyerFeeAgreement() {
         
         // מצא את הסדר הגבוה ביותר של כל הסעיפים הרגילים
         let maxOrder = 0;
-        regularSections.forEach(section => {
+        regularSectionsForFeeOrder.forEach(section => {
           const sectionIds = findAllChildren(section.id, withoutOldFee);
           const sectionWithChildren = withoutOldFee.filter(s => sectionIds.includes(s.id));
           const sectionMaxOrder = sectionWithChildren.length > 0
