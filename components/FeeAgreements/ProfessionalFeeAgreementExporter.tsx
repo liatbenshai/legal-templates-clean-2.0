@@ -300,151 +300,198 @@ export default function ProfessionalFeeAgreementExporter({
       // קבל את תיאור השירות המלא - אם serviceName הוא מפתח, קח את הערך, אחרת קח את serviceDescription
       const serviceScope = serviceScopeMapping[serviceName] || serviceDescription || 'שירות משפטי לפי הצורך';
       
-      // צור את הסעיף הראשון החדש
+      // צור את הסעיף הראשון החדש - נחלק אותו ל-4 תתי-סעיפים
       const firstSectionTemplate = feeAgreementTemplates.preamble?.firstSection?.text || 
         '{{multipleClients:הלקוחות|הלקוח}} שכרו את שירותיו של עורך הדין לצורך ייעוץ משפטי וטיפול משפטי בעניין {{serviceType}}. השירותים המשפטיים יכללו, בין היתר, את הפעולות המפורטות להלן: {{serviceScope}}. מובהר ומוסכם כי כל שירות משפטי אחר, שאינו נכלל במפורש בהגדרה זו, יחייב הסכם נפרד בכתב ותשלום שכר טרחה נוסף.';
       
-      let firstSectionText = firstSectionTemplate;
-      firstSectionText = firstSectionText.replace(/\{\{multipleClients:([^|]+)\|([^|]+)\|([^}]+)\}\}/g, (_match: string, pluralText: string, maleText: string, femaleText: string) => {
-        if (multipleClients) return pluralText;
-        return clientsGender === 'female' ? femaleText : maleText;
-      });
-      // החלף את {{תיאור העניין}} ו-{{תיאור השירותים}} ב-serviceDescription
-      firstSectionText = firstSectionText.replace(/\{\{תיאור העניין\}\}/g, serviceDescription || '[תיאור העניין]');
-      firstSectionText = firstSectionText.replace(/\{\{תיאור השירותים\}\}/g, serviceDescription || '[תיאור השירותים]');
-      firstSectionText = firstSectionText.replace(/\{\{serviceType\}\}/g, serviceName || serviceDescription || '[תיאור השירות המשפטי]');
-      firstSectionText = firstSectionText.replace(/\{\{serviceScope\}\}/g, serviceScope);
+      // חלק את התבנית ל-4 חלקים לפי \n\n
+      // הטקסט ב-JSON מחולק ל-4 חלקים:
+      // 1. הלקוחה פנתה... (חלק 1)
+      // 2. עורך הדין מתחייב לייצג... (חלק 2 - נחליף ל"עורך הדין מתחייב לבצע את השירות הנ"ל.")
+      // 3. הסכם זה מסדיר... (חלק 3)
+      // 4. כל שירות משפטי נוסף... (חלק 4)
+      const templateParts = firstSectionTemplate.split(/\n\n+/).filter(p => p.trim());
       
-      // קודם נחליף את משתני ההסכם ({{לקוח}}, {{gender:...}}) - זה חייב להיות לפני ההגנות!
-      firstSectionText = replaceFeeAgreementTemplateTextWithGender(firstSectionText, clientsGender);
+      // צור 4 חלקים ברורים:
+      // 1. הלקוחה פנתה... (החלק הראשון)
+      let part1 = templateParts[0] || '';
+      // 2. עורך הדין מתחייב לבצע את השירות הנ"ל. (טקסט חדש - מחליף את החלק השני המקורי)
+      let part2 = 'עורך הדין מתחייב לבצע את השירות הנ"ל.';
+      // 3. הסכם זה מסדיר... (החלק השלישי - בדרך כלל templateParts[2] אם יש 4 חלקים)
+      let part3 = '';
+      if (templateParts.length >= 3) {
+        // נבדוק אם החלק השלישי הוא "הסכם זה מסדיר"
+        const candidate = templateParts[2];
+        if (candidate.includes('הסכם זה מסדיר')) {
+          part3 = candidate;
+        } else {
+          // נחפש את החלק שמכיל "הסכם זה מסדיר"
+          const found = templateParts.find(p => p.includes('הסכם זה מסדיר'));
+          part3 = found || 'הסכם זה מסדיר את מלוא היחסים בין הצדדים בכל הנוגע למתן השירותים המשפטיים המפורטים לעיל.';
+        }
+      } else {
+        // אם אין חלק 3, נשתמש בברירת מחדל
+        part3 = 'הסכם זה מסדיר את מלוא היחסים בין הצדדים בכל הנוגע למתן השירותים המשפטיים המפורטים לעיל.';
+      }
+      // 4. כל שירות משפטי נוסף... (החלק האחרון)
+      let part4 = '';
+      if (templateParts.length >= 4) {
+        part4 = templateParts[3] || templateParts[templateParts.length - 1];
+      } else if (templateParts.length >= 3) {
+        // אם יש רק 3 חלקים, החלק האחרון יכול להיות "כל שירות משפטי נוסף"
+        const lastPart = templateParts[templateParts.length - 1];
+        if (lastPart.includes('כל שירות משפטי נוסף')) {
+          part4 = lastPart;
+        } else {
+          part4 = 'כל שירות משפטי נוסף, לרבות טיפול בערכאות נוספות, הליכי ערעור, בקשות לעיכוב ביצוע, הליכי הוצאה לפועל, או כל הליך משפטי אחר שאינו מפורט במפורש בהסכם זה, יחייב התקשרות נפרדת והסכמה בכתב.';
+        }
+      } else {
+        part4 = 'כל שירות משפטי נוסף, לרבות טיפול בערכאות נוספות, הליכי ערעור, בקשות לעיכוב ביצוע, הליכי הוצאה לפועל, או כל הליך משפטי אחר שאינו מפורט במפורש בהסכם זה, יחייב התקשרות נפרדת והסכמה בכתב.';
+      }
       
-      // הגנה על "עורך הדין" וכל מה שקשור אליו - נשמור אותו כזכר תמיד
-      // נשמור את כל הביטויים הקשורים לעורך הדין לפני החלפת מגדר
-      const lawyerPhrases: { [key: string]: string } = {};
-      let phraseIndex = 0;
-      
-      // מצא ושמור כל ביטוי שקשור לעורך הדין - כולל "בעל רישיון" ו"הוא"
-      const lawyerPatterns = [
-        /עורך הדין הוא עורך דין בעל רישיון[^;]*;/g,
-        /עורך דין בעל רישיון[^;]*;/g,
-        /שירותיו של עורך הדין/g,
-        /עורך הדין.*לצורך/g,
-        /עורך הדין.*ייעוץ/g,
-        /הוא עורך דין/g,
-        /בעל רישיון תקף/g
-      ];
-      
-      lawyerPatterns.forEach(pattern => {
-        firstSectionText = firstSectionText.replace(pattern, (match: string) => {
-          const placeholder = `__LAWYER_PHRASE_${phraseIndex}__`;
-          lawyerPhrases[placeholder] = match;
-          phraseIndex++;
-          return placeholder;
+      // עכשיו נעבד כל חלק בנפרד
+      const processSectionPart = (text: string): string => {
+        let processedText = text;
+        
+        // החלף את משתני multipleClients
+        processedText = processedText.replace(/\{\{multipleClients:([^|]+)\|([^|]+)\|([^}]+)\}\}/g, (_match: string, pluralText: string, maleText: string, femaleText: string) => {
+          if (multipleClients) return pluralText;
+          return clientsGender === 'female' ? femaleText : maleText;
         });
-      });
-      
-      // גם נשמור את "עורך הדין" עצמו
-      firstSectionText = firstSectionText.replace(/עורך הדין/g, '__LAWYER_PLACEHOLDER__');
-      // גם נשמור "עורך דין" (בלי ה' הידיעה)
-      firstSectionText = firstSectionText.replace(/עורך דין(?! בעל)/g, '__LAWYER_NO_HEY__');
-      
-      // הגנה על מילים שצריכות להישאר ללא שינוי במגדר בהסכמי שכר טרחה
-      const protectedPhrases: { [key: string]: string } = {};
-      let protectedIndex = 0;
-      
-      // מילים שתמיד יישארו ללא שינוי
-      const protectedPatterns = [
-        /\bמידע מלא\b/g,  // מידע מלא (לא מידע מלאה)
-        /\bשאינו נכלל\b/g,  // שאינו נכלל (לא שאינו נכללה)
-        /\bשכר טרחה\b/g,  // שכר טרחה (לא שכרה טרחה)
-        /\bשכר הטרחה\b/g,  // שכר הטרחה (לא שכרה הטרחה)
-        /\bשכר הטרחה המוסכם\b/g,  // שכר הטרחה המוסכם (לא שכרה הטרחה המוסכם או שכרו הטרחה המוסכם)
-        /\bהצד המקבל\b/g,  // הצד המקבל (לא הצד המקבלת)
-        /\bהבא\b/g,  // הבא (תמיד זכר, לא הבאה)
-        /\bמינוי אפוטרופוס\b/g,  // מינוי אפוטרופוס
-        /\bבמלואו\b/g,  // במלואו (לא באופן מלאה)
-        /\bמלאים\b/g,  // מלאים (תמיד "מלא")
-        /\bבלתי מלאים\b/g,  // בלתי מלאים (תמיד "בלתי מלא")
-        /\bשיפוי מלאים\b/g,  // שיפוי מלאים (תמיד "שיפוי מלא")
-        /\bעד\s+(?:ל|שני|סיום|יום|מיצוי|לקבלת)/g,  // עד למיצוי, עד שני, עד לסיום, עד ליום, עד לקבלת
-        /\bעד\s+(?:סבבי|תיקונים|סיום)/g,  // עד שני סבבי תיקונים, עד לסיום
-      ];
-      
-      protectedPatterns.forEach(pattern => {
-        firstSectionText = firstSectionText.replace(pattern, (match: string) => {
-          const placeholder = `__PROTECTED_${protectedIndex}__`;
-          protectedPhrases[placeholder] = match;
-          protectedIndex++;
-          return placeholder;
+        
+        // החלף את {{תיאור העניין}} ו-{{תיאור השירותים}}
+        processedText = processedText.replace(/\{\{תיאור העניין\}\}/g, serviceDescription || '[תיאור העניין]');
+        processedText = processedText.replace(/\{\{תיאור השירותים\}\}/g, serviceDescription || '[תיאור השירותים]');
+        processedText = processedText.replace(/\{\{serviceType\}\}/g, serviceName || serviceDescription || '[תיאור השירות המשפטי]');
+        processedText = processedText.replace(/\{\{serviceScope\}\}/g, serviceScope);
+        
+        // החלף משתני הסכם ({{לקוח}}, {{gender:...}})
+        processedText = replaceFeeAgreementTemplateTextWithGender(processedText, clientsGender);
+        
+        // הגנה על "עורך הדין" וכל מה שקשור אליו
+        const lawyerPhrases: { [key: string]: string } = {};
+        let phraseIndex = 0;
+        
+        const lawyerPatterns = [
+          /עורך הדין הוא עורך דין בעל רישיון[^;]*;/g,
+          /עורך דין בעל רישיון[^;]*;/g,
+          /שירותיו של עורך הדין/g,
+          /עורך הדין.*לצורך/g,
+          /עורך הדין.*ייעוץ/g,
+          /הוא עורך דין/g,
+          /בעל רישיון תקף/g
+        ];
+        
+        lawyerPatterns.forEach(pattern => {
+          processedText = processedText.replace(pattern, (match: string) => {
+            const placeholder = `__LAWYER_PHRASE_${phraseIndex}__`;
+            lawyerPhrases[placeholder] = match;
+            phraseIndex++;
+            return placeholder;
+          });
         });
-      });
+        
+        processedText = processedText.replace(/עורך הדין/g, '__LAWYER_PLACEHOLDER__');
+        processedText = processedText.replace(/עורך דין(?! בעל)/g, '__LAWYER_NO_HEY__');
+        
+        // הגנה על מילים שצריכות להישאר ללא שינוי
+        const protectedPhrases: { [key: string]: string } = {};
+        let protectedIndex = 0;
+        
+        const protectedPatterns = [
+          /\bמידע מלא\b/g,
+          /\bשאינו נכלל\b/g,
+          /\bשכר טרחה\b/g,
+          /\bשכר הטרחה\b/g,
+          /\bשכר הטרחה המוסכם\b/g,
+          /\bהצד המקבל\b/g,
+          /\bהבא\b/g,
+          /\bמינוי אפוטרופוס\b/g,
+          /\bבמלואו\b/g,
+          /\bמלאים\b/g,
+          /\bבלתי מלאים\b/g,
+          /\bשיפוי מלאים\b/g,
+          /\bעד\s+(?:ל|שני|סיום|יום|מיצוי|לקבלת)/g,
+          /\bעד\s+(?:סבבי|תיקונים|סיום)/g,
+        ];
+        
+        protectedPatterns.forEach(pattern => {
+          processedText = processedText.replace(pattern, (match: string) => {
+            const placeholder = `__PROTECTED_${protectedIndex}__`;
+            protectedPhrases[placeholder] = match;
+            protectedIndex++;
+            return placeholder;
+          });
+        });
+        
+        processedText = processedText.replace(/עורך הדין\s+(?=לא|תישא|יישא|ישא|יישאו|אינו|יהיה)/g, '__LAWYER_VERB__');
+        processedText = processedText.replace(/__LAWYER_PLACEHOLDER__\s+רשאי/g, '__LAWYER_CAN__');
+        processedText = processedText.replace(/בימים א' עד ה'/g, '__DAYS_UNTIL__');
+        processedText = processedText.replace(/\bעד\s+(?!עד[הא]|עדי|עדות|עדים|עדה)/g, '__UNTIL_PLACEHOLDER__');
+        
+        // החלפת מגדר כללית
+        processedText = replaceTextWithGender(processedText, clientsGender);
+        
+        // החזרת הביטויים המוגנים
+        Object.keys(lawyerPhrases).forEach(placeholder => {
+          processedText = processedText.replace(new RegExp(placeholder, 'g'), lawyerPhrases[placeholder]);
+        });
+        processedText = processedText.replace(/__LAWYER_CAN__/g, 'עורך הדין רשאי');
+        processedText = processedText.replace(/__LAWYER_PLACEHOLDER__/g, 'עורך הדין');
+        processedText = processedText.replace(/__LAWYER_NO_HEY__/g, 'עורך דין');
+        
+        Object.keys(protectedPhrases).forEach(placeholder => {
+          processedText = processedText.replace(new RegExp(placeholder, 'g'), protectedPhrases[placeholder]);
+        });
+        processedText = processedText.replace(/__UNTIL_PLACEHOLDER__/g, 'עד ');
+        processedText = processedText.replace(/__DAYS_UNTIL__/g, "בימים א' עד ה'");
+        processedText = processedText.replace(/__LAWYER_VERB__/g, 'עורך הדין ');
+        
+        // תיקונים נוספים
+        processedText = processedText.replace(/עורך דין בעלת/g, 'עורך דין בעל');
+        processedText = processedText.replace(/היא עורך דין/g, 'הוא עורך דין');
+        processedText = processedText.replace(/שירותיה של עורך הדין/g, 'שירותיו של עורך הדין');
+        processedText = processedText.replace(/עורך הדין רשאית/g, 'עורך הדין רשאי');
+        processedText = processedText.replace(/מידע מלאה/g, 'מידע מלא');
+        processedText = processedText.replace(/שאינו נכללה/g, 'שאינו נכלל');
+        processedText = processedText.replace(/שכרה טרחה/g, 'שכר טרחה');
+        processedText = processedText.replace(/שכרה הטרחה/g, 'שכר הטרחה');
+        processedText = processedText.replace(/שכרה הטרחה המוסכם/g, 'שכר הטרחה המוסכם');
+        processedText = processedText.replace(/שכרו הטרחה המוסכם/g, 'שכר הטרחה המוסכם');
+        processedText = processedText.replace(/שכרה הטרחה המוסכמת/g, 'שכר הטרחה המוסכם');
+        processedText = processedText.replace(/הצד המקבלת/g, 'הצד המקבל');
+        processedText = processedText.replace(/הבאה/g, 'הבא');
+        processedText = processedText.replace(/שלאחר משלוחה/g, 'הבא');
+        processedText = processedText.replace(/מינוי אפוטרופסית/g, 'מינוי אפוטרופוס');
+        processedText = processedText.replace(/באופן מלאה/g, 'באופן מלא');
+        processedText = processedText.replace(/במלואה/g, 'במלואו');
+        processedText = processedText.replace(/מלאה, שלמה/g, 'מלא, שלם');
+        processedText = processedText.replace(/מלאה.*שלמה/g, 'מלא, שלם');
+        processedText = processedText.replace(/מלאים\b/g, 'מלא');
+        processedText = processedText.replace(/בלתי מלאים\b/g, 'בלתי מלא');
+        processedText = processedText.replace(/שיפוי מלאים\b/g, 'שיפוי מלא');
+        processedText = processedText.replace(/עדה למיצוי/g, 'עד למיצוי');
+        processedText = processedText.replace(/עדה\s+(?:ל|שני|סיום|יום|לקבלת|ה'|מועד|בין)/g, (match: string) => match.replace(/עדה/g, 'עד'));
+        processedText = processedText.replace(/בימים א' עדה ה'/g, "בימים א' עד ה'");
+        processedText = processedText.replace(/בימים א' עדה ה' בין/g, "בימים א' עד ה' בין");
+        processedText = processedText.replace(/בבקשה עדה/g, 'בבקשה עד');
+        processedText = processedText.replace(/עורך הדין אינו נושא ולא תישא/g, 'עורך הדין אינו נושא ולא יישא');
+        processedText = processedText.replace(/עורך הדין והמשרד תישא/g, 'עורך הדין והמשרד יישאו');
+        processedText = processedText.replace(/עורך הדין יישאו/g, 'עורך הדין יישא');
+        processedText = processedText.replace(/עורך הדין רשאית/g, 'עורך הדין רשאי');
+        processedText = processedText.replace(/מינוי אפוטרופסית/g, 'מינוי אפוטרופוס');
+        
+        return processedText.trim();
+      };
       
-      // הגנה על "עורך הדין" שלא ישתנה ל"יישאו" - תמיד "יישא"
-      firstSectionText = firstSectionText.replace(/עורך הדין\s+(?=לא|תישא|יישא|ישא|יישאו|אינו|יהיה)/g, '__LAWYER_VERB__');
-      // הגנה על "עורך הדין רשאי" שלא ישתנה ל"רשאית"
-      firstSectionText = firstSectionText.replace(/__LAWYER_PLACEHOLDER__\s+רשאי/g, '__LAWYER_CAN__');
+      // עבד כל חלק בנפרד (חלק 2 כבר מוכן, הוא טקסט קבוע)
+      part1 = processSectionPart(part1);
+      // part2 כבר מוכן - "עורך הדין מתחייב לבצע את השירות הנ"ל."
+      part3 = processSectionPart(part3);
+      part4 = processSectionPart(part4);
       
-      // הגנה על "בימים א' עד ה'" שלא ישתנה
-      firstSectionText = firstSectionText.replace(/בימים א' עד ה'/g, '__DAYS_UNTIL__');
-      
-      // הגנה מיוחדת על המילה "עד" כשהיא לא חלק מ"עדה" או "עדים" או "עדות"
-      // נשמור "עד" כשהיא מופיעה לפני מילות יחס או מספרים
-      firstSectionText = firstSectionText.replace(/\bעד\s+(?!עד[הא]|עדי|עדות|עדים|עדה)/g, '__UNTIL_PLACEHOLDER__');
-      
-      // עכשיו נחליף גם מגדר כללי לפעלים ומילים אחרות
-      firstSectionText = replaceTextWithGender(firstSectionText, clientsGender);
-      
-      // החזרת כל הביטויים הקשורים לעורך הדין כזכר תמיד
-      Object.keys(lawyerPhrases).forEach(placeholder => {
-        firstSectionText = firstSectionText.replace(new RegExp(placeholder, 'g'), lawyerPhrases[placeholder]);
-      });
-      firstSectionText = firstSectionText.replace(/__LAWYER_CAN__/g, 'עורך הדין רשאי');
-      firstSectionText = firstSectionText.replace(/__LAWYER_PLACEHOLDER__/g, 'עורך הדין');
-      firstSectionText = firstSectionText.replace(/__LAWYER_NO_HEY__/g, 'עורך דין');
-      
-      // החזרת המילים המוגנות
-      Object.keys(protectedPhrases).forEach(placeholder => {
-        firstSectionText = firstSectionText.replace(new RegExp(placeholder, 'g'), protectedPhrases[placeholder]);
-      });
-      firstSectionText = firstSectionText.replace(/__UNTIL_PLACEHOLDER__/g, 'עד ');
-      firstSectionText = firstSectionText.replace(/__DAYS_UNTIL__/g, "בימים א' עד ה'");
-      firstSectionText = firstSectionText.replace(/__LAWYER_VERB__/g, 'עורך הדין ');
-      
-      // תיקון נוסף - אם משהו השתנה בטעות, נשנה אותו חזרה
-      firstSectionText = firstSectionText.replace(/עורך דין בעלת/g, 'עורך דין בעל');
-      firstSectionText = firstSectionText.replace(/היא עורך דין/g, 'הוא עורך דין');
-      firstSectionText = firstSectionText.replace(/שירותיה של עורך הדין/g, 'שירותיו של עורך הדין');
-      firstSectionText = firstSectionText.replace(/עורך הדין רשאית/g, 'עורך הדין רשאי');
-      
-      // תיקון מילים שצריכות להישאר ללא שינוי
-      firstSectionText = firstSectionText.replace(/מידע מלאה/g, 'מידע מלא');
-      firstSectionText = firstSectionText.replace(/שאינו נכללה/g, 'שאינו נכלל');
-      firstSectionText = firstSectionText.replace(/שכרה טרחה/g, 'שכר טרחה');
-      firstSectionText = firstSectionText.replace(/שכרה הטרחה/g, 'שכר הטרחה');
-      firstSectionText = firstSectionText.replace(/שכרה הטרחה המוסכם/g, 'שכר הטרחה המוסכם');
-      firstSectionText = firstSectionText.replace(/שכרו הטרחה המוסכם/g, 'שכר הטרחה המוסכם');
-      firstSectionText = firstSectionText.replace(/שכרה הטרחה המוסכמת/g, 'שכר הטרחה המוסכם');
-      firstSectionText = firstSectionText.replace(/הצד המקבלת/g, 'הצד המקבל');
-      firstSectionText = firstSectionText.replace(/הבאה/g, 'הבא');
-      firstSectionText = firstSectionText.replace(/שלאחר משלוחה/g, 'הבא');
-      firstSectionText = firstSectionText.replace(/מינוי אפוטרופסית/g, 'מינוי אפוטרופוס');
-      firstSectionText = firstSectionText.replace(/באופן מלאה/g, 'באופן מלא');
-      firstSectionText = firstSectionText.replace(/במלואה/g, 'במלואו');
-      firstSectionText = firstSectionText.replace(/מלאה, שלמה/g, 'מלא, שלם');
-      firstSectionText = firstSectionText.replace(/מלאה.*שלמה/g, 'מלא, שלם');
-      firstSectionText = firstSectionText.replace(/מלאים\b/g, 'מלא');
-      firstSectionText = firstSectionText.replace(/בלתי מלאים\b/g, 'בלתי מלא');
-      firstSectionText = firstSectionText.replace(/שיפוי מלאים\b/g, 'שיפוי מלא');
-      firstSectionText = firstSectionText.replace(/עדה למיצוי/g, 'עד למיצוי');
-      firstSectionText = firstSectionText.replace(/עדה\s+(?:ל|שני|סיום|יום|לקבלת|ה'|מועד|בין)/g, (match: string) => match.replace(/עדה/g, 'עד'));
-      firstSectionText = firstSectionText.replace(/בימים א' עדה ה'/g, "בימים א' עד ה'");
-      firstSectionText = firstSectionText.replace(/בימים א' עדה ה' בין/g, "בימים א' עד ה' בין");
-      firstSectionText = firstSectionText.replace(/בבקשה עדה/g, 'בבקשה עד');
-      firstSectionText = firstSectionText.replace(/עורך הדין אינו נושא ולא תישא/g, 'עורך הדין אינו נושא ולא יישא');
-      firstSectionText = firstSectionText.replace(/עורך הדין והמשרד תישא/g, 'עורך הדין והמשרד יישאו');
-      firstSectionText = firstSectionText.replace(/עורך הדין יישאו/g, 'עורך הדין יישא');
-      firstSectionText = firstSectionText.replace(/עורך הדין רשאית/g, 'עורך הדין רשאי');
-      firstSectionText = firstSectionText.replace(/מינוי אפוטרופסית/g, 'מינוי אפוטרופוס');
+      // שמור את תתי-הסעיפים המעבדים
+      const firstSectionSubSections = [part1, part2, part3, part4].filter(p => p && p.trim());
       
       // פונקציה ליצירת פסקאות מסעיף עם המספור הנכון
       // הסעיף הראשון הוא תמיד "תיאור השירות" (1), אז הסעיפים מ-customSections מתחילים מ-2
@@ -465,7 +512,27 @@ export default function ProfessionalFeeAgreementExporter({
         };
         
         // כותרת הסעיף (אם קיימת) - השתמש ב-numbering של Word
+        // גם הכותרת צריכה לעבור דרך החלפת מגדר!
         if (section.title && level === 0) {
+          // עיבוד הכותרת עם החלפת מגדר
+          let processedTitle = section.title;
+          // שלב 1: החלפת משתני מגדר מיוחדים - כולל ה{{לקוח}}
+          processedTitle = replaceFeeAgreementTemplateTextWithGender(processedTitle, clientsGender);
+          // הגנה על ביטויים שצריכים להישאר ללא שינוי
+          processedTitle = processedTitle.replace(/\bשכר טרחה\b/g, '__FEE_TITLE__');
+          processedTitle = processedTitle.replace(/\bשכר הטרחה\b/g, '__FEE_THE_TITLE__');
+          processedTitle = processedTitle.replace(/\bהצד המקבל\b/g, '__RECEIVING_PARTY_TITLE__');
+          // שלב 2: החלפת כל הטקסט לפי מגדר
+          processedTitle = replaceTextWithGender(processedTitle, clientsGender);
+          // שלב 3: החזרת הביטויים המוגנים
+          processedTitle = processedTitle.replace(/__FEE_TITLE__/g, 'שכר טרחה');
+          processedTitle = processedTitle.replace(/__FEE_THE_TITLE__/g, 'שכר הטרחה');
+          processedTitle = processedTitle.replace(/__RECEIVING_PARTY_TITLE__/g, 'הצד המקבל');
+          // תיקונים נוספים
+          processedTitle = processedTitle.replace(/שכרה טרחה/g, 'שכר טרחה');
+          processedTitle = processedTitle.replace(/שכרה הטרחה/g, 'שכר הטרחה');
+          processedTitle = processedTitle.replace(/הצד המקבלת/g, 'הצד המקבל');
+          
           paragraphs.push(
             new Paragraph({
               numbering: { 
@@ -477,7 +544,7 @@ export default function ProfessionalFeeAgreementExporter({
               spacing: { before: SPACING.beforeHeading, after: SPACING.afterHeading },
               children: [
                 new TextRun({
-                  text: section.title,
+                  text: processedTitle,
                   bold: true,
                   font: 'David',
                   rightToLeft: true,
@@ -1423,19 +1490,30 @@ export default function ProfessionalFeeAgreementExporter({
               ]
             }),
             
-            new Paragraph({
-              alignment: AlignmentType.RIGHT,
-              bidirectional: true,
-              spacing: { after: SPACING.afterParagraph },
-              children: [
-                new TextRun({
-                  text: firstSectionText,
-                  font: 'David',
-                  rightToLeft: true,
-                  size: SIZES.normal
-                })
-              ]
-            }),
+            // חלוקה ל-4 תתי-סעיפים
+            ...firstSectionSubSections.map((subText) => 
+              new Paragraph({
+                numbering: { 
+                  reference: "main-numbering", 
+                  level: 1
+                },
+                alignment: AlignmentType.BOTH,
+                bidirectional: true,
+                spacing: { 
+                  before: SPACING.beforeParagraph,
+                  after: SPACING.afterParagraph,
+                  line: SPACING.line
+                },
+                children: [
+                  new TextRun({
+                    text: subText,
+                    font: 'David',
+                    rightToLeft: true,
+                    size: SIZES.normal
+                  })
+                ]
+              })
+            ),
             
             // ✅ הסעיפים עם מספור נכון
             // סעיפים מותאמים אישית - בניית מבנה היררכי

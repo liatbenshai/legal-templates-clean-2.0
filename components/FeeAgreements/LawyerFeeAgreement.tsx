@@ -1049,9 +1049,17 @@ export default function LawyerFeeAgreement() {
       // חשב את הסדר הנכון - אחרי הסעיף הראשון ולפני שכר טרחה
       const nextOrder = getNextOrder();
       
+      // עיבוד כותרת הסעיף הראשי עם החלפת מגדר
+      let mainTitle = selectedMainSection.title || '';
+      mainTitle = replaceFeeAgreementTemplateTextWithGender(mainTitle, clientsGender);
+      mainTitle = replaceTextWithGender(mainTitle, clientsGender);
+      mainTitle = mainTitle.replace(/שכרה טרחה/g, 'שכר טרחה');
+      mainTitle = mainTitle.replace(/שכרה הטרחה/g, 'שכר הטרחה');
+      mainTitle = mainTitle.replace(/הצד המקבלת/g, 'הצד המקבל');
+      
       const mainSection = {
         id: mainSectionId,
-        title: selectedMainSection.title,
+        title: mainTitle,
         content: mainContent,
         level: 'main' as const,
         order: nextOrder,
@@ -1099,9 +1107,17 @@ export default function LawyerFeeAgreement() {
         subContent = subContent.replace(/עורך הדין יהיה זכאית/g, 'עורך הדין יהיה זכאי');
         subContent = subContent.replace(/מינוי אפוטרופסית/g, 'מינוי אפוטרופוס');
         
+        // עיבוד כותרת תת-סעיף עם החלפת מגדר
+        let subTitle = sub.title || '';
+        subTitle = replaceFeeAgreementTemplateTextWithGender(subTitle, clientsGender);
+        subTitle = replaceTextWithGender(subTitle, clientsGender);
+        subTitle = subTitle.replace(/שכרה טרחה/g, 'שכר טרחה');
+        subTitle = subTitle.replace(/שכרה הטרחה/g, 'שכר הטרחה');
+        subTitle = subTitle.replace(/הצד המקבלת/g, 'הצד המקבל');
+        
         const subSection = {
           id: subSectionId,
-          title: sub.title,
+          title: subTitle,
           content: subContent,
           level: 'sub' as const,
           parentId: mainSectionId,
@@ -1139,9 +1155,17 @@ export default function LawyerFeeAgreement() {
           subSubContent = subSubContent.replace(/עורך הדין יהיה זכאית/g, 'עורך הדין יהיה זכאי');
           subSubContent = subSubContent.replace(/מינוי אפוטרופסית/g, 'מינוי אפוטרופוס');
           
+          // עיבוד כותרת תת-תת-סעיף עם החלפת מגדר
+          let subSubTitle = subSub.title || '';
+          subSubTitle = replaceFeeAgreementTemplateTextWithGender(subSubTitle, clientsGender);
+          subSubTitle = replaceTextWithGender(subSubTitle, clientsGender);
+          subSubTitle = subSubTitle.replace(/שכרה טרחה/g, 'שכר טרחה');
+          subSubTitle = subSubTitle.replace(/שכרה הטרחה/g, 'שכר הטרחה');
+          subSubTitle = subSubTitle.replace(/הצד המקבלת/g, 'הצד המקבל');
+          
           const subSubSection = {
             id: generateSectionId(),
-            title: subSub.title,
+            title: subSubTitle,
             content: subSubContent,
             level: 'sub-sub' as const,
             parentId: subSectionId,
