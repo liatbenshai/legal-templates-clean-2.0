@@ -571,8 +571,11 @@ export default function ProfessionalFeeAgreementExporter({
           protectedContent = protectedContent.replace(/\bהצד המקבל\b/g, '__RECEIVING_PARTY__');
           // הגנה על "הבא" שלא ישתנה
           protectedContent = protectedContent.replace(/\bהבא\b/g, '__NEXT__');
-          // הגנה על "עד" שלא ישתנה ל"עדה"
-          protectedContent = protectedContent.replace(/\bעד\s+(?!עד[הא]|עדי|עדות|עדים|עדה)/g, 'עד-ל ');
+          // הגנה על "עד" שלא ישתנה ל"עדה" - גם ב-plural (כדי למנוע החלפה ל"עדים")
+          // הגנה על "עד" לפני מילות יחס, מספרים, תאריכים וכו' (גם עם רווח וגם בלי)
+          protectedContent = protectedContent.replace(/\bעד\s+(?!עד[הא]|עדי|עדות|עדים|עדה)/g, '__UNTIL_PLACEHOLDER__ ');
+          // הגנה גם על "עד" כשהוא לפני מילות יחס/מספרים ללא רווח (אם יש)
+          protectedContent = protectedContent.replace(/\bעד(שני|שלושה|שלוש|ארבע|חמש|שש|שבע|שמונה|תשע|עשר|שתי|סבבי|סיום|שיוחלט|אשרת|שמתקיים)/g, '__UNTIL_PLACEHOLDER__$1');
           // הגנה על "בימים א' עד ה'" שלא ישתנה
           protectedContent = protectedContent.replace(/בימים א' עד ה'/g, '__DAYS_UNTIL__');
           // הגנה על "עורך הדין" שלא ישתנה ל"עורך הדין תישא" או "יישאו"
@@ -582,7 +585,8 @@ export default function ProfessionalFeeAgreementExporter({
           // שלב 2: החלפת כל הטקסט לפי מגדר (פעלים, תארים וכו')
           let withFullGender = replaceTextWithGender(protectedContent, clientsGender);
           // שלב 3: החזרת הביטויים המוגנים
-          withFullGender = withFullGender.replace(/עד-ל\s+/g, 'עד ');
+          withFullGender = withFullGender.replace(/__UNTIL_PLACEHOLDER__\s+/g, 'עד ');
+          withFullGender = withFullGender.replace(/__UNTIL_PLACEHOLDER__/g, 'עד');
           withFullGender = withFullGender.replace(/__LAWYER_VERB__/g, 'עורך הדין ');
           withFullGender = withFullGender.replace(/__APOTROPS__/g, 'מינוי אפוטרופוס');
           withFullGender = withFullGender.replace(/__DAYS_UNTIL__/g, "בימים א' עד ה'");
@@ -592,7 +596,11 @@ export default function ProfessionalFeeAgreementExporter({
           withFullGender = withFullGender.replace(/__FEE_AGREED__/g, 'שכר הטרחה המוסכם');
           withFullGender = withFullGender.replace(/__RECEIVING_PARTY__/g, 'הצד המקבל');
           withFullGender = withFullGender.replace(/__NEXT__/g, 'הבא');
-          // תיקונים נוספים
+          // תיקונים נוספים - גם למקרים שהמילה "עד" (witness) הוחלפה ל"עדים" במקומות של "עד" (until)
+          // במקרים של plural, "עד" (witness) הוחלפה ל"עדים", אבל "עד" (until) לא צריך להשתנות
+          // תיקון: החזר "עדים" ל"עד" כשהוא מופיע לפני מילות יחס, מספרים, תאריכים וכו'
+          // זה חשוב במיוחד ב-plural כי "עד" (witness) הוחלפה ל"עדים"
+          withFullGender = withFullGender.replace(/עדים\s+(?:ל|שני|שלושה|שלוש|ארבע|חמש|שש|שבע|שמונה|תשע|עשר|שתי|סבבי|סיום|יום|לקבלת|מיצוי|מועד|בין|שבוע|חודש|שנה|תקופה|הפגישה|הפגישות|ביצוע|סוג|דקות|שעות|חודשים|שנים|שיוחלט|אשרת|שמתקיים)/g, 'עד $1');
           withFullGender = withFullGender.replace(/עדה\s+(ה'|ל|שני|סיום|יום|לקבלת|מיצוי|מועד|בין)/g, 'עד $1');
           withFullGender = withFullGender.replace(/בימים א' עדה ה'/g, "בימים א' עד ה'");
           withFullGender = withFullGender.replace(/בימים א' עדה ה' בין/g, "בימים א' עד ה' בין");
@@ -663,8 +671,9 @@ export default function ProfessionalFeeAgreementExporter({
               protectedSubContent = protectedSubContent.replace(/\bהצד המקבל\b/g, '__RECEIVING_PARTY__');
               // הגנה על "הבא" שלא ישתנה
               protectedSubContent = protectedSubContent.replace(/\bהבא\b/g, '__NEXT__');
-              // הגנה על "עד" שלא ישתנה ל"עדה"
-              protectedSubContent = protectedSubContent.replace(/\bעד\s+(?!עד[הא]|עדי|עדות|עדים|עדה)/g, 'עד-ל ');
+              // הגנה על "עד" שלא ישתנה ל"עדה" - גם ב-plural
+              protectedSubContent = protectedSubContent.replace(/\bעד\s+(?!עד[הא]|עדי|עדות|עדים|עדה)/g, '__UNTIL_PLACEHOLDER__ ');
+              protectedSubContent = protectedSubContent.replace(/\bעד(שני|שלושה|שלוש|ארבע|חמש|שש|שבע|שמונה|תשע|עשר|שתי|סבבי|סיום|שיוחלט|אשרת|שמתקיים)/g, '__UNTIL_PLACEHOLDER__$1');
               // הגנה על "עורך הדין" שלא ישתנה ל"עורך הדין תישא"
               protectedSubContent = protectedSubContent.replace(/עורך הדין\s+(?=לא|תישא|יישא|ישא|אינו|יהיה)/g, '__LAWYER_VERB__');
               // הגנה על "מינוי אפוטרופוס" שלא ישתנה ל"מינוי אפוטרופסית"
@@ -672,7 +681,8 @@ export default function ProfessionalFeeAgreementExporter({
               // שלב 2: החלפת כל הטקסט לפי מגדר
               let withFullGender = replaceTextWithGender(protectedSubContent, clientsGender);
               // שלב 3: החזרת הביטויים המוגנים
-              withFullGender = withFullGender.replace(/עד-ל\s+/g, 'עד ');
+              withFullGender = withFullGender.replace(/__UNTIL_PLACEHOLDER__\s+/g, 'עד ');
+              withFullGender = withFullGender.replace(/__UNTIL_PLACEHOLDER__/g, 'עד');
               withFullGender = withFullGender.replace(/__LAWYER_VERB__/g, 'עורך הדין ');
               withFullGender = withFullGender.replace(/__APOTROPS__/g, 'מינוי אפוטרופוס');
               withFullGender = withFullGender.replace(/__FEE__/g, 'שכר טרחה');
@@ -680,7 +690,9 @@ export default function ProfessionalFeeAgreementExporter({
               withFullGender = withFullGender.replace(/__FEE_AGREED__/g, 'שכר הטרחה המוסכם');
               withFullGender = withFullGender.replace(/__RECEIVING_PARTY__/g, 'הצד המקבל');
               withFullGender = withFullGender.replace(/__NEXT__/g, 'הבא');
-              // תיקונים נוספים
+              // תיקונים נוספים - גם למקרים שהמילה "עד" (witness) הוחלפה ל"עדים" במקומות של "עד" (until)
+              // במקרים של plural, "עד" (witness) הוחלפה ל"עדים", אבל "עד" (until) לא צריך להשתנות
+              withFullGender = withFullGender.replace(/עדים\s+(?:ל|שני|שלושה|שלוש|ארבע|חמש|שש|שבע|שמונה|תשע|עשר|שתי|סבבי|סיום|יום|לקבלת|מיצוי|מועד|בין|שבוע|חודש|שנה|תקופה|הפגישה|הפגישות|ביצוע|סוג|דקות|שעות|חודשים|שנים|שיוחלט|אשרת|שמתקיים)/g, 'עד $1');
               withFullGender = withFullGender.replace(/עדה\s+(ה'|ל|שני|סיום|יום|לקבלת|מיצוי|מועד|בין)/g, 'עד $1');
               withFullGender = withFullGender.replace(/בימים א' עדה ה'/g, "בימים א' עד ה'");
               withFullGender = withFullGender.replace(/בימים א' עדה ה' בין/g, "בימים א' עד ה' בין");
@@ -750,8 +762,9 @@ export default function ProfessionalFeeAgreementExporter({
                   protectedSubSubContent = protectedSubSubContent.replace(/\bהצד המקבל\b/g, '__RECEIVING_PARTY__');
                   // הגנה על "הבא" שלא ישתנה
                   protectedSubSubContent = protectedSubSubContent.replace(/\bהבא\b/g, '__NEXT__');
-                  // הגנה על "עד" שלא ישתנה ל"עדה"
-                  protectedSubSubContent = protectedSubSubContent.replace(/\bעד\s+(?!עד[הא]|עדי|עדות|עדים|עדה)/g, 'עד-ל ');
+                  // הגנה על "עד" שלא ישתנה ל"עדה" - גם ב-plural
+                  protectedSubSubContent = protectedSubSubContent.replace(/\bעד\s+(?!עד[הא]|עדי|עדות|עדים|עדה)/g, '__UNTIL_PLACEHOLDER__ ');
+                  protectedSubSubContent = protectedSubSubContent.replace(/\bעד(שני|שלושה|שלוש|ארבע|חמש|שש|שבע|שמונה|תשע|עשר|שתי|סבבי|סיום|שיוחלט|אשרת|שמתקיים)/g, '__UNTIL_PLACEHOLDER__$1');
                   // הגנה על "בימים א' עד ה'" שלא ישתנה
                   protectedSubSubContent = protectedSubSubContent.replace(/בימים א' עד ה'/g, '__DAYS_UNTIL__');
                   // הגנה על "עורך הדין" שלא ישתנה ל"עורך הדין תישא" או "יישאו"
@@ -761,7 +774,8 @@ export default function ProfessionalFeeAgreementExporter({
                   // שלב 2: החלפת כל הטקסט לפי מגדר
                   let withFullGender = replaceTextWithGender(protectedSubSubContent, clientsGender);
                   // שלב 3: החזרת הביטויים המוגנים
-                  withFullGender = withFullGender.replace(/עד-ל\s+/g, 'עד ');
+                  withFullGender = withFullGender.replace(/__UNTIL_PLACEHOLDER__\s+/g, 'עד ');
+                  withFullGender = withFullGender.replace(/__UNTIL_PLACEHOLDER__/g, 'עד');
                   withFullGender = withFullGender.replace(/__LAWYER_VERB__/g, 'עורך הדין ');
                   withFullGender = withFullGender.replace(/__APOTROPS__/g, 'מינוי אפוטרופוס');
                   withFullGender = withFullGender.replace(/__DAYS_UNTIL__/g, "בימים א' עד ה'");
@@ -771,7 +785,9 @@ export default function ProfessionalFeeAgreementExporter({
                   withFullGender = withFullGender.replace(/__FEE_AGREED__/g, 'שכר הטרחה המוסכם');
                   withFullGender = withFullGender.replace(/__RECEIVING_PARTY__/g, 'הצד המקבל');
                   withFullGender = withFullGender.replace(/__NEXT__/g, 'הבא');
-                  // תיקונים נוספים
+                  // תיקונים נוספים - גם למקרים שהמילה "עד" (witness) הוחלפה ל"עדים" במקומות של "עד" (until)
+                  // במקרים של plural, "עד" (witness) הוחלפה ל"עדים", אבל "עד" (until) לא צריך להשתנות
+                  withFullGender = withFullGender.replace(/עדים\s+(?:ל|שני|שלושה|שלוש|ארבע|חמש|שש|שבע|שמונה|תשע|עשר|שתי|סבבי|סיום|יום|לקבלת|מיצוי|מועד|בין|שבוע|חודש|שנה|תקופה|הפגישה|הפגישות|ביצוע|סוג|דקות|שעות|חודשים|שנים|שיוחלט|אשרת|שמתקיים)/g, 'עד $1');
                   withFullGender = withFullGender.replace(/עדה\s+(ה'|ל|שני|סיום|יום|לקבלת|מיצוי|מועד|בין)/g, 'עד $1');
                   withFullGender = withFullGender.replace(/בימים א' עדה ה'/g, "בימים א' עד ה'");
                   withFullGender = withFullGender.replace(/בימים א' עדה ה' בין/g, "בימים א' עד ה' בין");
