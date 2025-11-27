@@ -287,31 +287,11 @@ export default function LawyerFeeAgreement() {
         feeOrder = maxOrder + 1;
       }
       
-      // בניית תוכן הסעיף הראשי
-      let mainContent = '';
-      
-      // הוסף תיאור השירות (אם לא כבר מופיע בסעיף אחר)
-      if (agreementData.case.subject && !serviceDescriptionSection) {
-        mainContent += `שכר הטרחה נקבע עבור השירות המשפטי הבא:\n${agreementData.case.subject}\n\n`;
-      }
-      
-      // הוסף את הסכום הכולל
-      if (agreementData.fees.totalAmount) {
-        const formattedAmount = formatNumber(agreementData.fees.totalAmount);
-        mainContent += `שכר הטרחה הכולל בעד השירות המפורט לעיל הוא סכום של ${formattedAmount} ש"ח + מע"מ.\n\n`;
-      }
-      
-      // הוסף את מבנה התשלום
-      if (agreementData.fees.paymentStructure === 'מלא מראש') {
-        mainContent += 'התשלום יבוצע במלואו מראש עם חתימת ההסכם.';
-      } else if (agreementData.fees.paymentStructure === 'שלבים') {
-        mainContent += 'התשלום יבוצע בחלוקה לשלבים כמפורט להלן:';
-      }
-      
+      // בניית הסעיף הראשי - רק כותרת, התוכן יהיה בתתי-סעיפים
       const mainSection = {
         id: mainSectionId,
         title: 'שכר טרחה עבור השירות',
-        content: mainContent,
+        content: '', // לא נשתמש בתוכן - הכל יהיה בתתי-סעיפים
         level: 'main' as const,
         order: feeOrder
       };
@@ -321,9 +301,67 @@ export default function LawyerFeeAgreement() {
         s.title !== 'שכר טרחה עבור השירות' && s.parentId !== mainSectionId
       );
       
-      // אם יש מבנה תשלום עם שלבים, עדכן את התתי סעיפים
-      if (agreementData.fees.paymentStructure === 'שלבים' && agreementData.fees.paymentStages && agreementData.fees.paymentStages.length > 0) {
-        const newSubsections = agreementData.fees.paymentStages.map((stage, index) => {
+      // בניית תתי-סעיפים לשכר הטרחה
+      const feeSubSections: Array<{
+        id: string;
+        title: string;
+        content: string;
+        level: 'sub' | 'sub-sub';
+        parentId?: string;
+        order: number;
+      }> = [];
+      
+      let subSectionOrder = 1;
+      
+      // תת-סעיף 1: שכר הטרחה נקבע עבור השירות המשפטי הבא
+      if (agreementData.case.subject && !serviceDescriptionSection) {
+        feeSubSections.push({
+          id: generateSectionId(),
+          title: '',
+          content: `שכר הטרחה נקבע עבור השירות המשפטי הבא: ${agreementData.case.subject}`,
+          level: 'sub' as const,
+          parentId: mainSectionId,
+          order: subSectionOrder++
+        });
+      }
+      
+      // תת-סעיף 2: שכר הטרחה הכולל
+      if (agreementData.fees.totalAmount) {
+        const formattedAmount = formatNumber(agreementData.fees.totalAmount);
+        feeSubSections.push({
+          id: generateSectionId(),
+          title: '',
+          content: `שכר הטרחה הכולל בעד השירות המפורט לעיל הוא סכום של ${formattedAmount} ש"ח + מע"מ.`,
+          level: 'sub' as const,
+          parentId: mainSectionId,
+          order: subSectionOrder++
+        });
+      }
+      
+      // תת-סעיף 3: מבנה התשלום
+      if (agreementData.fees.paymentStructure === 'מלא מראש') {
+        feeSubSections.push({
+          id: generateSectionId(),
+          title: '',
+          content: 'התשלום יבוצע במלואו מראש עם חתימת ההסכם.',
+          level: 'sub' as const,
+          parentId: mainSectionId,
+          order: subSectionOrder++
+        });
+      } else if (agreementData.fees.paymentStructure === 'שלבים' && agreementData.fees.paymentStages && agreementData.fees.paymentStages.length > 0) {
+        // תת-סעיף 3: התשלום יבוצע לפי הפירוט הבא
+        const paymentMethodSubSectionId = generateSectionId();
+        feeSubSections.push({
+          id: paymentMethodSubSectionId,
+          title: '',
+          content: 'התשלום יבוצע לפי הפירוט הבא:',
+          level: 'sub' as const,
+          parentId: mainSectionId,
+          order: subSectionOrder++
+        });
+        
+        // תתי-תתי-סעיפים: השלבים
+        agreementData.fees.paymentStages.forEach((stage, index) => {
           const stageValue = stage.type === 'amount' 
             ? (stage.value ? `${formatNumber(stage.value)} ש"ח + מע"מ` : '')
             : (stage.value ? `${stage.value}%` : '');
@@ -333,94 +371,65 @@ export default function LawyerFeeAgreement() {
             content += stage.description;
           }
           if (stageValue) {
-            content += (content ? '\n' : '') + `${stage.type === 'amount' ? 'סכום' : 'אחוז'}: ${stageValue}`;
+            content += (content ? ' ' : '') + `${stage.type === 'amount' ? 'סכום' : 'אחוז'}: ${stageValue}`;
           }
           if (stage.paymentTiming) {
-            content += (content ? '\n' : '') + `תשלום: ${stage.paymentTiming}`;
+            content += (content ? ' ' : '') + `תשלום: ${stage.paymentTiming}`;
           }
           
-          return {
+          feeSubSections.push({
             id: stage.id,
-            title: `שלב ${index + 1}`,
+            title: '',
             content: content || `שלב תשלום ${index + 1}`,
-            level: 'sub' as const,
-            parentId: mainSectionId,
-            order: feeOrder + index + 1
-          };
-        });
-        
-        // הפרד בין סעיפים רגילים לסעיפים קבועים (gen_)
-        const regularSections = withoutOldMain.filter(s => !s.id.startsWith('gen_'));
-        const generalSections = withoutOldMain.filter(s => s.id.startsWith('gen_'));
-        
-        // מצא את הסדר הגבוה ביותר של הסעיפים הרגילים (לא קבועים)
-        const maxRegularOrder = regularSections.length > 0 
-          ? Math.max(...regularSections.map(s => s.order), 0)
-          : feeOrder - 1;
-        
-        // שכר טרחה יופיע אחרי כל הסעיפים הרגילים, אבל לפני הסעיפים הקבועים
-        const feeOrderNew = maxRegularOrder + 1;
-        mainSection.order = feeOrderNew;
-        
-        // עדכן את הסדר של תתי הסעיפים
-        newSubsections.forEach((sub, index) => {
-          sub.order = feeOrderNew + index + 1;
-        });
-        
-        // נשמור על הסדר: סעיפים רגילים -> שכר טרחה ותתי סעיפים -> סעיפים קבועים
-        const allSections = [
-          ...regularSections,
-          mainSection,
-          ...newSubsections,
-          ...generalSections
-        ];
-        
-        // עדכן את הסדר של כל הסעיפים (רק סעיפים רגילים ושכר טרחה, לא קבועים)
-        let currentOrder = 1;
-        return allSections.map((section) => {
-          if (section.id.startsWith('gen_')) {
-            // שמור את הסדר המקורי של הסעיפים הקבועים
-            return section;
-          }
-          return {
-          ...section,
-            order: currentOrder++
-          };
-        });
-      } else {
-        // תשלום מלא מראש - רק הסעיף הראשי
-        // הפרד בין סעיפים רגילים לסעיפים קבועים (gen_)
-        const regularSections = withoutOldMain.filter(s => !s.id.startsWith('gen_'));
-        const generalSections = withoutOldMain.filter(s => s.id.startsWith('gen_'));
-        
-        // מצא את הסדר הגבוה ביותר של הסעיפים הרגילים (לא קבועים)
-        const maxRegularOrder = regularSections.length > 0 
-          ? Math.max(...regularSections.map(s => s.order), 0)
-          : feeOrder - 1;
-        
-        // שכר טרחה יופיע אחרי כל הסעיפים הרגילים, אבל לפני הסעיפים הקבועים
-        mainSection.order = maxRegularOrder + 1;
-        
-        // נשמור על הסדר: סעיפים רגילים -> שכר טרחה -> סעיפים קבועים
-        const allSections = [
-          ...regularSections,
-          mainSection,
-          ...generalSections
-        ];
-        
-        // עדכן את הסדר של כל הסעיפים (רק סעיפים רגילים ושכר טרחה, לא קבועים)
-        let currentOrder = 1;
-        return allSections.map((section) => {
-          if (section.id.startsWith('gen_')) {
-            // שמור את הסדר המקורי של הסעיפים הקבועים
-            return section;
-          }
-          return {
-          ...section,
-            order: currentOrder++
-          };
+            level: 'sub-sub' as const,
+            parentId: paymentMethodSubSectionId,
+            order: subSectionOrder++
+          });
         });
       }
+      
+      // הפרד בין סעיפים רגילים לסעיפים קבועים (gen_)
+      const regularSections = withoutOldMain.filter(s => !s.id.startsWith('gen_'));
+      const generalSections = withoutOldMain.filter(s => s.id.startsWith('gen_'));
+      
+      // מצא את הסדר הגבוה ביותר של הסעיפים הרגילים (לא קבועים)
+      const maxRegularOrder = regularSections.length > 0 
+        ? Math.max(...regularSections.map(s => s.order), 0)
+        : feeOrder - 1;
+      
+      // שכר טרחה יופיע אחרי כל הסעיפים הרגילים, אבל לפני הסעיפים הקבועים
+      const feeOrderNew = maxRegularOrder + 1;
+      mainSection.order = feeOrderNew;
+      
+      // הסדר של תתי-הסעיפים כבר נקבע ב-subSectionOrder, אין צורך לעדכן אותו כאן
+      // הסדר יתעדכן ב-map הבא יחד עם כל הסעיפים האחרים
+      
+      // נשמור על הסדר: סעיפים רגילים -> שכר טרחה ותתי סעיפים -> סעיפים קבועים
+      const allSections = [
+        ...regularSections,
+        mainSection,
+        ...feeSubSections,
+        ...generalSections
+      ];
+      
+      // עדכן את הסדר של כל הסעיפים (רק סעיפים רגילים ושכר טרחה, לא קבועים)
+      // תתי-סעיפים לא מעודכנים כאן כי הסדר שלהם הוא יחסי בתוך הסעיף הראשי
+      let currentOrder = 1;
+      return allSections.map((section) => {
+        if (section.id.startsWith('gen_')) {
+          // שמור את הסדר המקורי של הסעיפים הקבועים
+          return section;
+        }
+        // אם זה תת-סעיף או תת-תת-סעיף, שמור את הסדר המקורי שלו
+        if (section.level === 'sub' || section.level === 'sub-sub') {
+          return section;
+        }
+        // עדכן את הסדר רק של סעיפים ראשיים
+        return {
+          ...section,
+          order: currentOrder++
+        };
+      });
     });
   };
 
