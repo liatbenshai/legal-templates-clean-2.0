@@ -240,6 +240,14 @@ export const hebrewDictionary: Record<string, GenderedWord> = {
   'מוסמך': { male: 'מוסמך', female: 'מוסמכת', plural: 'מוסמכים' },
   'מחויבמשפטי': { male: 'מחויב', female: 'מחויבת', plural: 'מחויבים' },
   
+  // כינויי גוף - מילות יחס
+  'עליו': { male: 'עליו', female: 'עליה', plural: 'עליהם' },
+  'לו': { male: 'לו', female: 'לה', plural: 'להם' },
+  'אותו': { male: 'אותו', female: 'אותה', plural: 'אותם' },
+  'ממנו': { male: 'ממנו', female: 'ממנה', plural: 'מהם' },
+  'אצלו': { male: 'אצלו', female: 'אצלה', plural: 'אצלם' },
+  'בידיו': { male: 'בידיו', female: 'בידיה', plural: 'בידיהם' },
+  
   // מונחים משפטיים - נאמנות
   'הנאמן': { male: 'הנאמן', female: 'הנאמנה', plural: 'הנאמנים' },
   'עין': { male: 'עינו', female: 'עינה', plural: 'עיניהם' },
@@ -409,6 +417,17 @@ export function replaceTextWithGender(text: string, gender: Gender): string {
     result = result.replace(/ממלא\/ת/g, 'ממלא'); // ממלא/ת → ממלא (עבור "אני ממליץ/ה")
     result = result.replace(/רשאי\/ת/g, 'רשאי'); // רשאי/ת → רשאי
     result = result.replace(/יחליט\/תחליט/g, 'יחליט'); // יחליט/תחליט → יחליט
+    result = result.replace(/ייגע\/תיגע/g, 'ייגע'); // ייגע/תיגע → ייגע
+    result = result.replace(/יחרוג\/תחרוג/g, 'יחרוג'); // יחרוג/תחרוג → יחרוג
+    result = result.replace(/יפעל\/תפעל/g, 'יפעל'); // יפעל/תפעל → יפעל
+    result = result.replace(/יטפל\/תטפל/g, 'יטפל'); // יטפל/תטפל → יטפל
+    result = result.replace(/יבדוק\/תבדוק/g, 'יבדוק'); // יבדוק/תבדוק → יבדוק
+    result = result.replace(/ידאג\/תדאג/g, 'ידאג'); // ידאג/תדאג → ידאג
+    result = result.replace(/יוודא\/תוודא/g, 'יוודא'); // יוודא/תוודא → יוודא
+    result = result.replace(/יתקין\/תתקין/g, 'יתקין'); // יתקין/תתקין → יתקין
+    result = result.replace(/יפקח\/תפקח/g, 'יפקח'); // יפקח/תפקח → יפקח
+    result = result.replace(/יוצא\/ת/g, 'יוצא'); // יוצא/ת → יוצא
+    result = result.replace(/עליו\/ה/g, 'עליו'); // עליו/ה → עליו
     result = result.replace(/מרצונו\/ה/g, 'מרצונו'); // מרצונו/ה → מרצונו
     result = result.replace(/מגוריו\/ה/g, 'מגוריו'); // מגוריו/ה → מגוריו
     result = result.replace(/חייו\/ה/g, 'חייו'); // חייו/ה → חייו
@@ -516,6 +535,17 @@ export function replaceTextWithGender(text: string, gender: Gender): string {
     result = result.replace(/ממלא\/ת/g, 'ממלאת'); // ממלא/ת → ממלאת
     result = result.replace(/רשאי\/ת/g, 'רשאית'); // רשאי/ת → רשאית
     result = result.replace(/יחליט\/תחליט/g, 'תחליט'); // יחליט/תחליט → תחליט
+    result = result.replace(/ייגע\/תיגע/g, 'תיגע'); // ייגע/תיגע → תיגע
+    result = result.replace(/יחרוג\/תחרוג/g, 'תחרוג'); // יחרוג/תחרוג → תחרוג
+    result = result.replace(/יפעל\/תפעל/g, 'תפעל'); // יפעל/תפעל → תפעל
+    result = result.replace(/יטפל\/תטפל/g, 'תטפל'); // יטפל/תטפל → תטפל
+    result = result.replace(/יבדוק\/תבדוק/g, 'תבדוק'); // יבדוק/תבדוק → תבדוק
+    result = result.replace(/ידאג\/תדאג/g, 'תדאג'); // ידאג/תדאג → תדאג
+    result = result.replace(/יוודא\/תוודא/g, 'תוודא'); // יוודא/תוודא → תוודא
+    result = result.replace(/יתקין\/תתקין/g, 'תתקין'); // יתקין/תתקין → תתקין
+    result = result.replace(/יפקח\/תפקח/g, 'תפקח'); // יפקח/תפקח → תפקח
+    result = result.replace(/יוצא\/ת/g, 'יוצאת'); // יוצא/ת → יוצאת
+    result = result.replace(/עליו\/ה/g, 'עליה'); // עליו/ה → עליה
     result = result.replace(/מרצונו\/ה/g, 'מרצונה'); // מרצונו/ה → מרצונה
     result = result.replace(/מגוריו\/ה/g, 'מגוריה'); // מגוריו/ה → מגוריה
     result = result.replace(/חייו\/ה/g, 'חייה'); // חייו/ה → חייה
@@ -607,6 +637,17 @@ export function replaceTextWithGender(text: string, gender: Gender): string {
     result = result.replace(/ממלא\/ת/g, 'ממלאים'); // ממלא/ת → ממלאים
     result = result.replace(/רשאי\/ת/g, 'רשאים'); // רשאי/ת → רשאים
     result = result.replace(/יחליט\/תחליט/g, 'יחליטו'); // יחליט/תחליט → יחליטו
+    result = result.replace(/ייגע\/תיגע/g, 'ייגעו'); // ייגע/תיגע → ייגעו
+    result = result.replace(/יחרוג\/תחרוג/g, 'יחרגו'); // יחרוג/תחרוג → יחרגו
+    result = result.replace(/יפעל\/תפעל/g, 'יפעלו'); // יפעל/תפעל → יפעלו
+    result = result.replace(/יטפל\/תטפל/g, 'יטפלו'); // יטפל/תטפל → יטפלו
+    result = result.replace(/יבדוק\/תבדוק/g, 'יבדקו'); // יבדוק/תבדוק → יבדקו
+    result = result.replace(/ידאג\/תדאג/g, 'ידאגו'); // ידאג/תדאג → ידאגו
+    result = result.replace(/יוודא\/תוודא/g, 'יוודאו'); // יוודא/תוודא → יוודאו
+    result = result.replace(/יתקין\/תתקין/g, 'יתקינו'); // יתקין/תתקין → יתקינו
+    result = result.replace(/יפקח\/תפקח/g, 'יפקחו'); // יפקח/תפקח → יפקחו
+    result = result.replace(/יוצא\/ת/g, 'יוצאים'); // יוצא/ת → יוצאים
+    result = result.replace(/עליו\/ה/g, 'עליהם'); // עליו/ה → עליהם
     result = result.replace(/מרצונו\/ה/g, 'מרצונם'); // מרצונו/ה → מרצונם
     result = result.replace(/מגוריו\/ה/g, 'מגוריהם'); // מגוריו/ה → מגוריהם
     result = result.replace(/חייו\/ה/g, 'חייהם'); // חייו/ה → חיייהם

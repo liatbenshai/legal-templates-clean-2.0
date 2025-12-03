@@ -620,7 +620,7 @@ export function applyAdvanceDirectivesGender(
 ): string {
   let result = sectionContent;
   
-  // **שלב 1: החלפת placeholders ממילון העברית**
+  // **שלב 1: החלפת placeholders ממילון העברית עם {{}}**
   // מיופה כוח, רשאי, אחראי, מוסמך, הממנה וכו'
   const genderMap: Record<string, 'male' | 'female' | 'plural'> = {
     'מיופה_כוח': attorneyGender,
@@ -629,9 +629,10 @@ export function applyAdvanceDirectivesGender(
     'אחראי': attorneyGender,
     'מוסמך': attorneyGender,
     'מחויב': attorneyGender,
+    'חייב': attorneyGender,
+    'זכאי': attorneyGender,
     'ממנה': principalGender,
     'הממנה': principalGender,
-    'זכאי': principalGender,
     'מבקש': principalGender,
     'דורש': principalGender,
     'מצהיר': principalGender,
@@ -640,10 +641,129 @@ export function applyAdvanceDirectivesGender(
   
   result = replaceTextWithMultipleGenders(result, genderMap);
   
-  // **שלב 2: החלפת דפוסים אוטומטיים /ת /ה**
-  // רק אם יש דפוסים כאלה בטקסט - נחליף לפי מגדר הממנה
-  if (result.includes('/ת') || result.includes('/ה')) {
-    result = replaceTextWithGender(result, principalGender);
+  // **שלב 2: החלפת דפוסים /ת /ה לפי מגדר הממנה (הטקסט שמתייחס לממנה)**
+  // טיפול רק בדפוסים ספציפיים - לא מפעיל החלפה גורפת מהמילון!
+  if (principalGender === 'male') {
+    // הסר /ת כדי להשאיר צורת זכר
+    result = result.replace(/\/ת\b/g, '');
+    result = result.replace(/\/ה\b/g, '');
+    result = result.replace(/\/ית\b/g, '');
+    result = result.replace(/מבקש\/ת/g, 'מבקש');
+    result = result.replace(/מצהיר\/ה/g, 'מצהיר');
+    result = result.replace(/מורה\/ה/g, 'מורה');
+    result = result.replace(/רשאי\/ת/g, 'רשאי');
+    result = result.replace(/יוצא\/ת/g, 'יוצא');
+    result = result.replace(/מורשה\/ית/g, 'מורשה');
+    result = result.replace(/כבעל\/ת/g, 'כבעל');
+    result = result.replace(/מעוניין\/ת/g, 'מעוניין');
+    result = result.replace(/מנחה\/ה/g, 'מנחה');
+    result = result.replace(/מביע\/ה/g, 'מביע');
+    result = result.replace(/רגיל\/ה/g, 'רגיל');
+    result = result.replace(/לבוש\/ה/g, 'לבוש');
+    result = result.replace(/חפץ\/ה/g, 'חפץ');
+    // כינויי שייכות של הממנה
+    result = result.replace(/הכנסותיו\/ה/g, 'הכנסותיו');
+    result = result.replace(/רווחתו\/ה/g, 'רווחתו');
+    result = result.replace(/יכולתו\/ה/g, 'יכולתו');
+    result = result.replace(/צרכיו\/ה/g, 'צרכיו');
+  } else {
+    // הוסף ת כדי ליצור צורת נקבה
+    result = result.replace(/\/ת\b/g, 'ת');
+    result = result.replace(/([^ה])\/ה\b/g, '$1ה');
+    result = result.replace(/\/ית\b/g, 'ית');
+    result = result.replace(/מבקש\/ת/g, 'מבקשת');
+    result = result.replace(/מצהיר\/ה/g, 'מצהירה');
+    result = result.replace(/מורה\/ה/g, 'מורה');
+    result = result.replace(/רשאי\/ת/g, 'רשאית');
+    result = result.replace(/יוצא\/ת/g, 'יוצאת');
+    result = result.replace(/מורשה\/ית/g, 'מורשית');
+    result = result.replace(/כבעל\/ת/g, 'כבעלת');
+    result = result.replace(/מעוניין\/ת/g, 'מעוניינת');
+    result = result.replace(/מנחה\/ה/g, 'מנחה');
+    result = result.replace(/מביע\/ה/g, 'מביעה');
+    result = result.replace(/רגיל\/ה/g, 'רגילה');
+    result = result.replace(/לבוש\/ה/g, 'לבושה');
+    result = result.replace(/חפץ\/ה/g, 'חפצה');
+    // כינויי שייכות של הממנה
+    result = result.replace(/הכנסותיו\/ה/g, 'הכנסותיה');
+    result = result.replace(/רווחתו\/ה/g, 'רווחתה');
+    result = result.replace(/יכולתו\/ה/g, 'יכולתה');
+    result = result.replace(/צרכיו\/ה/g, 'צרכיה');
+  }
+  
+  // **שלב 3: החלפת דפוסים של מיופה הכוח (פעלים עתיד וכינויי שייכות)**
+  if (attorneyGender === 'male') {
+    result = result.replace(/יפעל\/תפעל/g, 'יפעל');
+    result = result.replace(/ידאג\/תדאג/g, 'ידאג');
+    result = result.replace(/יוודא\/תוודא/g, 'יוודא');
+    result = result.replace(/יבצע\/תבצע/g, 'יבצע');
+    result = result.replace(/יטפל\/תטפל/g, 'יטפל');
+    result = result.replace(/יבדוק\/תבדוק/g, 'יבדוק');
+    result = result.replace(/יתקין\/תתקין/g, 'יתקין');
+    result = result.replace(/יפקח\/תפקח/g, 'יפקח');
+    result = result.replace(/יוכל\/תוכל/g, 'יוכל');
+    result = result.replace(/יידרש\/תידרש/g, 'יידרש');
+    result = result.replace(/יהיה\/תהיה/g, 'יהיה');
+    result = result.replace(/יקפיד\/תקפיד/g, 'יקפיד');
+    result = result.replace(/ימכור\/תמכור/g, 'ימכור');
+    result = result.replace(/יבחן\/תבחן/g, 'יבחן');
+    result = result.replace(/יבחר\/תבחר/g, 'יבחר');
+    result = result.replace(/מנוע\/ה/g, 'מנוע');
+    result = result.replace(/יישא\/תישא/g, 'יישא');
+    result = result.replace(/ינחה\/תנחה/g, 'ינחה');
+    result = result.replace(/יחדש\/תחדש/g, 'יחדש');
+    result = result.replace(/שיקול דעתו\/ה/g, 'שיקול דעתו');
+    result = result.replace(/סמכויותיו\/ה/g, 'סמכויותיו');
+    result = result.replace(/לרשותו\/ה/g, 'לרשותו');
+    result = result.replace(/שביכולתו\/ה/g, 'שביכולתו');
+  } else if (attorneyGender === 'female') {
+    result = result.replace(/יפעל\/תפעל/g, 'תפעל');
+    result = result.replace(/ידאג\/תדאג/g, 'תדאג');
+    result = result.replace(/יוודא\/תוודא/g, 'תוודא');
+    result = result.replace(/יבצע\/תבצע/g, 'תבצע');
+    result = result.replace(/יטפל\/תטפל/g, 'תטפל');
+    result = result.replace(/יבדוק\/תבדוק/g, 'תבדוק');
+    result = result.replace(/יתקין\/תתקין/g, 'תתקין');
+    result = result.replace(/יפקח\/תפקח/g, 'תפקח');
+    result = result.replace(/יוכל\/תוכל/g, 'תוכל');
+    result = result.replace(/יידרש\/תידרש/g, 'תידרש');
+    result = result.replace(/יהיה\/תהיה/g, 'תהיה');
+    result = result.replace(/יקפיד\/תקפיד/g, 'תקפיד');
+    result = result.replace(/ימכור\/תמכור/g, 'תמכור');
+    result = result.replace(/יבחן\/תבחן/g, 'תבחן');
+    result = result.replace(/יבחר\/תבחר/g, 'תבחר');
+    result = result.replace(/מנוע\/ה/g, 'מנועה');
+    result = result.replace(/יישא\/תישא/g, 'תישא');
+    result = result.replace(/ינחה\/תנחה/g, 'תנחה');
+    result = result.replace(/יחדש\/תחדש/g, 'תחדש');
+    result = result.replace(/שיקול דעתו\/ה/g, 'שיקול דעתה');
+    result = result.replace(/סמכויותיו\/ה/g, 'סמכויותיה');
+    result = result.replace(/לרשותו\/ה/g, 'לרשותה');
+    result = result.replace(/שביכולתו\/ה/g, 'שביכולתה');
+  } else { // plural
+    result = result.replace(/יפעל\/תפעל/g, 'יפעלו');
+    result = result.replace(/ידאג\/תדאג/g, 'ידאגו');
+    result = result.replace(/יוודא\/תוודא/g, 'יוודאו');
+    result = result.replace(/יבצע\/תבצע/g, 'יבצעו');
+    result = result.replace(/יטפל\/תטפל/g, 'יטפלו');
+    result = result.replace(/יבדוק\/תבדוק/g, 'יבדקו');
+    result = result.replace(/יתקין\/תתקין/g, 'יתקינו');
+    result = result.replace(/יפקח\/תפקח/g, 'יפקחו');
+    result = result.replace(/יוכל\/תוכל/g, 'יוכלו');
+    result = result.replace(/יידרש\/תידרש/g, 'יידרשו');
+    result = result.replace(/יהיה\/תהיה/g, 'יהיו');
+    result = result.replace(/יקפיד\/תקפיד/g, 'יקפידו');
+    result = result.replace(/ימכור\/תמכור/g, 'ימכרו');
+    result = result.replace(/יבחן\/תבחן/g, 'יבחנו');
+    result = result.replace(/יבחר\/תבחר/g, 'יבחרו');
+    result = result.replace(/מנוע\/ה/g, 'מנועים');
+    result = result.replace(/יישא\/תישא/g, 'יישאו');
+    result = result.replace(/ינחה\/תנחה/g, 'ינחו');
+    result = result.replace(/יחדש\/תחדש/g, 'יחדשו');
+    result = result.replace(/שיקול דעתו\/ה/g, 'שיקול דעתם');
+    result = result.replace(/סמכויותיו\/ה/g, 'סמכויותיהם');
+    result = result.replace(/לרשותו\/ה/g, 'לרשותם');
+    result = result.replace(/שביכולתו\/ה/g, 'שביכולתם');
   }
   
   return result;

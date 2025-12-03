@@ -7,9 +7,13 @@ import AdvanceDirectivesSectionSelector from './AdvanceDirectivesSectionSelector
 import type { Gender } from '@/lib/hebrew-gender';
 import { replaceTextWithGender } from '@/lib/hebrew-gender';
 import { 
-  applyAdvanceDirectivesGender,
-  getAdvanceDirectivesSectionById 
+  applyAdvanceDirectivesGender
 } from '@/lib/sections-warehouses/advance-directives-warehouse';
+import { 
+  useAdvanceDirectivesSections,
+  getLocalSections,
+  type AdvanceDirectivesSection
+} from '@/lib/hooks/useAdvanceDirectivesSections';
 import { EditableSection as EditableSectionType } from '@/lib/learning-system/types';
 import { learningEngine } from '@/lib/learning-system/learning-engine';
 import EditableSection from './LearningSystem/EditableSection';
@@ -40,6 +44,29 @@ export default function AdvanceDirectivesForm() {
     email: '',
     gender: 'male' as PersonGender
   });
+
+  // Supabase hook לסעיפים
+  const { 
+    sections: dbSections, 
+    isLoading: sectionsLoading,
+    getSectionById 
+  } = useAdvanceDirectivesSections();
+
+  // Fallback לסעיפים מקומיים
+  const [localSections, setLocalSections] = useState<AdvanceDirectivesSection[]>([]);
+  
+  useEffect(() => {
+    if (!sectionsLoading && dbSections.length === 0) {
+      getLocalSections().then(setLocalSections);
+    }
+  }, [sectionsLoading, dbSections.length]);
+
+  // פונקציה לקבלת סעיף לפי ID (מ-Supabase או מקומי)
+  const getSection = (sectionId: string) => {
+    const dbSection = getSectionById(sectionId);
+    if (dbSection) return dbSection;
+    return localSections.find(s => s.section_id === sectionId);
+  };
 
   // Warehouse hook
   const { addSection, updateSection, sections: warehouseSections } = useWarehouse(principalInfo.fullName || 'anonymous');
@@ -141,7 +168,7 @@ export default function AdvanceDirectivesForm() {
   const getSelectedSectionsContent = async (category: 'property' | 'personal' | 'medical'): Promise<string> => {
     const attorneyGender = getAttorneyGender();
     const sections = selectedSections
-      .map(id => getAdvanceDirectivesSectionById(id))
+      .map(id => getSection(id))
       .filter(section => section && section.category === category);
     
     if (sections.length === 0) return '';
@@ -167,7 +194,7 @@ export default function AdvanceDirectivesForm() {
     
     // הוספת כל הסעיפים שנבחרו מהמחסן
     const sectionPromises = selectedSections.map(async (sectionId, index) => {
-      const section = getAdvanceDirectivesSectionById(sectionId);
+      const section = getSection(sectionId);
       if (section) {
         const content = await applyAdvanceDirectivesGender(
           section.content,
@@ -451,7 +478,8 @@ ${principalInfo.email ? `דוא"ל: ${principalInfo.email}` : ''}
 ${attorneys.map((attorney, index) => {
   const attorneyNum = index + 1;
   const attorneySuffix = attorney.gender === 'female' ? 'ת' : '';
-  return `${attorneyNum}. מיופה${attorneySuffix} כוח ${index === 0 ? 'ראשי' + attorneySuffix : 'חלופי' + attorneySuffix}:
+  const attorneyWord = attorney.gender === 'female' ? 'מיופת' : 'מיופה';
+  return `${attorneyNum}. ${attorneyWord} כוח ${index === 0 ? 'ראשי' + attorneySuffix : 'חלופי' + attorneySuffix}:
    שם: ${attorney.name}
    ת"ז: ${attorney.id}
    יחסי קרבה: ${attorney.relationship}

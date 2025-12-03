@@ -1,14 +1,17 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { 
-  advanceDirectivesSectionsWarehouse, 
   advanceDirectivesCategories, 
   advanceDirectivesSubcategories,
-  applyAdvanceDirectivesGender,
-  type AdvanceDirectivesSectionTemplate 
+  applyAdvanceDirectivesGender
 } from '@/lib/sections-warehouses/advance-directives-warehouse';
-import { Search, Plus, Check, Eye, EyeOff, X, RefreshCw } from 'lucide-react';
+import { 
+  useAdvanceDirectivesSections, 
+  getLocalSections,
+  type AdvanceDirectivesSection 
+} from '@/lib/hooks/useAdvanceDirectivesSections';
+import { Search, Plus, Check, Eye, EyeOff, X, RefreshCw, Database, HardDrive } from 'lucide-react';
 import { useAdvanceDirectivesHidden } from '@/lib/hooks/useAdvanceDirectivesHidden';
 
 interface AdvanceDirectivesSectionSelectorProps {
@@ -26,6 +29,17 @@ export default function AdvanceDirectivesSectionSelector({
   attorneyGender,
   userId
 }: AdvanceDirectivesSectionSelectorProps) {
+  // Supabase hook לסעיפים
+  const {
+    sections: supabaseSections,
+    categories: dbCategories,
+    subcategories: dbSubcategories,
+    isLoading: sectionsLoading,
+    error: sectionsError,
+    fetchSections,
+    incrementUsage
+  } = useAdvanceDirectivesSections();
+
   // Supabase hook לסעיפים מוסתרים
   const {
     hiddenSections,
@@ -34,34 +48,54 @@ export default function AdvanceDirectivesSectionSelector({
     showAllSections
   } = useAdvanceDirectivesHidden(userId);
 
+  // Fallback לסעיפים מקומיים אם אין חיבור ל-Supabase
+  const [localSections, setLocalSections] = useState<AdvanceDirectivesSection[]>([]);
+  const [useLocal, setUseLocal] = useState(false);
+
+  useEffect(() => {
+    // אם יש שגיאה או אין סעיפים מ-Supabase, טען מקומית
+    if (sectionsError || (!sectionsLoading && supabaseSections.length === 0)) {
+      getLocalSections().then(sections => {
+        setLocalSections(sections);
+        setUseLocal(true);
+      });
+    }
+  }, [sectionsError, sectionsLoading, supabaseSections.length]);
+
+  // השתמש בסעיפים מ-Supabase או מקומיים
+  const allSections = useLocal ? localSections : supabaseSections;
+  const isLoading = sectionsLoading && !useLocal;
+
   const [selectedCategory, setSelectedCategory] = useState<'property' | 'personal' | 'medical'>('property');
-  const [selectedSubcategory, setSelectedSubcategory] = useState<string>('real-estate'); // ברירת מחדל: נדל"ן
+  const [selectedSubcategory, setSelectedSubcategory] = useState<string>('real_estate'); // ברירת מחדל: נדל"ן
   const [searchQuery, setSearchQuery] = useState('');
   const [previewSection, setPreviewSection] = useState<string | null>(null);
 
   // סינון סעיפים לפי קטגוריה, תת-קטגוריה, חיפוש והסתרה
-  const filteredSections = advanceDirectivesSectionsWarehouse.filter(section => {
-    // סינון לפי הסתרה
-    if (hiddenSections.includes(section.id)) return false;
-    
-    // סינון לפי קטגוריה
-    if (section.category !== selectedCategory) return false;
-    
-    // סינון לפי תת-קטגוריה (אם נבחר)
-    if (selectedSubcategory && section.subcategory !== selectedSubcategory) return false;
-    
-    // סינון לפי חיפוש
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      return (
-        section.title.toLowerCase().includes(query) ||
-        section.content.toLowerCase().includes(query) ||
-        section.tags.some(tag => tag.toLowerCase().includes(query))
-      );
-    }
-    
-    return true;
-  });
+  const filteredSections = useMemo(() => {
+    return allSections.filter(section => {
+      // סינון לפי הסתרה
+      if (hiddenSections.includes(section.section_id)) return false;
+      
+      // סינון לפי קטגוריה
+      if (section.category !== selectedCategory) return false;
+      
+      // סינון לפי תת-קטגוריה (אם נבחר)
+      if (selectedSubcategory && section.subcategory !== selectedSubcategory) return false;
+      
+      // סינון לפי חיפוש
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        return (
+          section.title.toLowerCase().includes(query) ||
+          section.content.toLowerCase().includes(query) ||
+          section.tags.some(tag => tag.toLowerCase().includes(query))
+        );
+      }
+      
+      return true;
+    });
+  }, [allSections, hiddenSections, selectedCategory, selectedSubcategory, searchQuery]);
 
   // קבלת תת-הקטגוריות של הקטגוריה הנוכחית
   const currentSubcategories = advanceDirectivesSubcategories[selectedCategory] || [];
@@ -70,8 +104,20 @@ export default function AdvanceDirectivesSectionSelector({
   const isSectionSelected = (sectionId: string) => selectedSections.includes(sectionId);
 
   // הצגת תצוגה מקדימה של סעיף עם נטיות
-  const getPreviewContent = async (section: AdvanceDirectivesSectionTemplate) => {
+  const getPreviewContent = async (section: AdvanceDirectivesSection) => {
     return await applyAdvanceDirectivesGender(section.content, principalGender, attorneyGender);
+  };
+
+  // טיפול בבחירת סעיף
+  const handleSectionToggle = async (sectionId: string) => {
+    onSectionToggle(sectionId);
+    // עדכון מונה שימוש ב-Supabase
+    if (!useLocal) {
+      const section = allSections.find(s => s.section_id === sectionId);
+      if (section) {
+        await incrementUsage(section.id);
+      }
+    }
   };
 
   return (
@@ -79,14 +125,38 @@ export default function AdvanceDirectivesSectionSelector({
       <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="font-semibold text-gray-900 mb-2">📚 מחסן הסעיפים - 95 סעיפים מוכנים ☁️</h3>
+            <h3 className="font-semibold text-gray-900 mb-2">
+              📚 מחסן הסעיפים - {allSections.length} סעיפים 
+              {useLocal ? (
+                <span className="text-orange-600 mr-2">
+                  <HardDrive className="w-4 h-4 inline mr-1" />
+                  (מקומי)
+                </span>
+              ) : (
+                <span className="text-green-600 mr-2">
+                  <Database className="w-4 h-4 inline mr-1" />
+                  (ענן)
+                </span>
+              )}
+            </h3>
             <p className="text-sm text-gray-700">
               בחר סעיפים מהמחסן או כתוב סעיפים משלך. כל הסעיפים יותאמו אוטומטית למגדר שבחרת.
             </p>
           </div>
-          {hiddenLoading && (
-            <RefreshCw className="w-5 h-5 text-blue-600 animate-spin" />
-          )}
+          <div className="flex items-center gap-2">
+            {(hiddenLoading || isLoading) && (
+              <RefreshCw className="w-5 h-5 text-blue-600 animate-spin" />
+            )}
+            {!useLocal && (
+              <button
+                onClick={() => fetchSections()}
+                className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded"
+                title="רענון סעיפים"
+              >
+                <RefreshCw className="w-4 h-4" />
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -153,15 +223,21 @@ export default function AdvanceDirectivesSectionSelector({
 
       {/* רשימת סעיפים */}
       <div className="space-y-3 max-h-[500px] overflow-y-auto">
-        {filteredSections.length === 0 ? (
+        {isLoading ? (
+          <div className="text-center py-12">
+            <RefreshCw className="w-8 h-8 mx-auto text-blue-500 animate-spin" />
+            <p className="mt-3 text-gray-500">טוען סעיפים...</p>
+          </div>
+        ) : filteredSections.length === 0 ? (
           <div className="text-center py-12 text-gray-500">
             <p className="text-lg">לא נמצאו סעיפים</p>
             <p className="text-sm mt-2">נסה לשנות את החיפוש או הקטגוריה</p>
           </div>
         ) : (
           filteredSections.map((section) => {
-            const isSelected = isSectionSelected(section.id);
-            const isPreview = previewSection === section.id;
+            const sectionId = section.section_id;
+            const isSelected = isSectionSelected(sectionId);
+            const isPreview = previewSection === sectionId;
             
             return (
               <div
@@ -176,7 +252,8 @@ export default function AdvanceDirectivesSectionSelector({
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
                       <h4 className="font-semibold text-gray-900">{section.title}</h4>
-                      {section.tags.length > 0 && (
+                      <span className="text-xs text-gray-400">{sectionId}</span>
+                      {section.tags && section.tags.length > 0 && (
                         <div className="flex gap-1">
                           {section.tags.slice(0, 3).map((tag, idx) => (
                             <span
@@ -192,17 +269,14 @@ export default function AdvanceDirectivesSectionSelector({
                     
                     {isPreview && (
                       <div className="mt-3 p-3 bg-white border border-gray-200 rounded text-sm text-gray-700 whitespace-pre-wrap">
-                        {(() => {
-                          // זה לא יכול להיות async ב-JSX, אז נציג הודעה
-                          return 'תצוגה מקדימה זמינה רק לאחר בחירה';
-                        })()}
+                        {section.content.substring(0, 300)}...
                       </div>
                     )}
                   </div>
 
                   <div className="flex gap-2">
                     <button
-                      onClick={() => setPreviewSection(isPreview ? null : section.id)}
+                      onClick={() => setPreviewSection(isPreview ? null : sectionId)}
                       className={`p-2 rounded-lg transition ${
                         isPreview
                           ? 'bg-blue-100 text-blue-600'
@@ -216,7 +290,7 @@ export default function AdvanceDirectivesSectionSelector({
                     <button
                       onClick={async () => {
                         try {
-                          await toggleHideSection(section.id);
+                          await toggleHideSection(sectionId);
                         } catch (err) {
                           alert('❌ שגיאה בהסתרת הסעיף');
                         }
@@ -228,7 +302,7 @@ export default function AdvanceDirectivesSectionSelector({
                     </button>
 
                     <button
-                      onClick={() => onSectionToggle(section.id)}
+                      onClick={() => handleSectionToggle(sectionId)}
                       className={`p-2 rounded-lg transition ${
                         isSelected
                           ? 'bg-green-600 text-white hover:bg-green-700'
