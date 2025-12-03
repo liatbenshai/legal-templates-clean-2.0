@@ -326,7 +326,7 @@ export async function getLocalSections(): Promise<AdvanceDirectivesSection[]> {
     title_en: s.titleEn,
     content: s.content,
     variables: s.variables,
-    gender_variables: s.genderVariables,
+    gender_variables: s.genderVariables || { principal: false, attorney: false },
     tags: s.tags,
     is_active: true,
     is_custom: false,

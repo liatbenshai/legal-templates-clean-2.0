@@ -8,68 +8,80 @@ export default function HomePage() {
   const featuredCategories = updatedCategories.slice(0, 6);
 
   return (
-    <div className="bg-gradient-to-b from-blue-50 to-white">
-      {/* Hero Section */}
-      <section className="container mx-auto px-4 py-20">
-        <div className="max-w-4xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-800 rounded-full text-sm font-medium mb-6">
-            <Sparkles className="w-4 h-4" />
-            <span>מערכת מתקדמת עם עוזר AI לניסוח משפטי</span>
-          </div>
-          
-          <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
-            כל התבניות המשפטיות
-            <br />
-            <span className="text-primary">במקום אחד</span>
-          </h1>
-          
-          <p className="text-xl text-gray-600 mb-10 leading-relaxed max-w-2xl mx-auto">
-            פלטפורמה מתקדמת לעורכי דין עם מאות תבניות משפטיות מעוצבות,
-            עורך חכם ועוזר AI לניסוח בעברית משפטית תקינה
-          </p>
-
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              href="/documents"
-              className="px-10 py-5 bg-gradient-to-r from-green-600 to-emerald-600 text-white text-xl font-bold rounded-xl hover:from-green-700 hover:to-emerald-700 transition shadow-2xl hover:shadow-3xl transform hover:scale-105 flex items-center gap-3"
-            >
-              <Sparkles className="w-6 h-6" />
-              <span>יצירת מסמכים 🚀</span>
-            </Link>
-            <Link
-              href="/templates"
-              className="px-8 py-4 bg-primary text-white text-lg font-semibold rounded-xl hover:bg-blue-700 transition shadow-lg hover:shadow-xl"
-            >
-              גלה תבניות
-            </Link>
-            <Link
-              href="/editor"
-              className="px-8 py-4 bg-white text-primary text-lg font-semibold rounded-xl hover:bg-gray-50 transition border-2 border-primary"
-            >
-              עורך חדש
-            </Link>
-          </div>
+    <div className="min-h-screen">
+      {/* Hero Section with Animated Background */}
+      <section className="relative overflow-hidden hero-bg">
+        {/* Floating Orbs */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="orb orb-1"></div>
+          <div className="orb orb-2"></div>
+          <div className="orb orb-3"></div>
         </div>
 
-        {/* סטטיסטיקות */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl mx-auto mt-16">
-          <div className="bg-white rounded-xl p-6 text-center shadow-md">
-            <div className="text-4xl font-bold text-primary mb-2">200+</div>
-            <div className="text-gray-600">תבניות משפטיות</div>
+        <div className="container mx-auto px-4 py-24 relative z-10">
+          <div className="max-w-4xl mx-auto text-center">
+            {/* Glass Badge */}
+            <div className="inline-flex items-center gap-2 px-5 py-2.5 glass rounded-full text-sm font-medium mb-8 text-primary">
+              <Sparkles className="w-4 h-4" />
+              <span>מערכת מתקדמת עם עוזר AI לניסוח משפטי</span>
+            </div>
+
+            {/* Title with Gradient */}
+            <h1 className="text-5xl md:text-7xl font-bold text-gray-900 mb-6 leading-tight">
+              כל התבניות המשפטיות
+              <br />
+              <span className="text-gradient">במקום אחד</span>
+            </h1>
+
+            <p className="text-xl text-gray-600 mb-12 leading-relaxed max-w-2xl mx-auto">
+              פלטפורמה מתקדמת לעורכי דין עם מאות תבניות משפטיות מעוצבות,
+              עורך חכם ועוזר AI לניסוח בעברית משפטית תקינה
+            </p>
+
+            {/* Glass CTA Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link
+                href="/documents"
+                className="px-10 py-5 bg-gradient-to-r from-green-600 to-emerald-600 text-white text-xl font-bold rounded-xl hover:from-green-700 hover:to-emerald-700 transition-all duration-300 shadow-glass-lg hover:shadow-2xl transform hover:scale-105 hover:-translate-y-1 flex items-center justify-center gap-3"
+              >
+                <Sparkles className="w-6 h-6" />
+                <span>יצירת מסמכים</span>
+              </Link>
+              <Link
+                href="/templates"
+                className="glass-button text-primary text-lg font-semibold hover:bg-white/60"
+              >
+                גלה תבניות
+              </Link>
+              <Link
+                href="/editor"
+                className="glass-button border-2 border-primary/20 text-primary text-lg font-semibold hover:border-primary/40"
+              >
+                עורך חדש
+              </Link>
+            </div>
           </div>
-          <div className="bg-white rounded-xl p-6 text-center shadow-md">
-            <div className="text-4xl font-bold text-primary mb-2">10</div>
-            <div className="text-gray-600">קטגוריות ראשיות</div>
-          </div>
-          <div className="bg-white rounded-xl p-6 text-center shadow-md">
-            <div className="text-4xl font-bold text-primary mb-2">100%</div>
-            <div className="text-gray-600">בעברית תקינה</div>
+
+          {/* Glass Statistics Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl mx-auto mt-20">
+            <div className="glass-card text-center group">
+              <div className="text-4xl font-bold text-gradient mb-2 group-hover:scale-110 transition-transform">200+</div>
+              <div className="text-gray-600">תבניות משפטיות</div>
+            </div>
+            <div className="glass-card text-center group">
+              <div className="text-4xl font-bold text-gradient mb-2 group-hover:scale-110 transition-transform">10</div>
+              <div className="text-gray-600">קטגוריות ראשיות</div>
+            </div>
+            <div className="glass-card text-center group">
+              <div className="text-4xl font-bold text-gradient mb-2 group-hover:scale-110 transition-transform">100%</div>
+              <div className="text-gray-600">בעברית תקינה</div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* תכונות עיקריות */}
-      <section className="bg-white py-20">
+      {/* Features Section */}
+      <section className="py-24 relative">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">למה לבחור בנו?</h2>
@@ -79,9 +91,9 @@ export default function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {/* תכונה 1 */}
-            <div className="text-center">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            {/* Feature 1 */}
+            <div className="glass-card text-center group">
+              <div className="glass-icon w-16 h-16 mx-auto mb-4 group-hover:scale-110">
                 <FileText className="w-8 h-8 text-primary" />
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-2">
@@ -92,9 +104,9 @@ export default function HomePage() {
               </p>
             </div>
 
-            {/* תכונה 2 */}
-            <div className="text-center">
-              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            {/* Feature 2 */}
+            <div className="glass-card text-center group">
+              <div className="glass-icon w-16 h-16 mx-auto mb-4 group-hover:scale-110">
                 <Sparkles className="w-8 h-8 text-purple-600" />
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-2">
@@ -105,9 +117,9 @@ export default function HomePage() {
               </p>
             </div>
 
-            {/* תכונה 3 */}
-            <div className="text-center">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            {/* Feature 3 */}
+            <div className="glass-card text-center group">
+              <div className="glass-icon w-16 h-16 mx-auto mb-4 group-hover:scale-110">
                 <Zap className="w-8 h-8 text-green-600" />
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-2">
@@ -118,9 +130,9 @@ export default function HomePage() {
               </p>
             </div>
 
-            {/* תכונה 4 */}
-            <div className="text-center">
-              <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            {/* Feature 4 */}
+            <div className="glass-card text-center group">
+              <div className="glass-icon w-16 h-16 mx-auto mb-4 group-hover:scale-110">
                 <Clock className="w-8 h-8 text-orange-600" />
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-2">
@@ -134,8 +146,8 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* קטגוריות מובילות */}
-      <section className="py-20">
+      {/* Popular Categories Section */}
+      <section className="py-24 relative hero-bg">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">קטגוריות פופולריות</h2>
@@ -146,8 +158,8 @@ export default function HomePage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {featuredCategories.map((category) => (
-              <CategoryCard 
-                key={category.id} 
+              <CategoryCard
+                key={category.id}
                 icon={category.icon}
                 title={category.name}
                 description={category.description || ''}
@@ -159,7 +171,7 @@ export default function HomePage() {
           <div className="text-center mt-12">
             <Link
               href="/categories"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-lg hover:bg-blue-700 transition font-medium"
+              className="inline-flex items-center gap-2 glass-button text-primary hover:bg-white/60 font-medium"
             >
               <span>כל הקטגוריות</span>
               <Search className="w-5 h-5" />
@@ -169,24 +181,34 @@ export default function HomePage() {
       </section>
 
       {/* CTA Section */}
-      <section className="bg-gradient-to-r from-primary to-blue-700 text-white py-20">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-4xl font-bold mb-6">
+      <section className="relative py-24 overflow-hidden">
+        {/* Glass Background */}
+        <div className="absolute inset-0 bg-gradient-to-r from-primary to-blue-700"></div>
+        <div className="absolute inset-0 bg-glass-gradient opacity-50"></div>
+
+        {/* Floating Orbs */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="orb" style={{ width: '300px', height: '300px', background: 'rgba(255,255,255,0.1)', top: '10%', right: '10%', filter: 'blur(40px)' }}></div>
+          <div className="orb" style={{ width: '200px', height: '200px', background: 'rgba(255,255,255,0.15)', bottom: '20%', left: '5%', filter: 'blur(40px)', animationDelay: '2s' }}></div>
+        </div>
+
+        <div className="container mx-auto px-4 text-center relative z-10">
+          <h2 className="text-4xl md:text-5xl font-bold mb-6 text-white">
             מוכנים להתחיל?
           </h2>
-          <p className="text-xl mb-8 max-w-2xl mx-auto opacity-90">
+          <p className="text-xl mb-10 max-w-2xl mx-auto text-white/90">
             הצטרף לאלפי עורכי דין שכבר משתמשים במערכת שלנו
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               href="/templates"
-              className="px-8 py-4 bg-white text-primary text-lg font-semibold rounded-xl hover:bg-gray-100 transition"
+              className="px-8 py-4 bg-white text-primary text-lg font-semibold rounded-xl hover:bg-gray-100 transition-all duration-300 hover:scale-105 shadow-glass-lg"
             >
               התחל עכשיו
             </Link>
             <Link
               href="/about"
-              className="px-8 py-4 bg-transparent text-white text-lg font-semibold rounded-xl border-2 border-white hover:bg-white hover:text-primary transition"
+              className="px-8 py-4 bg-transparent text-white text-lg font-semibold rounded-xl border-2 border-white/30 hover:bg-white/10 hover:border-white/50 transition-all duration-300 backdrop-blur-sm"
             >
               למד עוד
             </Link>
