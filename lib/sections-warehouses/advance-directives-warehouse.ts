@@ -716,6 +716,40 @@ export function applyAdvanceDirectivesGender(
     result = result.replace(/סמכויותיו\/ה/g, 'סמכויותיו');
     result = result.replace(/לרשותו\/ה/g, 'לרשותו');
     result = result.replace(/שביכולתו\/ה/g, 'שביכולתו');
+    // פעלים נוספים - ייפוי כוח
+    result = result.replace(/יעדכן\/תעדכן/g, 'יעדכן');
+    result = result.replace(/ימנע\/תמנע/g, 'ימנע');
+    result = result.replace(/ייקח\/תיקח/g, 'ייקח');
+    result = result.replace(/יציע\/תציע/g, 'יציע');
+    result = result.replace(/ינסה\/תנסה/g, 'ינסה');
+    result = result.replace(/יתעד\/תתעד/g, 'יתעד');
+    result = result.replace(/ינהל\/תנהל/g, 'ינהל');
+    result = result.replace(/יתייעץ\/תתייעץ/g, 'יתייעץ');
+    result = result.replace(/יעקוב\/תעקוב/g, 'יעקוב');
+    result = result.replace(/לטובתו\/ה/g, 'לטובתו');
+    result = result.replace(/דעתו\/ה/g, 'דעתו');
+    result = result.replace(/אינו\/ה/g, 'אינו');
+    // פעלים נוספים - המשך
+    result = result.replace(/יפנה\/תפנה/g, 'יפנה');
+    result = result.replace(/יעשה\/תעשה/g, 'יעשה');
+    result = result.replace(/יפדה\/תפדה/g, 'יפדה');
+    result = result.replace(/ימשוך\/תמשוך/g, 'ימשוך');
+    result = result.replace(/יעביר\/תעביר/g, 'יעביר');
+    result = result.replace(/עצמו\/ה/g, 'עצמו');
+    result = result.replace(/שלו\/ה/g, 'שלו');
+    result = result.replace(/מכיסו\/ה/g, 'מכיסו');
+    result = result.replace(/הוציא\/ה/g, 'הוציא');
+    result = result.replace(/ידווח\/תדווח/g, 'ידווח');
+    result = result.replace(/ישתתף\/תשתתף/g, 'ישתתף');
+    result = result.replace(/יכין\/תכין/g, 'יכין');
+    result = result.replace(/יחדש\/תחדש/g, 'יחדש');
+    result = result.replace(/יתאם\/תתאם/g, 'יתאם');
+    result = result.replace(/יחזור\/תחזור/g, 'יחזור');
+    result = result.replace(/יסדיר\/תסדיר/g, 'יסדיר');
+    result = result.replace(/ישתדל\/תשתדל/g, 'ישתדל');
+    result = result.replace(/יכולתו\/ה/g, 'יכולתו');
+    result = result.replace(/נפשו\/ה/g, 'נפשו');
+    result = result.replace(/ילדיו\/ה/g, 'ילדיו');
   } else if (attorneyGender === 'female') {
     result = result.replace(/יפעל\/תפעל/g, 'תפעל');
     result = result.replace(/ידאג\/תדאג/g, 'תדאג');
@@ -740,6 +774,40 @@ export function applyAdvanceDirectivesGender(
     result = result.replace(/סמכויותיו\/ה/g, 'סמכויותיה');
     result = result.replace(/לרשותו\/ה/g, 'לרשותה');
     result = result.replace(/שביכולתו\/ה/g, 'שביכולתה');
+    // פעלים נוספים - ייפוי כוח
+    result = result.replace(/יעדכן\/תעדכן/g, 'תעדכן');
+    result = result.replace(/ימנע\/תמנע/g, 'תמנע');
+    result = result.replace(/ייקח\/תיקח/g, 'תיקח');
+    result = result.replace(/יציע\/תציע/g, 'תציע');
+    result = result.replace(/ינסה\/תנסה/g, 'תנסה');
+    result = result.replace(/יתעד\/תתעד/g, 'תתעד');
+    result = result.replace(/ינהל\/תנהל/g, 'תנהל');
+    result = result.replace(/יתייעץ\/תתייעץ/g, 'תתייעץ');
+    result = result.replace(/יעקוב\/תעקוב/g, 'תעקוב');
+    result = result.replace(/לטובתו\/ה/g, 'לטובתה');
+    result = result.replace(/דעתו\/ה/g, 'דעתה');
+    result = result.replace(/אינו\/ה/g, 'אינה');
+    // פעלים נוספים - המשך
+    result = result.replace(/יפנה\/תפנה/g, 'תפנה');
+    result = result.replace(/יעשה\/תעשה/g, 'תעשה');
+    result = result.replace(/יפדה\/תפדה/g, 'תפדה');
+    result = result.replace(/ימשוך\/תמשוך/g, 'תמשוך');
+    result = result.replace(/יעביר\/תעביר/g, 'תעביר');
+    result = result.replace(/עצמו\/ה/g, 'עצמה');
+    result = result.replace(/שלו\/ה/g, 'שלה');
+    result = result.replace(/מכיסו\/ה/g, 'מכיסה');
+    result = result.replace(/הוציא\/ה/g, 'הוציאה');
+    result = result.replace(/ידווח\/תדווח/g, 'תדווח');
+    result = result.replace(/ישתתף\/תשתתף/g, 'תשתתף');
+    result = result.replace(/יכין\/תכין/g, 'תכין');
+    result = result.replace(/יחדש\/תחדש/g, 'תחדש');
+    result = result.replace(/יתאם\/תתאם/g, 'תתאם');
+    result = result.replace(/יחזור\/תחזור/g, 'תחזור');
+    result = result.replace(/יסדיר\/תסדיר/g, 'תסדיר');
+    result = result.replace(/ישתדל\/תשתדל/g, 'תשתדל');
+    result = result.replace(/יכולתו\/ה/g, 'יכולתה');
+    result = result.replace(/נפשו\/ה/g, 'נפשה');
+    result = result.replace(/ילדיו\/ה/g, 'ילדיה');
   } else { // plural
     result = result.replace(/יפעל\/תפעל/g, 'יפעלו');
     result = result.replace(/ידאג\/תדאג/g, 'ידאגו');
@@ -764,6 +832,40 @@ export function applyAdvanceDirectivesGender(
     result = result.replace(/סמכויותיו\/ה/g, 'סמכויותיהם');
     result = result.replace(/לרשותו\/ה/g, 'לרשותם');
     result = result.replace(/שביכולתו\/ה/g, 'שביכולתם');
+    // פעלים נוספים - ייפוי כוח
+    result = result.replace(/יעדכן\/תעדכן/g, 'יעדכנו');
+    result = result.replace(/ימנע\/תמנע/g, 'ימנעו');
+    result = result.replace(/ייקח\/תיקח/g, 'ייקחו');
+    result = result.replace(/יציע\/תציע/g, 'יציעו');
+    result = result.replace(/ינסה\/תנסה/g, 'ינסו');
+    result = result.replace(/יתעד\/תתעד/g, 'יתעדו');
+    result = result.replace(/ינהל\/תנהל/g, 'ינהלו');
+    result = result.replace(/יתייעץ\/תתייעץ/g, 'יתייעצו');
+    result = result.replace(/יעקוב\/תעקוב/g, 'יעקבו');
+    result = result.replace(/לטובתו\/ה/g, 'לטובתם');
+    result = result.replace(/דעתו\/ה/g, 'דעתם');
+    result = result.replace(/אינו\/ה/g, 'אינם');
+    // פעלים נוספים - המשך
+    result = result.replace(/יפנה\/תפנה/g, 'יפנו');
+    result = result.replace(/יעשה\/תעשה/g, 'יעשו');
+    result = result.replace(/יפדה\/תפדה/g, 'יפדו');
+    result = result.replace(/ימשוך\/תמשוך/g, 'ימשכו');
+    result = result.replace(/יעביר\/תעביר/g, 'יעבירו');
+    result = result.replace(/עצמו\/ה/g, 'עצמם');
+    result = result.replace(/שלו\/ה/g, 'שלהם');
+    result = result.replace(/מכיסו\/ה/g, 'מכיסם');
+    result = result.replace(/הוציא\/ה/g, 'הוציאו');
+    result = result.replace(/ידווח\/תדווח/g, 'ידווחו');
+    result = result.replace(/ישתתף\/תשתתף/g, 'ישתתפו');
+    result = result.replace(/יכין\/תכין/g, 'יכינו');
+    result = result.replace(/יחדש\/תחדש/g, 'יחדשו');
+    result = result.replace(/יתאם\/תתאם/g, 'יתאמו');
+    result = result.replace(/יחזור\/תחזור/g, 'יחזרו');
+    result = result.replace(/יסדיר\/תסדיר/g, 'יסדירו');
+    result = result.replace(/ישתדל\/תשתדל/g, 'ישתדלו');
+    result = result.replace(/יכולתו\/ה/g, 'יכולתם');
+    result = result.replace(/נפשו\/ה/g, 'נפשם');
+    result = result.replace(/ילדיו\/ה/g, 'ילדיהם');
   }
   
   return result;

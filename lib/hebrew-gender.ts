@@ -265,6 +265,50 @@ export const hebrewDictionary: Record<string, GenderedWord> = {
   'מנוע': { male: 'מנוע', female: 'מנועה', plural: 'מנועים' },
   'חתוםמסמך': { male: 'חתום', female: 'חתומה', plural: 'חתומים' },
   'הנ"ל': { male: 'הנ"ל', female: 'הנ"ל', plural: 'הנ"ל' },
+  
+  // פעלים נוספים - ייפוי כוח
+  'יעדכן': { male: 'יעדכן', female: 'תעדכן', plural: 'יעדכנו' },
+  'ימנע': { male: 'ימנע', female: 'תמנע', plural: 'ימנעו' },
+  'ייקח': { male: 'ייקח', female: 'תיקח', plural: 'ייקחו' },
+  'יציע': { male: 'יציע', female: 'תציע', plural: 'יציעו' },
+  'ינסה': { male: 'ינסה', female: 'תנסה', plural: 'ינסו' },
+  'יתעד': { male: 'יתעד', female: 'תתעד', plural: 'יתעדו' },
+  'ינהל': { male: 'ינהל', female: 'תנהל', plural: 'ינהלו' },
+  'יתייעץ': { male: 'יתייעץ', female: 'תתייעץ', plural: 'יתייעצו' },
+  'יעקוב': { male: 'יעקוב', female: 'תעקוב', plural: 'יעקבו' },
+  'לטובתו': { male: 'לטובתו', female: 'לטובתה', plural: 'לטובתם' },
+  'דעתו': { male: 'דעתו', female: 'דעתה', plural: 'דעתם' },
+  'אינו': { male: 'אינו', female: 'אינה', plural: 'אינם' },
+  
+  // פעלים נוספים - המשך
+  'יפנה': { male: 'יפנה', female: 'תפנה', plural: 'יפנו' },
+  'יעשה': { male: 'יעשה', female: 'תעשה', plural: 'יעשו' },
+  'יפדה': { male: 'יפדה', female: 'תפדה', plural: 'יפדו' },
+  'ימשוך': { male: 'ימשוך', female: 'תמשוך', plural: 'ימשכו' },
+  'יעביר': { male: 'יעביר', female: 'תעביר', plural: 'יעבירו' },
+  
+  // כינויי שייכות נוספים
+  'עצמו': { male: 'עצמו', female: 'עצמה', plural: 'עצמם' },
+  'שלו': { male: 'שלו', female: 'שלה', plural: 'שלהם' },
+  'מכיסו': { male: 'מכיסו', female: 'מכיסה', plural: 'מכיסם' },
+  'הוציא': { male: 'הוציא', female: 'הוציאה', plural: 'הוציאו' },
+  
+  // פעלים נוספים - סדרה 3
+  'ידווח': { male: 'ידווח', female: 'תדווח', plural: 'ידווחו' },
+  'ישתתף': { male: 'ישתתף', female: 'תשתתף', plural: 'ישתתפו' },
+  'יכין': { male: 'יכין', female: 'תכין', plural: 'יכינו' },
+  'יחדש': { male: 'יחדש', female: 'תחדש', plural: 'יחדשו' },
+  
+  // פעלים נוספים - סדרה 4
+  'יתאם': { male: 'יתאם', female: 'תתאם', plural: 'יתאמו' },
+  'יחזור': { male: 'יחזור', female: 'תחזור', plural: 'יחזרו' },
+  'יסדיר': { male: 'יסדיר', female: 'תסדיר', plural: 'יסדירו' },
+  'ישתדל': { male: 'ישתדל', female: 'תשתדל', plural: 'ישתדלו' },
+  
+  // כינויי שייכות נוספים - סדרה 2
+  'יכולתו': { male: 'יכולתו', female: 'יכולתה', plural: 'יכולתם' },
+  'נפשו': { male: 'נפשו', female: 'נפשה', plural: 'נפשם' },
+  'ילדיו': { male: 'ילדיו', female: 'ילדיה', plural: 'ילדיהם' },
 };
 
 /**
@@ -433,6 +477,44 @@ export function replaceTextWithGender(text: string, gender: Gender): string {
     result = result.replace(/חייו\/ה/g, 'חייו'); // חייו/ה → חייו
     result = result.replace(/הוא\/היא/g, 'הוא'); // הוא/היא → הוא
     
+    // פעלים נוספים - ייפוי כוח
+    result = result.replace(/יעדכן\/תעדכן/g, 'יעדכן'); // יעדכן/תעדכן → יעדכן
+    result = result.replace(/ימנע\/תמנע/g, 'ימנע'); // ימנע/תמנע → ימנע
+    result = result.replace(/ייקח\/תיקח/g, 'ייקח'); // ייקח/תיקח → ייקח
+    result = result.replace(/יציע\/תציע/g, 'יציע'); // יציע/תציע → יציע
+    result = result.replace(/ינסה\/תנסה/g, 'ינסה'); // ינסה/תנסה → ינסה
+    result = result.replace(/יתעד\/תתעד/g, 'יתעד'); // יתעד/תתעד → יתעד
+    result = result.replace(/ינהל\/תנהל/g, 'ינהל'); // ינהל/תנהל → ינהל
+    result = result.replace(/יתייעץ\/תתייעץ/g, 'יתייעץ'); // יתייעץ/תתייעץ → יתייעץ
+    result = result.replace(/יעקוב\/תעקוב/g, 'יעקוב'); // יעקוב/תעקוב → יעקוב
+    
+    // כינויי שייכות נוספים
+    result = result.replace(/לטובתו\/ה/g, 'לטובתו'); // לטובתו/ה → לטובתו
+    result = result.replace(/דעתו\/ה/g, 'דעתו'); // דעתו/ה → דעתו
+    result = result.replace(/אינו\/ה/g, 'אינו'); // אינו/ה → אינו
+    
+    // פעלים נוספים - המשך
+    result = result.replace(/יפנה\/תפנה/g, 'יפנה'); // יפנה/תפנה → יפנה
+    result = result.replace(/יעשה\/תעשה/g, 'יעשה'); // יעשה/תעשה → יעשה
+    result = result.replace(/יפדה\/תפדה/g, 'יפדה'); // יפדה/תפדה → יפדה
+    result = result.replace(/ימשוך\/תמשוך/g, 'ימשוך'); // ימשוך/תמשוך → ימשוך
+    result = result.replace(/יעביר\/תעביר/g, 'יעביר'); // יעביר/תעביר → יעביר
+    result = result.replace(/עצמו\/ה/g, 'עצמו'); // עצמו/ה → עצמו
+    result = result.replace(/שלו\/ה/g, 'שלו'); // שלו/ה → שלו
+    result = result.replace(/מכיסו\/ה/g, 'מכיסו'); // מכיסו/ה → מכיסו
+    result = result.replace(/הוציא\/ה/g, 'הוציא'); // הוציא/ה → הוציא
+    result = result.replace(/ידווח\/תדווח/g, 'ידווח'); // ידווח/תדווח → ידווח
+    result = result.replace(/ישתתף\/תשתתף/g, 'ישתתף'); // ישתתף/תשתתף → ישתתף
+    result = result.replace(/יכין\/תכין/g, 'יכין'); // יכין/תכין → יכין
+    result = result.replace(/יחדש\/תחדש/g, 'יחדש'); // יחדש/תחדש → יחדש
+    result = result.replace(/יתאם\/תתאם/g, 'יתאם'); // יתאם/תתאם → יתאם
+    result = result.replace(/יחזור\/תחזור/g, 'יחזור'); // יחזור/תחזור → יחזור
+    result = result.replace(/יסדיר\/תסדיר/g, 'יסדיר'); // יסדיר/תסדיר → יסדיר
+    result = result.replace(/ישתדל\/תשתדל/g, 'ישתדל'); // ישתדל/תשתדל → ישתדל
+    result = result.replace(/יכולתו\/ה/g, 'יכולתו'); // יכולתו/ה → יכולתו
+    result = result.replace(/נפשו\/ה/g, 'נפשו'); // נפשו/ה → נפשו
+    result = result.replace(/ילדיו\/ה/g, 'ילדיו'); // ילדיו/ה → ילדיו
+    
     // מונחים משפטיים - נאמנות
     result = result.replace(/הנאמן\/ת/g, 'הנאמן'); // הנאמן/ת → הנאמן
     result = result.replace(/עינו\/ה/g, 'עינו'); // עינו/ה → עינו
@@ -551,6 +633,44 @@ export function replaceTextWithGender(text: string, gender: Gender): string {
     result = result.replace(/חייו\/ה/g, 'חייה'); // חייו/ה → חייה
     result = result.replace(/הוא\/היא/g, 'היא'); // הוא/היא → היא
     
+    // פעלים נוספים - ייפוי כוח
+    result = result.replace(/יעדכן\/תעדכן/g, 'תעדכן'); // יעדכן/תעדכן → תעדכן
+    result = result.replace(/ימנע\/תמנע/g, 'תמנע'); // ימנע/תמנע → תמנע
+    result = result.replace(/ייקח\/תיקח/g, 'תיקח'); // ייקח/תיקח → תיקח
+    result = result.replace(/יציע\/תציע/g, 'תציע'); // יציע/תציע → תציע
+    result = result.replace(/ינסה\/תנסה/g, 'תנסה'); // ינסה/תנסה → תנסה
+    result = result.replace(/יתעד\/תתעד/g, 'תתעד'); // יתעד/תתעד → תתעד
+    result = result.replace(/ינהל\/תנהל/g, 'תנהל'); // ינהל/תנהל → תנהל
+    result = result.replace(/יתייעץ\/תתייעץ/g, 'תתייעץ'); // יתייעץ/תתייעץ → תתייעץ
+    result = result.replace(/יעקוב\/תעקוב/g, 'תעקוב'); // יעקוב/תעקוב → תעקוב
+    
+    // כינויי שייכות נוספים
+    result = result.replace(/לטובתו\/ה/g, 'לטובתה'); // לטובתו/ה → לטובתה
+    result = result.replace(/דעתו\/ה/g, 'דעתה'); // דעתו/ה → דעתה
+    result = result.replace(/אינו\/ה/g, 'אינה'); // אינו/ה → אינה
+    
+    // פעלים נוספים - המשך
+    result = result.replace(/יפנה\/תפנה/g, 'תפנה'); // יפנה/תפנה → תפנה
+    result = result.replace(/יעשה\/תעשה/g, 'תעשה'); // יעשה/תעשה → תעשה
+    result = result.replace(/יפדה\/תפדה/g, 'תפדה'); // יפדה/תפדה → תפדה
+    result = result.replace(/ימשוך\/תמשוך/g, 'תמשוך'); // ימשוך/תמשוך → תמשוך
+    result = result.replace(/יעביר\/תעביר/g, 'תעביר'); // יעביר/תעביר → תעביר
+    result = result.replace(/עצמו\/ה/g, 'עצמה'); // עצמו/ה → עצמה
+    result = result.replace(/שלו\/ה/g, 'שלה'); // שלו/ה → שלה
+    result = result.replace(/מכיסו\/ה/g, 'מכיסה'); // מכיסו/ה → מכיסה
+    result = result.replace(/הוציא\/ה/g, 'הוציאה'); // הוציא/ה → הוציאה
+    result = result.replace(/ידווח\/תדווח/g, 'תדווח'); // ידווח/תדווח → תדווח
+    result = result.replace(/ישתתף\/תשתתף/g, 'תשתתף'); // ישתתף/תשתתף → תשתתף
+    result = result.replace(/יכין\/תכין/g, 'תכין'); // יכין/תכין → תכין
+    result = result.replace(/יחדש\/תחדש/g, 'תחדש'); // יחדש/תחדש → תחדש
+    result = result.replace(/יתאם\/תתאם/g, 'תתאם'); // יתאם/תתאם → תתאם
+    result = result.replace(/יחזור\/תחזור/g, 'תחזור'); // יחזור/תחזור → תחזור
+    result = result.replace(/יסדיר\/תסדיר/g, 'תסדיר'); // יסדיר/תסדיר → תסדיר
+    result = result.replace(/ישתדל\/תשתדל/g, 'תשתדל'); // ישתדל/תשתדל → תשתדל
+    result = result.replace(/יכולתו\/ה/g, 'יכולתה'); // יכולתו/ה → יכולתה
+    result = result.replace(/נפשו\/ה/g, 'נפשה'); // נפשו/ה → נפשה
+    result = result.replace(/ילדיו\/ה/g, 'ילדיה'); // ילדיו/ה → ילדיה
+    
     // מונחים משפטיים - נאמנות
     result = result.replace(/הנאמן\/ת/g, 'הנאמנה'); // הנאמן/ת → הנאמנה
     result = result.replace(/עינו\/ה/g, 'עינה'); // עינו/ה → עינה
@@ -656,6 +776,44 @@ export function replaceTextWithGender(text: string, gender: Gender): string {
     result = result.replace(/הוא יקבל\/תקבל/g, 'הם יקבלו'); // הוא יקבל/תקבל → הם יקבלו
     result = result.replace(/הוא יבחר\/תבחר/g, 'הם יבחרו'); // הוא יבחר/תבחר → הם יבחרו
     result = result.replace(/הוא ימנה\/תמנה/g, 'הם ימנו'); // הוא ימנה/תמנה → הם ימנו
+    
+    // פעלים נוספים - ייפוי כוח
+    result = result.replace(/יעדכן\/תעדכן/g, 'יעדכנו'); // יעדכן/תעדכן → יעדכנו
+    result = result.replace(/ימנע\/תמנע/g, 'ימנעו'); // ימנע/תמנע → ימנעו
+    result = result.replace(/ייקח\/תיקח/g, 'ייקחו'); // ייקח/תיקח → ייקחו
+    result = result.replace(/יציע\/תציע/g, 'יציעו'); // יציע/תציע → יציעו
+    result = result.replace(/ינסה\/תנסה/g, 'ינסו'); // ינסה/תנסה → ינסו
+    result = result.replace(/יתעד\/תתעד/g, 'יתעדו'); // יתעד/תתעד → יתעדו
+    result = result.replace(/ינהל\/תנהל/g, 'ינהלו'); // ינהל/תנהל → ינהלו
+    result = result.replace(/יתייעץ\/תתייעץ/g, 'יתייעצו'); // יתייעץ/תתייעץ → יתייעצו
+    result = result.replace(/יעקוב\/תעקוב/g, 'יעקבו'); // יעקוב/תעקוב → יעקבו
+    
+    // כינויי שייכות נוספים
+    result = result.replace(/לטובתו\/ה/g, 'לטובתם'); // לטובתו/ה → לטובתם
+    result = result.replace(/דעתו\/ה/g, 'דעתם'); // דעתו/ה → דעתם
+    result = result.replace(/אינו\/ה/g, 'אינם'); // אינו/ה → אינם
+    
+    // פעלים נוספים - המשך
+    result = result.replace(/יפנה\/תפנה/g, 'יפנו'); // יפנה/תפנה → יפנו
+    result = result.replace(/יעשה\/תעשה/g, 'יעשו'); // יעשה/תעשה → יעשו
+    result = result.replace(/יפדה\/תפדה/g, 'יפדו'); // יפדה/תפדה → יפדו
+    result = result.replace(/ימשוך\/תמשוך/g, 'ימשכו'); // ימשוך/תמשוך → ימשכו
+    result = result.replace(/יעביר\/תעביר/g, 'יעבירו'); // יעביר/תעביר → יעבירו
+    result = result.replace(/עצמו\/ה/g, 'עצמם'); // עצמו/ה → עצמם
+    result = result.replace(/שלו\/ה/g, 'שלהם'); // שלו/ה → שלהם
+    result = result.replace(/מכיסו\/ה/g, 'מכיסם'); // מכיסו/ה → מכיסם
+    result = result.replace(/הוציא\/ה/g, 'הוציאו'); // הוציא/ה → הוציאו
+    result = result.replace(/ידווח\/תדווח/g, 'ידווחו'); // ידווח/תדווח → ידווחו
+    result = result.replace(/ישתתף\/תשתתף/g, 'ישתתפו'); // ישתתף/תשתתף → ישתתפו
+    result = result.replace(/יכין\/תכין/g, 'יכינו'); // יכין/תכין → יכינו
+    result = result.replace(/יחדש\/תחדש/g, 'יחדשו'); // יחדש/תחדש → יחדשו
+    result = result.replace(/יתאם\/תתאם/g, 'יתאמו'); // יתאם/תתאם → יתאמו
+    result = result.replace(/יחזור\/תחזור/g, 'יחזרו'); // יחזור/תחזור → יחזרו
+    result = result.replace(/יסדיר\/תסדיר/g, 'יסדירו'); // יסדיר/תסדיר → יסדירו
+    result = result.replace(/ישתדל\/תשתדל/g, 'ישתדלו'); // ישתדל/תשתדל → ישתדלו
+    result = result.replace(/יכולתו\/ה/g, 'יכולתם'); // יכולתו/ה → יכולתם
+    result = result.replace(/נפשו\/ה/g, 'נפשם'); // נפשו/ה → נפשם
+    result = result.replace(/ילדיו\/ה/g, 'ילדיהם'); // ילדיו/ה → ילדיהם
     
     // מונחים משפטיים - נאמנות
     result = result.replace(/הנאמן\/ת/g, 'הנאמנים'); // הנאמן/ת → הנאמנים
