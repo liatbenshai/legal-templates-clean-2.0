@@ -216,7 +216,6 @@ export const hebrewDictionary: Record<string, GenderedWord> = {
   'בנו': { male: 'בנו', female: 'בתו', plural: 'ילדיו' },
   'אח': { male: 'אח', female: 'אחות', plural: 'אחים' },
   'האח': { male: 'האח', female: 'האחות', plural: 'האחים' },
-  'אחיו': { male: 'אחיו', female: 'אחותו', plural: 'אחיו' },
   'הורהמשפחתי': { male: 'אב', female: 'אם', plural: 'הורים' },
   'ההורה': { male: 'האב', female: 'האם', plural: 'ההורים' },
   'נכד': { male: 'נכד', female: 'נכדה', plural: 'נכדים' },
@@ -309,6 +308,236 @@ export const hebrewDictionary: Record<string, GenderedWord> = {
   'יכולתו': { male: 'יכולתו', female: 'יכולתה', plural: 'יכולתם' },
   'נפשו': { male: 'נפשו', female: 'נפשה', plural: 'נפשם' },
   'ילדיו': { male: 'ילדיו', female: 'ילדיה', plural: 'ילדיהם' },
+  
+  // פעלים עתיד - סדרה חדשה
+  'יוודא': { male: 'יוודא', female: 'תוודא', plural: 'יוודאו' },
+  'יטפל': { male: 'יטפל', female: 'תטפל', plural: 'יטפלו' },
+  'ידאג': { male: 'ידאג', female: 'תדאג', plural: 'ידאגו' },
+  'ישמור': { male: 'ישמור', female: 'תשמור', plural: 'ישמרו' },
+  'ירצה': { male: 'ירצה', female: 'תרצה', plural: 'ירצו' },
+  'יקבל': { male: 'יקבל', female: 'תקבל', plural: 'יקבלו' },
+  'ישלם': { male: 'ישלם', female: 'תשלם', plural: 'ישלמו' },
+  'יחתום': { male: 'יחתום', female: 'תחתום', plural: 'יחתמו' },
+  'יבקש': { male: 'יבקש', female: 'תבקש', plural: 'יבקשו' },
+  'ימסור': { male: 'ימסור', female: 'תמסור', plural: 'ימסרו' },
+  'יודיע': { male: 'יודיע', female: 'תודיע', plural: 'יודיעו' },
+  'יאשר': { male: 'יאשר', female: 'תאשר', plural: 'יאשרו' },
+  'יבדוק': { male: 'יבדוק', female: 'תבדוק', plural: 'יבדקו' },
+  'יתחייב': { male: 'יתחייב', female: 'תתחייב', plural: 'יתחייבו' },
+  'יסכים': { male: 'יסכים', female: 'תסכים', plural: 'יסכימו' },
+  'יפעל': { male: 'יפעל', female: 'תפעל', plural: 'יפעלו' },
+  'יקיים': { male: 'יקיים', female: 'תקיים', plural: 'יקיימו' },
+  'ישלח': { male: 'ישלח', female: 'תשלח', plural: 'ישלחו' },
+  'יגיש': { male: 'יגיש', female: 'תגיש', plural: 'יגישו' },
+  'ימלא': { male: 'ימלא', female: 'תמלא', plural: 'ימלאו' },
+  'יספק': { male: 'יספק', female: 'תספק', plural: 'יספקו' },
+  'יפקיד': { male: 'יפקיד', female: 'תפקיד', plural: 'יפקידו' },
+  'ימנה': { male: 'ימנה', female: 'תמנה', plural: 'ימנו' },
+  'יפרט': { male: 'יפרט', female: 'תפרט', plural: 'יפרטו' },
+  'יציג': { male: 'יציג', female: 'תציג', plural: 'יציגו' },
+  'יבחר': { male: 'יבחר', female: 'תבחר', plural: 'יבחרו' },
+  'יקרא': { male: 'יקרא', female: 'תקרא', plural: 'יקראו' },
+  'יכתוב': { male: 'יכתוב', female: 'תכתוב', plural: 'יכתבו' },
+  'יחשב': { male: 'יחשב', female: 'תחשב', plural: 'יחשבו' },
+  'יעזור': { male: 'יעזור', female: 'תעזור', plural: 'יעזרו' },
+  'ילמד': { male: 'ילמד', female: 'תלמד', plural: 'ילמדו' },
+  'יזכור': { male: 'יזכור', female: 'תזכור', plural: 'יזכרו' },
+  'ישכח': { male: 'ישכח', female: 'תשכח', plural: 'ישכחו' },
+  'יפקח': { male: 'יפקח', female: 'תפקח', plural: 'יפקחו' },
+  'יתקשר': { male: 'יתקשר', female: 'תתקשר', plural: 'יתקשרו' },
+  'יפגוש': { male: 'יפגוש', female: 'תפגוש', plural: 'יפגשו' },
+  'יתייצב': { male: 'יתייצב', female: 'תתייצב', plural: 'יתייצבו' },
+  'ייצג': { male: 'ייצג', female: 'תייצג', plural: 'ייצגו' },
+  'יטען': { male: 'יטען', female: 'תטען', plural: 'יטענו' },
+  'יוכיח': { male: 'יוכיח', female: 'תוכיח', plural: 'יוכיחו' },
+  'יחליט': { male: 'יחליט', female: 'תחליט', plural: 'יחליטו' },
+  'יכבד': { male: 'יכבד', female: 'תכבד', plural: 'יכבדו' },
+  'יסרב': { male: 'יסרב', female: 'תסרב', plural: 'יסרבו' },
+  'ידרוש': { male: 'ידרוש', female: 'תדרוש', plural: 'ידרשו' },
+  'ישקול': { male: 'ישקול', female: 'תשקול', plural: 'ישקלו' },
+  'ישתף': { male: 'ישתף', female: 'תשתף', plural: 'ישתפו' },
+  'ימשיך': { male: 'ימשיך', female: 'תמשיך', plural: 'ימשיכו' },
+  'יפסיק': { male: 'יפסיק', female: 'תפסיק', plural: 'יפסיקו' },
+  'יאפשר': { male: 'יאפשר', female: 'תאפשר', plural: 'יאפשרו' },
+  'יגן': { male: 'יגן', female: 'תגן', plural: 'יגנו' },
+  'ישמר': { male: 'ישמר', female: 'תשמר', plural: 'ישמרו' },
+  'יקפיד': { male: 'יקפיד', female: 'תקפיד', plural: 'יקפידו' },
+  'יעדיף': { male: 'יעדיף', female: 'תעדיף', plural: 'יעדיפו' },
+  'יתנגד': { male: 'יתנגד', female: 'תתנגד', plural: 'יתנגדו' },
+  'יקבע': { male: 'יקבע', female: 'תקבע', plural: 'יקבעו' },
+  'יורה': { male: 'יורה', female: 'תורה', plural: 'יורו' },
+  'ינחה': { male: 'ינחה', female: 'תנחה', plural: 'ינחו' },
+  'יחפוץ': { male: 'יחפוץ', female: 'תחפוץ', plural: 'יחפצו' },
+  
+  // כינויי שייכות - רכוש ומשפחה
+  'רכושו': { male: 'רכושו', female: 'רכושה', plural: 'רכושם' },
+  'ביתו': { male: 'ביתו', female: 'ביתה', plural: 'ביתם' },
+  'כספו': { male: 'כספו', female: 'כספה', plural: 'כספם' },
+  'חייו': { male: 'חייו', female: 'חייה', plural: 'חייהם' },
+  'שמו': { male: 'שמו', female: 'שמה', plural: 'שמם' },
+  'כתובתו': { male: 'כתובתו', female: 'כתובתה', plural: 'כתובתם' },
+  'חתימתו': { male: 'חתימתו', female: 'חתימתה', plural: 'חתימתם' },
+  'הסכמתו': { male: 'הסכמתו', female: 'הסכמתה', plural: 'הסכמתם' },
+  'זכותו': { male: 'זכותו', female: 'זכותה', plural: 'זכותם' },
+  'חובתו': { male: 'חובתו', female: 'חובתה', plural: 'חובתם' },
+  'רצונו': { male: 'רצונו', female: 'רצונה', plural: 'רצונם' },
+  'טובתו': { male: 'טובתו', female: 'טובתה', plural: 'טובתם' },
+  'בריאותו': { male: 'בריאותו', female: 'בריאותה', plural: 'בריאותם' },
+  'עסקיו': { male: 'עסקיו', female: 'עסקיה', plural: 'עסקיהם' },
+  'נכסיו': { male: 'נכסיו', female: 'נכסיה', plural: 'נכסיהם' },
+  'מסמכיו': { male: 'מסמכיו', female: 'מסמכיה', plural: 'מסמכיהם' },
+  'חשבונו': { male: 'חשבונו', female: 'חשבונה', plural: 'חשבונם' },
+  'אחריותו': { male: 'אחריותו', female: 'אחריותה', plural: 'אחריותם' },
+  'התחייבותו': { male: 'התחייבותו', female: 'התחייבותה', plural: 'התחייבותם' },
+  'זהותו': { male: 'זהותו', female: 'זהותה', plural: 'זהותם' },
+  'מקומו': { male: 'מקומו', female: 'מקומה', plural: 'מקומם' },
+  'תפקידו': { male: 'תפקידו', female: 'תפקידה', plural: 'תפקידם' },
+  'משפחתו': { male: 'משפחתו', female: 'משפחתה', plural: 'משפחתם' },
+  'הוריו': { male: 'הוריו', female: 'הוריה', plural: 'הוריהם' },
+  'בתו': { male: 'בתו', female: 'בתה', plural: 'בתם' },
+  'גופו': { male: 'גופו', female: 'גופה', plural: 'גופם' },
+  'ראשו': { male: 'ראשו', female: 'ראשה', plural: 'ראשם' },
+  'ידו': { male: 'ידו', female: 'ידה', plural: 'ידם' },
+  'עינו': { male: 'עינו', female: 'עינה', plural: 'עינם' },
+  
+  // פעלי עבר
+  'מסר': { male: 'מסר', female: 'מסרה', plural: 'מסרו' },
+  'התחייב': { male: 'התחייב', female: 'התחייבה', plural: 'התחייבו' },
+  'שילם': { male: 'שילם', female: 'שילמה', plural: 'שילמו' },
+  'אישר': { male: 'אישר', female: 'אישרה', plural: 'אישרו' },
+  'ויתר': { male: 'ויתר', female: 'ויתרה', plural: 'ויתרו' },
+  'הודה': { male: 'הודה', female: 'הודתה', plural: 'הודו' },
+  'הכיר': { male: 'הכיר', female: 'הכירה', plural: 'הכירו' },
+  'רצה': { male: 'רצה', female: 'רצתה', plural: 'רצו' },
+  'יכל': { male: 'יכל', female: 'יכלה', plural: 'יכלו' },
+  'היה': { male: 'היה', female: 'הייתה', plural: 'היו' },
+  'לקח': { male: 'לקח', female: 'לקחה', plural: 'לקחו' },
+  'בא': { male: 'בא', female: 'באה', plural: 'באו' },
+  'הלך': { male: 'הלך', female: 'הלכה', plural: 'הלכו' },
+  'ראה': { male: 'ראה', female: 'ראתה', plural: 'ראו' },
+  'שמע': { male: 'שמע', female: 'שמעה', plural: 'שמעו' },
+  'נולד': { male: 'נולד', female: 'נולדה', plural: 'נולדו' },
+  'בחר': { male: 'בחר', female: 'בחרה', plural: 'בחרו' },
+  
+  // תארי הווה
+  'מסכים': { male: 'מסכים', female: 'מסכימה', plural: 'מסכימים' },
+  'חותם': { male: 'חותם', female: 'חותמת', plural: 'חותמים' },
+  'מוסר': { male: 'מוסר', female: 'מוסרת', plural: 'מוסרים' },
+  'מצהיר': { male: 'מצהיר', female: 'מצהירה', plural: 'מצהירים' },
+  'מתחייב': { male: 'מתחייב', female: 'מתחייבת', plural: 'מתחייבים' },
+  'משלם': { male: 'משלם', female: 'משלמת', plural: 'משלמים' },
+  'מאשר': { male: 'מאשר', female: 'מאשרת', plural: 'מאשרים' },
+  'מבקש': { male: 'מבקש', female: 'מבקשת', plural: 'מבקשים' },
+  'מוותר': { male: 'מוותר', female: 'מוותרת', plural: 'מוותרים' },
+  'מודה': { male: 'מודה', female: 'מודה', plural: 'מודים' },
+  'מכיר': { male: 'מכיר', female: 'מכירה', plural: 'מכירים' },
+  'יודע': { male: 'יודע', female: 'יודעת', plural: 'יודעים' },
+  'צריך': { male: 'צריך', female: 'צריכה', plural: 'צריכים' },
+  'מוכן': { male: 'מוכן', female: 'מוכנה', plural: 'מוכנים' },
+  'מעוניין': { male: 'מעוניין', female: 'מעוניינת', plural: 'מעוניינים' },
+  'נמצא': { male: 'נמצא', female: 'נמצאת', plural: 'נמצאים' },
+  'עומד': { male: 'עומד', female: 'עומדת', plural: 'עומדים' },
+  'פועל': { male: 'פועל', female: 'פועלת', plural: 'פועלים' },
+  'גר': { male: 'גר', female: 'גרה', plural: 'גרים' },
+  'עובד': { male: 'עובד', female: 'עובדת', plural: 'עובדים' },
+  
+  // כינויי גוף וזיקה
+  'הוא': { male: 'הוא', female: 'היא', plural: 'הם' },
+  'אליו': { male: 'אליו', female: 'אליה', plural: 'אליהם' },
+  'בו': { male: 'בו', female: 'בה', plural: 'בהם' },
+  'לבדו': { male: 'לבדו', female: 'לבדה', plural: 'לבדם' },
+  'החתום': { male: 'החתום', female: 'החתומה', plural: 'החתומים' },
+  'המוסמך': { male: 'המוסמך', female: 'המוסמכת', plural: 'המוסמכים' },
+  'הרשום': { male: 'הרשום', female: 'הרשומה', plural: 'הרשומים' },
+  'המפורט': { male: 'המפורט', female: 'המפורטת', plural: 'המפורטים' },
+  
+  // מונחים רפואיים
+  'חולה': { male: 'חולה', female: 'חולה', plural: 'חולים' },
+  'סובל': { male: 'סובל', female: 'סובלת', plural: 'סובלים' },
+  'מאושפז': { male: 'מאושפז', female: 'מאושפזת', plural: 'מאושפזים' },
+  'מטופל': { male: 'מטופל', female: 'מטופלת', plural: 'מטופלים' },
+  'מורדם': { male: 'מורדם', female: 'מורדמת', plural: 'מורדמים' },
+  'מונשם': { male: 'מונשם', female: 'מונשמת', plural: 'מונשמים' },
+  'מחובר': { male: 'מחובר', female: 'מחוברת', plural: 'מחוברים' },
+  'מודע': { male: 'מודע', female: 'מודעת', plural: 'מודעים' },
+  'צלול': { male: 'צלול', female: 'צלולה', plural: 'צלולים' },
+  'מבולבל': { male: 'מבולבל', female: 'מבולבלת', plural: 'מבולבלים' },
+  'סיעודי': { male: 'סיעודי', female: 'סיעודית', plural: 'סיעודיים' },
+  'תלוי': { male: 'תלוי', female: 'תלויה', plural: 'תלויים' },
+  'זקוק': { male: 'זקוק', female: 'זקוקה', plural: 'זקוקים' },
+  'גוסס': { male: 'גוסס', female: 'גוססת', plural: 'גוססים' },
+  'שוכב': { male: 'שוכב', female: 'שוכבת', plural: 'שוכבים' },
+  'יושב': { male: 'יושב', female: 'יושבת', plural: 'יושבים' },
+  'מתהלך': { male: 'מתהלך', female: 'מתהלכת', plural: 'מתהלכים' },
+  'מרותק': { male: 'מרותק', female: 'מרותקת', plural: 'מרותקים' },
+  'משותק': { male: 'משותק', female: 'משותקת', plural: 'משותקים' },
+  'נשכח': { male: 'נשכח', female: 'נשכחת', plural: 'נשכחים' },
+  'כשיר': { male: 'כשיר', female: 'כשירה', plural: 'כשירים' },
+  'מבין': { male: 'מבין', female: 'מבינה', plural: 'מבינים' },
+  'שפוי': { male: 'שפוי', female: 'שפויה', plural: 'שפויים' },
+  'חסוי': { male: 'חסוי', female: 'חסויה', plural: 'חסויים' },
+  'מוגבל': { male: 'מוגבל', female: 'מוגבלת', plural: 'מוגבלים' },
+  'עצמאי': { male: 'עצמאי', female: 'עצמאית', plural: 'עצמאיים' },
+  'נזקק': { male: 'נזקק', female: 'נזקקת', plural: 'נזקקים' },
+  
+  // כינויי שייכות רפואיים
+  'מצבו': { male: 'מצבו', female: 'מצבה', plural: 'מצבם' },
+  'רוחו': { male: 'רוחו', female: 'רוחה', plural: 'רוחם' },
+  'מותו': { male: 'מותו', female: 'מותה', plural: 'מותם' },
+  'סבלו': { male: 'סבלו', female: 'סבלה', plural: 'סבלם' },
+  'כאבו': { male: 'כאבו', female: 'כאבה', plural: 'כאבם' },
+  'הכרתו': { male: 'הכרתו', female: 'הכרתה', plural: 'הכרתם' },
+  'צלילותו': { male: 'צלילותו', female: 'צלילותה', plural: 'צלילותם' },
+  'כשירותו': { male: 'כשירותו', female: 'כשירותה', plural: 'כשירותם' },
+  'כבודו': { male: 'כבודו', female: 'כבודה', plural: 'כבודם' },
+  'פרטיותו': { male: 'פרטיותו', female: 'פרטיותה', plural: 'פרטיותם' },
+  'צנעתו': { male: 'צנעתו', female: 'צנעתה', plural: 'צנעתם' },
+  'העדפותיו': { male: 'העדפותיו', female: 'העדפותיה', plural: 'העדפותיהם' },
+  'ערכיו': { male: 'ערכיו', female: 'ערכיה', plural: 'ערכיהם' },
+  'אמונותיו': { male: 'אמונותיו', female: 'אמונותיה', plural: 'אמונותיהם' },
+  'השקפותיו': { male: 'השקפותיו', female: 'השקפותיה', plural: 'השקפותיהם' },
+  'דתו': { male: 'דתו', female: 'דתה', plural: 'דתם' },
+  'מסורתו': { male: 'מסורתו', female: 'מסורתה', plural: 'מסורתם' },
+  'הרגליו': { male: 'הרגליו', female: 'הרגליה', plural: 'הרגליהם' },
+  'שגרתו': { male: 'שגרתו', female: 'שגרתה', plural: 'שגרתם' },
+  'אחיו': { male: 'אחיו', female: 'אחיה', plural: 'אחיהם' },
+  'נכדיו': { male: 'נכדיו', female: 'נכדיה', plural: 'נכדיהם' },
+  'קרוביו': { male: 'קרוביו', female: 'קרוביה', plural: 'קרוביהם' },
+  'יורשיו': { male: 'יורשיו', female: 'יורשיה', plural: 'יורשיהם' },
+  'מקורביו': { male: 'מקורביו', female: 'מקורביה', plural: 'מקורביהם' },
+  'חסכונותיו': { male: 'חסכונותיו', female: 'חסכונותיה', plural: 'חסכונותיהם' },
+  'הכנסותיו': { male: 'הכנסותיו', female: 'הכנסותיה', plural: 'הכנסותיהם' },
+  'הוצאותיו': { male: 'הוצאותיו', female: 'הוצאותיה', plural: 'הוצאותיהם' },
+  'חובותיו': { male: 'חובותיו', female: 'חובותיה', plural: 'חובותיהם' },
+  'זכויותיו': { male: 'זכויותיו', female: 'זכויותיה', plural: 'זכויותיהם' },
+  'דירתו': { male: 'דירתו', female: 'דירתה', plural: 'דירתם' },
+  'רכבו': { male: 'רכבו', female: 'רכבה', plural: 'רכבם' },
+  'טיפולו': { male: 'טיפולו', female: 'טיפולה', plural: 'טיפולם' },
+  'מגוריו': { male: 'מגוריו', female: 'מגוריה', plural: 'מגוריהם' },
+  'סביבתו': { male: 'סביבתו', female: 'סביבתה', plural: 'סביבתם' },
+  'מטפלו': { male: 'מטפלו', female: 'מטפלה', plural: 'מטפלם' },
+  'רופאו': { male: 'רופאו', female: 'רופאה', plural: 'רופאם' },
+  'אשפוזו': { male: 'אשפוזו', female: 'אשפוזה', plural: 'אשפוזם' },
+  'שיקומו': { male: 'שיקומו', female: 'שיקומה', plural: 'שיקומם' },
+  'בעניינו': { male: 'בעניינו', female: 'בעניינה', plural: 'בעניינם' },
+  'בשמו': { male: 'בשמו', female: 'בשמה', plural: 'בשמם' },
+  'עבורו': { male: 'עבורו', female: 'עבורה', plural: 'עבורם' },
+  'במקומו': { male: 'במקומו', female: 'במקומה', plural: 'במקומם' },
+  
+  // המטופל/החולה/הנזקק
+  'המטופל': { male: 'המטופל', female: 'המטופלת', plural: 'המטופלים' },
+  'החולה': { male: 'החולה', female: 'החולה', plural: 'החולים' },
+  'הנזקק': { male: 'הנזקק', female: 'הנזקקת', plural: 'הנזקקים' },
+  'האדם': { male: 'האדם', female: 'האישה', plural: 'האנשים' },
+  
+  // פעלים רפואיים סביליים
+  'יונשם': { male: 'יונשם', female: 'תונשם', plural: 'יונשמו' },
+  'יוזן': { male: 'יוזן', female: 'תוזן', plural: 'יוזנו' },
+  'יושהה': { male: 'יושהה', female: 'תושהה', plural: 'יושהו' },
+  'יחובר': { male: 'יחובר', female: 'תחובר', plural: 'יחוברו' },
+  'ינותק': { male: 'ינותק', female: 'תנותק', plural: 'ינותקו' },
+  'יטופל': { male: 'יטופל', female: 'תטופל', plural: 'יטופלו' },
+  'ישוקם': { male: 'ישוקם', female: 'תשוקם', plural: 'ישוקמו' },
 };
 
 /**
@@ -515,6 +744,151 @@ export function replaceTextWithGender(text: string, gender: Gender): string {
     result = result.replace(/נפשו\/ה/g, 'נפשו'); // נפשו/ה → נפשו
     result = result.replace(/ילדיו\/ה/g, 'ילדיו'); // ילדיו/ה → ילדיו
     
+    // פעלים נוספים - סדרה מורחבת
+    result = result.replace(/יקבל\/תקבל/g, 'יקבל');
+    result = result.replace(/ישלם\/תשלם/g, 'ישלם');
+    result = result.replace(/יחתום\/תחתום/g, 'יחתום');
+    result = result.replace(/יבקש\/תבקש/g, 'יבקש');
+    result = result.replace(/ימסור\/תמסור/g, 'ימסור');
+    result = result.replace(/יודיע\/תודיע/g, 'יודיע');
+    result = result.replace(/יאשר\/תאשר/g, 'יאשר');
+    result = result.replace(/יתחייב\/תתחייב/g, 'יתחייב');
+    result = result.replace(/יסכים\/תסכים/g, 'יסכים');
+    result = result.replace(/יקיים\/תקיים/g, 'יקיים');
+    result = result.replace(/ישלח\/תשלח/g, 'ישלח');
+    result = result.replace(/יגיש\/תגיש/g, 'יגיש');
+    result = result.replace(/ימלא\/תמלא/g, 'ימלא');
+    result = result.replace(/יספק\/תספק/g, 'יספק');
+    result = result.replace(/יפקיד\/תפקיד/g, 'יפקיד');
+    result = result.replace(/ימנה\/תמנה/g, 'ימנה');
+    result = result.replace(/יפרט\/תפרט/g, 'יפרט');
+    result = result.replace(/יציג\/תציג/g, 'יציג');
+    result = result.replace(/יבחר\/תבחר/g, 'יבחר');
+    result = result.replace(/יקרא\/תקרא/g, 'יקרא');
+    result = result.replace(/יכתוב\/תכתוב/g, 'יכתוב');
+    result = result.replace(/יחשב\/תחשב/g, 'יחשב');
+    result = result.replace(/יעזור\/תעזור/g, 'יעזור');
+    result = result.replace(/ילמד\/תלמד/g, 'ילמד');
+    result = result.replace(/יזכור\/תזכור/g, 'יזכור');
+    result = result.replace(/ישכח\/תשכח/g, 'ישכח');
+    result = result.replace(/יתקשר\/תתקשר/g, 'יתקשר');
+    result = result.replace(/יפגוש\/תפגוש/g, 'יפגוש');
+    result = result.replace(/יתייצב\/תתייצב/g, 'יתייצב');
+    result = result.replace(/ייצג\/תייצג/g, 'ייצג');
+    result = result.replace(/יטען\/תטען/g, 'יטען');
+    result = result.replace(/יוכיח\/תוכיח/g, 'יוכיח');
+    result = result.replace(/יכבד\/תכבד/g, 'יכבד');
+    result = result.replace(/יסרב\/תסרב/g, 'יסרב');
+    result = result.replace(/ידרוש\/תדרוש/g, 'ידרוש');
+    result = result.replace(/ישקול\/תשקול/g, 'ישקול');
+    result = result.replace(/ישתף\/תשתף/g, 'ישתף');
+    result = result.replace(/ימשיך\/תמשיך/g, 'ימשיך');
+    result = result.replace(/יפסיק\/תפסיק/g, 'יפסיק');
+    result = result.replace(/יאפשר\/תאפשר/g, 'יאפשר');
+    result = result.replace(/יגן\/תגן/g, 'יגן');
+    result = result.replace(/ישמר\/תשמר/g, 'ישמר');
+    result = result.replace(/יעדיף\/תעדיף/g, 'יעדיף');
+    result = result.replace(/יתנגד\/תתנגד/g, 'יתנגד');
+    result = result.replace(/יקבע\/תקבע/g, 'יקבע');
+    result = result.replace(/יורה\/תורה/g, 'יורה');
+    result = result.replace(/ינחה\/תנחה/g, 'ינחה');
+    result = result.replace(/יחפוץ\/תחפוץ/g, 'יחפוץ');
+    
+    // כינויי שייכות נוספים
+    result = result.replace(/רכושו\/ה/g, 'רכושו');
+    result = result.replace(/ביתו\/ה/g, 'ביתו');
+    result = result.replace(/כספו\/ה/g, 'כספו');
+    result = result.replace(/שמו\/ה/g, 'שמו');
+    result = result.replace(/כתובתו\/ה/g, 'כתובתו');
+    result = result.replace(/חתימתו\/ה/g, 'חתימתו');
+    result = result.replace(/הסכמתו\/ה/g, 'הסכמתו');
+    result = result.replace(/זכותו\/ה/g, 'זכותו');
+    result = result.replace(/חובתו\/ה/g, 'חובתו');
+    result = result.replace(/רצונו\/ה/g, 'רצונו');
+    result = result.replace(/טובתו\/ה/g, 'טובתו');
+    result = result.replace(/בריאותו\/ה/g, 'בריאותו');
+    result = result.replace(/עסקיו\/ה/g, 'עסקיו');
+    result = result.replace(/נכסיו\/ה/g, 'נכסיו');
+    result = result.replace(/מסמכיו\/ה/g, 'מסמכיו');
+    result = result.replace(/חשבונו\/ה/g, 'חשבונו');
+    result = result.replace(/אחריותו\/ה/g, 'אחריותו');
+    result = result.replace(/התחייבותו\/ה/g, 'התחייבותו');
+    result = result.replace(/זהותו\/ה/g, 'זהותו');
+    result = result.replace(/מקומו\/ה/g, 'מקומו');
+    result = result.replace(/תפקידו\/ה/g, 'תפקידו');
+    result = result.replace(/משפחתו\/ה/g, 'משפחתו');
+    result = result.replace(/הוריו\/ה/g, 'הוריו');
+    result = result.replace(/בנו\/ה/g, 'בנו');
+    result = result.replace(/בתו\/ה/g, 'בתו');
+    result = result.replace(/גופו\/ה/g, 'גופו');
+    result = result.replace(/ראשו\/ה/g, 'ראשו');
+    result = result.replace(/ידו\/ה/g, 'ידו');
+    result = result.replace(/מצבו\/ה/g, 'מצבו');
+    result = result.replace(/רוחו\/ה/g, 'רוחו');
+    result = result.replace(/מותו\/ה/g, 'מותו');
+    result = result.replace(/סבלו\/ה/g, 'סבלו');
+    result = result.replace(/כאבו\/ה/g, 'כאבו');
+    result = result.replace(/הכרתו\/ה/g, 'הכרתו');
+    result = result.replace(/צלילותו\/ה/g, 'צלילותו');
+    result = result.replace(/כשירותו\/ה/g, 'כשירותו');
+    result = result.replace(/כבודו\/ה/g, 'כבודו');
+    result = result.replace(/פרטיותו\/ה/g, 'פרטיותו');
+    result = result.replace(/צנעתו\/ה/g, 'צנעתו');
+    result = result.replace(/דתו\/ה/g, 'דתו');
+    result = result.replace(/מסורתו\/ה/g, 'מסורתו');
+    result = result.replace(/שגרתו\/ה/g, 'שגרתו');
+    result = result.replace(/אחיו\/ה/g, 'אחיו');
+    result = result.replace(/נכדיו\/ה/g, 'נכדיו');
+    result = result.replace(/דירתו\/ה/g, 'דירתו');
+    result = result.replace(/רכבו\/ה/g, 'רכבו');
+    result = result.replace(/טיפולו\/ה/g, 'טיפולו');
+    result = result.replace(/סביבתו\/ה/g, 'סביבתו');
+    result = result.replace(/מטפלו\/ה/g, 'מטפלו');
+    result = result.replace(/רופאו\/ה/g, 'רופאו');
+    result = result.replace(/אשפוזו\/ה/g, 'אשפוזו');
+    result = result.replace(/שיקומו\/ה/g, 'שיקומו');
+    result = result.replace(/בעניינו\/ה/g, 'בעניינו');
+    result = result.replace(/בשמו\/ה/g, 'בשמו');
+    result = result.replace(/עבורו\/ה/g, 'עבורו');
+    result = result.replace(/במקומו\/ה/g, 'במקומו');
+    
+    // פעלים רפואיים
+    result = result.replace(/יונשם\/תונשם/g, 'יונשם');
+    result = result.replace(/יוזן\/תוזן/g, 'יוזן');
+    result = result.replace(/יושהה\/תושהה/g, 'יושהה');
+    result = result.replace(/יחובר\/תחובר/g, 'יחובר');
+    result = result.replace(/ינותק\/תנותק/g, 'ינותק');
+    result = result.replace(/יטופל\/תטופל/g, 'יטופל');
+    result = result.replace(/ישוקם\/תשוקם/g, 'ישוקם');
+    
+    // תארים נוספים
+    result = result.replace(/חולה\/ה/g, 'חולה');
+    result = result.replace(/סובל\/ת/g, 'סובל');
+    result = result.replace(/מאושפז\/ת/g, 'מאושפז');
+    result = result.replace(/מטופל\/ת/g, 'מטופל');
+    result = result.replace(/מורדם\/ת/g, 'מורדם');
+    result = result.replace(/מונשם\/ת/g, 'מונשם');
+    result = result.replace(/מחובר\/ת/g, 'מחובר');
+    result = result.replace(/מודע\/ת/g, 'מודע');
+    result = result.replace(/צלול\/ה/g, 'צלול');
+    result = result.replace(/מבולבל\/ת/g, 'מבולבל');
+    result = result.replace(/סיעודי\/ת/g, 'סיעודי');
+    result = result.replace(/תלוי\/ה/g, 'תלוי');
+    result = result.replace(/זקוק\/ה/g, 'זקוק');
+    result = result.replace(/גוסס\/ת/g, 'גוסס');
+    result = result.replace(/שוכב\/ת/g, 'שוכב');
+    result = result.replace(/יושב\/ת/g, 'יושב');
+    result = result.replace(/מתהלך\/ת/g, 'מתהלך');
+    result = result.replace(/מרותק\/ת/g, 'מרותק');
+    result = result.replace(/משותק\/ת/g, 'משותק');
+    result = result.replace(/כשיר\/ה/g, 'כשיר');
+    result = result.replace(/מבין\/ה/g, 'מבין');
+    result = result.replace(/שפוי\/ה/g, 'שפוי');
+    result = result.replace(/חסוי\/ה/g, 'חסוי');
+    result = result.replace(/מוגבל\/ת/g, 'מוגבל');
+    result = result.replace(/עצמאי\/ת/g, 'עצמאי');
+    result = result.replace(/נזקק\/ת/g, 'נזקק');
+    
     // מונחים משפטיים - נאמנות
     result = result.replace(/הנאמן\/ת/g, 'הנאמן'); // הנאמן/ת → הנאמן
     result = result.replace(/עינו\/ה/g, 'עינו'); // עינו/ה → עינו
@@ -671,6 +1045,151 @@ export function replaceTextWithGender(text: string, gender: Gender): string {
     result = result.replace(/נפשו\/ה/g, 'נפשה'); // נפשו/ה → נפשה
     result = result.replace(/ילדיו\/ה/g, 'ילדיה'); // ילדיו/ה → ילדיה
     
+    // פעלים נוספים - סדרה מורחבת
+    result = result.replace(/יקבל\/תקבל/g, 'תקבל');
+    result = result.replace(/ישלם\/תשלם/g, 'תשלם');
+    result = result.replace(/יחתום\/תחתום/g, 'תחתום');
+    result = result.replace(/יבקש\/תבקש/g, 'תבקש');
+    result = result.replace(/ימסור\/תמסור/g, 'תמסור');
+    result = result.replace(/יודיע\/תודיע/g, 'תודיע');
+    result = result.replace(/יאשר\/תאשר/g, 'תאשר');
+    result = result.replace(/יתחייב\/תתחייב/g, 'תתחייב');
+    result = result.replace(/יסכים\/תסכים/g, 'תסכים');
+    result = result.replace(/יקיים\/תקיים/g, 'תקיים');
+    result = result.replace(/ישלח\/תשלח/g, 'תשלח');
+    result = result.replace(/יגיש\/תגיש/g, 'תגיש');
+    result = result.replace(/ימלא\/תמלא/g, 'תמלא');
+    result = result.replace(/יספק\/תספק/g, 'תספק');
+    result = result.replace(/יפקיד\/תפקיד/g, 'תפקיד');
+    result = result.replace(/ימנה\/תמנה/g, 'תמנה');
+    result = result.replace(/יפרט\/תפרט/g, 'תפרט');
+    result = result.replace(/יציג\/תציג/g, 'תציג');
+    result = result.replace(/יבחר\/תבחר/g, 'תבחר');
+    result = result.replace(/יקרא\/תקרא/g, 'תקרא');
+    result = result.replace(/יכתוב\/תכתוב/g, 'תכתוב');
+    result = result.replace(/יחשב\/תחשב/g, 'תחשב');
+    result = result.replace(/יעזור\/תעזור/g, 'תעזור');
+    result = result.replace(/ילמד\/תלמד/g, 'תלמד');
+    result = result.replace(/יזכור\/תזכור/g, 'תזכור');
+    result = result.replace(/ישכח\/תשכח/g, 'תשכח');
+    result = result.replace(/יתקשר\/תתקשר/g, 'תתקשר');
+    result = result.replace(/יפגוש\/תפגוש/g, 'תפגוש');
+    result = result.replace(/יתייצב\/תתייצב/g, 'תתייצב');
+    result = result.replace(/ייצג\/תייצג/g, 'תייצג');
+    result = result.replace(/יטען\/תטען/g, 'תטען');
+    result = result.replace(/יוכיח\/תוכיח/g, 'תוכיח');
+    result = result.replace(/יכבד\/תכבד/g, 'תכבד');
+    result = result.replace(/יסרב\/תסרב/g, 'תסרב');
+    result = result.replace(/ידרוש\/תדרוש/g, 'תדרוש');
+    result = result.replace(/ישקול\/תשקול/g, 'תשקול');
+    result = result.replace(/ישתף\/תשתף/g, 'תשתף');
+    result = result.replace(/ימשיך\/תמשיך/g, 'תמשיך');
+    result = result.replace(/יפסיק\/תפסיק/g, 'תפסיק');
+    result = result.replace(/יאפשר\/תאפשר/g, 'תאפשר');
+    result = result.replace(/יגן\/תגן/g, 'תגן');
+    result = result.replace(/ישמר\/תשמר/g, 'תשמר');
+    result = result.replace(/יעדיף\/תעדיף/g, 'תעדיף');
+    result = result.replace(/יתנגד\/תתנגד/g, 'תתנגד');
+    result = result.replace(/יקבע\/תקבע/g, 'תקבע');
+    result = result.replace(/יורה\/תורה/g, 'תורה');
+    result = result.replace(/ינחה\/תנחה/g, 'תנחה');
+    result = result.replace(/יחפוץ\/תחפוץ/g, 'תחפוץ');
+    
+    // כינויי שייכות נוספים
+    result = result.replace(/רכושו\/ה/g, 'רכושה');
+    result = result.replace(/ביתו\/ה/g, 'ביתה');
+    result = result.replace(/כספו\/ה/g, 'כספה');
+    result = result.replace(/שמו\/ה/g, 'שמה');
+    result = result.replace(/כתובתו\/ה/g, 'כתובתה');
+    result = result.replace(/חתימתו\/ה/g, 'חתימתה');
+    result = result.replace(/הסכמתו\/ה/g, 'הסכמתה');
+    result = result.replace(/זכותו\/ה/g, 'זכותה');
+    result = result.replace(/חובתו\/ה/g, 'חובתה');
+    result = result.replace(/רצונו\/ה/g, 'רצונה');
+    result = result.replace(/טובתו\/ה/g, 'טובתה');
+    result = result.replace(/בריאותו\/ה/g, 'בריאותה');
+    result = result.replace(/עסקיו\/ה/g, 'עסקיה');
+    result = result.replace(/נכסיו\/ה/g, 'נכסיה');
+    result = result.replace(/מסמכיו\/ה/g, 'מסמכיה');
+    result = result.replace(/חשבונו\/ה/g, 'חשבונה');
+    result = result.replace(/אחריותו\/ה/g, 'אחריותה');
+    result = result.replace(/התחייבותו\/ה/g, 'התחייבותה');
+    result = result.replace(/זהותו\/ה/g, 'זהותה');
+    result = result.replace(/מקומו\/ה/g, 'מקומה');
+    result = result.replace(/תפקידו\/ה/g, 'תפקידה');
+    result = result.replace(/משפחתו\/ה/g, 'משפחתה');
+    result = result.replace(/הוריו\/ה/g, 'הוריה');
+    result = result.replace(/בנו\/ה/g, 'בנה');
+    result = result.replace(/בתו\/ה/g, 'בתה');
+    result = result.replace(/גופו\/ה/g, 'גופה');
+    result = result.replace(/ראשו\/ה/g, 'ראשה');
+    result = result.replace(/ידו\/ה/g, 'ידה');
+    result = result.replace(/מצבו\/ה/g, 'מצבה');
+    result = result.replace(/רוחו\/ה/g, 'רוחה');
+    result = result.replace(/מותו\/ה/g, 'מותה');
+    result = result.replace(/סבלו\/ה/g, 'סבלה');
+    result = result.replace(/כאבו\/ה/g, 'כאבה');
+    result = result.replace(/הכרתו\/ה/g, 'הכרתה');
+    result = result.replace(/צלילותו\/ה/g, 'צלילותה');
+    result = result.replace(/כשירותו\/ה/g, 'כשירותה');
+    result = result.replace(/כבודו\/ה/g, 'כבודה');
+    result = result.replace(/פרטיותו\/ה/g, 'פרטיותה');
+    result = result.replace(/צנעתו\/ה/g, 'צנעתה');
+    result = result.replace(/דתו\/ה/g, 'דתה');
+    result = result.replace(/מסורתו\/ה/g, 'מסורתה');
+    result = result.replace(/שגרתו\/ה/g, 'שגרתה');
+    result = result.replace(/אחיו\/ה/g, 'אחיה');
+    result = result.replace(/נכדיו\/ה/g, 'נכדיה');
+    result = result.replace(/דירתו\/ה/g, 'דירתה');
+    result = result.replace(/רכבו\/ה/g, 'רכבה');
+    result = result.replace(/טיפולו\/ה/g, 'טיפולה');
+    result = result.replace(/סביבתו\/ה/g, 'סביבתה');
+    result = result.replace(/מטפלו\/ה/g, 'מטפלה');
+    result = result.replace(/רופאו\/ה/g, 'רופאה');
+    result = result.replace(/אשפוזו\/ה/g, 'אשפוזה');
+    result = result.replace(/שיקומו\/ה/g, 'שיקומה');
+    result = result.replace(/בעניינו\/ה/g, 'בעניינה');
+    result = result.replace(/בשמו\/ה/g, 'בשמה');
+    result = result.replace(/עבורו\/ה/g, 'עבורה');
+    result = result.replace(/במקומו\/ה/g, 'במקומה');
+    
+    // פעלים רפואיים
+    result = result.replace(/יונשם\/תונשם/g, 'תונשם');
+    result = result.replace(/יוזן\/תוזן/g, 'תוזן');
+    result = result.replace(/יושהה\/תושהה/g, 'תושהה');
+    result = result.replace(/יחובר\/תחובר/g, 'תחובר');
+    result = result.replace(/ינותק\/תנותק/g, 'תנותק');
+    result = result.replace(/יטופל\/תטופל/g, 'תטופל');
+    result = result.replace(/ישוקם\/תשוקם/g, 'תשוקם');
+    
+    // תארים נוספים
+    result = result.replace(/חולה\/ה/g, 'חולה');
+    result = result.replace(/סובל\/ת/g, 'סובלת');
+    result = result.replace(/מאושפז\/ת/g, 'מאושפזת');
+    result = result.replace(/מטופל\/ת/g, 'מטופלת');
+    result = result.replace(/מורדם\/ת/g, 'מורדמת');
+    result = result.replace(/מונשם\/ת/g, 'מונשמת');
+    result = result.replace(/מחובר\/ת/g, 'מחוברת');
+    result = result.replace(/מודע\/ת/g, 'מודעת');
+    result = result.replace(/צלול\/ה/g, 'צלולה');
+    result = result.replace(/מבולבל\/ת/g, 'מבולבלת');
+    result = result.replace(/סיעודי\/ת/g, 'סיעודית');
+    result = result.replace(/תלוי\/ה/g, 'תלויה');
+    result = result.replace(/זקוק\/ה/g, 'זקוקה');
+    result = result.replace(/גוסס\/ת/g, 'גוססת');
+    result = result.replace(/שוכב\/ת/g, 'שוכבת');
+    result = result.replace(/יושב\/ת/g, 'יושבת');
+    result = result.replace(/מתהלך\/ת/g, 'מתהלכת');
+    result = result.replace(/מרותק\/ת/g, 'מרותקת');
+    result = result.replace(/משותק\/ת/g, 'משותקת');
+    result = result.replace(/כשיר\/ה/g, 'כשירה');
+    result = result.replace(/מבין\/ה/g, 'מבינה');
+    result = result.replace(/שפוי\/ה/g, 'שפויה');
+    result = result.replace(/חסוי\/ה/g, 'חסויה');
+    result = result.replace(/מוגבל\/ת/g, 'מוגבלת');
+    result = result.replace(/עצמאי\/ת/g, 'עצמאית');
+    result = result.replace(/נזקק\/ת/g, 'נזקקת');
+    
     // מונחים משפטיים - נאמנות
     result = result.replace(/הנאמן\/ת/g, 'הנאמנה'); // הנאמן/ת → הנאמנה
     result = result.replace(/עינו\/ה/g, 'עינה'); // עינו/ה → עינה
@@ -814,6 +1333,151 @@ export function replaceTextWithGender(text: string, gender: Gender): string {
     result = result.replace(/יכולתו\/ה/g, 'יכולתם'); // יכולתו/ה → יכולתם
     result = result.replace(/נפשו\/ה/g, 'נפשם'); // נפשו/ה → נפשם
     result = result.replace(/ילדיו\/ה/g, 'ילדיהם'); // ילדיו/ה → ילדיהם
+    
+    // פעלים נוספים - סדרה מורחבת
+    result = result.replace(/יקבל\/תקבל/g, 'יקבלו');
+    result = result.replace(/ישלם\/תשלם/g, 'ישלמו');
+    result = result.replace(/יחתום\/תחתום/g, 'יחתמו');
+    result = result.replace(/יבקש\/תבקש/g, 'יבקשו');
+    result = result.replace(/ימסור\/תמסור/g, 'ימסרו');
+    result = result.replace(/יודיע\/תודיע/g, 'יודיעו');
+    result = result.replace(/יאשר\/תאשר/g, 'יאשרו');
+    result = result.replace(/יתחייב\/תתחייב/g, 'יתחייבו');
+    result = result.replace(/יסכים\/תסכים/g, 'יסכימו');
+    result = result.replace(/יקיים\/תקיים/g, 'יקיימו');
+    result = result.replace(/ישלח\/תשלח/g, 'ישלחו');
+    result = result.replace(/יגיש\/תגיש/g, 'יגישו');
+    result = result.replace(/ימלא\/תמלא/g, 'ימלאו');
+    result = result.replace(/יספק\/תספק/g, 'יספקו');
+    result = result.replace(/יפקיד\/תפקיד/g, 'יפקידו');
+    result = result.replace(/ימנה\/תמנה/g, 'ימנו');
+    result = result.replace(/יפרט\/תפרט/g, 'יפרטו');
+    result = result.replace(/יציג\/תציג/g, 'יציגו');
+    result = result.replace(/יבחר\/תבחר/g, 'יבחרו');
+    result = result.replace(/יקרא\/תקרא/g, 'יקראו');
+    result = result.replace(/יכתוב\/תכתוב/g, 'יכתבו');
+    result = result.replace(/יחשב\/תחשב/g, 'יחשבו');
+    result = result.replace(/יעזור\/תעזור/g, 'יעזרו');
+    result = result.replace(/ילמד\/תלמד/g, 'ילמדו');
+    result = result.replace(/יזכור\/תזכור/g, 'יזכרו');
+    result = result.replace(/ישכח\/תשכח/g, 'ישכחו');
+    result = result.replace(/יתקשר\/תתקשר/g, 'יתקשרו');
+    result = result.replace(/יפגוש\/תפגוש/g, 'יפגשו');
+    result = result.replace(/יתייצב\/תתייצב/g, 'יתייצבו');
+    result = result.replace(/ייצג\/תייצג/g, 'ייצגו');
+    result = result.replace(/יטען\/תטען/g, 'יטענו');
+    result = result.replace(/יוכיח\/תוכיח/g, 'יוכיחו');
+    result = result.replace(/יכבד\/תכבד/g, 'יכבדו');
+    result = result.replace(/יסרב\/תסרב/g, 'יסרבו');
+    result = result.replace(/ידרוש\/תדרוש/g, 'ידרשו');
+    result = result.replace(/ישקול\/תשקול/g, 'ישקלו');
+    result = result.replace(/ישתף\/תשתף/g, 'ישתפו');
+    result = result.replace(/ימשיך\/תמשיך/g, 'ימשיכו');
+    result = result.replace(/יפסיק\/תפסיק/g, 'יפסיקו');
+    result = result.replace(/יאפשר\/תאפשר/g, 'יאפשרו');
+    result = result.replace(/יגן\/תגן/g, 'יגנו');
+    result = result.replace(/ישמר\/תשמר/g, 'ישמרו');
+    result = result.replace(/יעדיף\/תעדיף/g, 'יעדיפו');
+    result = result.replace(/יתנגד\/תתנגד/g, 'יתנגדו');
+    result = result.replace(/יקבע\/תקבע/g, 'יקבעו');
+    result = result.replace(/יורה\/תורה/g, 'יורו');
+    result = result.replace(/ינחה\/תנחה/g, 'ינחו');
+    result = result.replace(/יחפוץ\/תחפוץ/g, 'יחפצו');
+    
+    // כינויי שייכות נוספים
+    result = result.replace(/רכושו\/ה/g, 'רכושם');
+    result = result.replace(/ביתו\/ה/g, 'ביתם');
+    result = result.replace(/כספו\/ה/g, 'כספם');
+    result = result.replace(/שמו\/ה/g, 'שמם');
+    result = result.replace(/כתובתו\/ה/g, 'כתובתם');
+    result = result.replace(/חתימתו\/ה/g, 'חתימתם');
+    result = result.replace(/הסכמתו\/ה/g, 'הסכמתם');
+    result = result.replace(/זכותו\/ה/g, 'זכותם');
+    result = result.replace(/חובתו\/ה/g, 'חובתם');
+    result = result.replace(/רצונו\/ה/g, 'רצונם');
+    result = result.replace(/טובתו\/ה/g, 'טובתם');
+    result = result.replace(/בריאותו\/ה/g, 'בריאותם');
+    result = result.replace(/עסקיו\/ה/g, 'עסקיהם');
+    result = result.replace(/נכסיו\/ה/g, 'נכסיהם');
+    result = result.replace(/מסמכיו\/ה/g, 'מסמכיהם');
+    result = result.replace(/חשבונו\/ה/g, 'חשבונם');
+    result = result.replace(/אחריותו\/ה/g, 'אחריותם');
+    result = result.replace(/התחייבותו\/ה/g, 'התחייבותם');
+    result = result.replace(/זהותו\/ה/g, 'זהותם');
+    result = result.replace(/מקומו\/ה/g, 'מקומם');
+    result = result.replace(/תפקידו\/ה/g, 'תפקידם');
+    result = result.replace(/משפחתו\/ה/g, 'משפחתם');
+    result = result.replace(/הוריו\/ה/g, 'הוריהם');
+    result = result.replace(/בנו\/ה/g, 'בנם');
+    result = result.replace(/בתו\/ה/g, 'בתם');
+    result = result.replace(/גופו\/ה/g, 'גופם');
+    result = result.replace(/ראשו\/ה/g, 'ראשם');
+    result = result.replace(/ידו\/ה/g, 'ידם');
+    result = result.replace(/מצבו\/ה/g, 'מצבם');
+    result = result.replace(/רוחו\/ה/g, 'רוחם');
+    result = result.replace(/מותו\/ה/g, 'מותם');
+    result = result.replace(/סבלו\/ה/g, 'סבלם');
+    result = result.replace(/כאבו\/ה/g, 'כאבם');
+    result = result.replace(/הכרתו\/ה/g, 'הכרתם');
+    result = result.replace(/צלילותו\/ה/g, 'צלילותם');
+    result = result.replace(/כשירותו\/ה/g, 'כשירותם');
+    result = result.replace(/כבודו\/ה/g, 'כבודם');
+    result = result.replace(/פרטיותו\/ה/g, 'פרטיותם');
+    result = result.replace(/צנעתו\/ה/g, 'צנעתם');
+    result = result.replace(/דתו\/ה/g, 'דתם');
+    result = result.replace(/מסורתו\/ה/g, 'מסורתם');
+    result = result.replace(/שגרתו\/ה/g, 'שגרתם');
+    result = result.replace(/אחיו\/ה/g, 'אחיהם');
+    result = result.replace(/נכדיו\/ה/g, 'נכדיהם');
+    result = result.replace(/דירתו\/ה/g, 'דירתם');
+    result = result.replace(/רכבו\/ה/g, 'רכבם');
+    result = result.replace(/טיפולו\/ה/g, 'טיפולם');
+    result = result.replace(/סביבתו\/ה/g, 'סביבתם');
+    result = result.replace(/מטפלו\/ה/g, 'מטפלם');
+    result = result.replace(/רופאו\/ה/g, 'רופאם');
+    result = result.replace(/אשפוזו\/ה/g, 'אשפוזם');
+    result = result.replace(/שיקומו\/ה/g, 'שיקומם');
+    result = result.replace(/בעניינו\/ה/g, 'בעניינם');
+    result = result.replace(/בשמו\/ה/g, 'בשמם');
+    result = result.replace(/עבורו\/ה/g, 'עבורם');
+    result = result.replace(/במקומו\/ה/g, 'במקומם');
+    
+    // פעלים רפואיים
+    result = result.replace(/יונשם\/תונשם/g, 'יונשמו');
+    result = result.replace(/יוזן\/תוזן/g, 'יוזנו');
+    result = result.replace(/יושהה\/תושהה/g, 'יושהו');
+    result = result.replace(/יחובר\/תחובר/g, 'יחוברו');
+    result = result.replace(/ינותק\/תנותק/g, 'ינותקו');
+    result = result.replace(/יטופל\/תטופל/g, 'יטופלו');
+    result = result.replace(/ישוקם\/תשוקם/g, 'ישוקמו');
+    
+    // תארים נוספים
+    result = result.replace(/חולה\/ה/g, 'חולים');
+    result = result.replace(/סובל\/ת/g, 'סובלים');
+    result = result.replace(/מאושפז\/ת/g, 'מאושפזים');
+    result = result.replace(/מטופל\/ת/g, 'מטופלים');
+    result = result.replace(/מורדם\/ת/g, 'מורדמים');
+    result = result.replace(/מונשם\/ת/g, 'מונשמים');
+    result = result.replace(/מחובר\/ת/g, 'מחוברים');
+    result = result.replace(/מודע\/ת/g, 'מודעים');
+    result = result.replace(/צלול\/ה/g, 'צלולים');
+    result = result.replace(/מבולבל\/ת/g, 'מבולבלים');
+    result = result.replace(/סיעודי\/ת/g, 'סיעודיים');
+    result = result.replace(/תלוי\/ה/g, 'תלויים');
+    result = result.replace(/זקוק\/ה/g, 'זקוקים');
+    result = result.replace(/גוסס\/ת/g, 'גוססים');
+    result = result.replace(/שוכב\/ת/g, 'שוכבים');
+    result = result.replace(/יושב\/ת/g, 'יושבים');
+    result = result.replace(/מתהלך\/ת/g, 'מתהלכים');
+    result = result.replace(/מרותק\/ת/g, 'מרותקים');
+    result = result.replace(/משותק\/ת/g, 'משותקים');
+    result = result.replace(/כשיר\/ה/g, 'כשירים');
+    result = result.replace(/מבין\/ה/g, 'מבינים');
+    result = result.replace(/שפוי\/ה/g, 'שפויים');
+    result = result.replace(/חסוי\/ה/g, 'חסויים');
+    result = result.replace(/מוגבל\/ת/g, 'מוגבלים');
+    result = result.replace(/עצמאי\/ת/g, 'עצמאיים');
+    result = result.replace(/נזקק\/ת/g, 'נזקקים');
     
     // מונחים משפטיים - נאמנות
     result = result.replace(/הנאמן\/ת/g, 'הנאמנים'); // הנאמן/ת → הנאמנים

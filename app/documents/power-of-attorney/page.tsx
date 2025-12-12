@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { FileSignature, User, Users, Download, Plus, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
@@ -218,6 +218,18 @@ export default function PowerOfAttorneyPage() {
     const actVerb = attorneySingular
       ? (mainAttorneys[0]?.gender === 'female' ? 'תפעל' : 'יפעל')
       : 'יפעלו';
+    const obligateVerb = attorneySingular
+      ? (mainAttorneys[0]?.gender === 'female' ? 'ותחייב' : 'ויחייב')
+      : 'ויחייבו';
+    const actionsSuffix = attorneySingular
+      ? (mainAttorneys[0]?.gender === 'female' ? 'יה' : 'יו')
+      : 'יהם';
+    const notWord = attorneySingular
+      ? (mainAttorneys[0]?.gender === 'female' ? 'אינה' : 'אינו')
+      : 'אינם';
+    const entitledWord = attorneySingular
+      ? (mainAttorneys[0]?.gender === 'female' ? 'זכאית' : 'זכאי')
+      : 'זכאים';
 
     // סוג ייפוי הכוח
     const typeNames: Record<PowerOfAttorneyType, string> = {
@@ -317,9 +329,9 @@ ${validity.conditions ? `\nתנאים נוספים: ${validity.conditions}` : ''
 
 1. אני חותמ${principalGenderSuffix} על ייפוי כוח זה מרצוני החופשי, בדעה צלולה ומתוך הבנה מלאה של משמעותו.
 
-2. אני מודע${principalGenderSuffix} לכך ש${attorneyWordFull} ${actVerb} בשמי ויחייב${mainAttorneys.length === 1 ? '' : 'ו'} אותי בפעולות${mainAttorneys.length === 1 ? 'יו' : 'יהם'}.
+2. אני מודע${principalGenderSuffix} לכך ש${attorneyWordFull} ${actVerb} בשמי ${obligateVerb} אותי בפעולות${actionsSuffix}.
 
-3. ${attorneyWordFull} אינ${mainAttorneys.length === 1 ? 'ו' : 'ם'} זכאי${mainAttorneys.length === 1 ? '' : 'ם'} לשכר עבור פעולות${mainAttorneys.length === 1 ? 'יו' : 'יהם'}, אלא אם הוסכם אחרת בכתב.
+3. ${attorneyWordFull} ${notWord} ${entitledWord} לשכר עבור פעולות${actionsSuffix}, אלא אם הוסכם אחרת בכתב.
 
 ═══════════════════════════════════════════════════════════════
 
@@ -1001,4 +1013,3 @@ ${validity.conditions ? `\nתנאים נוספים: ${validity.conditions}` : ''
     </div>
   );
 }
-
