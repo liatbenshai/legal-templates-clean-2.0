@@ -572,35 +572,18 @@ export const advanceDirectivesSubcategories = {
     { id: 'real_estate', name: 'נדל"ן' },
     { id: 'banking', name: 'בנקאות' },
     { id: 'allowances', name: 'קצבאות' },
-    { id: 'vehicle', name: 'רכב' },
-    { id: 'prohibitions', name: 'איסורים' }
+    { id: 'vehicle', name: 'רכב' }
   ],
   personal: [
     { id: 'residence', name: 'מגורים' },
-    { id: 'caregiver', name: 'מטפלים' },
-    { id: 'social', name: 'קשרים חברתיים' },
-    { id: 'cleanliness', name: 'ניקיון' },
-    { id: 'maintenance', name: 'תחזוקה' },
-    { id: 'nutrition', name: 'תזונה' },
-    { id: 'personal_care', name: 'טיפוח אישי' },
-    { id: 'physical_activity', name: 'פעילות גופנית' },
     { id: 'culture', name: 'תרבות ופנאי' },
-    { id: 'technology', name: 'טכנולוגיה' },
-    { id: 'security', name: 'אבטחה' },
-    { id: 'travel', name: 'נסיעות' }
+    { id: 'nutrition', name: 'תזונה' }
   ],
   medical: [
     { id: 'decisions', name: 'החלטות רפואיות' },
-    { id: 'treatment', name: 'עקרונות טיפול' },
-    { id: 'second_opinion', name: 'חוות דעת שנייה' },
-    { id: 'clinical_trials', name: 'ניסויים קליניים' },
     { id: 'end_of_life', name: 'סוף חיים' },
-    { id: 'pain', name: 'ניהול כאב' },
-    { id: 'resuscitation', name: 'החייאה' },
-    { id: 'chronic', name: 'מחלות כרוניות' },
-    { id: 'providers', name: 'נותני שירות' },
-    { id: 'insurance', name: 'ביטוחים' },
-    { id: 'organ_donation', name: 'תרומת איברים' }
+    { id: 'special_conditions', name: 'מצבים מיוחדים' },
+    { id: 'insurance_rights', name: 'ביטוחים וזכויות' }
   ]
 };
 
